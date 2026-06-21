@@ -68,7 +68,7 @@ void rpc_stop_transmission(
   // handle error
   if ( ! response ) {
     error.status = -ENOMEM;
-    bolthur_rpc_return( type, &error, sizeof( error ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     free( request );
     return;
   }

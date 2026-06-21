@@ -1250,6 +1250,7 @@ response_t dwhci_channel_send_cancel( const channel_queue_entry_t* entry ) {
     entry->status != DWHCI_QUEUE_CHANNEL_STATUS_SETUP
     && entry->status != DWHCI_QUEUE_CHANNEL_STATUS_DATA
     && entry->status != DWHCI_QUEUE_CHANNEL_STATUS_ACK
+    && entry->status != DWHCI_QUEUE_POLL_STATUS_DATA
   ) {
     return HCD_RESPONSE_ERROR_EINVAL;
   }

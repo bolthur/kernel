@@ -101,12 +101,12 @@ void rpc_hid_detach(
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL, };
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // get data from mailbox
@@ -115,7 +115,7 @@ void rpc_hid_detach(
     data_info, &data_size, true, nullptr );
   if ( ! request ) {
     err_response.status = -ENOMSG;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // get message

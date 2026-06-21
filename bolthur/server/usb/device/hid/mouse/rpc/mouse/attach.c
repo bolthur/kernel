@@ -37,7 +37,7 @@
  * @param response_info response info
  */
 void rpc_mouse_attach(
-  size_t type,
+  [[maybe_unused]] size_t type,
   pid_t origin,
   size_t data_info,
   [[maybe_unused]] size_t response_info
@@ -45,12 +45,12 @@ void rpc_mouse_attach(
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL, };
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // get data from mailbox
@@ -59,7 +59,7 @@ void rpc_mouse_attach(
     data_info, &data_size, true, nullptr );
   if ( ! request ) {
     err_response.status = -ENOMSG;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // allocate space for pull_request
@@ -70,13 +70,13 @@ void rpc_mouse_attach(
   if ( 0 != result ) {
     free( request );
     err_response.status = -result;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // handle invalid device driver
   if ( device_driver != DEVICE_DRIVER_HID ) {
     free( request );
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // get application

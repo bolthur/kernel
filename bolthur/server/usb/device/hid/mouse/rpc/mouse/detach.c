@@ -41,12 +41,12 @@ void rpc_mouse_detach(
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL, };
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // get data from mailbox
@@ -55,7 +55,7 @@ void rpc_mouse_detach(
     data_info, &data_size, true, nullptr );
   if ( ! request ) {
     err_response.status = -ENOMSG;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // get message
@@ -67,7 +67,7 @@ void rpc_mouse_detach(
   // handle error
   if ( ! response ) {
     err_response.status = -ENOMEM;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -79,7 +79,7 @@ void rpc_mouse_detach(
     // try to stop all transmissions
     if ( 0 != usb_stop_transmission( device->device_number ) ) {
       err_response.status = -EIO;
-      bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
       free( request );
       free( response );
       return;
@@ -89,7 +89,7 @@ void rpc_mouse_detach(
   }
   // return success
   memcpy( response->container, request->container, container_size );
-  bolthur_rpc_return( type, response, response_size, nullptr, 0 );
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, 0 );
   free( request );
   free( response );
 }
