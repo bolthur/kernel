@@ -52,7 +52,13 @@ bool rpc_init( void ) {
   // bind rpc handler for communication
   bolthur_rpc_bind( HCD_POLL_INTERRUPT, rpc_poll_interrupt, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register handler submit control message!\r\n" )
+    STARTUP_PRINT( "Unable to register handler poll interrupt!\r\n" )
+    return false;
+  }
+  // bind rpc handler for communication
+  bolthur_rpc_bind( HCD_STOP_TRANSMISSION, rpc_stop_transmission, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register handler stop transmission!\r\n" )
     return false;
   }
   // return success

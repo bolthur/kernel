@@ -1911,6 +1911,76 @@ response_t dwhci_get_next_entry( channel_queue_entry_t** out ) {
 }
 
 /**
+ * @fn response_t dwhci_cancel_by_device(uint32_t)
+ * @brief Cancel running stuff by device
+ * @param device_number
+ * @return
+ */
+response_t dwhci_cancel_by_device( const uint32_t device_number ) {
+  // get list
+  auto current = configuration.list;
+  // iterate and cancel
+  while ( current ) {
+    // get is poll flag
+    const bool is_poll = current->status == DWHCI_QUEUE_POLL_STATUS_PENDING
+      || current->status == DWHCI_QUEUE_POLL_STATUS_DATA
+      || current->status == DWHCI_QUEUE_POLL_STATUS_ACK
+      || current->status == DWHCI_QUEUE_POLL_STATUS_DONE;
+    // get is command flag
+    const bool is_command = current->status == DWHCI_QUEUE_CHANNEL_STATUS_PENDING
+      || current->status == DWHCI_QUEUE_CHANNEL_STATUS_SETUP
+      || current->status == DWHCI_QUEUE_CHANNEL_STATUS_DATA
+      || current->status == DWHCI_QUEUE_CHANNEL_STATUS_ACK
+      || current->status == DWHCI_QUEUE_CHANNEL_STATUS_DONE;
+    // handle skip
+    if (
+      (
+        is_poll
+        && ( ( usb_interrupt_poll_t* )current->data )->device_number != device_number
+      ) || (
+        is_command
+        && ( ( usb_control_message_t* )current->data )->device_number != device_number
+      )
+    ) {
+      // go to next
+      current = current->next;
+      // skip rest
+      continue;
+    }
+    // handle pending
+    if (
+      DWHCI_QUEUE_CHANNEL_STATUS_PENDING == current->status
+      || DWHCI_QUEUE_POLL_STATUS_PENDING == current->status
+    ) {
+      // get entry to delete
+      auto to_delete = current;
+      // switch to next
+      current = current->next;
+      // remove with cleanup
+      dwhci_queue_remove_entry( to_delete, true );
+      // skip rest
+      continue;
+    }
+    // cancel
+    current->status = DWHCI_QUEUE_CANCEL;
+    // start cancellation
+    const response_t response = dwhci_channel_async_continue( current );
+    if ( HCD_RESPONSE_OK != response ) {
+      // debug output
+      //#if defined ( DWHCI_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Unable to start cancellation process\r\n" )
+      //#endif
+      // return response
+      return response;
+    }
+    // go to next
+    current = current->next;
+  }
+  // return success
+  return HCD_RESPONSE_OK;
+}
+
+/**
  * @fn response_t dwhci_power_on(void)
  * @brief Method to power on usb device
  * @return power on result

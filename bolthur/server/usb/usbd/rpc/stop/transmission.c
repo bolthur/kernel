@@ -29,8 +29,8 @@
 #include "../../../../../library/usb/usb.h"
 
 /**
- * @fn void rpc_interrupt_poll_finished( size_t, pid_t, size_t, size_t )
- * @brief Interrupt poll finished callback
+ * @fn void rpc_stop_transmission_finished( size_t, pid_t, size_t, size_t )
+ * @brief stop transmission finished callback
  * @param type
  * @param origin
  * @param data_info
@@ -38,7 +38,7 @@
  *
  * @todo on error return correctly
  */
-static void rpc_interrupt_poll_finished(
+static void rpc_stop_transmission_finished(
   [[maybe_unused]] size_t type,
   pid_t origin,
   size_t data_info,
@@ -68,9 +68,9 @@ static void rpc_interrupt_poll_finished(
   }
   // get message and data size
   size_t data_size;
-  vfs_ioctl_perform_response_t* poll_response = bolthur_rpc_fetch_from_mailbox(
+  vfs_ioctl_perform_response_t* stop_response = bolthur_rpc_fetch_from_mailbox(
     data_info, &data_size, true, nullptr );
-  if ( ! poll_response ) {
+  if ( ! stop_response ) {
     // return from rpc
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // skip rest
@@ -83,25 +83,26 @@ static void rpc_interrupt_poll_finished(
   // detach shared memory
   _syscall_memory_shared_detach( interrupt_message->shm_id );
   // actually return
-  bolthur_rpc_return( RPC_VFS_IOCTL, poll_response, data_size, async_data, 0 );
+  bolthur_rpc_return( RPC_VFS_IOCTL, stop_response, data_size, async_data, 0 );
   // free up structures
-  free( poll_response );
+  free( stop_response );
 }
 
 /**
- * @fn void rpc_handler_register(size_t, pid_t, size_t, size_t)
- * @brief Register rpc handler for device
+ * @fn void rpc_stop_transmission(size_t, pid_t, size_t, size_t)
+ * @brief Stop a transmission for a device
  * @param type message type
  * @param origin origin of the message
  * @param data_info data id
  * @param response_info response info
  */
-void rpc_interrupt_poll(
+void rpc_stop_transmission(
   [[maybe_unused]] size_t type,
   pid_t origin,
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  EARLY_STARTUP_PRINT( "POLLING\r\n" )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
@@ -122,28 +123,12 @@ void rpc_interrupt_poll(
     return;
   }
   // allocate space for pull_request
-  auto const interrupt_message = ( usbd_interrupt_message_t* )request->container;
-  // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach( interrupt_message->shm_id, 0 );
-  // handle error
-  if ( errno ) {
-    // set error
-    error.status = -errno;
-    // free request
-    free( request );
-    // return from rpc
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
-    return;
-  }
-  // transform shared memory into message
-  auto const message = ( usb_interrupt_poll_t* )shm_addr;
+  auto const stop_message = ( usbd_stop_transmission_t* )request->container;
   // find device
   libusb_device_t* device;
-  int result = usbd_device_get_by_number( message->device_number, &device );
+  int result = usbd_device_get_by_number( stop_message->device_number, &device );
   if ( 0 != result ) {
     error.status = -result;
-    // detach shared memory
-    _syscall_memory_shared_detach( interrupt_message->shm_id );
     // free request
     free( request );
     // return from rpc
@@ -156,8 +141,6 @@ void rpc_interrupt_poll(
   vfs_ioctl_perform_response_t* response = malloc( response_size );
   if ( ! response ) {
     error.status = -ENOMEM;
-    // detach shared memory
-    _syscall_memory_shared_detach( interrupt_message->shm_id );
     // free request
     free( request );
     // return from rpc
@@ -167,21 +150,10 @@ void rpc_interrupt_poll(
   memset( response, 0, response_size );
   memcpy( response->container, request->container, container_size );
   // perform hcd control message
-  result = usbd_interrupt_poll(
+  result = usbd_stop_transmission(
     device,
-    ( libusb_pipe_address_t ) {
-      .type = message->transfer,
-      .speed = device->speed,
-      .end_point = ( uint8_t )( message->endpoint & 0xF ),
-      .device = ( uint8_t )device->number,
-      .direction = message->direction,
-      .max_size = usb_packet_size_from_number(
-        device->descriptor.max_packet_size0
-      ),
-    },
-    message,
-    interrupt_message,
-    rpc_interrupt_poll_finished,
+    stop_message,
+    rpc_stop_transmission_finished,
     origin,
     data_info,
     request,
@@ -190,8 +162,6 @@ void rpc_interrupt_poll(
   // handle error
   if ( -1 == result ) {
     error.status = -EIO;
-    // detach shared memory
-    _syscall_memory_shared_detach( interrupt_message->shm_id );
     // free request
     free( request );
     free( response );
@@ -200,8 +170,6 @@ void rpc_interrupt_poll(
     // skip rest
     return;
   }
-  // populate polling origin
-  device->poll_origin = request->origin;
   // free request
   free( request );
   free( response );

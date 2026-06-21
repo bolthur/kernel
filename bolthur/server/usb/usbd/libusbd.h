@@ -167,6 +167,8 @@ int usbd_roothub_fire_attach( void );
 int usbd_string_get( libusb_device_t*, uint8_t, uint16_t, void*, size_t );
 int usbd_string_read_lang( libusb_device_t*, uint8_t, uint16_t, void*, size_t );
 int usbd_string_read( libusb_device_t*, uint8_t, void*, size_t );
+// transmission
+int usbd_stop_transmission( const libusb_device_t*, usbd_stop_transmission_t*, rpc_handler_t, pid_t, size_t, void*, size_t );
 
 // global variables from init
 extern int fd_hcd;

@@ -107,10 +107,16 @@ bool rpc_init( void ) {
     STARTUP_PRINT( "Unable to register poll interrupt handler!\r\n" )
     return false;
   }
-  // register handler poll interrupt
+  // register handler generic poll
   bolthur_rpc_bind( GENERIC_POLL_INTERRUPT, rpc_interrupt_generic, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register poll interrupt handler!\r\n" )
+    STARTUP_PRINT( "Unable to register generic poll handler!\r\n" )
+    return false;
+  }
+  // register handler stop transmission
+  bolthur_rpc_bind( USBD_STOP_TRANSMISSION, rpc_stop_transmission, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register stop transmission handler!\r\n" )
     return false;
   }
   return true;

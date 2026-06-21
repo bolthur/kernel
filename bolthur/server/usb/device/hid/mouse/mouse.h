@@ -25,6 +25,7 @@
 //#define MOUSE_ENABLE_DEBUG 1
 
 void mouse_append( libusb_mouse_device_t* );
+void mouse_detach( const libusb_mouse_device_t* );
 int mouse_new_index( uint32_t* );
 void mouse_destroy( libusb_mouse_device_t* );
 int mouse_duplicate_report( libusb_hid_parser_report_t**, const libusb_hid_parser_report_t*, size_t );

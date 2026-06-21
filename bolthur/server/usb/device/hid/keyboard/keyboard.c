@@ -60,6 +60,20 @@ void keyboard_append( libusb_keyboard_device_t* keyboard ) {
 }
 
 /**
+ * @fn void keyboard_detach(const libusb_keyboard_device_t*)
+ * @brief Removes keyboard from list
+ * @param keyboard
+ */
+void keyboard_detach( const libusb_keyboard_device_t* keyboard ) {
+  if ( keyboard->prev ) {
+    keyboard->prev->next = keyboard->next;
+  }
+  if ( keyboard->next ) {
+    keyboard->next->prev = keyboard->prev;
+  }
+}
+
+/**
  * @fn void keyboard_destroy(libusb_keyboard_device_t*)
  * @brief Method to destroy keyboard device
  * @param device
@@ -68,6 +82,10 @@ void keyboard_destroy( libusb_keyboard_device_t* device ) {
   // handle no device
   if ( ! device ) {
     return;
+  }
+  // remove from list
+  if ( device->prev || device->next ) {
+    keyboard_detach( device );
   }
   // free key report field
   if ( device->key_report ) {

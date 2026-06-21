@@ -63,7 +63,7 @@
 #define USBD_GET_CONFIGURATION USBD_GET_ROOTHUB + 1
 #define USBD_GET_STATUS USBD_GET_CONFIGURATION + 1
 #define USBD_POLL_INTERRUPT USBD_GET_STATUS + 1
-#define USBD_GET_ENUMERATING USBD_POLL_INTERRUPT + 1
+#define USBD_STOP_TRANSMISSION USBD_POLL_INTERRUPT + 1
 
 // generic usb rpc structures
 typedef struct {
@@ -75,10 +75,6 @@ typedef struct {
 typedef struct {
   uint32_t device_number;
 } usb_generic_detached_t;
-
-typedef struct {
-  uint32_t device_number;
-} usb_generic_deallocate_t;
 
 typedef struct {
   uint32_t device_number;
@@ -268,7 +264,7 @@ typedef struct {
 } usbd_get_status_t;
 
 typedef struct {
-  bool enumerating;
-} usbd_get_enumerating_t;
+  uint32_t device_number;
+} usbd_stop_transmission_t;
 
 #endif

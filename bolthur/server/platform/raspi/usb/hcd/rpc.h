@@ -26,6 +26,7 @@ bool rpc_init( void );
 void rpc_default_timer( size_t, pid_t, size_t, size_t );
 void rpc_interrupt_handle( size_t, pid_t, size_t, size_t );
 void rpc_poll_interrupt( size_t, pid_t, size_t, size_t );
+void rpc_stop_transmission( size_t, pid_t, size_t, size_t );
 void rpc_submit_message( size_t, pid_t, size_t, size_t );
 
 #endif

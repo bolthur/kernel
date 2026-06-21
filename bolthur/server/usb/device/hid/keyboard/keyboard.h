@@ -27,6 +27,7 @@
 extern libusb_keyboard_device_t* keyboard_head;
 
 void keyboard_append( libusb_keyboard_device_t* );
+void keyboard_detach( const libusb_keyboard_device_t* );
 void keyboard_destroy( libusb_keyboard_device_t* );
 int keyboard_new_index( uint32_t* );
 int keyboard_duplicate_report( libusb_hid_parser_report_t**, const libusb_hid_parser_report_t*, size_t );

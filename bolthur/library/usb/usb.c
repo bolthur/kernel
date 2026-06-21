@@ -1033,6 +1033,59 @@ int usb_get_status( const uint32_t device_number, libusb_device_status_t* status
 }
 
 /**
+ * @fn int usb_stop_transmission(uint32_t)
+ * @brief Stop a device transmission
+ * @param device_number
+ * @return
+ */
+int usb_stop_transmission( const uint32_t device_number ) {
+  // debug output
+  #if defined( LIBUSB_ENABLE_DEBUG )
+    STARTUP_PRINT( "firing usb stop transmission\r\n" )
+  #endif
+  // allocate request
+  usbd_stop_transmission_t* request = malloc( sizeof( *request ) );
+  if ( ! request ) {
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate request\r\n" )
+    #endif
+    // return error
+    return ENOMEM;
+  }
+  // clear out everything
+  memset( request, 0, sizeof( *request ) );
+  // populate shm_id
+  request->device_number = device_number;
+  // perform request
+  const int result = ioctl(
+    fd_usbd,
+    IOCTL_BUILD_REQUEST(
+      USBD_STOP_TRANSMISSION,
+      sizeof( *request ),
+      IOCTL_RDWR
+    ),
+    request
+  );
+  // handle ioctl error
+  if ( -1 == result ) {
+    // debug output
+    #if defined( LIBUSB_ENABLE_ERROR )
+      const int e = errno;
+      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
+    #endif
+    // free request
+    free( request );
+    // return eio
+    return EIO;
+  }
+  // free control message
+  free( request );
+  // return result
+  return result;
+}
+
+/**
  * @fn int usb_interrupt_poll_async(uint32_t, libusb_transfer_t, uint32_t. libusb_direction_t, void*, size_t, size_t)
  * @brief Wrapper to perform async interrupt poll
  * @param device_number
@@ -1143,66 +1196,6 @@ int usb_interrupt_poll_async(
   free( control_request );
   // detach shared memory again
   _syscall_memory_shared_detach( shm_id );
-  // return result
-  return result;
-}
-
-/**
- * @brief Get enumerating status
- * @param out output variable
- * @return
- */
-int usb_get_enumerating( bool* out ) {
-  // validate parameter
-  if ( ! out ) {
-    #if defined( LIBUSB_ENABLE_DEBUG )
-      STARTUP_PRINT( "Invalid status parameter passed\r\n" )
-    #endif
-    // return einval
-    return EINVAL;
-  }
-  // debug output
-  #if defined( LIBUSB_ENABLE_DEBUG )
-    STARTUP_PRINT( "firing usb get enumerating\r\n" )
-  #endif
-  // allocate request
-  usbd_get_enumerating_t* request = malloc( sizeof( *request ) );
-  if ( ! request ) {
-    // debug output
-    #if defined( LIBUSB_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to allocate request\r\n" )
-    #endif
-    // return error
-    return ENOMEM;
-  }
-  // clear out everything
-  memset( request, 0, sizeof( *request ) );
-  // perform request
-  const int result = ioctl(
-    fd_usbd,
-    IOCTL_BUILD_REQUEST(
-      USBD_GET_ENUMERATING,
-      sizeof( *request ),
-      IOCTL_RDWR
-    ),
-    request
-  );
-  // handle ioctl error
-  if ( -1 == result ) {
-    // debug output
-    #if defined( LIBUSB_ENABLE_ERROR )
-      const int e = errno;
-      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
-    #endif
-    // free request
-    free( request );
-    // return eio
-    return EIO;
-  }
-  // copy over response
-  memcpy( out, request, sizeof ( bool ) );
-  // free control message
-  free( request );
   // return result
   return result;
 }

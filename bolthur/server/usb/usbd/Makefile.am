@@ -33,6 +33,7 @@ usbd_SOURCES = \
   libusbd/interrupt.c \
   libusbd/roothub.c \
   libusbd/string.c \
+  libusbd/transmission.c \
   rpc/attach/device.c \
   rpc/attach/roothub.c \
   rpc/control/message.c \
@@ -47,6 +48,7 @@ usbd_SOURCES = \
   rpc/handler/unregister.c \
   rpc/interrupt/generic.c \
   rpc/interrupt/poll.c \
+  rpc/stop/transmission.c \
   rpc/init.c \
   main.c
 usbd_LDFLAGS = -all-static --static

@@ -38,7 +38,7 @@ int usb_get_interface( uint32_t, uint32_t, libusb_interface_descriptor_t* );
 int usb_get_root_hub( uint32_t* );
 int usb_get_configuration( uint32_t, void** );
 int usb_get_status( uint32_t, libusb_device_status_t* );
-int usb_get_enumerating( bool* );
+int usb_stop_transmission( uint32_t );
 libusb_packet_size_t usb_packet_size_from_number( uint32_t );
 uint32_t usb_number_from_packet_size( libusb_packet_size_t );
 char* usb_speed_to_string( libusb_speed_t );

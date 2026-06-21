@@ -16,6 +16,7 @@ hcd_SOURCES = \
   rpc/default/timer.c \
   rpc/interrupt/handle.c \
   rpc/poll/interrupt.c \
+  rpc/stop/transmission.c \
   rpc/submit/message.c \
   rpc/init.c \
   dwhci.c \

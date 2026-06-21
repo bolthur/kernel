@@ -146,6 +146,7 @@ response_t dwhci_continue_next( channel_queue_entry_t* );
 response_t dwhci_next_usb_pid( dwhci_channel_state_t, uint32_t, uint8_t* );
 response_t dwhci_read_port( uint32_t, uint32_t* );
 response_t dwhci_write_port( uint32_t, uint32_t );
+response_t dwhci_cancel_by_device( uint32_t );
 response_t dwhci_power_on( void );
 response_t dwhci_core_flush_tx_fifo( uint32_t );
 response_t dwhci_core_flush_rx_fifo( void );

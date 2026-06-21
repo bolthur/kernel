@@ -18,78 +18,72 @@
  */
 
 #include <errno.h>
+#include <inttypes.h>
 #include <sys/bolthur.h>
-#include "../../keyboard.h"
 #include "../../rpc.h"
+#include "../../dwhci.h"
+#include "../../dwhciroothub.h"
+#include "../../../../../../libhcd.h"
 #include "../../../../../../libusbd.h"
-#include "../../../../../../../library/usb/usb.h"
 
 /**
- * @fn void rpc_keyboard_detach(size_t, pid_t, size_t, size_t)
- * @brief Register rpc handler detach
+ * @fn void rpc_stop_transmission(size_t, pid_t, size_t, size_t)
+ * @brief stop transmission rpc handler
  * @param type message type
  * @param origin origin of the message
  * @param data_info data id
  * @param response_info response info
  */
-void rpc_keyboard_detach(
+void rpc_stop_transmission(
   [[maybe_unused]] size_t type,
   pid_t origin,
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  vfs_ioctl_perform_response_t err_response = { .status = -EINVAL, };
-  // handle no data
-  if ( ! data_info ) {
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
-    return;
-  }
+  vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+    return;
+  }
+  // handle no data
+  if ( ! data_info ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // get data from mailbox
   size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox(
-    data_info, &data_size, true, NULL );
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
-    err_response.status = -ENOMSG;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    error.status = -EIO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
-  // get message
-  auto const message = ( usb_generic_detached_t* )request->container;
+  // allocate space for pull_request
+  auto const stop_message = ( usbd_stop_transmission_t* )request->container;
   // allocate response
   const size_t container_size = data_size - sizeof( vfs_ioctl_perform_request_t );
   const size_t response_size = container_size + sizeof( vfs_ioctl_perform_response_t );
   auto const response = ( vfs_ioctl_perform_response_t* )malloc( response_size );
   // handle error
   if ( ! response ) {
-    err_response.status = -ENOMEM;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    error.status = -ENOMEM;
+    bolthur_rpc_return( type, &error, sizeof( error ), nullptr, 0 );
     free( request );
     return;
   }
   memset( response, 0, response_size );
-  // get device by name
-  libusb_keyboard_device_t* device = keyboard_get_device( message->device_number );
-  // handle no device => success
-  if ( device ) {
-    // try to stop all transmissions
-    if ( 0 != usb_stop_transmission( device->device_number ) ) {
-      err_response.status = -EIO;
-      bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
-      free( request );
-      free( response );
-      return;
-    }
-    // finally destroy it
-    keyboard_destroy( device );
-  }
-  // return success
   memcpy( response->container, request->container, container_size );
-  bolthur_rpc_return( type, response, response_size, nullptr, 0 );
+  // cancel by device
+  if ( HCD_RESPONSE_OK != dwhci_cancel_by_device( stop_message->device_number ) ) {
+    error.status = -EIO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+    free( response );
+    return;
+  }
+  // return from rpc
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, sizeof( response_size ), nullptr, 0 );
+  // free response and request
   free( request );
   free( response );
 }

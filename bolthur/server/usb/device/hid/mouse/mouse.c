@@ -59,6 +59,20 @@ void mouse_append( libusb_mouse_device_t* mouse ) {
 }
 
 /**
+ * @fn void mouse_detach(const libusb_mouse_device_t*)
+ * @brief Removes mouse from list
+ * @param mouse
+ */
+void mouse_detach( const libusb_mouse_device_t* mouse ) {
+  if ( mouse->prev ) {
+    mouse->prev->next = mouse->next;
+  }
+  if ( mouse->next ) {
+    mouse->next->prev = mouse->prev;
+  }
+}
+
+/**
  * @fn int mouse_new_index(uint32_t*);
  * @brief Function to get new index
  * @param idx
@@ -94,6 +108,10 @@ void mouse_destroy( libusb_mouse_device_t* device ) {
   // handle no device
   if ( ! device ) {
     return;
+  }
+  // remove from list
+  if ( device->prev || device->next ) {
+    mouse_detach( device );
   }
   // free led report field
   if ( device->mouse_report ) {
