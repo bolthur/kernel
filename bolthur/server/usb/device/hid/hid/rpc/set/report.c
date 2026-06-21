@@ -46,19 +46,19 @@ void rpc_set_report(
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // get data from mailbox
   size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // allocate space for pull_request
@@ -69,15 +69,15 @@ void rpc_set_report(
   if ( 0 != result ) {
     error.status = -result;
     free( request );
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach( message->shm_id, ( uintptr_t )NULL  );
+  void* shm_addr = _syscall_memory_shared_attach( message->shm_id, 0  );
   if ( errno ) {
     error.status = -errno;
     free( request );
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   uint32_t last_transfer;
@@ -105,7 +105,7 @@ void rpc_set_report(
     _syscall_memory_shared_detach( message->shm_id );
     error.status = result;
     free( request );
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // handle error
@@ -113,7 +113,7 @@ void rpc_set_report(
     error.status = EIO;
     _syscall_memory_shared_detach( message->shm_id );
     free( request );
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // calculate request size
@@ -126,14 +126,14 @@ void rpc_set_report(
     error.status = -ENOMEM;
     _syscall_memory_shared_detach( message->shm_id );
     free( request );
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   memset( response, 0, response_size );
   // populate response
   memcpy( response->container, message, request_size );
   // return
-  bolthur_rpc_return( RPC_VFS_IOCTL, response, request_size + sizeof( vfs_ioctl_perform_response_t ), NULL, 0 );
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, request_size + sizeof( vfs_ioctl_perform_response_t ), nullptr, 0 );
   // free request and response
   free( request );
   free( response );

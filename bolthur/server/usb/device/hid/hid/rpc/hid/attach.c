@@ -132,7 +132,7 @@ void rpc_hid_attach(
   // get data from mailbox
   size_t data_size;
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox(
-    data_info, &data_size, true, NULL );
+    data_info, &data_size, true, nullptr );
   if ( ! request ) {
     EARLY_STARTUP_PRINT( "NO MESSAGE\r\n" )
     err_response.status = -ENOMEM;
@@ -279,7 +279,7 @@ void rpc_hid_attach(
   }
   // find descriptor of hid
   libusb_descriptor_header_t* original_header = header;
-  libusb_hid_descriptor_t* descriptor = NULL;
+  libusb_hid_descriptor_t* descriptor = nullptr;
   uint32_t interface_number = message->interface_number + 1;
   do {
     // handle end reached

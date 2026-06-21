@@ -182,7 +182,7 @@ int usbd_address_set(
         dev->descriptor.max_packet_size0
       ),
     },
-    NULL,
+    nullptr,
     0,
     &( libusb_device_request_t ){
       .request = LIBUSB_DEVICE_REQUEST_SET_ADDRESS,

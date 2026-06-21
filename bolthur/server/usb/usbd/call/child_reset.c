@@ -60,13 +60,13 @@ int call_child_reset( const libusb_device_t* parent, const libusb_device_t* chil
     parent->device_child_reset_handler,
     request,
     request_size,
-    NULL,
+    nullptr,
     GENERIC_CHILD_RESET,
     request,
     request_size,
     0,
     0,
-    NULL,
+    nullptr,
     true,
     false
   );

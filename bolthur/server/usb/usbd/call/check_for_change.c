@@ -58,13 +58,13 @@ int call_check_for_change( const libusb_device_t* dev ) {
     dev->device_check_for_change_handler,
     request,
     request_size,
-    NULL,
+    nullptr,
     GENERIC_CHECK_FOR_CHANGE,
     request,
     request_size,
     0,
     0,
-    NULL,
+    nullptr,
     true,
     false
   );

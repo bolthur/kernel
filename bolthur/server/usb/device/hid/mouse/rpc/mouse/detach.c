@@ -52,7 +52,7 @@ void rpc_mouse_detach(
   // get data from mailbox
   size_t data_size;
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox(
-    data_info, &data_size, true, NULL );
+    data_info, &data_size, true, nullptr );
   if ( ! request ) {
     err_response.status = -ENOMSG;
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );

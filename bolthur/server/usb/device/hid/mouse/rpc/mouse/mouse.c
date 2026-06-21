@@ -53,7 +53,7 @@ void rpc_mouse_mouse(
   }
   // get data from mailbox
   size_t data_size;
-  vfs_ioctl_perform_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_ioctl_perform_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! response ) {
     _syscall_rpc_cleanup();
     return;

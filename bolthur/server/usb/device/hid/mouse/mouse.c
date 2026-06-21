@@ -233,6 +233,6 @@ libusb_mouse_device_t* mouse_get_device(const uint32_t device_number) {
     // switch to next
     current = current->next;
   }
-  // return null
+  // return nullptr
   return nullptr;
 }

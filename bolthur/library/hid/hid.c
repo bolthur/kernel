@@ -358,7 +358,7 @@ int hid_get_report(
   }
   // attach it
   // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
+  void* shm_addr = _syscall_memory_shared_attach( shm_id, 0 );
   // handle error
   if ( errno ) {
     const int e = errno;
@@ -522,7 +522,7 @@ int hid_set_report( const uint32_t device_number, const uint8_t report_type, con
   }
   // attach it
   // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
+  void* shm_addr = _syscall_memory_shared_attach( shm_id, 0 );
   // handle error
   if ( errno ) {
     const int e = errno;

@@ -58,13 +58,13 @@ int call_detached( const libusb_device_t* dev ) {
     dev->device_detached_handler,
     request,
     request_size,
-    NULL,
+    nullptr,
     GENERIC_DETACH,
     request,
     request_size,
     0,
     0,
-    NULL,
+    nullptr,
     true,
     false
   );

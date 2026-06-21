@@ -32,7 +32,7 @@
 /**
  * @brief Head of keyboard device list
  */
-libusb_keyboard_device_t* keyboard_head = NULL;
+libusb_keyboard_device_t* keyboard_head = nullptr;
 
 /**
  * @fn void keyboard_append(libusb_keyboard_device_t*)
@@ -42,7 +42,7 @@ libusb_keyboard_device_t* keyboard_head = NULL;
 void keyboard_append( libusb_keyboard_device_t* keyboard ) {
   // loop to last one
   libusb_keyboard_device_t* current = keyboard_head;
-  libusb_keyboard_device_t* found = NULL;
+  libusb_keyboard_device_t* found = nullptr;
   while ( current ) {
     found = current;
     current = current->next;
@@ -50,8 +50,8 @@ void keyboard_append( libusb_keyboard_device_t* keyboard ) {
   // handle empty
   if ( ! found ) {
     keyboard_head = keyboard;
-    keyboard->prev = NULL;
-    keyboard->next = NULL;
+    keyboard->prev = nullptr;
+    keyboard->next = nullptr;
     return;
   }
   // attach to list
@@ -238,7 +238,7 @@ libusb_keyboard_device_t* keyboard_get_device(const uint32_t device_number) {
     // switch to next
     current = current->next;
   }
-  // return null
+  // return nullptr
   return nullptr;
 }
 

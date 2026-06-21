@@ -60,13 +60,13 @@ int call_child_check_connection( const libusb_device_t* parent, const libusb_dev
     parent->device_check_connection_handler,
     request,
     request_size,
-    NULL,
+    nullptr,
     GENERIC_CHILD_CHECK_CONNECTION,
     request,
     request_size,
     0,
     0,
-    NULL,
+    nullptr,
     true,
     false
   );

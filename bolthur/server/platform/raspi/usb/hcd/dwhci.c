@@ -574,7 +574,7 @@ response_t dwhci_queue_remove_entry( channel_queue_entry_t* entry, const bool fr
     configuration.list = entry->next;
     // handle list valid
     if ( configuration.list ) {
-      // set prev of list to null
+      // set prev of list to nullptr
       configuration.list->prev = nullptr;
     }
   } else {
@@ -1152,7 +1152,7 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Handling finished request\r\n" )
   #endif
-  // handle transfer size not null
+  // handle transfer size
   if ( entry->transferred ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )

@@ -27,7 +27,7 @@
  * @return
  */
 libusb_device_t* usbd_roothub_get( void ) {
-  // return first device or null if not set
+  // return first device or nullptr if not set
   return head && head->number == 1 ? head : nullptr;
 }
 

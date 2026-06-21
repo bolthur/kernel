@@ -58,7 +58,7 @@ void rpc_hub_attach(
   // get data from mailbox
   size_t data_size;
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox(
-    data_info, &data_size, true, NULL );
+    data_info, &data_size, true, nullptr );
   if ( ! request ) {
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;

@@ -60,13 +60,13 @@ int call_child_detached( const libusb_device_t* parent, const libusb_device_t* c
     parent->device_child_detached_handler,
     request,
     request_size,
-    NULL,
+    nullptr,
     GENERIC_CHILD_DETACHED,
     request,
     request_size,
     0,
     0,
-    NULL,
+    nullptr,
     true,
     false
   );
