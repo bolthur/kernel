@@ -96,7 +96,6 @@ int usbd_allocate_device( libusb_device_t** dev, const bool insert_head ) {
   ( *dev )->configuration_index = 0xff;
   // setup handlers with invalid pid
   ( *dev )->device_detached_handler = 0;
-  ( *dev )->device_deallocate_handler = 0;
   ( *dev )->device_check_for_change_handler = 0;
   ( *dev )->device_child_detached_handler = 0;
   ( *dev )->device_child_reset_handler = 0;

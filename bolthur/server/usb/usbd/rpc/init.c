@@ -119,5 +119,11 @@ bool rpc_init( void ) {
     STARTUP_PRINT( "Unable to register stop transmission handler!\r\n" )
     return false;
   }
+  // register handler detach device
+  bolthur_rpc_bind( USBD_DETACH_DEVICE, rpc_detach_device, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register detach device handler!\r\n" )
+    return false;
+  }
   return true;
 }

@@ -334,3 +334,46 @@ void usbd_context_control_destroy( usbd_control_context_t* ctx ) {
   }
   free( ctx );
 }
+
+/**
+ * @fn int usbd_context_deallocate_create(rpc_handler_t, libusb_device_t*, void*, usbd_deallocate_context_t**)
+ * @brief Create deallocation context
+ * @param handler
+ * @param dev
+ * @param additional_context
+ * @param ctx
+ * @return
+ */
+int usbd_context_deallocate_create( const rpc_handler_t handler, libusb_device_t* dev, void* additional_context, usbd_deallocate_context_t** ctx ) {
+  // allocate additional context
+  *ctx = malloc( sizeof( usbd_deallocate_context_t ) );
+  // handle error
+  if ( ! *ctx ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
+    #endif
+    // return error
+    return ENOMEM;
+  }
+  // clear out context
+  memset( *ctx, 0, sizeof( usbd_control_context_t ) );
+  // populate context
+  ( *ctx )->device = dev;
+  ( *ctx )->handler = handler;
+  ( *ctx )->context = additional_context;
+  // return success
+  return 0;
+}
+
+/**
+ * @fn void usbd_context_deallocate_destroy(usbd_deallocate_context_t*)
+ * @brief destroy deallocation context
+ * @param ctx
+ */
+void usbd_context_deallocate_destroy( usbd_deallocate_context_t* ctx ) {
+  if ( ! ctx ) {
+    return;
+  }
+  free( ctx );
+}

@@ -37,6 +37,7 @@ usbd_SOURCES = \
   rpc/attach/device.c \
   rpc/attach/roothub.c \
   rpc/control/message.c \
+  rpc/detach/device.c \
   rpc/get/configuration.c \
   rpc/get/description.c \
   rpc/get/descriptor.c \

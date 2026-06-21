@@ -233,7 +233,6 @@ int handler_call_attach(
     return 0;
   }
   // set handler pids for device
-  device->device_deallocate_handler = handler;
   device->device_detached_handler = handler;
   // generate request
   constexpr size_t request_size = sizeof( vfs_ioctl_perform_request_t ) + sizeof( usb_generic_attach_t );
@@ -293,7 +292,6 @@ int handler_call_detach(
     return 0;
   }
   // set handler pids for device
-  device->device_deallocate_handler = handler;
   device->device_detached_handler = handler;
   // generate request
   constexpr size_t request_size = sizeof( vfs_ioctl_perform_request_t ) + sizeof( usb_generic_detached_t );

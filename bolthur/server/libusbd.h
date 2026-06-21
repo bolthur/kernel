@@ -64,6 +64,7 @@
 #define USBD_GET_STATUS ( USBD_GET_CONFIGURATION + 1 )
 #define USBD_POLL_INTERRUPT ( USBD_GET_STATUS + 1 )
 #define USBD_STOP_TRANSMISSION ( USBD_POLL_INTERRUPT + 1 )
+#define USBD_DETACH_DEVICE ( USBD_STOP_TRANSMISSION + 1 )
 
 // generic usb rpc structures
 typedef struct {
@@ -217,6 +218,10 @@ typedef struct {
   // place for return
   uint32_t device_number;
 } usbd_attach_device_t;
+
+typedef struct {
+  uint32_t device_number;
+} usbd_detach_device_t;
 
 typedef struct {
   uint32_t device_number;

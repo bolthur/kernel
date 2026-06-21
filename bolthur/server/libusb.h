@@ -321,7 +321,6 @@ typedef struct libusb_device {
   // processes responsible for generic detach and deallocate
   pid_t device_attached_handler;
   pid_t device_detached_handler;
-  pid_t device_deallocate_handler;
   // processes responsible for hub actions check for change, child detached
   // child reset and check connection
   pid_t device_check_for_change_handler;
@@ -737,7 +736,6 @@ typedef struct libusb_hid_device {
   libusb_driver_data_header* driver_data;
 
   pid_t device_detached_handler;
-  pid_t device_deallocate_handler;
 
   uint32_t device_number;
 

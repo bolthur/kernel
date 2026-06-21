@@ -59,8 +59,7 @@ int call_attach(
   }
   // set handler pids for device
   dev->device_attached_handler = handler;
-  //dev->device_detached_handler = handler;
-  //dev->device_deallocate_handler = handler;
+  dev->device_detached_handler = handler;
   //dev->device_check_for_change_handler = handler;
   //dev->device_child_detached_handler = handler;
   //dev->device_child_reset_handler = handler;

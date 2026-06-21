@@ -38,5 +38,6 @@ void rpc_handler_unregister( size_t, pid_t, size_t, size_t );
 void rpc_interrupt_poll( size_t, pid_t, size_t, size_t );
 void rpc_interrupt_generic( size_t, pid_t, size_t, size_t );
 void rpc_stop_transmission( size_t, pid_t, size_t, size_t );
+void rpc_detach_device( size_t, pid_t, size_t, size_t );
 
 #endif

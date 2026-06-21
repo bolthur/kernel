@@ -29,7 +29,7 @@
 #endif
 
 int call_attach( libusb_device_t*, uint32_t, rpc_handler_t, usbd_attach_context_t* );
-int call_detached( const libusb_device_t* );
+int call_detached( const libusb_device_t*, rpc_handler_t, void*, size_t, pid_t, size_t, usbd_deallocate_context_t* );
 int call_check_for_change( const libusb_device_t* );
 int call_child_detached( const libusb_device_t*, const libusb_device_t* );
 int call_child_reset( const libusb_device_t*, const libusb_device_t* );

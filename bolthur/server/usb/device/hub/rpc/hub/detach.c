@@ -22,7 +22,6 @@
 #include "../../hub.h"
 #include "../../rpc.h"
 #include "../../../libusbd.h"
-#include "../../../../../../library/usb/usb.h"
 
 /**
  * @fn void rpc_hub_detach(size_t, pid_t, size_t, size_t)
@@ -43,12 +42,12 @@ void rpc_hub_detach(
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL, };
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // get data from mailbox
@@ -57,7 +56,7 @@ void rpc_hub_detach(
     data_info, &data_size, true, nullptr );
   if ( ! request ) {
     err_response.status = -ENOMSG;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // get message
@@ -69,7 +68,7 @@ void rpc_hub_detach(
   // handle error
   if ( ! response ) {
     err_response.status = -ENOMEM;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -77,21 +76,41 @@ void rpc_hub_detach(
   // get device by name
   libusb_hub_device_t* device = hub_get( message->device_number );
   // handle no device => success
-  if ( device ) {
-    // try to stop all transmissions
-    if ( 0 != usb_stop_transmission( device->device_number ) ) {
-      err_response.status = -EIO;
-      bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
-      free( request );
-      free( response );
-      return;
-    }
-    // finally destroy it
-    hub_destroy( device );
+  if ( ! device ) {
+    // return success
+    memcpy( response->container, request->container, container_size );
+    bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, 0 );
+    free( request );
+    free( response );
+    return;
   }
-  // return success
-  memcpy( response->container, request->container, container_size );
-  bolthur_rpc_return( type, response, response_size, nullptr, 0 );
+  // evaluate to detach
+  size_t to_detach = 0;
+  for ( size_t idx = 0; idx < device->max_children; idx++ ) {
+    if ( device->children[ idx ] ) {
+      to_detach++;
+    }
+  }
+  // handle nothing to detach
+  if ( 0 == to_detach ) {
+    // return success
+    memcpy( response->container, request->container, container_size );
+    bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, 0 );
+    free( request );
+    free( response );
+    return;
+  }
+  // start detach
+  const int result = hub_perform_detach( device, to_detach, origin, data_info );
+  if ( 0 != result ) {
+    // return error
+    response->status = -result;
+    memcpy( response->container, request->container, container_size );
+    bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, 0 );
+    free( request );
+    free( response );
+    return;
+  }
   free( request );
   free( response );
 }

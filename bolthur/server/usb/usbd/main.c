@@ -73,8 +73,9 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     USBD_POLL_INTERRUPT,
     GENERIC_POLL_INTERRUPT,
     USBD_STOP_TRANSMISSION,
+    USBD_DETACH_DEVICE,
   };
-  if ( ! vfs_dev_add_file( USBD_DEVICE_PATH, device_info, 15, nullptr ) ) {
+  if ( ! vfs_dev_add_file( USBD_DEVICE_PATH, device_info, 16, nullptr ) ) {
     STARTUP_PRINT( "Unable to add dev usbd\r\n" )
     return -1;
   }

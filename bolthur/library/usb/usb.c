@@ -670,6 +670,102 @@ int usb_attach_device(
 }
 
 /**
+ * @fn int usb_detach_device(uint32_t, const rpc_handler_t, void*, pid_t, size_t)
+ * @brief Usb detach device by number
+ * @param device_number
+ * @param callback
+ * @param context
+ * @param origin
+ * @param data_info
+ * @return
+ */
+int usb_detach_device(
+  const uint32_t device_number,
+  const rpc_handler_t callback,
+  void* context,
+  const pid_t origin,
+  const size_t data_info
+) {
+  // debug message
+  #if defined( LIBUSB_ENABLE_DEBUG )
+    STARTUP_PRINT( "Detaching device %"PRIu32"\r\n", device_number )
+  #endif
+  // allocate device
+  usbd_detach_device_t* request = malloc( sizeof( *request ) );
+  // handle error
+  if ( ! request ) {
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate request\r\n" )
+    #endif
+    // return nomem
+    return ENOMEM;
+  }
+  // clear out
+  memset( request, 0, sizeof( *request ) );
+  // copy over necessary data
+  request->device_number = device_number;
+  // calculate rpc request size
+  constexpr size_t rpc_request_size = sizeof( vfs_ioctl_perform_request_t )
+    + sizeof( *request );
+  // allocate rpc structures
+  vfs_ioctl_perform_request_t* rpc_request = malloc( rpc_request_size );
+  if ( ! rpc_request ) {
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate request\r\n" )
+    #endif
+    // free control request
+    free( request );
+    // return error
+    return ENOMEM;
+  }
+  // clear rpc structures
+  memset( rpc_request, 0, rpc_request_size );
+  // populate structure
+  rpc_request->handle = fd_usbd;
+  rpc_request->command = USBD_DETACH_DEVICE;
+  rpc_request->type = IOCTL_RDWR;
+  // copy over data
+  memcpy( rpc_request->container, request, sizeof( *request ) );
+  EARLY_STARTUP_PRINT( "origin = %d, data_info = %zu\r\n", origin, data_info )
+  // raise rpc and wait for return
+  const size_t response_id = bolthur_rpc_raise(
+    RPC_VFS_IOCTL,
+    VFS_DAEMON_ID,
+    rpc_request,
+    rpc_request_size,
+    callback,
+    RPC_VFS_IOCTL,
+    rpc_request,
+    rpc_request_size,
+    origin,
+    data_info,
+    context,
+    false
+  );
+  if ( ! response_id ) {
+    // debug output
+    #if defined( LIBUSB_ENABLE_ERROR )
+      const int e = errno;
+      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
+    #endif
+    // free request data
+    free( rpc_request );
+    // free control request
+    free( request );
+    // return io error
+    return EIO;
+  }
+  // free request data
+  free( rpc_request );
+  // free control request
+  free( request );
+  // return success
+  return 0;
+}
+
+/**
  * @fn int usb_register_handler(libusb_interface_class_t)
  * @brief Method to attach a new discovered device
  * @param type

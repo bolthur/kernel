@@ -115,6 +115,18 @@ typedef struct {
   void* context;
 } usbd_control_context_t;
 
+/**
+ * @brief USBD deallocation context
+ */
+typedef struct {
+  /** handler to be called once finished */
+  rpc_handler_t handler;
+  /** device to deallocate */
+  libusb_device_t* device;
+  /** additional context */
+  void* context;
+} usbd_deallocate_context_t;
+
 // address
 int usbd_address_set( libusb_device_t*, uint8_t, rpc_handler_t, usbd_attach_context_t* );
 // allocate
@@ -136,11 +148,13 @@ int usbd_context_configuration_create( rpc_handler_t, void*, uint8_t, usbd_confi
 void usbd_context_configuration_destroy( usbd_configuration_context_t* );
 int usbd_context_control_create( rpc_handler_t, void*, usbd_control_context_t**);
 void usbd_context_control_destroy( usbd_control_context_t* );
+int usbd_context_deallocate_create( rpc_handler_t, libusb_device_t*, void*, usbd_deallocate_context_t** );
+void usbd_context_deallocate_destroy( usbd_deallocate_context_t* );
 // control
 int usbd_control_message( libusb_device_t*, libusb_pipe_address_t, void*, size_t, const libusb_device_request_t*, size_t );
 int usbd_control_message_async( const libusb_device_t*, libusb_pipe_address_t, const void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t, pid_t, size_t, void*, size_t, void*, size_t );
 // deallocate
-void usbd_deallocate_device( libusb_device_t* );
+void usbd_deallocate_device( libusb_device_t*, rpc_handler_t, void*, size_t, pid_t, size_t, void* );
 // description
 const char* usbd_description_get( const libusb_device_t* );
 // descriptor

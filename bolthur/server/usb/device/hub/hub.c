@@ -495,6 +495,180 @@ int hub_port_reset(
 }
 
 /**
+ * @brief Single hub entry detach finished
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+static void rpc_hub_detach_finished(
+  [[maybe_unused]] size_t type,
+  pid_t origin,
+  size_t data_info,
+  size_t response_info
+) {
+  vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
+  auto const async_data = bolthur_rpc_pop_async( RPC_VFS_IOCTL, response_info );
+  // handle no async data
+  if ( ! async_data ) {
+    // cleanup
+    _syscall_rpc_cleanup();
+    // skip rest
+    return;
+  }
+  // get context
+  auto const ctx = ( hub_detach_context_t* )async_data->context;
+  // decrement to attach amount
+  ctx->to_detach--;
+  // handle no data
+  if ( ! data_info ) {
+    #if defined ( HUB_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "No data\r\n" )
+    #endif
+    if ( ! ctx->to_detach ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+      free( ctx );
+    } else {
+      _syscall_rpc_cleanup();
+    }
+    return;
+  }
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    #if defined ( HUB_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "invalid origin\r\n" )
+    #endif
+    if ( ! ctx->to_detach ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+      free( ctx );
+    } else {
+      _syscall_rpc_cleanup();
+    }
+    return;
+  }
+  // get attach response
+  size_t data_size;
+  vfs_ioctl_perform_response_t* detach_response = bolthur_rpc_fetch_from_mailbox(
+    data_info, &data_size, true, nullptr );
+  if ( ! detach_response ) {
+    #if defined ( HUB_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "nothing in mailbox\r\n" )
+    #endif
+    if ( ! ctx->to_detach ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+      free( ctx );
+    } else {
+      _syscall_rpc_cleanup();
+    }
+    return;
+  }
+  // clear device
+  ctx->hub->children[ ctx->idx++ ] = 0;
+  // evaluate next index
+  if ( ctx->to_detach ) {
+    // get next to detach
+    const size_t old_index = ctx->idx;
+    for ( size_t idx = ctx->idx; idx < 255; idx++ ) {
+      if ( ctx->hub->children[ idx ] ) {
+        ctx->idx = idx;
+        break;
+      }
+    }
+    // handle not the same, should everytime happen
+    if ( old_index != ctx->idx ) {
+      // call detach
+      const int result = usb_detach_device(
+        ctx->hub->children[ ctx->idx ],
+        rpc_hub_detach_finished,
+        ctx,
+        ctx->origin,
+        ctx->data_info
+      );
+      // handle error
+      if ( result != 0 ) {
+        #if defined ( HUB_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "failed to detach device\r\n" )
+        #endif
+        free( ctx );
+        free( detach_response );
+        err_response.status = -result;
+        bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+        return;
+      }
+    }
+    // skip rest
+    return;
+  }
+  // try to stop all transmissions
+  if ( 0 != usb_stop_transmission( ctx->hub->device_number ) ) {
+    err_response.status = -EIO;
+    free( detach_response );
+    free( ctx );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    return;
+  }
+  // finally destroy it
+  hub_destroy( ctx->hub );
+  // return success by clearing err response
+  memset( &err_response, 0, sizeof( err_response ) );
+  bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+}
+
+/**
+ * @fn int hub_perform_detach(libusb_hub_device_t*, size_t, pid_t, size_t)
+ * @brief Hub perform detach
+ * @param hub hub to detach
+ * @param to_detach detach count
+ * @param origin origin
+ * @param data_info data info
+ * @return
+ */
+int hub_perform_detach(
+  libusb_hub_device_t* hub,
+  const size_t to_detach,
+  const pid_t origin,
+  const size_t data_info
+) {
+  // allocate context
+  hub_detach_context_t* ctx = malloc( sizeof( hub_detach_context_t ) );
+  if ( ! ctx ) {
+    return ENOMEM;
+  }
+  // clear out
+  memset( ctx, 0, sizeof( hub_detach_context_t ) );
+  // populate
+  ctx->hub = hub;
+  ctx->to_detach = to_detach;
+  ctx->data_info = data_info;
+  ctx->origin = origin;
+  // find first to detach
+  for ( size_t idx = 0; idx < 255; idx++ ) {
+    if ( ctx->hub->children[ idx ] ) {
+      ctx->idx = idx;
+      break;
+    }
+  }
+  // call detach
+  const int result = usb_detach_device(
+    ctx->hub->children[ ctx->idx ],
+    rpc_hub_detach_finished,
+    ctx,
+    origin,
+    data_info
+  );
+  // handle error
+  if ( result != 0 ) {
+    #if defined ( HUB_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "failed to call detach first device\r\n" )
+    #endif
+    free( ctx );
+    return result;
+  }
+  // return success
+  return 0;
+}
+
+/**
  * @fn void hub_attach_finished( size_t, pid_t, size_t, size_t )
  * @brief Single port attach finished callback
  * @param type
@@ -604,6 +778,7 @@ static void hub_attach_finished(
           EARLY_STARTUP_PRINT( "Unable to check connection for port: %"PRIu8"\r\n",
             ( uint8_t )port)
         #endif
+        free( ctx );
         free( attach_response );
         err_response.status = -result;
         bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );

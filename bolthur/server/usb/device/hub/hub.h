@@ -44,6 +44,22 @@ typedef struct {
   uint32_t device_number;
 } hub_attach_context_t;
 
+/**
+ * @brief Hub detach context
+ */
+typedef struct {
+  /** detach count */
+  size_t to_detach;
+  /** index detach is running for */
+  uint32_t idx;
+  /** hub data */
+  libusb_hub_device_t* hub;
+  /** origin process */
+  pid_t origin;
+  /** data info */
+  size_t data_info;
+} hub_detach_context_t;
+
 void hub_append( libusb_hub_device_t* );
 void hub_detach( const libusb_hub_device_t* );
 void hub_destroy( libusb_hub_device_t* );
@@ -57,5 +73,6 @@ int hub_port_reset( uint32_t, libusb_hub_device_t*, uint8_t );
 int hub_port_connection_changed( uint32_t, libusb_hub_device_t*, uint8_t, hub_attach_context_t* );
 int hub_shall_to_attach( uint32_t, libusb_hub_device_t*, uint8_t, uint32_t, bool* );
 int hub_check_connection( uint32_t, libusb_hub_device_t*, uint8_t, hub_attach_context_t* );
+int hub_perform_detach( libusb_hub_device_t*, size_t, pid_t, size_t );
 
 #endif
