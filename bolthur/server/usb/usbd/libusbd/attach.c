@@ -49,7 +49,7 @@ static void attach_attach_finished(
     // skip rest
     return;
   }
-  // get contexts
+  // get context
   usbd_attach_context_t* ctx = async_data->context;
   assert( ctx );
   // dummy error response

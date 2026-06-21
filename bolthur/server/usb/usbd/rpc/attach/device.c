@@ -96,6 +96,8 @@ static void rpc_attach_device_finished(
   // copy over result
   response->status = attach_response->status;
   memcpy( response->container, request->container, container_size );
+  // populate device number into data
+  ( ( usbd_attach_device_t* )request->container )->device_number = ctx->device->number;
   // return from rpc
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, async_data, 0 );
   // free response

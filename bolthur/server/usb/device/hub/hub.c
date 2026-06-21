@@ -84,6 +84,55 @@ void hub_append( libusb_hub_device_t* hub ) {
 }
 
 /**
+ * @fn void hub_detach(const libusb_hub_device_t*)
+ * @brief Detach hub from list
+ * @param hub
+ */
+void hub_detach( const libusb_hub_device_t* hub ) {
+  if ( hub->prev ) {
+    hub->prev->next = hub->next;
+  }
+  if ( hub->next ) {
+    hub->next->prev = hub->prev;
+  }
+  if ( hub == hub_head ) {
+    hub_head = hub->next;
+  }
+}
+
+/**
+ * @fn void hub_destroy(libusb_hub_device_t*)
+ * @brief Destroy hub
+ * @param hub
+ */
+void hub_destroy( libusb_hub_device_t* hub ) {
+  if ( hub->prev || hub->next ) {
+    hub_detach( hub );
+  }
+  if ( hub->descriptor ) {
+    free( hub->descriptor );
+  }
+  free( hub );
+}
+
+/**
+ * @fn libusb_hub_device_t* hub_get(uint32_t)
+ * @brief Get hub by device number
+ * @param device_number
+ * @return
+ */
+libusb_hub_device_t* hub_get( const uint32_t device_number ) {
+  auto current = hub_head;
+  while ( current ) {
+    if ( current->device_number == device_number ) {
+      return current;
+    }
+    current = current->next;
+  }
+  return nullptr;
+}
+
+/**
  * @fn int hub_read_descriptor(uint32_t, void**)
  * @brief Read up descriptor
  * @param device_number
@@ -526,6 +575,10 @@ static void hub_attach_finished(
     }
     return;
   }
+  // get attach data
+  auto const attach = ( usbd_attach_device_t* )attach_response->container;
+  // cache children
+  ctx->hub->children[ ctx->port_number ] = attach->device_number;
   // further attachments
   if ( ++ctx->port_number < ctx->hub->max_children ) {
     // check for connection
@@ -540,6 +593,7 @@ static void hub_attach_finished(
         #if defined ( HUB_ENABLE_DEBUG )
           EARLY_STARTUP_PRINT( "Attach needs to continue async\r\n" )
         #endif
+        free( attach_response );
         // cleanup and wait for next response
         _syscall_rpc_cleanup();
         return;
@@ -550,6 +604,7 @@ static void hub_attach_finished(
           EARLY_STARTUP_PRINT( "Unable to check connection for port: %"PRIu8"\r\n",
             ( uint8_t )port)
         #endif
+        free( attach_response );
         err_response.status = -result;
         bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
         return;
@@ -562,12 +617,14 @@ static void hub_attach_finished(
     #if defined( HUB_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Successfully attached the hub\r\n")
     #endif
+    free( attach_response );
     memset( &err_response, 0, sizeof( err_response ) );
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     free( ctx );
-  } else {
-    _syscall_rpc_cleanup();
+    return;
   }
+  free( attach_response );
+  _syscall_rpc_cleanup();
 }
 
 /**

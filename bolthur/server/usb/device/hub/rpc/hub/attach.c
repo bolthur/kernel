@@ -153,7 +153,7 @@ void rpc_hub_attach(
   if ( 0 != result ) {
     err_response.status = -result;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
-    free( hub );
+    hub_destroy( hub );
     free( request );
     return;
   }
@@ -178,8 +178,7 @@ void rpc_hub_attach(
         hub->descriptor->attributes.power_switching_mode,
         usb_get_description( message->device_number ) )
     #endif
-    free( descriptor );
-    free( hub );
+    hub_destroy( hub );
     free( request );
     err_response.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
@@ -216,8 +215,7 @@ void rpc_hub_attach(
         hub->descriptor->attributes.power_switching_mode,
         usb_get_description( message->device_number ) )
     #endif
-    free( descriptor );
-    free( hub );
+    hub_destroy( hub );
     free( request );
     err_response.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
@@ -249,8 +247,7 @@ void rpc_hub_attach(
       EARLY_STARTUP_PRINT( "Unable to fetch hub status for %s: %s\r\n",
         usb_get_description( message->device_number ), strerror( result ) )
     #endif
-    free( descriptor );
-    free( hub );
+    hub_destroy( hub );
     free( request );
     err_response.status = -result;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
@@ -271,8 +268,7 @@ void rpc_hub_attach(
     #if defined ( HUB_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to retrieve root hub: %s\r\n", strerror( result ) )
     #endif
-    free( descriptor );
-    free( hub );
+    hub_destroy( hub );
     free( request );
     err_response.status = -result;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
@@ -290,8 +286,7 @@ void rpc_hub_attach(
       #if defined ( HUB_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Unable to power on hub!\r\n" )
       #endif
-      free( descriptor );
-      free( hub );
+      hub_destroy( hub );
       free( request );
       err_response.status = -result;
       bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
@@ -310,8 +305,7 @@ void rpc_hub_attach(
       EARLY_STARTUP_PRINT( "Unable to get hub status for %s: %s\r\n",
         usb_get_description( message->device_number ), strerror( result ) )
     #endif
-    free( descriptor );
-    free( hub );
+    hub_destroy( hub );
     free( request );
     err_response.status = -result;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
@@ -336,8 +330,7 @@ void rpc_hub_attach(
         EARLY_STARTUP_PRINT( "Unable to check for shall attach of port %"PRIu8"\r\n",
           ( uint8_t )port)
       #endif
-      free( descriptor );
-      free( hub );
+      hub_destroy( hub );
       free( request );
       err_response.status = -result;
       bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
@@ -354,8 +347,7 @@ void rpc_hub_attach(
       #if defined ( HUB_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Unable to allocate memory for context\r\n" )
       #endif
-      free( descriptor );
-      free( hub );
+      hub_destroy( hub );
       free( request );
       err_response.status = -ENOMEM;
       bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
@@ -392,8 +384,7 @@ void rpc_hub_attach(
           ( uint8_t )port)
       #endif
       free( ctx );
-      free( descriptor );
-      free( hub );
+      hub_destroy( hub );
       free( request );
       err_response.status = -result;
       bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );

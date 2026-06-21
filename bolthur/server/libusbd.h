@@ -214,6 +214,8 @@ typedef struct {
   uint32_t parent_number;
   uint32_t port_number;
   libusb_speed_t speed;
+  // place for return
+  uint32_t device_number;
 } usbd_attach_device_t;
 
 typedef struct {

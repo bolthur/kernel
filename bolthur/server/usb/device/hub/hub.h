@@ -45,6 +45,9 @@ typedef struct {
 } hub_attach_context_t;
 
 void hub_append( libusb_hub_device_t* );
+void hub_detach( const libusb_hub_device_t* );
+void hub_destroy( libusb_hub_device_t* );
+libusb_hub_device_t* hub_get( uint32_t );
 int hub_read_descriptor( uint32_t, void** );
 int hub_get_status( uint32_t, libusb_hub_device_t* );
 int hub_change_port_feature( uint32_t, libusb_hub_port_feature_t, uint8_t, bool );
