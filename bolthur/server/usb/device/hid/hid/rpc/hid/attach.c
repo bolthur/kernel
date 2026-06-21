@@ -94,6 +94,7 @@ static void rpc_hid_attach_finished(
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, async_data, 0 );
   // free response
   free( response );
+  free( attach_response );
 }
 
 /**

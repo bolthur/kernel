@@ -39,11 +39,8 @@ void hid_destroy_device( libusb_hid_device_t* device ) {
     return;
   }
   // remove from list
-  if ( device->prev ) {
-    device->prev->next = device->next;
-  }
-  if ( device->next ) {
-    device->next->prev = device->prev;
+  if ( device->prev || device->next ) {
+    hid_detach( device );
   }
   // handle parser result set
   if ( device->parser_result ) {
@@ -692,6 +689,23 @@ void hid_append( libusb_hid_device_t* hid ) {
   // attach to list
   found->next = hid;
   hid->prev = found;
+}
+
+/**
+ * @fn void hid_detach(const libusb_hid_device_t*)
+ * @brief Detach hid from list
+ * @param hid
+ */
+void hid_detach( const libusb_hid_device_t* hid ) {
+  if ( hid->prev ) {
+    hid->prev->next = hid->next;
+  }
+  if ( hid->next ) {
+    hid->next->prev = hid->prev;
+  }
+  if ( hid == hid_head ) {
+    hid_head = hid->next;
+  }
 }
 
 /**

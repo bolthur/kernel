@@ -71,6 +71,9 @@ void keyboard_detach( const libusb_keyboard_device_t* keyboard ) {
   if ( keyboard->next ) {
     keyboard->next->prev = keyboard->prev;
   }
+  if ( keyboard == keyboard_head ) {
+    keyboard_head = keyboard->next;
+  }
 }
 
 /**

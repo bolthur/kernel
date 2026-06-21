@@ -70,6 +70,9 @@ void mouse_detach( const libusb_mouse_device_t* mouse ) {
   if ( mouse->next ) {
     mouse->next->prev = mouse->prev;
   }
+  if ( mouse == mouse_head ) {
+    mouse_head = mouse->next;
+  }
 }
 
 /**

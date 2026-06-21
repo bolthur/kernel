@@ -271,3 +271,62 @@ int handler_call_attach(
   // return success
   return 0;
 }
+
+/**
+ * @fn int handler_call_detach(libusb_hid_device_t*, rpc_handler_t, pid_t, size_t)
+ * @brief Wrapper to call detach of hid
+ * @param device
+ * @param callback
+ * @param origin
+ * @param data_info
+ * @return
+ */
+int handler_call_detach(
+  libusb_hid_device_t* device,
+  const rpc_handler_t callback,
+  const pid_t origin,
+  const size_t data_info
+) {
+  // get handler
+  const pid_t handler = device->device_detached_handler;
+  if ( ! handler ) {
+    return 0;
+  }
+  // set handler pids for device
+  device->device_deallocate_handler = handler;
+  device->device_detached_handler = handler;
+  // generate request
+  constexpr size_t request_size = sizeof( vfs_ioctl_perform_request_t ) + sizeof( usb_generic_detached_t );
+  vfs_ioctl_perform_request_t* request = malloc( request_size );
+  if ( ! request ) {
+    // return nomem
+    return ENOMEM;
+  }
+  // clear out
+  memset( request, 0, request_size );
+  // populate container
+  ( ( usb_generic_detached_t* )request->container )->device_number = device->device_number;
+  // attach is defined as first custom message
+  const size_t response_id = bolthur_rpc_raise(
+    GENERIC_DETACH,
+    handler,
+    request,
+    request_size,
+    callback,
+    RPC_VFS_IOCTL,
+    request,
+    request_size,
+    origin,
+    data_info,
+    nullptr,
+    false
+  );
+  // handle error
+  if ( ! response_id ) {
+    free( request );
+    return EIO;
+  }
+  free( request );
+  // return success
+  return 0;
+}
