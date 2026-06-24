@@ -75,7 +75,7 @@ void rpc_termios_get(
   }
   // clear out
   memset( response, 0, response_size );
-  // copy over console ios into response
+  // copy over console termios into response
   memcpy( response->container, &handler->console->ios, sizeof( struct termios ) );
   // return and free up
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, 0 );

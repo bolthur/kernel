@@ -71,8 +71,9 @@ static void rpc_handle_render_cleanup(
     return;
   }
   // detach shared memory from original request
-  const vfs_write_request_t* original_request = async_data->original_data;
-  _syscall_memory_shared_detach( original_request->shm_id );
+  const vfs_ioctl_perform_request_t* original_request = async_data->original_data;
+  auto const terminal = ( terminal_write_request_t* )original_request->container;
+  _syscall_memory_shared_detach( terminal->shm_id );
   bolthur_rpc_destroy_async( async_data );
   free( response );
   _syscall_rpc_cleanup();
@@ -88,7 +89,8 @@ static void render_character( console_t* console, const char c ) {
   if ( ! console ) {
     return;
   }
-  const size_t shm_id = _syscall_memory_shared_create( sizeof( char ) * 2 );
+  constexpr size_t length = sizeof( char ) * 2;
+  const size_t shm_id = _syscall_memory_shared_create( length );
   if ( errno ) {
     return;
   }
@@ -107,7 +109,7 @@ static void render_character( console_t* console, const char c ) {
   // clear out memory
   memset( terminal, 0, terminal_size );
   // populate terminal
-  terminal->len = sizeof( char ) * 2;
+  terminal->len = length;
   terminal->shm_id = shm_id;
   strcpy( terminal->terminal, console->path );
   // handle not yet opened

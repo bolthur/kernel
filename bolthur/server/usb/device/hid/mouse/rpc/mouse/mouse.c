@@ -70,8 +70,11 @@ void rpc_mouse_mouse(
   }
   // handle error
   if ( message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
-    // handle stall by clearing stall bit
-    if ( message->error & LIBUSB_TRANSFER_ERROR_STALL ) {
+    // handle stall / toggle error by clearing stall bit
+    if (
+      message->error & LIBUSB_TRANSFER_ERROR_STALL
+      || message->error & LIBUSB_TRANSFER_ERROR_DATA_TOGGLE
+    ) {
       libusb_transfer_error_t error;
       uint32_t last_transfer;
       const int result = usb_control_message(

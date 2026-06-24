@@ -75,7 +75,7 @@ void rpc_termios_set(
   }
   // clear out
   memset( response, 0, response_size );
-  // overwrite console ios
+  // overwrite console termios
   memcpy( &handler->console->ios, request->container, sizeof( struct termios ) );
   // copy back into response container
   memcpy( response->container, &handler->console->ios, sizeof( struct termios ) );
