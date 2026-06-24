@@ -87,6 +87,11 @@ void queue_handle( const char* file, const char* data ) {
         // subtract carriage return and newline
         if ( newline ) {
           to_read -= 2;
+        } else {
+          newline = strstr( data, "\n" );
+          if ( newline ) {
+            to_read -= 1;
+          }
         }
         // copy over if there is something
         if ( to_read ) {
