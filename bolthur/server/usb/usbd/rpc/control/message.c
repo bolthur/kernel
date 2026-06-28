@@ -138,24 +138,8 @@
     // skip rest
     return;
   }
-  // handle error and parent is set
-  if ( device->parent && usb_control_message->error & ( uint32_t )~LIBUSB_TRANSFER_ERROR_PROCESSING ) {
-    // check connection
-    /// FIXME: NEEDS TO BE ASYNC AS WELL AS CONTROL MESSAGE
-    result = call_child_check_connection( device->parent, device );
-    // handle error
-    if ( 0 != result ) {
-      // detach both since both are attached already
-      _syscall_memory_shared_detach( submit_message->shm_id );
-      _syscall_memory_shared_detach( usbd_control_message->shm_id );
-      // free up stuff
-      free( submit_response );
-      // return from rpc
-      err_response.status = -ENOLINK;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-      // skip rest
-      return;
-    }
+  // handle error
+  if ( usb_control_message->error & ( uint32_t )~LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // set result to error
     result = EIO;
   }

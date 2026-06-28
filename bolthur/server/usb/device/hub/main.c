@@ -85,10 +85,8 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     GENERIC_DETACH,
     GENERIC_CHECK_FOR_CHANGE,
     GENERIC_CHILD_DETACHED,
-    GENERIC_CHILD_RESET,
-    GENERIC_CHILD_CHECK_CONNECTION,
   };
-  if ( ! vfs_dev_add_file( HUB_DEVICE_PATH, device_info, 6, nullptr ) ) {
+  if ( ! vfs_dev_add_file( HUB_DEVICE_PATH, device_info, 4, nullptr ) ) {
     STARTUP_PRINT( "Unable to add dev usbd\r\n" )
     return -1;
   }

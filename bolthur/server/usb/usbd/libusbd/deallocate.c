@@ -118,8 +118,6 @@ static void child_detach_finished(
  * @param origin
  * @param data_info
  * @param response_info
- *
- * @todo make call child detached asynchronously
  */
 static void detach_finished(
   size_t type,
@@ -164,7 +162,6 @@ static void detach_finished(
   libusb_device_t* dev = ctx->device;
   // child detach
   if ( dev->parent ) {
-    /// FIXME: MAKE ASYNC
     const int result = call_child_detached(
       dev->parent,
       dev,

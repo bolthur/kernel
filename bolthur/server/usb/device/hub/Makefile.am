@@ -10,9 +10,7 @@ hub_LDADD = \
   ${abs_top_builddir}/../library/vfs/libvfs.la
 hub_SOURCES = \
   rpc/hub/check/change.c \
-  rpc/hub/check/connection.c \
   rpc/hub/child/detach.c \
-  rpc/hub/child/reset.c \
   rpc/hub/attach.c \
   rpc/hub/detach.c \
   rpc/init.c \

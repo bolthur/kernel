@@ -13,9 +13,7 @@ usbd_LDADD = \
 usbd_SOURCES = \
   call/attach.c \
   call/check_for_change.c \
-  call/child_check_connection.c \
   call/child_detached.c \
-  call/child_reset.c \
   call/detached.c \
   ioctl/wrapper.c \
   libusbd/address.c \

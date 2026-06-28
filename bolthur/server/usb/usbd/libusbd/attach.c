@@ -373,26 +373,6 @@ static void attach_read_device_finished_1(
   // get device again by address
   // set device status to default
   attach_context->device->status = LIBUSB_DEVICE_STATUS_DEFAULT;
-  // handle parent set with device child reset
-  if ( attach_context->device->parent ) {
-    // perform child reset
-    /// FIXME: INTEGRATE INTO RECURSIVE CHAIN
-    const int result = call_child_reset( attach_context->device->parent, attach_context->device );
-    // handle error
-    if ( 0 != result ) {
-      // debug output
-      #if defined( USBD_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Reset child device failed: %s\r\n", strerror( result ) )
-      #endif
-      // restore number
-      attach_context->device->number = attach_context->address;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-      // cleanup contexts
-      usbd_context_descriptor_destroy( descriptor_context );
-      usbd_context_attach_destroy( attach_context );
-      return;
-    }
-  }
   // set address
   const int result = usbd_address_set(
     attach_context->device,

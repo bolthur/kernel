@@ -53,18 +53,6 @@ bool rpc_init( void ) {
     STARTUP_PRINT( "Unable to register child detach!\r\n" )
     return false;
   }
-  // register child reset handler
-  bolthur_rpc_bind( GENERIC_CHILD_RESET, rpc_hub_child_reset, true );
-  if ( errno ) {
-    STARTUP_PRINT( "Unable to register child reset!\r\n" )
-    return false;
-  }
-  // register check connection handler
-  bolthur_rpc_bind( GENERIC_CHILD_CHECK_CONNECTION, rpc_hub_check_connection, true );
-  if ( errno ) {
-    STARTUP_PRINT( "Unable to register check connection!\r\n" )
-    return false;
-  }
   // return success
   return true;
 }

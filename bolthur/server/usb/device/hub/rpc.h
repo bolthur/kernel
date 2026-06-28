@@ -24,9 +24,7 @@
 
 bool rpc_init( void );
 void rpc_hub_check_change( size_t, pid_t, size_t, size_t );
-void rpc_hub_check_connection( size_t, pid_t, size_t, size_t );
 void rpc_hub_child_detach( size_t, pid_t, size_t, size_t );
-void rpc_hub_child_reset( size_t, pid_t, size_t, size_t );
 void rpc_hub_attach( size_t, pid_t, size_t, size_t );
 void rpc_hub_detach( size_t, pid_t, size_t, size_t );
 
