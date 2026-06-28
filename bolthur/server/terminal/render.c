@@ -162,8 +162,9 @@ static uint32_t terminal_push( terminal_t* term, char* s ) {
     s += --len;
     // check character for actions
     switch ( c ) {
-      // newline just increase row
+      // newline, increase row and reset column
       case '\n':
+        term->col = 0;
         term->row++;
         break;
       // carriage return reset column

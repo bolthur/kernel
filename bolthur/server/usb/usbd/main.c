@@ -114,7 +114,9 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     // handle roothub not attached
     if ( roothub_attached ) {
       // FIXME: CHECK FOR PLUG AND PLAY
-      EARLY_STARTUP_PRINT( "CHECK FOR PLUG AND PLAY\r\n" )
+      #if defined( USBD_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "CHECK FOR PLUG AND PLAY\r\n" )
+      #endif
     }
     sleep( 5 );
   }

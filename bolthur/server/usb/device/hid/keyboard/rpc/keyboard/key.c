@@ -75,8 +75,6 @@ static void console_complete(
  * @param origin
  * @param data_info
  * @param response_info
- *
- * @todo add proper error handling
  */
 void rpc_keyboard_key(
   [[maybe_unused]] size_t type,

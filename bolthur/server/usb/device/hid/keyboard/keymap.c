@@ -41,7 +41,7 @@ static const char* special_key_strings[ KEYMAP_SPECIAL_KEY_MAX_CODE - KEYMAP_SPE
   "\x1b", // escape
   "\x7f", // backspace
   "\t", // tabulator
-  "\r\n", // return
+  "\n", // return
   "\x1b[2~", // insert
   "\x1b[1~", // home
   "\x1b[5~", // page up
@@ -74,7 +74,7 @@ static const char* special_key_strings[ KEYMAP_SPECIAL_KEY_MAX_CODE - KEYMAP_SPE
   "*", // keypad multiply
   "-", // keypad subtract
   "+", // keypad add
-  "\r\n", // keypad enter
+  "\n", // keypad enter
   "1", // keypad 1
   "2", // keypad 2
   "3", // keypad 3
