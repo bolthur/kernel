@@ -108,6 +108,8 @@ static void deallocate_roothub_finished(
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     return;
   }
+  // set roothub flag
+  roothub_attached = false;
   // set device to powered on
   roothub->status = LIBUSB_DEVICE_STATUS_POWERED;
   // attach usb device
@@ -270,10 +272,8 @@ static void attach_roothub_finished(
       EARLY_STARTUP_PRINT( "Roothub successfully attached\r\n" )
     }
   #endif
-  // debug output
-  #if defined( USBD_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Stopping enumeration to enable polling\r\n" )
-  #endif
+  // set roothub flag
+  roothub_attached = true;
   // free response
   free( response );
   _syscall_rpc_cleanup();

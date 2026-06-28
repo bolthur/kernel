@@ -28,6 +28,11 @@
 #include "../../../library/vfs/handler.h"
 
 /**
+ * @brief Roothub attached flag
+ */
+bool roothub_attached = false;
+
+/**
  * @fn int main(int, char*[])
  * @brief main entry point
  *
@@ -105,6 +110,15 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
 
   // wait for rpc
   STARTUP_PRINT( "Wait for rpc\r\n" )
+  while ( true ) {
+    // handle roothub not attached
+    if ( roothub_attached ) {
+      // FIXME: CHECK FOR PLUG AND PLAY
+      EARLY_STARTUP_PRINT( "CHECK FOR PLUG AND PLAY\r\n" )
+    }
+    sleep( 5 );
+  }
+  // wait for rpc ( should never be reached )
   bolthur_rpc_wait_block();
   return 0;
 }

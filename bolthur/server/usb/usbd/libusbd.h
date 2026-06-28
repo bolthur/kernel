@@ -187,5 +187,6 @@ int usbd_stop_transmission( const libusb_device_t*, usbd_stop_transmission_t*, r
 // global variables from init
 extern int fd_hcd;
 extern libusb_device_t* head;
+extern bool roothub_attached;
 
 #endif

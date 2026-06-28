@@ -716,6 +716,7 @@ static void hub_attach_finished(
       bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
       free( ctx );
     } else {
+      bolthur_rpc_destroy_async( async_data );
       _syscall_rpc_cleanup();
     }
     return;
@@ -729,6 +730,7 @@ static void hub_attach_finished(
       bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
       free( ctx );
     } else {
+      bolthur_rpc_destroy_async( async_data );
       _syscall_rpc_cleanup();
     }
     return;
@@ -745,6 +747,7 @@ static void hub_attach_finished(
       bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
       free( ctx );
     } else {
+      bolthur_rpc_destroy_async( async_data );
       _syscall_rpc_cleanup();
     }
     return;
@@ -767,6 +770,7 @@ static void hub_attach_finished(
         #if defined ( HUB_ENABLE_DEBUG )
           EARLY_STARTUP_PRINT( "Attach needs to continue async\r\n" )
         #endif
+        bolthur_rpc_destroy_async( async_data );
         free( attach_response );
         // cleanup and wait for next response
         _syscall_rpc_cleanup();
@@ -798,6 +802,7 @@ static void hub_attach_finished(
     free( ctx );
     return;
   }
+  bolthur_rpc_destroy_async( async_data );
   free( attach_response );
   _syscall_rpc_cleanup();
 }
