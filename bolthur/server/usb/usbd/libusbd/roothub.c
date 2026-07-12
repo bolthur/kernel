@@ -32,6 +32,54 @@ libusb_device_t* usbd_roothub_get( void ) {
 }
 
 /**
+ * @fn int attach_roothub(const rpc_handler_t, const pid_t, const size_t)
+ * @brief Helper to initiate roothub attach
+ * @param callback
+ * @param origin
+ * @param data_info
+ * @return
+ */
+static int attach_roothub( const rpc_handler_t callback, const pid_t origin, const size_t data_info ) {
+  // space for root hub
+  libusb_device_t* roothub = nullptr;
+  // allocate device
+  int result = usbd_allocate_device( &roothub, true );
+  // handle error
+  if ( 0 != result ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Allocating root hub failed: %s\r\n", strerror( result ) )
+    #endif
+    // return result
+    return result;
+  }
+  // set roothub flag
+  roothub_attached = false;
+  // set device to powered on
+  roothub->status = LIBUSB_DEVICE_STATUS_POWERED;
+  // attach usb device
+  result = usbd_attach_device(
+    roothub,
+    callback,
+    origin,
+    data_info,
+    nullptr,
+    0
+  );
+  // handle error
+  if ( 0 != result ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Attaching root hub failed: %s\r\n", strerror( result ) )
+    #endif
+    // return result
+    return result;
+  }
+  // return success
+  return 0;
+}
+
+/**
  * @fn deallocate_roothub_finished( size_t, pid_t, size_t, size_t )
  * @brief Detach and deallocation of roothub finished callback
  * @param type
@@ -94,32 +142,11 @@ static void deallocate_roothub_finished(
   // get context
   const usbd_deallocate_context_t* deallocate_context = async_data->context;
   usbd_attach_context_t* attach_context = deallocate_context->context;
-  // space for root hub
-  libusb_device_t* roothub = nullptr;
-  // allocate device
-  int result = usbd_allocate_device( &roothub, true );
-  // handle error
-  if ( 0 != result ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Allocating root hub failed: %s\r\n", strerror( result ) )
-    #endif
-    err_response.status = -result;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    return;
-  }
-  // set roothub flag
-  roothub_attached = false;
-  // set device to powered on
-  roothub->status = LIBUSB_DEVICE_STATUS_POWERED;
-  // attach usb device
-  result = usbd_attach_device(
-    roothub,
+  // attach roothub
+  const int result = attach_roothub(
     attach_context->handler,
     attach_context->origin,
-    attach_context->data_info,
-    nullptr,
-    0
+    attach_context->data_info
   );
   // handle error
   if ( 0 != result ) {
@@ -129,8 +156,6 @@ static void deallocate_roothub_finished(
     #endif
     err_response.status = -result;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // destroy attach context
-    usbd_context_attach_destroy( attach_context );
     return;
   }
   // free up stuff
@@ -154,8 +179,6 @@ int usbd_roothub_attach(
   #if defined( USBD_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Attaching root hob\r\n" )
   #endif
-  // space for root hub
-  libusb_device_t* roothub = nullptr;
   // handle existing by freeing up
   if ( head && 1 == head->number ) {
     // create attach context
@@ -185,39 +208,8 @@ int usbd_roothub_attach(
     // return success
     return 0;
   }
-  // allocate device
-  int result = usbd_allocate_device( &roothub, true );
-  // handle error
-  if ( 0 != result ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Allocating root hub failed: %s\r\n", strerror( result ) )
-    #endif
-    // return result
-    return result;
-  }
-  // set device to powered on
-  roothub->status = LIBUSB_DEVICE_STATUS_POWERED;
-  // attach usb device
-  result = usbd_attach_device(
-    roothub,
-    callback,
-    origin,
-    data_info,
-    nullptr,
-    0
-  );
-  // handle error
-  if ( 0 != result ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Attaching root hub failed: %s\r\n", strerror( result ) )
-    #endif
-    // return result
-    return result;
-  }
   // return success
-  return 0;
+  return attach_roothub( callback, origin, data_info );
 }
 
 /**
