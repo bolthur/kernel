@@ -60,6 +60,30 @@ typedef struct {
   size_t data_info;
 } hub_detach_context_t;
 
+typedef enum {
+  HUB_CHECK_CHANGE_STATUS_ATTACH = 0,
+  HUB_CHECK_CHANGE_STATUS_DETACH = 1,
+  HUB_CHECK_CHANGE_STATUS_CASCADE = 2,
+} hub_check_change_status_t;
+
+/**
+ * @brief Hub change check context
+ */
+typedef struct {
+  /** array of entries to check */
+  bool* to_check;
+  /** index change is running for */
+  uint32_t idx;
+  /** hub data */
+  libusb_hub_device_t* hub;
+  /** last status */
+  hub_check_change_status_t status;
+  /** origin process */
+  pid_t origin;
+  /** data info */
+  size_t data_info;
+} hub_check_change_context_t;
+
 void hub_append( libusb_hub_device_t* );
 void hub_detach( const libusb_hub_device_t* );
 void hub_destroy( libusb_hub_device_t* );

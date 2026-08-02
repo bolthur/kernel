@@ -29,6 +29,45 @@
 #include "../../../library/vfs/handler.h"
 
 /**
+ * @fn void continue_check_change(size_t, pid_t, size_t, size_t)
+ * @brief Helper to continue check for change
+ * @param type message type
+ * @param origin origin of the message
+ * @param data_info data id
+ * @param response_info response info
+ */
+static void check_change_done(
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
+  size_t data_info,
+  [[maybe_unused]] size_t response_info
+) {
+  if ( ! data_info ) {
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // get data from mailbox
+  size_t data_size;
+  vfs_ioctl_perform_response_t* response = bolthur_rpc_fetch_from_mailbox(
+    data_info, &data_size, true, nullptr );
+  if ( ! response ) {
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // get root hub
+  auto const roothub = usbd_roothub_get();
+  if ( ! roothub ) {
+    free( response );
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // reset check for change
+  roothub->check_running = false;
+  // free response
+  free( response );
+}
+
+/**
  * @fn int main(int, char*[])
  * @brief main entry point
  *
@@ -114,15 +153,17 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
       EARLY_STARTUP_PRINT( "CHECK FOR PLUG AND PLAY\r\n" )
     #endif
     // get roothub
-    const libusb_device_t* roothub = usbd_roothub_get();
+    auto roothub = usbd_roothub_get();
     // handle ready
-    if ( roothub && roothub->status == LIBUSB_DEVICE_STATUS_ATTACH_FINISHED ) {
+    if ( roothub && roothub->status == LIBUSB_DEVICE_STATUS_ATTACH_FINISHED && ! roothub->check_running ) {
+      // set check running
+      roothub->check_running = true;
       // debug output
-      #if defined( USBD_ENABLE_DEBUG )
+      //#if defined( USBD_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Checking for changes\r\n" )
-      #endif
+      //#endif
       // check for change
-      result = call_check_for_change( roothub );
+      result = call_check_for_change( roothub, check_change_done );
       // debug output
       #if defined( USBD_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Check for change result: %d\r\n", result )

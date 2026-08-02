@@ -754,6 +754,10 @@ static void hub_attach_finished(
   }
   // get attach data
   auto const attach = ( usbd_attach_device_t* )attach_response->container;
+  // debug output
+  #if defined( HUB_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "ctx->port_number = %"PRIu32" / %"PRIu32"\r\n", ctx->port_number, attach->device_number )
+  #endif
   // cache children
   ctx->hub->children[ ctx->port_number ] = attach->device_number;
   // further attachments

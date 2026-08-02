@@ -21,12 +21,13 @@
 #include "../call.h"
 
 /**
- * @fn int call_check_for_change( const libusb_device_t* )
+ * @fn int call_check_for_change( const libusb_device_t*, rpc_handler_t )
  * @brief Call check for change wrapper
  * @param dev
+ * @param handler
  * @return
  */
-int call_check_for_change( const libusb_device_t* dev ) {
+int call_check_for_change( const libusb_device_t* dev, rpc_handler_t handler ) {
   // get handler for attaching root hub
   if ( ! dev->device_check_for_change_handler ) {
     // debug output
@@ -58,7 +59,7 @@ int call_check_for_change( const libusb_device_t* dev ) {
     dev->device_check_for_change_handler,
     request,
     request_size,
-    nullptr,
+    handler,
     GENERIC_CHECK_FOR_CHANGE,
     nullptr,
     0,

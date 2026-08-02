@@ -337,6 +337,7 @@ typedef struct libusb_device {
   uint32_t last_transfer;
 
   pid_t poll_origin;
+  bool check_running;
 
   // pointer to next usb device
   libusb_device_t* next;
