@@ -784,6 +784,7 @@ typedef struct libusb_keyboard_device {
   uint32_t device_number;
   libusb_endpoint_descriptor_t descriptor;
   uint8_t* buffer;
+  void* keymap;
 
   libusb_keyboard_device_t* next;
   libusb_keyboard_device_t* prev;

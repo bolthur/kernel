@@ -98,6 +98,10 @@ void keyboard_destroy( libusb_keyboard_device_t* device ) {
   if ( device->led_report ) {
     hid_destroy_report( device->led_report );
   }
+  // free keymap area if set
+  if ( device->keymap ) {
+    free( device->keymap );
+  }
   // free device itself
   free( device );
 }

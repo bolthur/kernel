@@ -22,6 +22,7 @@
 #include <inttypes.h>
 #include <sys/bolthur.h>
 // local includes
+#include "keymap.h"
 #include "../../rpc.h"
 #include "../../keyboard.h"
 #include "../../../../../../libusbd.h"
@@ -374,7 +375,7 @@ void rpc_keyboard_attach(
   if ( ! device->buffer ) {
     free( request );
     keyboard_destroy( device );
-    err_response.status = -result;
+    err_response.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
@@ -383,6 +384,15 @@ void rpc_keyboard_attach(
   #endif
   // clear it out
   memset( device->buffer, 0, KEYBOARD_REPORT_SIZE );
+  // duplicate keymap
+  result = keymap_duplicate( &device->keymap );
+  if ( 0 != result ) {
+    free( request );
+    keyboard_destroy( device );
+    err_response.status = -result;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
+    return;
+  }
   // finally append device to list
   keyboard_append( device );
   #if defined( KEYBOARD_ENABLE_DEBUG )

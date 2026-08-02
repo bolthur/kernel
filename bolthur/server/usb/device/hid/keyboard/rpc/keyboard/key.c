@@ -29,6 +29,8 @@
 #include "../../../../../../libusbd.h"
 #include "../../../../../../../library/util/min.h"
 
+#define KEYBOARD_ENABLE_DEBUG 1
+
 /**
  * @fn void console_complete(size_t, pid_t, size_t, size_t)
  * @brief Console transfer complete command
@@ -291,6 +293,7 @@ void rpc_keyboard_key(
       #endif
     }
   }
+  keymap_t* keymap = dev->keymap;
   char tmp_buffer[10];
   size_t input_length = sizeof( char ) * 10;
   char* input_buffer = malloc( input_length );
@@ -313,13 +316,60 @@ void rpc_keyboard_key(
       EARLY_STARTUP_PRINT( "key: %02"PRIx16" / %02"PRIx16" / %c\r\n",
         dev->max_key_down[ i ], key, (uint8_t)key );
     #endif
-    // clear buffer and translate to string
-    memset( tmp_buffer, 0, sizeof( tmp_buffer ) );
-    if ( 0 != keymap_to_string( key, tmp_buffer ) ) {
+    bool set_led = false;
+    switch ( key ) {
+      case KEYMAP_SPECIAL_KEY_CAPS_LOCK:
+        keymap->caps_lock = !keymap->caps_lock;
+        if ( dev->led.caps_lock ) {
+          dev->led_field[ 1 ]->value._bool = keymap->caps_lock;
+        }
+        set_led = true;
+        break;
+      case KEYMAP_SPECIAL_KEY_NUM_LOCK:
+        keymap->num_lock = !keymap->num_lock;
+        if ( dev->led.num_lock ) {
+          dev->led_field[ 0 ]->value._bool = keymap->caps_lock;
+        }
+        set_led = true;
+        break;
+      case KEYMAP_SPECIAL_KEY_SCROLL_LOCK:
+        keymap->scroll_lock = !keymap->scroll_lock;
+        if ( dev->led.scroll_lock ) {
+          dev->led_field[ 2 ]->value._bool = keymap->caps_lock;
+        }
+        set_led = true;
+        break;
+      default:
+        // clear buffer and translate to string
+        memset( tmp_buffer, 0, sizeof( tmp_buffer ) );
+        if ( 0 != keymap_to_string( key, dev, tmp_buffer ) ) {
+          continue;
+        }
+    }
+    // handle set led
+    if ( set_led ) {
+      // set led
+      [[maybe_unused]] const int result = keyboard_set_led( dev, &(const libusb_keyboard_led_t){
+        .num_lock = dev->led.num_lock ? dev->led_field[ 0 ]->value._bool : false,
+        .caps_lock = dev->led.caps_lock ? dev->led_field[ 1 ]->value._bool : false,
+        .scroll_lock = dev->led.scroll_lock ? dev->led_field[ 2 ]->value._bool : false,
+        .compose = dev->led.compose ? dev->led_field[ 3 ]->value._bool : false,
+        .kana = dev->led.kana ? dev->led_field[ 4 ]->value._bool : false,
+        .power = dev->led.power ? dev->led_field[ 5 ]->value._bool : false,
+        .shift = dev->led.shift ? dev->led_field[ 6 ]->value._bool : false,
+        .mute = dev->led.mute ? dev->led_field[ 7 ]->value._bool : false,
+      });
+      // check result
+      #if defined( KEYBOARD_ENABLE_DEBUG )
+        if ( 0 != result ) {
+          EARLY_STARTUP_PRINT( "Unable to set led: %s\r\n", strerror( result ) );
+        }
+      #endif
+      // skip rest
       continue;
     }
     // calculate new length
-    size_t tmp_length = ( strlen( input_buffer ) + strlen( tmp_buffer ) + 1 ) * sizeof( char );
+    const size_t tmp_length = ( strlen( input_buffer ) + strlen( tmp_buffer ) + 1 ) * sizeof( char );
     // handle length exceed
     if ( tmp_length > input_length ) {
       // set new length

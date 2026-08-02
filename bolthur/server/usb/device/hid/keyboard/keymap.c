@@ -206,7 +206,7 @@ int keymap_init( void ) {
  */
 int keymap_translate( const uint16_t physical_code, const libusb_keyboard_device_t* dev, uint16_t* output ) {
   // validate loaded and output
-  if ( ! keymap_loaded || ! output ) {
+  if ( ! dev->keymap || ! output ) {
     return EINVAL;
   }
   // handle no translation
@@ -214,36 +214,51 @@ int keymap_translate( const uint16_t physical_code, const libusb_keyboard_device
     *output = KEYMAP_SPECIAL_KEY_NONE;
     return 0;
   }
+  // get local key map
+  const keymap_t* local_map = dev->keymap;
   // determine table to be used
   uint8_t table = KEYMAP_NORMTAB;
   if ( KEYPAD_FIRST <= physical_code && physical_code <= KEYPAD_LAST ) {
-    if ( map.num_lock ) {
+    if ( local_map->num_lock ) {
       table = KEYMAP_SHIFTTAB;
     }
   } else if ( dev->modifier.right_alt ) {
-    if ( dev->modifier.left_shift || dev->modifier.right_shift ) {
+    if (
+      // handle shift
+      dev->modifier.left_shift
+      || dev->modifier.right_shift
+      // handle caps lock
+      || local_map->caps_lock
+    ) {
       table = KEYMAP_ALTSHIFTTAB;
     } else {
       table = KEYMAP_ALTTAB;
     }
-  } else if ( dev->modifier.left_shift || dev->modifier.right_shift ) {
+  } else if (
+    // handle shift
+    dev->modifier.left_shift
+    || dev->modifier.right_shift
+    // handle caps lock
+    || local_map->caps_lock
+  ) {
     table = KEYMAP_SHIFTTAB;
   }
   // get key code from keymap and store it in output
-  *output = map.keymap[ physical_code ][ table ];
+  *output = local_map->keymap[ physical_code ][ table ];
   // return success
   return 0;
 }
 
 /**
- * @fn int keymap_to_string(const uint16_t, char*)
+ * @fn int keymap_to_string(const uint16_t, const libusb_keyboard_device_t*, char*)
  * @brief Function to convert keymap to string
  * @param key_code
+ * @param dev
  * @param output
  * @return
  */
-int keymap_to_string(const uint16_t key_code, char* output ) {
-  if ( ! keymap_loaded || ! output) {
+int keymap_to_string( const uint16_t key_code, const libusb_keyboard_device_t* dev, char* output ) {
+  if ( ! dev->keymap || ! output) {
     return EINVAL;
   }
   // handle no printable key
@@ -261,5 +276,26 @@ int keymap_to_string(const uint16_t key_code, char* output ) {
   // else translate key code into character
   output[ 0 ] = ( char )key_code;
   output[ 1 ] = '\0';
+  return 0;
+}
+
+/**
+ * @fn int keymap_duplicate(void**)
+ * @brief
+ * @param out
+ * @return
+ */
+int keymap_duplicate( void** out )
+{
+  // allocate keymap duplicate
+  *out = malloc( sizeof( keymap_t ) );
+  // handle error
+  if ( ! *out ) {
+    return ENOMEM;
+  }
+  // copy over
+  memset( *out, 0, sizeof( keymap_t ) );
+  memcpy( *out, &map, sizeof( keymap_t ) );
+  // return success
   return 0;
 }

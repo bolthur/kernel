@@ -111,7 +111,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // wait for rpc
   STARTUP_PRINT( "Wait for rpc\r\n" )
   while ( true ) {
-    // handle roothub not attached
+    // handle roothub attached
     if ( roothub_attached ) {
       // FIXME: CHECK FOR PLUG AND PLAY
       #if defined( USBD_ENABLE_DEBUG )
