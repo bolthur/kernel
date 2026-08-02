@@ -114,27 +114,32 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
       EARLY_STARTUP_PRINT( "CHECK FOR PLUG AND PLAY\r\n" )
     #endif
     // get roothub
-    libusb_device_t* roothub = usbd_roothub_get();
-    // handle not there or not initialized
-    if ( ! roothub || roothub->status != LIBUSB_DEVICE_STATUS_ATTACH_FINISHED ) {
+    const libusb_device_t* roothub = usbd_roothub_get();
+    // handle ready
+    if ( roothub && roothub->status == LIBUSB_DEVICE_STATUS_ATTACH_FINISHED ) {
+      // debug output
       #if defined( USBD_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "no roothub or not conifgured\r\n" )
+        EARLY_STARTUP_PRINT( "Checking for changes\r\n" )
       #endif
-      sleep( 5 );
-      continue;
+      // check for change
+      result = call_check_for_change( roothub );
+      // debug output
+      #if defined( USBD_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Check for change result: %d\r\n", result )
+      #endif
     }
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Checking for changes\r\n" )
-    #endif
-    // check for change
-    result = call_check_for_change( roothub );
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Check for change result: %d\r\n", result )
-    #endif
-    // sleep for 5 seconds
-    sleep( 5 );
+    // sleep for 5 seconds and repeat if interrupted
+    struct timespec ts;
+    ts.tv_sec = 5;
+    ts.tv_nsec = 0;
+    do {
+      // try to delay for 5 seconds
+      result = nanosleep( &ts, &ts );
+      // debug output
+      #if defined( USBD_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "result = %d\r\n", result )
+      #endif
+    } while ( result != 0 );
   }
   // wait for rpc ( should never be reached )
   bolthur_rpc_wait_block();
