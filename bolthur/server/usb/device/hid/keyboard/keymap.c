@@ -293,8 +293,9 @@ int keymap_duplicate( void** out )
   if ( ! *out ) {
     return ENOMEM;
   }
-  // copy over
+  // clear out space
   memset( *out, 0, sizeof( keymap_t ) );
+  // copy over loaded keymap
   memcpy( *out, &map, sizeof( keymap_t ) );
   // return success
   return 0;

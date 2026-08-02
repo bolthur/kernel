@@ -96,6 +96,8 @@ static void rpc_attach_device_finished(
   // copy over result
   response->status = attach_response->status;
   memcpy( response->container, request->container, container_size );
+  // set attach finished status
+  ctx->device->status = LIBUSB_DEVICE_STATUS_ATTACH_FINISHED;
   // populate device number into data
   ( ( usbd_attach_device_t* )request->container )->device_number = ctx->device->number;
   // return from rpc

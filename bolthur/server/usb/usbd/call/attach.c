@@ -60,10 +60,11 @@ int call_attach(
   // set handler pids for device
   dev->device_attached_handler = handler;
   dev->device_detached_handler = handler;
-  //dev->device_check_for_change_handler = handler;
-  //dev->device_child_detached_handler = handler;
-  //dev->device_child_reset_handler = handler;
-  //dev->device_check_connection_handler = handler;
+  // add check for change and child detached handlers in case we have a hub
+  if ( LIBUSB_DEVICE_CLASS_HUB == dev->descriptor.class ) {
+    dev->device_check_for_change_handler = handler;
+    dev->device_child_detached_handler = handler;
+  }
   // allocate request
   constexpr size_t request_size = sizeof( vfs_ioctl_perform_request_t )
     + sizeof( usb_generic_attach_t );

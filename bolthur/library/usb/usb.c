@@ -1192,8 +1192,6 @@ int usb_stop_transmission( const uint32_t device_number ) {
  * @param buffer_length
  * @param timeout
  * @return
- *
- * @todo detach shared memory on return
  */
 int usb_interrupt_poll_async(
   const uint32_t device_number,

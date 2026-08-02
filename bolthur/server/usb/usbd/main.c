@@ -22,15 +22,11 @@
 #include <sys/bolthur.h>
 #include "libusbd.h"
 #include "rpc.h"
+#include "call.h"
 #include "../../libhcd.h"
 #include "../../../library/vfs/wait.h"
 #include "../../../library/vfs/dev.h"
 #include "../../../library/vfs/handler.h"
-
-/**
- * @brief Roothub attached flag
- */
-bool roothub_attached = false;
 
 /**
  * @fn int main(int, char*[])
@@ -63,6 +59,9 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // add device file
   STARTUP_PRINT( "Sending device to vfs\r\n" )
   constexpr uint32_t device_info[] = {
+    // generic stuff
+    GENERIC_POLL_INTERRUPT,
+    // usbd related stuff
     USBD_REGISTER_HANDLER,
     USBD_UNREGISTER_HANDLER,
     USBD_GET_DESCRIPTOR,
@@ -76,7 +75,6 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     USBD_GET_CONFIGURATION,
     USBD_GET_STATUS,
     USBD_POLL_INTERRUPT,
-    GENERIC_POLL_INTERRUPT,
     USBD_STOP_TRANSMISSION,
     USBD_DETACH_DEVICE,
   };
@@ -111,13 +109,31 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // wait for rpc
   STARTUP_PRINT( "Wait for rpc\r\n" )
   while ( true ) {
-    // handle roothub attached
-    if ( roothub_attached ) {
-      // FIXME: CHECK FOR PLUG AND PLAY
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "CHECK FOR PLUG AND PLAY\r\n" )
+    #endif
+    // get roothub
+    libusb_device_t* roothub = usbd_roothub_get();
+    // handle not there or not initialized
+    if ( ! roothub || roothub->status != LIBUSB_DEVICE_STATUS_ATTACH_FINISHED ) {
       #if defined( USBD_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "CHECK FOR PLUG AND PLAY\r\n" )
+        EARLY_STARTUP_PRINT( "no roothub or not conifgured\r\n" )
       #endif
+      sleep( 5 );
+      continue;
     }
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Checking for changes\r\n" )
+    #endif
+    // check for change
+    result = call_check_for_change( roothub );
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Check for change result: %d\r\n", result )
+    #endif
+    // sleep for 5 seconds
     sleep( 5 );
   }
   // wait for rpc ( should never be reached )

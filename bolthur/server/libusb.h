@@ -280,6 +280,7 @@ typedef enum {
   LIBUSB_DEVICE_STATUS_DEFAULT = 2,
   LIBUSB_DEVICE_STATUS_ADDRESSED = 3,
   LIBUSB_DEVICE_STATUS_CONFIGURED = 4,
+  LIBUSB_DEVICE_STATUS_ATTACH_FINISHED = 5,
 } libusb_device_status_t;
 
 typedef enum {
@@ -325,8 +326,6 @@ typedef struct libusb_device {
   // child reset and check connection
   pid_t device_check_for_change_handler;
   pid_t device_child_detached_handler;
-  pid_t device_child_reset_handler;
-  pid_t device_check_connection_handler;
 
   libusb_device_descriptor_t descriptor __aligned( 4 );
   libusb_configuration_descriptor_t configuration __aligned( 4 );

@@ -53,8 +53,6 @@ static int attach_roothub( const rpc_handler_t callback, const pid_t origin, con
     // return result
     return result;
   }
-  // set roothub flag
-  roothub_attached = false;
   // set device to powered on
   roothub->status = LIBUSB_DEVICE_STATUS_POWERED;
   // attach usb device
@@ -264,8 +262,6 @@ static void attach_roothub_finished(
       EARLY_STARTUP_PRINT( "Roothub successfully attached\r\n" )
     }
   #endif
-  // set roothub flag
-  roothub_attached = true;
   // free response
   free( response );
   _syscall_rpc_cleanup();

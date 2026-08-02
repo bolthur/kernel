@@ -53,23 +53,22 @@ int call_check_for_change( const libusb_device_t* dev ) {
   // populate container
   ( ( usb_generic_check_for_change_t* )request->container )->device_number = dev->number;
   // attach is defined as first custom message
-  bolthur_rpc_raise_generic(
+  const size_t response_id = bolthur_rpc_raise(
     GENERIC_CHECK_FOR_CHANGE,
     dev->device_check_for_change_handler,
     request,
     request_size,
     nullptr,
     GENERIC_CHECK_FOR_CHANGE,
-    request,
-    request_size,
+    nullptr,
+    0,
     0,
     0,
     nullptr,
-    true,
     false
   );
   // handle error
-  if ( errno ) {
+  if ( ! response_id ) {
     // cache errno
     const int e = errno;
     // debug output
@@ -84,6 +83,22 @@ int call_check_for_change( const libusb_device_t* dev ) {
   }
   // free request
   free( request );
+  // get response from mailbox
+  size_t rpc_response_size;
+  vfs_ioctl_perform_response_t* rpc_response = bolthur_rpc_fetch_from_mailbox(
+    response_id,
+    &rpc_response_size,
+    true,
+    nullptr
+  );
+  // handle error
+  if ( ! rpc_response ) {
+    return ENOMSG;
+  }
+  // cache status
+  const int status = rpc_response->status;
+  // free rpc response
+  free( rpc_response );
   // return success
-  return 0;
+  return status;
 }

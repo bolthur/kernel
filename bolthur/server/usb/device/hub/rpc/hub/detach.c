@@ -30,8 +30,6 @@
  * @param origin origin of the message
  * @param data_info data id
  * @param response_info response info
- *
- * @todo detach children
  */
 void rpc_hub_detach(
   [[maybe_unused]] size_t type,

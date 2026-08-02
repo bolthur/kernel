@@ -29,8 +29,6 @@
 #include "../../../../../../libusbd.h"
 #include "../../../../../../../library/util/min.h"
 
-#define KEYBOARD_ENABLE_DEBUG 1
-
 /**
  * @fn void console_complete(size_t, pid_t, size_t, size_t)
  * @brief Console transfer complete command

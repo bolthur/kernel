@@ -17,6 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <errno.h>
 #include <sys/bolthur.h>
 #include "../../../rpc.h"
 
@@ -34,6 +35,29 @@ void rpc_hub_check_change(
   [[maybe_unused]] size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  vfs_ioctl_perform_response_t response = { .status = 0 };
+  vfs_ioctl_perform_response_t response = { .status = -EINVAL, };
+  // handle no data
+  if ( ! data_info ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), nullptr, 0 );
+    return;
+  }
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), nullptr, 0 );
+    return;
+  }
+  // get data from mailbox
+  size_t data_size;
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox(
+    data_info, &data_size, true, nullptr );
+  if ( ! request ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), nullptr, 0 );
+    return;
+  }
+  /// FIXME: IMPLEMENT
+  EARLY_STARTUP_PRINT( "check for change\r\n" )
+  memset( &response, 0, sizeof( response ) );
   bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), nullptr, 0 );
+  // free request again
+  free( request );
 }
