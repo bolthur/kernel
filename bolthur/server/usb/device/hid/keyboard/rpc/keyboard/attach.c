@@ -176,6 +176,60 @@ void rpc_keyboard_attach(
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
+
+
+
+  // request descriptor
+  libusb_device_descriptor_t device_descriptor;
+  result = usb_get_descriptor(
+    message->device_number,
+    LIBUSB_DESCRIPTOR_DEVICE,
+    0,
+    0,
+    &device_descriptor,
+    sizeof( device_descriptor ),
+    sizeof( device_descriptor ),
+    0
+  );
+  EARLY_STARTUP_PRINT( "device_descriptor.product = %"PRIu8"\r\n", device_descriptor.product )
+  EARLY_STARTUP_PRINT( "device_descriptor.manufacturer = %"PRIu8"\r\n", device_descriptor.manufacturer )
+  EARLY_STARTUP_PRINT( "device_descriptor.serial_number = %"PRIu8"\r\n", device_descriptor.serial_number )
+  if ( 0 != result ) {
+    EARLY_STARTUP_PRINT( "Unable to fetch device descriptor\r\n" )
+    free( request );
+    err_response.status = -result;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
+    return;
+  }
+  if ( device_descriptor.product != 0 ) {
+    char* buffer = nullptr;
+    result = usb_get_string( device->device_number, device_descriptor.product, &buffer );
+    EARLY_STARTUP_PRINT( "result = %d\r\n", result )
+    if ( buffer ) {
+      EARLY_STARTUP_PRINT( "Product: %s\r\n", buffer )
+      free( buffer );
+    }
+  }
+  if ( device_descriptor.manufacturer != 0 ) {
+    char* buffer = nullptr;
+    result = usb_get_string( device->device_number, device_descriptor.manufacturer, &buffer );
+    EARLY_STARTUP_PRINT( "result = %d\r\n", result )
+    if ( buffer ) {
+      EARLY_STARTUP_PRINT( "Manufacturer: %s\r\n", buffer )
+      free( buffer );
+    }
+  }
+  if ( device_descriptor.serial_number != 0 ) {
+    char* buffer = nullptr;
+    result = usb_get_string( device->device_number, device_descriptor.serial_number, &buffer );
+    EARLY_STARTUP_PRINT( "result = %d\r\n", result )
+    if ( buffer ) {
+      EARLY_STARTUP_PRINT( "Serial number: %s\r\n", buffer )
+      free( buffer );
+    }
+  }
+
+
   // iterate over reports
   for ( uint8_t idx = 0; idx < report_count; ++idx ) {
     // query report from hid

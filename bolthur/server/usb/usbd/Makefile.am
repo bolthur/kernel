@@ -43,6 +43,7 @@ usbd_SOURCES = \
   rpc/get/interface.c \
   rpc/get/roothub.c \
   rpc/get/status.c \
+  rpc/get/string.c \
   rpc/handler/register.c \
   rpc/handler/unregister.c \
   rpc/interrupt/generic.c \

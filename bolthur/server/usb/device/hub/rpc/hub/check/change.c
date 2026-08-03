@@ -45,13 +45,19 @@ static bool perform_check( hub_check_change_context_t* ctx ) {
     }
     // mark current port as not fetched
     ctx->to_check[ port ] = false;
-    EARLY_STARTUP_PRINT( "PORT = %"PRIu32" / %"PRIu32"\r\n", port, ctx->hub->children[ port ] )
+    // debug output
+    #if defined( HUB_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "PORT = %"PRIu32" / %"PRIu32"\r\n", port, ctx->hub->children[ port ] )
+    #endif
     // handle device disconnect
     if (
       ctx->hub->children[ port ]
       && ! ctx->hub->port_status[ port ].status.connected
     ) {
-      EARLY_STARTUP_PRINT( "DISCONNECT DETECTED\r\n" )
+      // debug output
+      #if defined( HUB_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "DISCONNECT DETECTED\r\n" )
+      #endif
       const int result = usb_detach_device(
         ctx->hub->children[ port ],
         continue_check_change,
@@ -60,7 +66,11 @@ static bool perform_check( hub_check_change_context_t* ctx ) {
         ctx->data_info
       );
       if ( 0 != result ) {
-        EARLY_STARTUP_PRINT( "Detach device failed: %s\r\n", strerror( result ) )
+        // debug output
+        #if defined( HUB_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "Detach device failed: %s\r\n", strerror( result ) )
+        #endif
+        // skip
         continue;
       }
       ctx->idx = port;
@@ -72,7 +82,10 @@ static bool perform_check( hub_check_change_context_t* ctx ) {
       ! ctx->hub->children[ port ]
       && ctx->hub->port_status[ port ].status.connected
     ) {
-      EARLY_STARTUP_PRINT( "CONNECT DETECTED\r\n" )
+      // debug output
+      #if defined( HUB_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "CONNECT DETECTED\r\n" )
+      #endif
       libusb_speed_t speed = LIBUSB_SPEED_FULL;
       if ( ctx->hub->port_status[ port ].status.high_speed_attached ) {
         speed = LIBUSB_SPEED_HIGH;
@@ -89,7 +102,11 @@ static bool perform_check( hub_check_change_context_t* ctx ) {
         ctx->data_info
       );
       if ( 0 != result ) {
-        EARLY_STARTUP_PRINT( "Attach device failed: %s\r\n", strerror( result ) )
+        // debug output
+        #if defined( HUB_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "Attach device failed: %s\r\n", strerror( result ) )
+        #endif
+        // skip
         continue;
       }
       ctx->idx = port;
@@ -98,6 +115,7 @@ static bool perform_check( hub_check_change_context_t* ctx ) {
     }
     // handle possible hub
     if ( ctx->hub->children[ port ] && hub_get( ctx->hub->children[ port ] ) ) {
+      // debug output
       EARLY_STARTUP_PRINT( "CASCADING\r\n" )
       // allocate request
       constexpr size_t request_size = sizeof( vfs_ioctl_perform_request_t )
@@ -105,7 +123,7 @@ static bool perform_check( hub_check_change_context_t* ctx ) {
       vfs_ioctl_perform_request_t* request = malloc( request_size );
       if ( ! request ) {
         // debug output
-        #if defined( CALL_ENABLE_DEBUG )
+        #if defined( HUB_ENABLE_DEBUG )
           EARLY_STARTUP_PRINT( "Error while allocating rpc request\r\n" )
         #endif
         // skip
@@ -133,7 +151,11 @@ static bool perform_check( hub_check_change_context_t* ctx ) {
       );
       // handle error
       if ( ! result ) {
-        EARLY_STARTUP_PRINT( "Error while cascading check change\r\n" )
+        // debug output
+        #if defined( HUB_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "Error while cascading check change\r\n" )
+        #endif
+        // skip
         continue;
       }
       ctx->idx = port;
@@ -293,7 +315,9 @@ void rpc_hub_check_change(
     // handle error
     if ( result != 0 ) {
       // debug output
-      EARLY_STARTUP_PRINT( "Unable to get port status: %s\r\n", strerror( result ) );
+      #if defined( HUB_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Unable to get port status: %s\r\n", strerror( result ) );
+      #endif
       // skip rest
       continue;
     }

@@ -63,8 +63,10 @@
 #define USBD_POLL_INTERRUPT ( USBD_GET_STATUS + 1 )
 #define USBD_STOP_TRANSMISSION ( USBD_POLL_INTERRUPT + 1 )
 #define USBD_DETACH_DEVICE ( USBD_STOP_TRANSMISSION + 1 )
+#define USBD_GET_STRING ( USBD_DETACH_DEVICE + 1 )
 
 // generic usb rpc structures
+
 typedef struct {
   uint32_t parent_device_number;
   uint32_t device_number;
@@ -143,6 +145,7 @@ typedef struct {
 } hid_set_idle_t;
 
 // usbd rpc structures
+
 typedef struct {
   libusb_interface_class_t type;
   pid_t handler;
@@ -271,5 +274,12 @@ typedef struct {
 typedef struct {
   uint32_t device_number;
 } usbd_stop_transmission_t;
+
+typedef struct {
+  uint32_t device_number;
+  uint8_t string_index;
+  size_t shm_id;
+  size_t buffer_size;
+} usbd_get_string_t;
 
 #endif

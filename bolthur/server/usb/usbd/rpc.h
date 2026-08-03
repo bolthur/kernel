@@ -33,6 +33,7 @@ void rpc_get_endpoint( size_t, pid_t, size_t, size_t );
 void rpc_get_interface( size_t, pid_t, size_t, size_t );
 void rpc_get_roothub( size_t, pid_t, size_t, size_t );
 void rpc_get_status( size_t, pid_t, size_t, size_t );
+void rpc_get_string( size_t, pid_t, size_t, size_t );
 void rpc_handler_register( size_t, pid_t, size_t, size_t );
 void rpc_handler_unregister( size_t, pid_t, size_t, size_t );
 void rpc_interrupt_poll( size_t, pid_t, size_t, size_t );

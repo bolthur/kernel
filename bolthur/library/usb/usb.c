@@ -1342,3 +1342,106 @@ char* usb_speed_to_string( const libusb_speed_t speed ) {
     default: return "Unknown Mb/s";
   }
 }
+
+/**
+ * @fn int usb_get_string(uint32_t, uint8_t, char**)
+ * @brief Method to get usb string
+ * @param device_number device number
+ * @param string_index string index
+ * @param out out string
+ * @return
+ */
+int usb_get_string( const uint32_t device_number, const uint8_t string_index, char** out ) {
+  // debug output
+  #if defined( LIBUSB_ENABLE_DEBUG )
+    STARTUP_PRINT( "firing async usb poll interrupt message\r\n" )
+  #endif
+  // allocate shared memory
+  const size_t shm_id = _syscall_memory_shared_create( 0x100 );
+  // handle error
+  if ( errno ) {
+    const int e = errno;
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to acquire shared memory!\r\n" )
+    #endif
+    // return error
+    return e;
+  }
+  // attach shared memory
+  void* shm_addr = _syscall_memory_shared_attach( shm_id, 0 );
+  // handle error
+  if ( errno ) {
+    const int e = errno;
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to attach shared memory!\r\n" )
+    #endif
+    // return error
+    return e;
+  }
+  // clear out
+  memset( shm_addr, 0, 0x100 );
+  // allocate request
+  usbd_get_string_t* get_string_request = malloc( sizeof( *get_string_request ) );
+  if ( ! get_string_request ) {
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate request\r\n" )
+    #endif
+    // detach shared memory
+    _syscall_memory_shared_detach( shm_id );
+    // return error
+    return ENOMEM;
+  }
+  // clear out everything
+  memset( get_string_request, 0, sizeof( *get_string_request ) );
+  // populate shm_id
+  get_string_request->shm_id = shm_id;
+  get_string_request->string_index = string_index;
+  get_string_request->device_number = device_number;
+  get_string_request->buffer_size = 0x100;
+  // perform request
+  const int result = ioctl(
+    fd_usbd,
+    IOCTL_BUILD_REQUEST(
+      USBD_GET_STRING,
+      sizeof( *get_string_request ),
+      IOCTL_RDWR
+    ),
+    get_string_request
+  );
+  // handle ioctl error
+  if ( -1 == result ) {
+    const int e = errno;
+    // debug output
+    #if defined( LIBUSB_ENABLE_ERROR )
+      STARTUP_PRINT("e = %d, errno = %s\r\n", e, strerror( e ));
+    #endif
+    // detach shared memory
+    _syscall_memory_shared_detach( shm_id );
+    // free request
+    free( get_string_request );
+    // return eio
+    return e ? e : EIO;
+  }
+  // free control message
+  free( get_string_request );
+  // allocate space
+  size_t buffer_length = strlen( shm_addr );
+  if ( buffer_length > 0 ) {
+    buffer_length++;
+    *out = malloc( sizeof( char ) * buffer_length );
+    if ( !*out ) {
+      _syscall_memory_shared_detach( shm_id );
+      return ENOMEM;
+    }
+    strcpy( *out, shm_addr );
+  } else {
+    *out = nullptr;
+  }
+  // detach shared memory again
+  _syscall_memory_shared_detach( shm_id );
+  // return result
+  return result;
+}

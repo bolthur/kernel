@@ -43,5 +43,6 @@ int usb_stop_transmission( uint32_t );
 libusb_packet_size_t usb_packet_size_from_number( uint32_t );
 uint32_t usb_number_from_packet_size( libusb_packet_size_t );
 char* usb_speed_to_string( libusb_speed_t );
+int usb_get_string( uint32_t, uint8_t, char** );
 
 #endif
