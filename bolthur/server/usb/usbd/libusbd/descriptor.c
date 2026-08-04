@@ -145,7 +145,7 @@ static void descriptor_read_device_finished(
     // return
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_descriptor_destroy( ctx );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // validate origin
@@ -153,7 +153,7 @@ static void descriptor_read_device_finished(
     // return
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_descriptor_destroy( ctx );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // get message and data size
@@ -164,7 +164,7 @@ static void descriptor_read_device_finished(
     // return
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_descriptor_destroy( ctx );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // get poll response
@@ -179,7 +179,7 @@ static void descriptor_read_device_finished(
     err_response.status = -e;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_descriptor_destroy( ctx );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // get result
@@ -193,7 +193,7 @@ static void descriptor_read_device_finished(
     err_response.status = -EPROTO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_descriptor_destroy( ctx );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // response is equal to input
@@ -209,7 +209,7 @@ static void descriptor_read_device_finished(
     err_response.status = -EPROTO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_descriptor_destroy( ctx );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // handle direction in with last transfer equal to buffer length

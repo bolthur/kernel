@@ -62,7 +62,7 @@ int usbd_context_attach_create(
   void* req = malloc( original_request_size );
   if ( ! req ) {
     // free context
-    usbd_context_attach_destroy( *ctx );
+    usbd_context_attach_destroy( *ctx, true );
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
@@ -86,15 +86,18 @@ int usbd_context_attach_create(
 }
 
 /**
- * @fn void context_attach_destroy(usbd_attach_context_t*)
+ * @fn void context_attach_destroy(usbd_attach_context_t*, bool)
  * @brief Helper to destroy created context
  * @param ctx
+ * @param destroy
  */
-void usbd_context_attach_destroy( usbd_attach_context_t* ctx ) {
+void usbd_context_attach_destroy( usbd_attach_context_t* ctx, const bool destroy ) {
   if ( ! ctx ) {
     return;
   }
-  EARLY_STARTUP_PRINT( "Destroy attach context %p\r\n", ( void* )ctx )
+  if ( destroy ) {
+    usbd_destroy_device( ctx->device );
+  }
   if ( ctx->request ) {
     free( ctx->request );
   }

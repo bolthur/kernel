@@ -61,7 +61,7 @@ static void set_address_finished(
     // return
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_address_destroy( ctx );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // validate origin
@@ -69,7 +69,7 @@ static void set_address_finished(
     // return
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_address_destroy( ctx );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // get message and data size
@@ -80,7 +80,7 @@ static void set_address_finished(
     // return
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_address_destroy( ctx );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // get poll response
@@ -94,7 +94,7 @@ static void set_address_finished(
     err_response.status = -e;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_address_destroy( ctx );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // get result
@@ -112,7 +112,7 @@ static void set_address_finished(
     err_response.status = -EPROTO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_address_destroy( ctx );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // populate last transfer and error

@@ -23,48 +23,6 @@
 #include "../libusbd.h"
 
 /**
- * @fn static void destroy_device(libusb_device_t*)
- * @brief Helper to destroy device
- * @param dev Device to destroy
- */
-static void destroy_device( libusb_device_t* dev ) {
-  // remove from list
-  if (
-    (
-      LIBUSB_DEVICE_STATUS_ADDRESSED == dev->status
-      || LIBUSB_DEVICE_STATUS_CONFIGURED == dev->status
-    ) && (
-      dev->prev
-      || dev->next
-    )
-  ) {
-    libusb_device_t* next = dev->next;
-    // set next of previous element if set
-    if ( dev->prev ) {
-      dev->prev->next = dev->next;
-    }
-    // set previous of next element if set
-    if ( dev->next ) {
-      dev->next->prev = dev->prev;
-    }
-    // handle root element
-    if ( head == dev ) {
-      head = next;
-    }
-  }
-  // free up full configuration
-  if ( dev->full_configuration ) {
-    free( dev->full_configuration );
-  }
-  // free up driver data
-  if ( dev->driver_data ) {
-    free( dev->driver_data );
-  }
-  // free up device
-  free( dev );
-}
-
-/**
  * @fn void child_detach_finished(size_t, pid_t, size_t, size_t)
  * @brief Child detach finished callback
  * @param type
@@ -112,7 +70,7 @@ static void child_detach_finished(
     return;
   }
   // destroy device
-  destroy_device( ctx->device );
+  usbd_destroy_device( ctx->device );
   // invoke handler
   ctx->handler( type, origin, data_info, response_info );
   // finally destroy attach context
@@ -195,7 +153,7 @@ static void detach_finished(
     return;
   }
   // destroy device
-  destroy_device( dev );
+  usbd_destroy_device( dev );
   // invoke handler
   ctx->handler( type, origin, data_info, response_info );
   // finally destroy attach context

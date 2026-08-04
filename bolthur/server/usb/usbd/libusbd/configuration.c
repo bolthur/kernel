@@ -63,7 +63,7 @@ static void set_configuration_finished(
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_configuration_destroy( ctx );
     usbd_context_configure_destroy( configure_context );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // validate origin
@@ -72,7 +72,7 @@ static void set_configuration_finished(
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_configuration_destroy( ctx );
     usbd_context_configure_destroy( configure_context );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // get message and data size
@@ -84,7 +84,7 @@ static void set_configuration_finished(
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_configuration_destroy( ctx );
     usbd_context_configure_destroy( configure_context );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // get poll response
@@ -100,7 +100,7 @@ static void set_configuration_finished(
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_configuration_destroy( ctx );
     usbd_context_configure_destroy( configure_context );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // get result
@@ -119,7 +119,7 @@ static void set_configuration_finished(
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_configuration_destroy( ctx );
     usbd_context_configure_destroy( configure_context );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // populate last transfer and error

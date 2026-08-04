@@ -102,3 +102,48 @@ int usbd_allocate_device( libusb_device_t** dev, const bool insert_head ) {
   // return success
   return 0;
 }
+
+/**
+ * @fn void usbd_destroy_device(libusb_device_t**, bool)
+ * @brief Function to deallocate a device
+ * @param dev
+ */
+void usbd_destroy_device( libusb_device_t* dev ) {
+  if ( ! dev ) {
+    return;
+  }
+  // remove from list
+  if (
+    (
+      LIBUSB_DEVICE_STATUS_ADDRESSED == dev->status
+      || LIBUSB_DEVICE_STATUS_CONFIGURED == dev->status
+    ) && (
+      dev->prev
+      || dev->next
+    )
+  ) {
+    libusb_device_t* next = dev->next;
+    // set next of previous element if set
+    if ( dev->prev ) {
+      dev->prev->next = dev->next;
+    }
+    // set previous of next element if set
+    if ( dev->next ) {
+      dev->next->prev = dev->prev;
+    }
+    // handle root element
+    if ( head == dev ) {
+      head = next;
+    }
+  }
+  // free up full configuration
+  if ( dev->full_configuration ) {
+    free( dev->full_configuration );
+  }
+  // free up driver data
+  if ( dev->driver_data ) {
+    free( dev->driver_data );
+  }
+  // free up device
+  free( dev );
+}

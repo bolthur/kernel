@@ -157,7 +157,7 @@ static void deallocate_roothub_finished(
     return;
   }
   // free up stuff
-  usbd_context_attach_destroy( attach_context );
+  usbd_context_attach_destroy( attach_context, true );
   _syscall_rpc_cleanup();
 }
 /**

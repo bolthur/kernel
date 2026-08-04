@@ -59,7 +59,7 @@ static void attach_attach_finished(
     EARLY_STARTUP_PRINT( "NO DATA\r\n" )
     // return
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    usbd_context_attach_destroy( ctx );
+    usbd_context_attach_destroy( ctx, true );
     return;
   }
   // validate origin
@@ -67,13 +67,13 @@ static void attach_attach_finished(
     EARLY_STARTUP_PRINT( "INVALID ORIGIN\r\n" )
     // return
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    usbd_context_attach_destroy( ctx );
+    usbd_context_attach_destroy( ctx, true );
     return;
   }
   // invoke handler
   ctx->handler( type, origin, data_info, response_info );
   // finally destroy attach context
-  usbd_context_attach_destroy( ctx );
+  usbd_context_attach_destroy( ctx, false );
 }
 
 /**
@@ -114,7 +114,7 @@ static void attach_configure_finished(
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_configuration_destroy( ctx );
     usbd_context_configure_destroy( configure_context );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // validate origin
@@ -123,7 +123,7 @@ static void attach_configure_finished(
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_configuration_destroy( ctx );
     usbd_context_configure_destroy( configure_context );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // debug output
@@ -149,14 +149,13 @@ static void attach_configure_finished(
     // destroy contexts
     usbd_context_configuration_destroy( ctx );
     usbd_context_configure_destroy( configure_context );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // destroy contexts
   usbd_context_configuration_destroy( ctx );
   usbd_context_configure_destroy( configure_context );
   bolthur_rpc_destroy_async( async_data );
-  EARLY_STARTUP_PRINT( "DONE\r\n" )
 }
 
 /**
@@ -198,7 +197,7 @@ static void attach_read_device_finished_2(
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // cleanup contexts
     usbd_context_descriptor_destroy( descriptor_context );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // validate origin
@@ -206,7 +205,7 @@ static void attach_read_device_finished_2(
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // cleanup contexts
     usbd_context_descriptor_destroy( descriptor_context );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // debug output
@@ -235,7 +234,7 @@ static void attach_read_device_finished_2(
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // cleanup contexts
     usbd_context_descriptor_destroy( descriptor_context );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // destroy descriptor context
@@ -281,7 +280,7 @@ static void attach_set_address_finished(
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // cleanup contexts
     usbd_context_address_destroy( address_context );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // validate origin
@@ -289,7 +288,7 @@ static void attach_set_address_finished(
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // cleanup contexts
     usbd_context_address_destroy( address_context );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // overwrite number again
@@ -308,7 +307,7 @@ static void attach_set_address_finished(
     #endif
     // cleanup contexts
     usbd_context_address_destroy( address_context );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     // return nodev
     err_response.status = -ENODEV;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
@@ -359,7 +358,7 @@ static void attach_read_device_finished_1(
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // cleanup contexts
     usbd_context_descriptor_destroy( descriptor_context );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // validate origin
@@ -367,7 +366,7 @@ static void attach_read_device_finished_1(
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // cleanup contexts
     usbd_context_descriptor_destroy( descriptor_context );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // get device again by address
@@ -391,7 +390,7 @@ static void attach_read_device_finished_1(
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // cleanup contexts
     usbd_context_descriptor_destroy( descriptor_context );
-    usbd_context_attach_destroy( attach_context );
+    usbd_context_attach_destroy( attach_context, true );
     return;
   }
   // destroy descriptor context
@@ -476,7 +475,7 @@ int usbd_attach_device(
     // restore number
     dev->number = address;
     // destroy context
-    usbd_context_attach_destroy( ctx );
+    usbd_context_attach_destroy( ctx, true );
     // return result
     return result;
   }
