@@ -17,17 +17,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _RPC_H
-#define _RPC_H
+#ifndef _HANDLER_H
+#define _HANDLER_H
 
-#include <sys/bolthur.h>
+#include "../../../../../library/collection/list/list.h"
 
-
-void rpc_handler_register( size_t, pid_t, size_t, size_t);
-void rpc_handler_unregister( size_t, pid_t, size_t, size_t);
-void rpc_mouse_attach( size_t, pid_t, size_t, size_t );
-void rpc_mouse_detach( size_t, pid_t, size_t, size_t );
-void rpc_mouse_mouse( size_t, pid_t, size_t, size_t );
-bool rpc_init( void );
+int handler_init( void );
+int handler_register( pid_t );
+int handler_unregister( pid_t );
+list_item_t* handler_first( void );
 
 #endif

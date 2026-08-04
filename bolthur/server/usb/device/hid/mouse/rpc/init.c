@@ -46,5 +46,17 @@ bool rpc_init( void ) {
     STARTUP_PRINT( "Unable to register poll interrupt handler!\r\n" )
     return false;
   }
+  // register register handler
+  bolthur_rpc_bind( MOUSE_REGISTER_HANDLER, rpc_handler_register, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register register handler handler!\r\n" )
+    return false;
+  }
+  // register unregister handler
+  bolthur_rpc_bind( MOUSE_UNREGISTER_HANDLER, rpc_handler_unregister, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register unregister handler handler!\r\n" )
+    return false;
+  }
   return true;
 }

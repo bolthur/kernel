@@ -21,6 +21,7 @@
 #include <inttypes.h>
 #include <sys/ioctl.h>
 #include "../../rpc.h"
+#include "../../handler.h"
 #include "../../mouse.h"
 #include "../../../../../../libusbd.h"
 #include "../../../../../../../library/usb/usb.h"
@@ -121,16 +122,86 @@ void rpc_mouse_mouse(
   memcpy( dev->buffer, message->buffer, MOUSE_REPORT_SIZE );
   // populate states
   dev->button_state = dev->buffer[ 0 ];
-  dev->mouse_x = ( int8_t )dev->buffer[ 0 ];
-  dev->mouse_y = ( int8_t )dev->buffer[ 0 ];
-  dev->wheel = ( int8_t )dev->buffer[ 0 ];
+  dev->mouse_x = ( int8_t )dev->buffer[ 1 ];
+  dev->mouse_y = ( int8_t )dev->buffer[ 2 ];
+  dev->wheel = ( int8_t )dev->buffer[ 3 ];
   // debug output
   #if defined( MOUSE_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "dev->mouse_x = %"PRId8", dev->mouse_y = %"PRId8"\r\n",
       dev->mouse_x, dev->mouse_y )
   #endif
-  /// FIXME: PUSH TO LISTENER
+
+  // allocate structures
+  mouse_notify_handler_t* notify = malloc( sizeof( *notify ) );
+  if ( ! notify ) {
+    free( response );
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // clear rpc structures
+  memset( notify, 0, sizeof( *notify ) );
+  // calculate rpc request size
+  constexpr size_t rpc_request_size = sizeof( vfs_ioctl_perform_request_t )
+    + sizeof( *notify );
+  // allocate rpc structures
+  vfs_ioctl_perform_request_t* rpc_request = malloc( rpc_request_size );
+  if ( ! rpc_request ) {
+    free( notify );
+    free( response );
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // clear rpc structures
+  memset( rpc_request, 0, rpc_request_size );
+  // populate notify
+  notify->button_state = dev->button_state;
+  notify->mouse_x = dev->mouse_x;
+  notify->mouse_y = dev->mouse_y;
+  notify->wheel = dev->wheel;
+  // copy over data
+  memcpy( rpc_request->container, notify, sizeof( *notify ) );
+  // get first item
+  const list_item_t* current = handler_first();
+  // iterate through list
+  while ( current ) {
+    // get handler
+    auto const handler = ( pid_t )current->data;
+    // populate structure
+    rpc_request->handle = handler;
+    rpc_request->command = MOUSE_NOTIFY_HANDLER;
+    rpc_request->type = IOCTL_RDWR;
+    // raise rpc with cleanup
+    const size_t response_id = bolthur_rpc_raise(
+      RPC_VFS_IOCTL,
+      VFS_DAEMON_ID,
+      rpc_request,
+      rpc_request_size,
+      nullptr,
+      RPC_VFS_IOCTL,
+      nullptr,
+      0,
+      origin,
+      data_info,
+      nullptr,
+      true
+    );
+    // handle response issue
+    if ( ! response_id ) {
+      // debug output
+      #if defined( MOUSE_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Pushing input to handler failed\r\n" )
+      #endif
+      // go to next
+      current = current->next;
+      // skip rest
+      continue;
+    }
+    // get next
+    current = current->next;
+  }
   // free up stuff and exit
+  free( notify );
+  free( rpc_request );
   free( response );
   _syscall_rpc_cleanup();
 }

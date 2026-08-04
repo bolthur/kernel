@@ -40,8 +40,8 @@ static int32_t compare_container(
   const avl_node_t* node_a,
   const avl_node_t* node_b
 ) {
-  const libusb_hid_usage_page_desktop_t value_a = (libusb_hid_usage_page_desktop_t)node_a->data;
-  const libusb_hid_usage_page_desktop_t value_b = (libusb_hid_usage_page_desktop_t)node_b->data;
+  auto const value_a = (libusb_hid_usage_page_desktop_t)node_a->data;
+  auto const value_b = (libusb_hid_usage_page_desktop_t)node_b->data;
   // return 0 if equal
   if ( value_a == value_b ) {
     return 0;
@@ -62,8 +62,8 @@ static int32_t lookup_container(
   const avl_node_t* node,
   const void* value
 ) {
-  const libusb_hid_usage_page_desktop_t type = ( libusb_hid_usage_page_desktop_t )value;
-  const libusb_hid_usage_page_desktop_t node_type = ( libusb_hid_usage_page_desktop_t )node->data;
+  auto const type = ( libusb_hid_usage_page_desktop_t )value;
+  auto const node_type = ( libusb_hid_usage_page_desktop_t )node->data;
   // return 0 if equal
   if ( node_type == type ) {
     return 0;

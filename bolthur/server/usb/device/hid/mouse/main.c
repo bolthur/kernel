@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <sys/bolthur.h>
 #include "rpc.h"
-#include "mouse.h"
+#include "handler.h"
 #include "../../../../libusbd.h"
 #include "../../../../../library/usb/usb.h"
 #include "../../../../../library/hid/hid.h"
@@ -39,15 +39,23 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // register rpc
   STARTUP_PRINT( "Setup rpc handler\r\n" )
   if ( !rpc_init() ) {
-    STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
+    STARTUP_PRINT( "Unable to bind rpc handler\r\n" )
+    return -1;
+  }
+
+  // initialize handler logic
+  STARTUP_PRINT( "Setup handler logic\r\n" )
+  int result = handler_init();
+  if ( 0 != result ) {
+    STARTUP_PRINT( "Unable to initialize handler logic: %s\r\n", strerror( result ) )
     return -1;
   }
 
   // initialize usb library
   STARTUP_PRINT( "Setup usb library\r\n" )
-  int result = usb_init();
+  result = usb_init();
   if ( 0 != result ) {
-    STARTUP_PRINT( "Unable to bind usb library: %s\r\n", strerror( result ) );
+    STARTUP_PRINT( "Unable to initialize usb library: %s\r\n", strerror( result ) )
     return -1;
   }
 
@@ -55,7 +63,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   STARTUP_PRINT( "Setup hid library\r\n" )
   result = hid_init();
   if ( 0 != result ) {
-    STARTUP_PRINT( "Unable to bind usb library: %s\r\n", strerror( result ) );
+    STARTUP_PRINT( "Unable to initialize hid library: %s\r\n", strerror( result ) )
     return -1;
   }
 
@@ -97,11 +105,15 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // add device file
   STARTUP_PRINT( "Sending device to vfs\r\n" )
   constexpr uint32_t device_info[] = {
+    // generic
     GENERIC_ATTACH,
     GENERIC_DETACH,
     GENERIC_POLL_INTERRUPT,
+    // specific
+    MOUSE_REGISTER_HANDLER,
+    MOUSE_UNREGISTER_HANDLER,
   };
-  if ( ! vfs_dev_add_file( MOUSE_DEVICE_PATH, device_info, 3, nullptr ) ) {
+  if ( ! vfs_dev_add_file( MOUSE_DEVICE_PATH, device_info, 5, nullptr ) ) {
     STARTUP_PRINT( "Unable to add dev usbd\r\n" )
     return -1;
   }

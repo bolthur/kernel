@@ -65,6 +65,11 @@
 #define USBD_DETACH_DEVICE ( USBD_STOP_TRANSMISSION + 1 )
 #define USBD_GET_STRING ( USBD_DETACH_DEVICE + 1 )
 
+// mouse rpc
+#define MOUSE_REGISTER_HANDLER ( GENERIC_CHILD_DETACHED + 1 )
+#define MOUSE_UNREGISTER_HANDLER ( MOUSE_REGISTER_HANDLER + 1 )
+#define MOUSE_NOTIFY_HANDLER ( MOUSE_UNREGISTER_HANDLER + 1 )
+
 // generic usb rpc structures
 
 typedef struct {
@@ -281,5 +286,22 @@ typedef struct {
   size_t shm_id;
   size_t buffer_size;
 } usbd_get_string_t;
+
+// mouse rpc structures
+
+typedef struct {
+  pid_t handler;
+} mouse_register_handler_t;
+
+typedef struct {
+  pid_t handler;
+} mouse_unregister_handler_t;
+
+typedef struct {
+  uint8_t button_state;
+  int8_t mouse_x;
+  int8_t mouse_y;
+  int8_t wheel;
+} mouse_notify_handler_t;
 
 #endif
