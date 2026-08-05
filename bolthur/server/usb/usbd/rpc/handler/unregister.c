@@ -73,8 +73,7 @@ void rpc_handler_unregister(
     return;
   }
   // set as allowed origin for return
-  /// FIXME: REMOVE AS VALID ORIGIN
-  //bolthur_rpc_origin_push_valid( message->handler );
+  bolthur_rpc_origin_pop_valid( message->handler );
   // return success
   error.status = 0;
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
