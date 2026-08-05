@@ -99,8 +99,10 @@ static void rpc_attach_device_finished(
   memcpy( response->container, request->container, container_size );
   // set attach finished status
   ctx->device->status = LIBUSB_DEVICE_STATUS_ATTACH_FINISHED;
-  EARLY_STARTUP_PRINT( "ctx->device->number = %"PRIu32" / %"PRIu8" / %"PRIu8"\r\n",
-    ctx->device->number, ctx->device_number, ctx->address )
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "ctx->device->number = %"PRIu32" / %"PRIu8" / %"PRIu8"\r\n",
+      ctx->device->number, ctx->device_number, ctx->address )
+  #endif
   // populate device number into data
   ( ( usbd_attach_device_t* )response->container )->device_number = ctx->device->number;
   // return from rpc

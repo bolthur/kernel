@@ -45,7 +45,9 @@ void rpc_keyboard_attach(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "keyboard attach\r\n" )
+  #if defined( KEYBOARD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "keyboard attach\r\n" )
+  #endif
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL, };
   // handle no data
   if ( ! data_info ) {
@@ -191,11 +193,12 @@ void rpc_keyboard_attach(
     sizeof( device_descriptor ),
     0
   );
-  EARLY_STARTUP_PRINT( "device_descriptor.product = %"PRIu8"\r\n", device_descriptor.product )
-  EARLY_STARTUP_PRINT( "device_descriptor.manufacturer = %"PRIu8"\r\n", device_descriptor.manufacturer )
-  EARLY_STARTUP_PRINT( "device_descriptor.serial_number = %"PRIu8"\r\n", device_descriptor.serial_number )
+  #if defined( KEYBOARD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "device_descriptor.product = %"PRIu8"\r\n", device_descriptor.product )
+    EARLY_STARTUP_PRINT( "device_descriptor.manufacturer = %"PRIu8"\r\n", device_descriptor.manufacturer )
+    EARLY_STARTUP_PRINT( "device_descriptor.serial_number = %"PRIu8"\r\n", device_descriptor.serial_number )
+  #endif
   if ( 0 != result ) {
-    EARLY_STARTUP_PRINT( "Unable to fetch device descriptor\r\n" )
     free( request );
     err_response.status = -result;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
@@ -204,27 +207,30 @@ void rpc_keyboard_attach(
   if ( device_descriptor.product != 0 ) {
     char* buffer = nullptr;
     result = usb_get_string( device->device_number, device_descriptor.product, &buffer );
-    EARLY_STARTUP_PRINT( "result = %d\r\n", result )
     if ( buffer ) {
-      EARLY_STARTUP_PRINT( "Product: %s\r\n", buffer )
+      #if defined( KEYBOARD_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Product: %s\r\n", buffer )
+      #endif
       free( buffer );
     }
   }
   if ( device_descriptor.manufacturer != 0 ) {
     char* buffer = nullptr;
     result = usb_get_string( device->device_number, device_descriptor.manufacturer, &buffer );
-    EARLY_STARTUP_PRINT( "result = %d\r\n", result )
     if ( buffer ) {
-      EARLY_STARTUP_PRINT( "Manufacturer: %s\r\n", buffer )
+      #if defined( KEYBOARD_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Manufacturer: %s\r\n", buffer )
+      #endif
       free( buffer );
     }
   }
   if ( device_descriptor.serial_number != 0 ) {
     char* buffer = nullptr;
     result = usb_get_string( device->device_number, device_descriptor.serial_number, &buffer );
-    EARLY_STARTUP_PRINT( "result = %d\r\n", result )
     if ( buffer ) {
-      EARLY_STARTUP_PRINT( "Serial number: %s\r\n", buffer )
+      #if defined( KEYBOARD_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Serial number: %s\r\n", buffer )
+      #endif
       free( buffer );
     }
   }

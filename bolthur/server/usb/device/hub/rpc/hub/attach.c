@@ -318,29 +318,6 @@ void rpc_hub_attach(
     EARLY_STARTUP_PRINT( "Hub over current condition: %s\r\n",
       !hub->status.status.over_current ? "No" : "Yes" )
   #endif
-  // determine attach count
-  uint32_t attach_count = 0;
-  // loop over children
-  for ( uint32_t port = 0; port < hub->max_children; port++ ) {
-    // get shall attach value
-    bool shall_attach = false;
-    result = hub_shall_to_attach( message->device_number, hub, ( uint8_t )port, roothub_device_number, &shall_attach );
-    if ( 0 != result ) {
-      #if defined ( HUB_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Unable to check for shall attach of port %"PRIu8"\r\n",
-          ( uint8_t )port)
-      #endif
-      hub_destroy( hub );
-      free( request );
-      err_response.status = -result;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
-      return;
-    }
-    // increase attach count if port shall be attached
-    if ( shall_attach ) {
-      attach_count++;
-    }
-  }
   // allocate context
   hub_attach_context_t* ctx = malloc( sizeof( *ctx ) );
   if ( ! ctx ) {
@@ -356,7 +333,7 @@ void rpc_hub_attach(
   // clear out
   memset( ctx, 0, sizeof( *ctx ) );
   // populate
-  ctx->to_attach = attach_count;
+  ctx->to_attach = hub->max_children;
   ctx->origin = origin;
   ctx->data_info = data_info;
   ctx->hub = hub;
@@ -396,13 +373,19 @@ void rpc_hub_attach(
   // free request
   free( request );
   // handle nothing to attach
-  if ( 0 == attach_count ) {
+  if ( EAGAIN != result ) {
     // free generated context again
     free( ctx );
     // return success
     memset( &err_response, 0, sizeof( err_response ) );
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
-    EARLY_STARTUP_PRINT( "done\r\n" )
+    // debug output
+    #if defined ( HUB_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "done\r\n" )
+    #endif
   }
-  EARLY_STARTUP_PRINT( "done\r\n" )
+  // debug output
+  #if defined ( HUB_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "done\r\n" )
+  #endif
 }

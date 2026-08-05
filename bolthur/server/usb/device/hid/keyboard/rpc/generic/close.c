@@ -36,7 +36,7 @@ void rpc_generic_close(
   [[maybe_unused]] pid_t origin,
   size_t data_info,
   [[maybe_unused]] size_t response_info
-  ) {
+) {
   // dummy error response
   vfs_close_response_t response = { .status = -EINVAL };
   // handle no data

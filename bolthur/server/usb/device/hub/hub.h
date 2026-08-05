@@ -22,7 +22,7 @@
 
 #include "../../../libusb.h"
 
-#define HUB_ENABLE_DEBUG 1
+//#define HUB_ENABLE_DEBUG 1
 
 /**
  * @brief Hub attach context
@@ -95,7 +95,6 @@ int hub_power_on( uint32_t, const libusb_hub_device_t* );
 int hub_get_port_status( uint32_t, libusb_hub_device_t*, uint8_t );
 int hub_port_reset( uint32_t, libusb_hub_device_t*, uint8_t );
 int hub_port_connection_changed( uint32_t, libusb_hub_device_t*, uint8_t, hub_attach_context_t* );
-int hub_shall_to_attach( uint32_t, libusb_hub_device_t*, uint8_t, uint32_t, bool* );
 int hub_check_connection( uint32_t, libusb_hub_device_t*, uint8_t, hub_attach_context_t* );
 int hub_perform_detach( libusb_hub_device_t*, size_t, pid_t, size_t );
 

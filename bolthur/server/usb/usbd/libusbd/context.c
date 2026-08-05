@@ -146,7 +146,10 @@ void usbd_context_descriptor_destroy( usbd_descriptor_context_t* ctx ) {
   if ( ! ctx ) {
     return;
   }
-  EARLY_STARTUP_PRINT( "Destroy descriptor context %p\r\n", ( void* )ctx )
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Destroy descriptor context %p\r\n", ( void* )ctx )
+  #endif
   free( ctx );
 }
 
@@ -195,7 +198,10 @@ void usbd_context_address_destroy( usbd_address_context_t* ctx ) {
   if ( ! ctx ) {
     return;
   }
-  EARLY_STARTUP_PRINT( "Destroy address context %p\r\n", ( void* )ctx )
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Destroy address context %p\r\n", ( void* )ctx )
+  #endif
   free( ctx );
 }
 
@@ -244,7 +250,10 @@ void usbd_context_configure_destroy( usbd_configure_context_t* ctx ) {
   if ( ! ctx ) {
     return;
   }
-  EARLY_STARTUP_PRINT( "Destroy configure context %p\r\n", ( void* )ctx )
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Destroy configure context %p\r\n", ( void* )ctx )
+  #endif
   free( ctx );
 }
 
@@ -293,7 +302,10 @@ void usbd_context_configuration_destroy( usbd_configuration_context_t* ctx ) {
   if ( ! ctx ) {
     return;
   }
-  EARLY_STARTUP_PRINT( "Destroy configuration context %p\r\n", ( void* )ctx )
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Destroy configuration context %p\r\n", ( void* )ctx )
+  #endif
   free( ctx );
 }
 

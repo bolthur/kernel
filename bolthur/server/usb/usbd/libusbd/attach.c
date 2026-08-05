@@ -37,13 +37,15 @@ static void attach_attach_finished(
   size_t data_info,
   size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "Attach call finished\r\n" )
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Attach call finished\r\n" )
+  #endif
   // peek matching async data without destroy for call chain
   bolthur_async_data_t* async_data = bolthur_rpc_peek_async(
     RPC_VFS_IOCTL, response_info );
   // handle no async data
   if ( ! async_data ) {
-    EARLY_STARTUP_PRINT( "NO ASYNC DATA\r\n" )
     // cleanup
     _syscall_rpc_cleanup();
     // skip rest
@@ -56,7 +58,6 @@ static void attach_attach_finished(
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // handle no data
   if ( ! data_info ) {
-    EARLY_STARTUP_PRINT( "NO DATA\r\n" )
     // return
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_attach_destroy( ctx, true );
@@ -64,7 +65,6 @@ static void attach_attach_finished(
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    EARLY_STARTUP_PRINT( "INVALID ORIGIN\r\n" )
     // return
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_attach_destroy( ctx, true );
@@ -90,7 +90,10 @@ static void attach_configure_finished(
   size_t data_info,
   size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "Attach configure finished\r\n" )
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Attach configure finished\r\n" )
+  #endif
   // peek matching async data without destroy for call chain
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
     RPC_VFS_IOCTL, response_info );
@@ -351,7 +354,10 @@ static void attach_read_device_finished_1(
   // get context out of context
   usbd_descriptor_context_t* descriptor_context = async_data->context;
   usbd_attach_context_t* attach_context = descriptor_context->context;
-  EARLY_STARTUP_PRINT( "async_data->original_rpc_id = %zu\r\n", async_data->original_rpc_id )
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "async_data->original_rpc_id = %zu\r\n", async_data->original_rpc_id )
+  #endif
   assert( descriptor_context && attach_context );
   // handle no data
   if ( ! data_info ) {

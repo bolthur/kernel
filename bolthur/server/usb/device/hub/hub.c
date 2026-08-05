@@ -920,55 +920,6 @@ int hub_port_connection_changed(
 }
 
 /**
- * @fn int hub_evaluate_to_attach( uint32_t, libusb_hub_device_t*, uint8_t, uint32_t, bool* )
- * @brief Function to evaluate attach amount
- * @param device_number device number
- * @param device_data device data
- * @param port port to attach
- * @param roothub_device_number device number of roothub
- * @param to_attach output variable
- * @return
- */
-int hub_shall_to_attach(
-  const uint32_t device_number,
-  libusb_hub_device_t* device_data,
-  const uint8_t port,
-  const uint32_t roothub_device_number,
-  bool* to_attach
-) {
-  // get port status
-  const int result = hub_get_port_status( device_number, device_data, port );
-  if ( 0 != result ) {
-    // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to retrieve port status: %s\r\n", strerror( result ) )
-    #endif
-    // return result
-    return result;
-  }
-  // cache full status
-  const libusb_hub_port_full_status_t* port_status = &device_data->port_status[ port ];
-  // handle connection changed
-  if ( port_status->change.connected_changed ) {
-    *to_attach = true;
-    return 0;
-  }
-  // enabled change only in case it's not the root hub with connected
-  if (
-    port_status->change.enabled_changed
-    && roothub_device_number != device_number
-    && ! port_status->status.enabled
-    && port_status->status.connected
-    && device_data->children[ port ]
-  ) {
-     *to_attach = true;
-    return 0;
-  }
-  // return success
-  return 0;
-}
-
-/**
  * @fn int hub_check_connection(uint32_t, libusb_hub_device_t*, uint8_t, hub_attach_context_t*)
  * @brief Function to check hub connection
  * @param device_number
@@ -985,8 +936,11 @@ int hub_check_connection(
 ) {
   // push port into hub
   context->port_number = port;
+  // debug output
+  #if defined ( HUB_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "FETCHING PORT STATUS\r\n" )
+  #endif
   // get port status
-  EARLY_STARTUP_PRINT( "FETCHING PORT STATUS\r\n" )
   int result = hub_get_port_status( device_number, device_data, port );
   if ( 0 != result ) {
     // debug output
@@ -996,7 +950,10 @@ int hub_check_connection(
     // return result
     return result;
   }
-  EARLY_STARTUP_PRINT( "CHECKING\r\n" )
+  // debug output
+  #if defined ( HUB_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "CHECKING\r\n" )
+  #endif
   // cache full status
   libusb_hub_port_full_status_t port_status;
   memcpy( &port_status, &device_data->port_status[ port ], sizeof( libusb_hub_port_full_status_t ) );
@@ -1099,7 +1056,10 @@ int hub_check_connection(
     }
   }
   if ( port_status.change.over_current_changed ) {
+    // debug output
+    #if defined ( HUB_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "----------------> Over current changed of port %"PRIu8"!\r\n", port )
+    #endif
     // clear enable change flag
     result = hub_change_port_feature(
       device_number, LIBUSB_HUB_PORT_FEATURE_OVER_CURRENT_CHANGE, port, false );

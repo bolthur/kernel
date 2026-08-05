@@ -114,7 +114,7 @@ int usbd_control_message(
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( USBD_ENABLE_ERROR )
+    #if defined( USBD_ENABLE_DEBUG )
       const int e = errno;
       EARLY_STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
@@ -128,7 +128,7 @@ int usbd_control_message(
   // response is equal to input
   if ( message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // debug output
-    #if defined( USBD_ENABLE_ERROR )
+    #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "error = %#x\r\n", message->error )
     #endif
     // detach shared memory
@@ -268,7 +268,7 @@ int usbd_control_message_async(
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( USBD_ENABLE_ERROR )
+    #if defined( USBD_ENABLE_DEBUG )
       const int e = errno;
       EARLY_STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif

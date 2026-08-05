@@ -41,13 +41,15 @@ static void rpc_get_string_finished(
   [[maybe_unused]] size_t data_info,
   size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "rpc_get_string_finished\r\n" );
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "rpc_get_string_finished\r\n" )
+  #endif
   // peek matching async data without destroy for call chain
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
     RPC_VFS_IOCTL, response_info );
   // handle no async data
   if ( ! async_data ) {
-    EARLY_STARTUP_PRINT( "no async data\r\n" );
     // cleanup
     _syscall_rpc_cleanup();
     // skip rest
@@ -69,7 +71,6 @@ static void rpc_get_string_finished(
   // allocate response
   vfs_ioctl_perform_response_t* response = malloc( sizeof( *response ) + data_size );
   if ( ! response ) {
-    EARLY_STARTUP_PRINT( "no memory\r\n" );
     error.status = -ENOMEM;
     usbd_context_read_string_destroy( read_string_context );
     free( request );

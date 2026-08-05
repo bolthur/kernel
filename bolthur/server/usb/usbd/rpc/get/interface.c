@@ -41,17 +41,18 @@ void rpc_get_interface(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "GET INTERFACE\r\n" )
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "GET INTERFACE\r\n" )
+  #endif
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-  EARLY_STARTUP_PRINT( "GET INTERFACE\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // handle no data
   if ( ! data_info ) {
-  EARLY_STARTUP_PRINT( "GET INTERFACE\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
@@ -59,7 +60,6 @@ void rpc_get_interface(
   size_t data_size;
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
-  EARLY_STARTUP_PRINT( "GET INTERFACE\r\n" )
     error.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
@@ -71,7 +71,6 @@ void rpc_get_interface(
   const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + container_size;
   vfs_ioctl_perform_response_t* response = malloc( response_size );
   if ( ! response ) {
-  EARLY_STARTUP_PRINT( "GET INTERFACE\r\n" )
     error.status = -ENOMEM;
     // free request
     free( request );
@@ -84,7 +83,6 @@ void rpc_get_interface(
   libusb_device_t* device;
   const int result = usbd_device_get_by_number( endpoint_message->device_number, &device );
   if ( 0 != result ) {
-  EARLY_STARTUP_PRINT( "GET INTERFACE\r\n" )
     error.status = -result;
     // free request
     free( request );
@@ -93,7 +91,10 @@ void rpc_get_interface(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
-  EARLY_STARTUP_PRINT( "GET INTERFACE\r\n" )
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "GET INTERFACE\r\n" )
+  #endif
   // populate response
   memcpy( response->container, &device->interfaces[ endpoint_message->interface_number ],
     sizeof( libusb_endpoint_descriptor_t ) );

@@ -632,7 +632,10 @@ int usb_attach_device(
   rpc_request->type = IOCTL_RDWR;
   // copy over data
   memcpy( rpc_request->container, request, sizeof( *request ) );
-  EARLY_STARTUP_PRINT( "origin = %d, data_info = %zu\r\n", origin, data_info )
+  // debug output
+  #if defined( LIBUSB_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "origin = %d, data_info = %zu\r\n", origin, data_info )
+  #endif
   // raise rpc and wait for return
   const size_t response_id = bolthur_rpc_raise(
     RPC_VFS_IOCTL,

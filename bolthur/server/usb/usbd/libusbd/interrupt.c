@@ -72,7 +72,7 @@ int usbd_interrupt_poll(
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( USBD_ENABLE_ERROR )
+    #if defined( USBD_ENABLE_DEBUG )
       const int e = errno;
       EARLY_STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
