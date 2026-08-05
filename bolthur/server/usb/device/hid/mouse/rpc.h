@@ -22,7 +22,20 @@
 
 #include <sys/bolthur.h>
 
-
+// generic
+void rpc_generic_add( size_t, pid_t, size_t, size_t );
+void rpc_generic_close( size_t, pid_t, size_t, size_t );
+void rpc_generic_exec( size_t, pid_t, size_t, size_t );
+void rpc_generic_exit( size_t, pid_t, size_t, size_t );
+void rpc_generic_fork( size_t, pid_t, size_t, size_t );
+void rpc_generic_ioctl( size_t, pid_t, size_t, size_t );
+void rpc_generic_open( size_t, pid_t, size_t, size_t );
+void rpc_generic_read( size_t, pid_t, size_t, size_t );
+void rpc_generic_remove( size_t, pid_t, size_t, size_t );
+void rpc_generic_seek( size_t, pid_t, size_t, size_t );
+void rpc_generic_stat( size_t, pid_t, size_t, size_t );
+void rpc_generic_write( size_t, pid_t, size_t, size_t );
+// specific
 void rpc_handler_register( size_t, pid_t, size_t, size_t);
 void rpc_handler_unregister( size_t, pid_t, size_t, size_t);
 void rpc_mouse_attach( size_t, pid_t, size_t, size_t );

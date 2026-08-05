@@ -47,7 +47,7 @@ void rpc_handle_close(
   }
   // get message and data size
   size_t data_size;
-  vfs_fork_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_close_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( ! request ) {
     response.status = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
