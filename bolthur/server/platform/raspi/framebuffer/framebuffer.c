@@ -492,7 +492,7 @@ void framebuffer_handle_clear(
   // perform flip
   framebuffer_flip();
   // set success and return
-  error.status = 0;
+  memset( &error, 0, sizeof( error ) );
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
   free( request );
 }
@@ -548,7 +548,7 @@ void framebuffer_handle_surface_render(
   // flip it
   framebuffer_flip();
   // return success
-  error.status = 0;
+  memset( &error, 0, sizeof( error ) );
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
   free( request );
 }

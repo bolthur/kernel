@@ -20,7 +20,7 @@
 #ifndef _LIBHCD_H
 #define _LIBHCD_H
 
-#define HCD_DEVICE_PATH "/dev/usb/hcd"
+#define HCD_DEVICE_PATH "/dev/usb/server/hcd"
 
 #define HCD_SUBMIT_CONTROL_MESSAGE RPC_CUSTOM_START
 #define HCD_POLL_INTERRUPT ( HCD_SUBMIT_CONTROL_MESSAGE + 1 )

@@ -218,7 +218,7 @@ void rpc_custom_handle_input(
     return;
   }
   // set success flag and return before handling anything else
-  error.status = 0;
+  memset( &error, 0, sizeof( error ) );
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
   // debug print buffer
   EARLY_STARTUP_PRINT( "%s\r\n", command->input );

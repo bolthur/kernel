@@ -69,7 +69,7 @@ void rpc_custom_handle_release(
     return;
   }
   // set success flag and return
-  error.status = 0;
+  memset( &error, 0, sizeof( error ) );
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
   // free all used temporary structures
   free( request );

@@ -100,7 +100,7 @@ void rpc_handle_gpio_set_pull(
   mmio_write( PERIPHERAL_GPIO_GPPUD, 0 );
   mmio_write( address, 0 );
   // set status to 0
-  error.status = 0;
+  memset( &error, 0, sizeof( error ) );
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
   // free pull_request
   free( request );

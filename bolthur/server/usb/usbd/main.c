@@ -154,7 +154,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
       EARLY_STARTUP_PRINT( "CHECK FOR PLUG AND PLAY\r\n" )
     #endif
     // get roothub
-    auto roothub = usbd_roothub_get();
+    auto const roothub = usbd_roothub_get();
     // handle ready
     if ( roothub && roothub->status == LIBUSB_DEVICE_STATUS_ATTACH_FINISHED && ! roothub->check_running ) {
       // set check running

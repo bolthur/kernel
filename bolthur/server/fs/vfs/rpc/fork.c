@@ -144,7 +144,7 @@ static void rpc_handle_fork_table(
   // check for hash table is empty => fork is finished
   if ( ! ht_length( process_container->fork_table ) ) {
     // set status to success
-    response.status = 0;
+    memset( &response, 0, sizeof( response ) );
     // return from rpc
     bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
   } else {
@@ -282,7 +282,7 @@ static void rpc_handle_fork_fork(
         }
       } );
       // set result to success
-      response.status = 0;
+      memset( &response, 0, sizeof( response ) );
       // return
       bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
     }

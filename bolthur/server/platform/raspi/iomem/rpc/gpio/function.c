@@ -153,7 +153,7 @@ void rpc_handle_gpio_set_function(
     EARLY_STARTUP_PRINT( "wrote %#"PRIx32" to %#"PRIxPTR"\r\n", value, address )
   #endif
   // set status to 0
-  error.status = 0;
+  memset( &error, 0, sizeof( error ) );
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
   // free function_request
   free( request );

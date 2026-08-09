@@ -148,6 +148,12 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     return -1;
   }
   vfs_wait_for_path( "/dev/usb" );
+  // add usb subfolder with wait for path
+  if ( ! vfs_dev_add_folder( "/dev/usb/server", nullptr, 0, on_folder_file_added ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add USB subfolder\r\n" )
+    return -1;
+  }
+  vfs_wait_for_path( "/dev/usb/server" );
   // add device file without wait for file since everything else is blocked
   // in early stage by /dev/manager/device and a wait for path would result
   // in possible locked up dev daemon

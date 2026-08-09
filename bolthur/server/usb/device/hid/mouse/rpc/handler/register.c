@@ -69,7 +69,7 @@ void rpc_handler_register(
     return;
   }
   // return success without data
-  error.status = 0;
+  memset( &error, 0, sizeof( error ) );
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
   free( request );
 }

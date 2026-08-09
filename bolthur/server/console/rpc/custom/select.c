@@ -80,6 +80,6 @@ void rpc_custom_handle_console_select(
   // free all used temporary structures
   free( request );
   // set success flag and return
-  error.status = 0;
+  memset( &error, 0, sizeof( error ) );
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
 }

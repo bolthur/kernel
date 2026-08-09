@@ -70,7 +70,7 @@ void rpc_handle_close(
   } else {
     handler->stderr_opened = false;
   }
-  response.status = 0;
+  memset( &response, 0, sizeof( response ) );
   bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
   free( request );
 }

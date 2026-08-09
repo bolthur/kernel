@@ -24,11 +24,11 @@
 #include "libusb.h"
 
 // device paths
-#define USBD_DEVICE_PATH "/dev/usb/usbd"
-#define HUB_DEVICE_PATH "/dev/usb/hub"
-#define HID_DEVICE_PATH "/dev/usb/hid"
-#define KEYBOARD_DEVICE_PATH "/dev/usb/keyboard"
-#define MOUSE_DEVICE_PATH "/dev/usb/mouse"
+#define USBD_DEVICE_PATH "/dev/usb/server/usbd"
+#define HUB_DEVICE_PATH "/dev/usb/server/hub"
+#define HID_DEVICE_PATH "/dev/usb/server/hid"
+#define KEYBOARD_DEVICE_PATH "/dev/usb/server/keyboard"
+#define MOUSE_DEVICE_PATH "/dev/usb/server/mouse"
 
 // generic rpc
 #define GENERIC_ATTACH RPC_CUSTOM_START

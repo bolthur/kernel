@@ -107,7 +107,7 @@ void rpc_handle_close(
   // destroy handle
   handle_destroy( request->origin, request->handle );
   // set success
-  response.status = 0;
+  memset( &response, 0, sizeof( response ) );
   // return data
   bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
   free( request );

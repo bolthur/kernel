@@ -111,7 +111,7 @@ void rpc_custom_handle_request(
   strcpy( data->pw_home, pw->pw_dir );
   strcpy( data->pw_shell, pw->pw_shell );
   // return success
-  error.status = 0;
+  memset( &error, 0, sizeof( error ) );
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
   // free allocated memory again
   _syscall_memory_shared_detach( authentication_request->shm_id );

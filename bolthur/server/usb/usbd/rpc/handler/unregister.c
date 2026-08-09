@@ -75,7 +75,7 @@ void rpc_handler_unregister(
   // set as allowed origin for return
   bolthur_rpc_origin_pop_valid( message->handler );
   // return success
-  error.status = 0;
+  memset( &error, 0, sizeof( error ) );
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
   free( request );
 }

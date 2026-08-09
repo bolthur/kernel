@@ -124,7 +124,7 @@ void rpc_attach_roothub(
   // free again
   free( dummy );
   // handle already attached
-  if ( head ) {
+  if ( usbd_roothub_get() ) {
     error.status = -EADDRINUSE;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;

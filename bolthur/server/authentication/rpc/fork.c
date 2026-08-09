@@ -84,8 +84,8 @@ void rpc_handle_fork(
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
-  // fill response structure
-  response.status = 0;
+  // clear response structure
+  memset( &response, 0, sizeof( response ) );
   // return response and free
   bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
   free( request );

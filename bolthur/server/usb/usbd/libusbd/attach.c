@@ -32,10 +32,10 @@
  * @param response_info
  */
 static void attach_attach_finished(
-  size_t type,
-  pid_t origin,
-  size_t data_info,
-  size_t response_info
+  const size_t type,
+  const pid_t origin,
+  const size_t data_info,
+  const size_t response_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
@@ -86,9 +86,9 @@ static void attach_attach_finished(
  */
 static void attach_configure_finished(
   [[maybe_unused]] size_t type,
-  pid_t origin,
-  size_t data_info,
-  size_t response_info
+  const pid_t origin,
+  const size_t data_info,
+  const size_t response_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
@@ -171,9 +171,9 @@ static void attach_configure_finished(
  */
 static void attach_read_device_finished_2(
   [[maybe_unused]] size_t type,
-  pid_t origin,
-  size_t data_info,
-  size_t response_info
+  const pid_t origin,
+  const size_t data_info,
+  const size_t response_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
@@ -255,9 +255,9 @@ static void attach_read_device_finished_2(
  */
 static void attach_set_address_finished(
   [[maybe_unused]] size_t type,
-  pid_t origin,
-  size_t data_info,
-  size_t response_info
+  const pid_t origin,
+  const size_t data_info,
+  const size_t response_info
 ) {
   #if defined( USBD_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "SET ADDRESS FINISHED\r\n")
@@ -331,9 +331,9 @@ static void attach_set_address_finished(
  */
 static void attach_read_device_finished_1(
   [[maybe_unused]] size_t type,
-  pid_t origin,
-  size_t data_info,
-  size_t response_info
+  const pid_t origin,
+  const size_t data_info,
+  const size_t response_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )

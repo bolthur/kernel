@@ -73,7 +73,7 @@ void rpc_handle_fork(
     }
   } );
   // return success
-  response.status = 0;
+  memset( &response, 0, sizeof( response ) );
   // return from rpc
   bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
   // free request
