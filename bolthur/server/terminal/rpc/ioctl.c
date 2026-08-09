@@ -48,23 +48,23 @@ void rpc_handle_ioctl(
   // handle no data
   if ( ! data_info ) {
     EARLY_STARTUP_PRINT( "no data info\r\n" )
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     EARLY_STARTUP_PRINT( "invalid origin\r\n" )
     err_response.status = -EINVAL;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, false, NULL );
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, false, nullptr );
   if ( ! request ) {
     EARLY_STARTUP_PRINT( "no message found\r\n" )
     err_response.status = -errno;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // get local handler
@@ -72,7 +72,7 @@ void rpc_handle_ioctl(
   if ( ! handler ) {
     EARLY_STARTUP_PRINT( "no handler found\r\n" )
     err_response.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }

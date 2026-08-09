@@ -31,7 +31,7 @@
 /**
  * @brief event manager structure
  */
-event_manager_t* event = NULL;
+event_manager_t* event = nullptr;
 
 /**
  * @brief Compare event callback necessary for avl tree
@@ -80,7 +80,7 @@ bool event_init( void ) {
   #endif
 
   // create tree
-  event->tree = avl_create_tree( compare_event_callback, NULL, NULL );
+  event->tree = avl_create_tree( compare_event_callback, nullptr, nullptr );
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Created event tree at: %p\r\n", event->tree )
@@ -92,7 +92,7 @@ bool event_init( void ) {
   }
 
   // create queue
-  event->queue_kernel = list_construct( NULL, NULL, NULL );
+  event->queue_kernel = list_construct( nullptr, nullptr, nullptr );
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Created kernel queue at: %p\r\n", event->queue_kernel )
@@ -104,7 +104,7 @@ bool event_init( void ) {
     return false;
   }
 
-  event->queue_user = list_construct( NULL, NULL, NULL );
+  event->queue_user = list_construct( nullptr, nullptr, nullptr );
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Created user queue at: %p\r\n", event->queue_user )
@@ -169,12 +169,12 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
     #endif
     // populate block
     block->type = type;
-    block->handler = list_construct( NULL, NULL, NULL );
+    block->handler = list_construct( nullptr, nullptr, nullptr );
     if ( ! block->handler ) {
       free( block );
       return false;
     }
-    block->post = list_construct( NULL, NULL, NULL );
+    block->post = list_construct( nullptr, nullptr, nullptr );
     if ( ! block->post ) {
       free( block->handler );
       free( block );

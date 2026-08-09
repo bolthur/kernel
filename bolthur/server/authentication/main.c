@@ -49,7 +49,7 @@ int main( int argc, char* argv[] ) {
     EARLY_STARTUP_PRINT( "Registering following pids with root user\r\n" )
     for ( int i = 1; i < argc; i++ ) {
       // transform string to pid
-      pid_t pid = ( pid_t )strtol( argv[ i ], ( char** )NULL, 10 );
+      pid_t pid = ( pid_t )strtol( argv[ i ], ( char** )nullptr, 10 );
       // try to add it with user 0
       if ( ! pid_node_add( pid, 0 ) ) {
         EARLY_STARTUP_PRINT( "Unable to push pid %d to tree\r\n", pid )

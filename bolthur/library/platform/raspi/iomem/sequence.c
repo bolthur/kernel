@@ -35,8 +35,8 @@ __attribute__((__malloc__, __malloc__(iomem_release_mmio_sequence, 1))) void* io
     #if defined( SEQUENCE_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Invalid sequence count given\r\n" )
     #endif
-    // return null
-    return NULL;
+    // return nullptr
+    return nullptr;
   }
   // allocate
   const size_t tmp_total = count * sizeof( iomem_mmio_entry_t );
@@ -46,8 +46,8 @@ __attribute__((__malloc__, __malloc__(iomem_release_mmio_sequence, 1))) void* io
     #if defined( SEQUENCE_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate sequence\r\n" )
     #endif
-    // return null
-    return NULL;
+    // return nullptr
+    return nullptr;
   }
   // erase
   memset( tmp, 0, tmp_total );
@@ -57,7 +57,7 @@ __attribute__((__malloc__, __malloc__(iomem_release_mmio_sequence, 1))) void* io
     tmp[ i ].sleep_type = IOMEM_MMIO_SLEEP_NONE;
     tmp[ i ].failure_condition = IOMEM_MMIO_FAILURE_CONDITION_OFF;
   }
-  // set total if not null
+  // set total if valid
   if ( total ) {
     *total = tmp_total;
   }

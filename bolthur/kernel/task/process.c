@@ -47,7 +47,7 @@
 /**
  * @brief Process management structure
  */
-task_manager_t* process_manager = NULL;
+task_manager_t* process_manager = nullptr;
 
 /**
  * @fn int32_t process_compare_id(const avl_node_t*, const avl_node_t*)
@@ -138,8 +138,8 @@ static void task_process_free( task_process_t* proc ) {
     proc->rpc_mailbox = 0;
     proc->rpc_mailbox_virt = 0;
   }
-  // set to null
-  proc->virtual_context = NULL;
+  // set to nullptr
+  proc->virtual_context = nullptr;
   // destroy thread manager
   if ( proc->thread_manager ) {
     task_thread_destroy( proc->thread_manager );
@@ -210,7 +210,7 @@ bool task_process_init( void ) {
 
   // create tree for managing processes by id
   process_manager->process_id = avl_create_tree(
-    process_compare_id, process_lookup_id, NULL );
+    process_compare_id, process_lookup_id, nullptr );
   // handle error
   if ( ! process_manager->process_id ) {
     // debug output
@@ -236,7 +236,7 @@ bool task_process_init( void ) {
   process_manager->process_to_cleanup = list_construct(
     cleanup_process_lookup_id,
     cleanup_process_delete,
-    NULL
+    nullptr
   );
   if ( ! process_manager->process_to_cleanup ) {
     // debug output
@@ -248,7 +248,7 @@ bool task_process_init( void ) {
     free( process_manager );
     return false;
   }
-  process_manager->thread_to_cleanup = list_construct( NULL, NULL, NULL );
+  process_manager->thread_to_cleanup = list_construct( nullptr, nullptr, nullptr );
   if ( ! process_manager->thread_to_cleanup ) {
     // debug output
     #if defined( PRINT_PROCESS )
@@ -329,7 +329,7 @@ pid_t task_process_generate_id( void ) {
 task_process_t* task_process_create( size_t priority, pid_t parent ) {
   // check manager
   if ( ! process_manager ) {
-    return NULL;
+    return nullptr;
   }
 
   // debug output
@@ -345,7 +345,7 @@ task_process_t* task_process_create( size_t priority, pid_t parent ) {
   task_process_t* process = malloc( sizeof( *process ) );
   // check
   if ( ! process ) {
-    return NULL;
+    return nullptr;
   }
   // debug output
   #if defined( PRINT_PROCESS )
@@ -360,7 +360,7 @@ task_process_t* task_process_create( size_t priority, pid_t parent ) {
   // handle error
   if ( ! process->thread_manager ) {
     task_process_free( process );
-    return NULL;
+    return nullptr;
   }
   process->priority = priority;
   process->parent = parent;
@@ -368,14 +368,14 @@ task_process_t* task_process_create( size_t priority, pid_t parent ) {
   // handle error
   if ( ! process->thread_stack_manager ) {
     task_process_free( process );
-    return NULL;
+    return nullptr;
   }
   // create context only for user processes
   process->virtual_context = virt_create_context( VIRT_CONTEXT_TYPE_USER );
   // handle error
   if ( ! process->virtual_context ) {
     task_process_free( process );
-    return NULL;
+    return nullptr;
   }
 
   // prepare node
@@ -383,7 +383,7 @@ task_process_t* task_process_create( size_t priority, pid_t parent ) {
   // add process to tree
   if ( ! avl_insert_by_node( process_manager->process_id, &process->node_id ) ) {
     task_process_free( process );
-    return NULL;
+    return nullptr;
   }
   // return process
   return process;
@@ -394,7 +394,7 @@ task_process_t* task_process_create( size_t priority, pid_t parent ) {
  * @brief Generate complete copy of process to fork
  *
  * @param thread_calling calling thread containing process information
- * @return forked process structure or null
+ * @return forked process structure or nullptr
  */
 task_process_t* task_process_fork( task_thread_t* thread_calling ) {
   #if defined( PRINT_PROCESS )
@@ -403,7 +403,7 @@ task_process_t* task_process_fork( task_thread_t* thread_calling ) {
   // reserve new process structure
   task_process_t* forked = malloc( sizeof( *forked ) );
   if ( ! forked ) {
-    return NULL;
+    return nullptr;
   }
   memset( ( void* )forked, 0, sizeof( task_process_t ) );
   task_process_t* proc = thread_calling->process;
@@ -415,7 +415,7 @@ task_process_t* task_process_fork( task_thread_t* thread_calling ) {
   forked->thread_manager = task_thread_init();
   if ( ! forked->thread_manager ) {
     task_process_free( forked );
-    return NULL;
+    return nullptr;
   }
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "Initialize thread stack manager\r\n" )
@@ -423,7 +423,7 @@ task_process_t* task_process_fork( task_thread_t* thread_calling ) {
   forked->thread_stack_manager = task_stack_manager_create();
   if ( ! forked->thread_stack_manager ) {
     task_process_free( forked );
-    return NULL;
+    return nullptr;
   }
   // fork shared memory structures
   #if defined( PRINT_PROCESS )
@@ -431,7 +431,7 @@ task_process_t* task_process_fork( task_thread_t* thread_calling ) {
   #endif
   if ( ! shared_memory_fork( proc, forked ) ) {
     task_process_free( forked );
-    return NULL;
+    return nullptr;
   }
   // fork virtual context
   #if defined( PRINT_PROCESS )
@@ -440,7 +440,7 @@ task_process_t* task_process_fork( task_thread_t* thread_calling ) {
   forked->virtual_context = virt_fork_context( proc->virtual_context, forked );
   if ( ! forked->virtual_context ) {
     task_process_free( forked );
-    return NULL;
+    return nullptr;
   }
   // create message queue if existing
   #if defined( PRINT_PROCESS )
@@ -448,7 +448,7 @@ task_process_t* task_process_fork( task_thread_t* thread_calling ) {
   #endif
   if ( proc->rpc_queue && ! rpc_queue_setup( forked ) ) {
     task_process_free( forked );
-    return NULL;
+    return nullptr;
   }
   // erase mailbox if existing
   if ( proc->rpc_mailbox_virt && proc->rpc_mailbox ) {
@@ -479,7 +479,7 @@ task_process_t* task_process_fork( task_thread_t* thread_calling ) {
   #endif
   if ( ! avl_insert_by_node( process_manager->process_id, &forked->node_id ) ) {
     task_process_free( forked );
-    return NULL;
+    return nullptr;
   }
 
   #if defined( PRINT_PROCESS )
@@ -492,7 +492,7 @@ task_process_t* task_process_fork( task_thread_t* thread_calling ) {
     // try to fork it
     if ( ! task_thread_fork( forked, thread ) ) {
       task_process_free( forked );
-      return NULL;
+      return nullptr;
     }
     // get next thread
     #if defined( PRINT_PROCESS )
@@ -513,10 +513,10 @@ task_process_t* task_process_fork( task_thread_t* thread_calling ) {
  */
 void task_process_queue_reset( void ) {
   // min / max queue
-  task_priority_queue_t* min_queue = NULL;
-  task_priority_queue_t* max_queue = NULL;
-  avl_node_t* min = NULL;
-  avl_node_t* max = NULL;
+  task_priority_queue_t* min_queue = nullptr;
+  task_priority_queue_t* max_queue = nullptr;
+  avl_node_t* min = nullptr;
+  avl_node_t* max = nullptr;
 
   // debug output
   #if defined( PRINT_PROCESS )
@@ -576,7 +576,7 @@ void task_process_queue_reset( void ) {
     }
 
     // reset last handled
-    current->last_handled = NULL;
+    current->last_handled = nullptr;
     // prevent endless loop by checking against 0
     if ( 0 == priority ) {
       break;
@@ -732,7 +732,7 @@ bool task_process_prepare_init( task_process_t* proc ) {
   task_thread_t* thread = TASK_THREAD_GET_BLOCK( node );
 
   // empty env for init
-  char* env[] = { NULL, };
+  char* env[] = { nullptr, };
   // arch related
   uintptr_t proc_additional_start = task_process_prepare_init_arch( proc );
   if ( proc_additional_start ) {
@@ -740,10 +740,10 @@ bool task_process_prepare_init( task_process_t* proc ) {
     sprintf( str_additional, "%#"PRIxPTR"\0", proc_additional_start );
 
     char* arg[] = {
-      "daemon:/init", str_ramdisk, str_ramdisk_size, str_additional, NULL, };
+      "daemon:/init", str_ramdisk, str_ramdisk_size, str_additional, nullptr, };
     assert( task_thread_push_arguments( thread, arg, env ) )
   } else {
-    char* arg[] = { "daemon:/init", str_ramdisk, str_ramdisk_size, NULL, };
+    char* arg[] = { "daemon:/init", str_ramdisk, str_ramdisk_size, nullptr, };
     assert( task_thread_push_arguments( thread, arg, env ) )
   }
 
@@ -765,7 +765,7 @@ task_process_t* task_process_get_by_id( pid_t pid ) {
   );
   // handle not existing
   if ( ! found ) {
-    return NULL;
+    return nullptr;
   }
   // return found entry
   return TASK_PROCESS_GET_BLOCK_ID( found );

@@ -72,7 +72,7 @@ handler_node_t* handler_extract( const char* name, bool create ) {
   handler_node_t* node = malloc( sizeof( *node ) );
   // handle error
   if ( ! node ) {
-    return NULL;
+    return nullptr;
   }
   // clear out node
   memset( node, 0, sizeof( *node ) );
@@ -80,7 +80,7 @@ handler_node_t* handler_extract( const char* name, bool create ) {
   node->name = strdup( name );
   if ( ! node->name ) {
     free( node );
-    return NULL;
+    return nullptr;
   }
   // lookup for node
   handler_node_t* found = handler_node_tree_find( &management_tree, node );
@@ -89,12 +89,12 @@ handler_node_t* handler_extract( const char* name, bool create ) {
     if ( ! create ) {
       free( node->name );
       free( node );
-      return NULL;
+      return nullptr;
     }
     if ( handler_node_tree_insert( &management_tree, node ) ) {
       free( node->name );
       free( node );
-      return NULL;
+      return nullptr;
     }
     return handler_node_tree_find( &management_tree, node );
   }

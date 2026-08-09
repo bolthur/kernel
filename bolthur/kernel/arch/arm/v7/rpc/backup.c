@@ -74,7 +74,7 @@ rpc_backup_t* rpc_backup_create(
   }
   // handle no inactive thread
   if ( ! thread ) {
-    return NULL;
+    return nullptr;
   }
   // ensure correct state
   if ( ! thread->process->rpc_ready ) {
@@ -82,7 +82,7 @@ rpc_backup_t* rpc_backup_create(
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT( "thread not ready %d!\r\n", thread->state )
     #endif
-    return NULL;
+    return nullptr;
   }
 
   // debug output
@@ -97,7 +97,7 @@ rpc_backup_t* rpc_backup_create(
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT( "Unable to reserve memory for backup structure!\r\n" )
     #endif
-    return NULL;
+    return nullptr;
   }
   // clear out
   memset( backup, 0, sizeof( *backup ) );
@@ -108,7 +108,7 @@ rpc_backup_t* rpc_backup_create(
 
   // variables
   const list_item_t* current_list = target->rpc_queue->first;
-  rpc_backup_t* active = NULL;
+  rpc_backup_t* active = nullptr;
   // try to find matching rpc
   while( current_list ) {
     // get current backup
@@ -154,7 +154,7 @@ rpc_backup_t* rpc_backup_create(
   backup->context = malloc( sizeof( cpu_register_context_t ) );
   if ( ! backup->context ) {
     rpc_backup_destroy( backup );
-    return NULL;
+    return nullptr;
   }
   // debug output
   #if defined( PRINT_RPC )
@@ -183,7 +183,7 @@ rpc_backup_t* rpc_backup_create(
           DEBUG_OUTPUT( "Adding to queue failed with code %d\r\n", err )
         #endif
         rpc_backup_destroy( backup );
-        return NULL;
+        return nullptr;
       }
       // debug output
       #if defined( PRINT_RPC )
@@ -207,7 +207,7 @@ rpc_backup_t* rpc_backup_create(
           DEBUG_OUTPUT( "Adding to queue failed with code %d\r\n", err )
         #endif
         rpc_backup_destroy( backup );
-        return NULL;
+        return nullptr;
       }
       // debug output
       #if defined( PRINT_RPC )

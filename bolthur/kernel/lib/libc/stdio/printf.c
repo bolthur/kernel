@@ -34,7 +34,7 @@ int printf( const char* restrict format, ... ) {
   // variable arguments
   va_start( parameter, format );
   // write
-  int written = vsprintf( NULL, format, parameter );
+  int written = vsprintf( nullptr, format, parameter );
   // cleanup parameter
   va_end( parameter );
   // return written amount

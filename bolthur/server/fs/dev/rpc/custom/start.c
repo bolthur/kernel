@@ -44,26 +44,26 @@ void rpc_custom_handle_start(
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     error.status = -errno;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   auto const command = ( dev_command_start_t* )request->container;
   if ( ! command ) {
     error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   void* shm_addr = _syscall_memory_shared_attach( command->shm_id, ( uintptr_t )NULL );
@@ -71,7 +71,7 @@ void rpc_custom_handle_start(
     const int e = errno;
     free( request );
     error.status = -e;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // get data
@@ -84,7 +84,7 @@ void rpc_custom_handle_start(
     _syscall_memory_shared_detach( command->shm_id );
     free( request );
     error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // allocate space for fork
@@ -94,7 +94,7 @@ void rpc_custom_handle_start(
     free( request );
     free( response );
     error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // fork process
@@ -105,7 +105,7 @@ void rpc_custom_handle_start(
     free( request );
     free( response );
     error.status = -errno;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // fork only
@@ -127,7 +127,7 @@ void rpc_custom_handle_start(
     // handle additional boot args
     if ( 0 < strlen( args ) ) {
       // build command
-      char* cmd[] = { base, args, NULL, };
+      char* cmd[] = { base, args, nullptr, };
       // exec to replace
       if ( -1 == execv( path, cmd ) ) {
         exit( 1 );
@@ -135,7 +135,7 @@ void rpc_custom_handle_start(
     // handle no additional boot args
     } else {
       // build command
-      char* cmd[] = { base, NULL, };
+      char* cmd[] = { base, nullptr, };
       // exec to replace
       if ( -1 == execv( path, cmd ) ) {
         exit( 1 );
@@ -149,7 +149,7 @@ void rpc_custom_handle_start(
   memcpy( response->container, forked_process, sizeof( pid_t ) );
   // set success flag and return
   response->status = 0;
-  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, 0 );
   // free all used temporary structures
   free( request );
   free( response );

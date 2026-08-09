@@ -56,7 +56,7 @@ void rpc_handle_stat_async(
   }
   // get message and data size
   size_t data_size;
-  vfs_stat_response_t* response_data = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_stat_response_t* response_data = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! response_data ) {
     bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
     return;
@@ -95,14 +95,14 @@ void rpc_handle_stat(
   vfs_stat_response_t response = { .success = false };
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
-  vfs_stat_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_stat_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
 
@@ -111,7 +111,7 @@ void rpc_handle_stat(
     handle_node_t* container;
     // try to get handle information
     if ( handle_get( &container, origin, request->handle ) ) {
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( request );
       return;
     }
@@ -121,7 +121,7 @@ void rpc_handle_stat(
   // get mount point
   mountpoint_node_t* mount_point = mountpoint_node_extract( request->file_path );
   if ( ! mount_point ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -131,7 +131,7 @@ void rpc_handle_stat(
     response.handler = getpid();
     memset( &response.info, 0, sizeof( response.info ) );
     // return response
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -147,7 +147,7 @@ void rpc_handle_stat(
     sizeof( *request ),
     origin,
     data_info,
-    NULL,
+    nullptr,
     false
   );
   free( request );

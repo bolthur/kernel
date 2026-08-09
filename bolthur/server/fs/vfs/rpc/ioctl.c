@@ -59,7 +59,7 @@ void rpc_handle_ioctl_async(
   }
   // get message and data size
   size_t data_size;
-  char* rpc_response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  char* rpc_response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! rpc_response ) {
     err_response.status = -errno;
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), async_data, 0 );
@@ -95,15 +95,15 @@ void rpc_handle_ioctl(
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL, 0 );
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     err_response.status = -errno;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL, 0 );
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // get handle
@@ -113,7 +113,7 @@ void rpc_handle_ioctl(
   // handle error
   if ( 0 > result ) {
     err_response.status = result;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL, 0 );
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -136,12 +136,12 @@ void rpc_handle_ioctl(
       data_size,
       origin,
       data_info,
-      NULL,
+      nullptr,
       false
     );
     if ( errno ) {
       err_response.status = -errno;
-      bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL, 0 );
+      bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
       return;
     }
     free( request );
@@ -154,7 +154,7 @@ void rpc_handle_ioctl(
   );
   if ( ! ioctl_container ) {
     err_response.status = -EIO;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL, 0 );
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -170,12 +170,12 @@ void rpc_handle_ioctl(
     data_size,
     origin,
     data_info,
-    NULL,
+    nullptr,
     false
   );
   if ( errno ) {
     err_response.status = -errno;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL, 0 );
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }

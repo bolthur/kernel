@@ -42,23 +42,23 @@ void rpc_generic_read(
   vfs_read_response_t error = { .len = -EINVAL, };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( type, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( type, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( type, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // fetch rpc data
   size_t data_size;
-  vfs_read_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_read_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   // handle error
   if ( ! request ) {
     error.len = -ENOMSG;
-    bolthur_rpc_return( type, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( type, &error, sizeof( error ), nullptr, 0 );
     return;
   }
-  bolthur_rpc_return( type, &error, sizeof( error ), NULL, 0 );
+  bolthur_rpc_return( type, &error, sizeof( error ), nullptr, 0 );
   free( request );
 }

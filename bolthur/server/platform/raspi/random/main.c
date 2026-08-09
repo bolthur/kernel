@@ -52,11 +52,11 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   STARTUP_PRINT( "Enable rpc\r\n" )
   _syscall_rpc_set_ready( true );
 
-  if ( ! vfs_dev_add_file( "/dev/urandom", NULL, 0, nullptr ) ) {
+  if ( ! vfs_dev_add_file( "/dev/urandom", nullptr, 0, nullptr ) ) {
     STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }
-  if ( ! vfs_dev_add_file( "/dev/random", NULL, 0, nullptr ) ) {
+  if ( ! vfs_dev_add_file( "/dev/random", nullptr, 0, nullptr ) ) {
     STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }

@@ -39,16 +39,15 @@ void* ramdisk_extract(
   size_t extract_size,
   size_t* shared_id
 ) {
-  int err;
   // decompress
   z_stream stream = { 0 };
   *shared_id = _syscall_memory_shared_create( extract_size );
   if ( errno ) {
-    return NULL;
+    return nullptr;
   }
   void* dec = _syscall_memory_shared_attach( *shared_id, ( uintptr_t )NULL );
   if ( errno ) {
-    return NULL;
+    return nullptr;
   }
   // prepare stream
   stream.total_in = stream.avail_in = size;
@@ -59,12 +58,12 @@ void* ramdisk_extract(
   stream.zfree  = Z_NULL;
   stream.opaque = Z_NULL;
   // initialize inflate
-  err = inflateInit2( &stream, 15 + 32 );
+  int err = inflateInit2(&stream, 15 + 32);
   if ( Z_OK != err ) {
     EARLY_STARTUP_PRINT( "ERROR ON INIT = %d!\r\n", err )
     inflateEnd( &stream );
     free( dec );
-    return NULL;
+    return nullptr;
   }
   // inflate in one step
   err = inflate( &stream, Z_FINISH);
@@ -72,7 +71,7 @@ void* ramdisk_extract(
     EARLY_STARTUP_PRINT( "ERROR ON INFLATE = %d!\r\n", err )
     inflateEnd( &stream );
     free( dec );
-    return NULL;
+    return nullptr;
   }
   // end inflate
   inflateEnd( &stream );

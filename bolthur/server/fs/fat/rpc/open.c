@@ -60,28 +60,28 @@ void rpc_handle_open(
   vfs_open_response_t response = { .handle = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // fetch rpc data
   size_t data_size;
-  vfs_open_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_open_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   // handle error
   if ( ! request ) {
     response.handle = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // get mountpoint
   common_mountpoint_t* mp = common_mountpoint_find( request->path );
   if ( ! mp ) {
     response.handle = -EINVAL;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -91,7 +91,7 @@ void rpc_handle_open(
   int result = common_transaction_begin( fs->bdev );
   if ( EOK != result ) {
     response.handle = -result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -103,13 +103,13 @@ void rpc_handle_open(
     if ( EOK != result ) {
       common_transaction_rollback( fs->bdev );
       response.handle = -result;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( request );
       return;
     }
     // try to push back
     if ( ! stat_push( request->path, &st ) ) {
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( request );
       return;
     }
@@ -120,7 +120,7 @@ void rpc_handle_open(
   if ( ! container ) {
     common_transaction_rollback( fs->bdev );
     response.handle = -ENOMEM;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -132,7 +132,7 @@ void rpc_handle_open(
     if ( ! dir ) {
       common_transaction_rollback( fs->bdev );
       response.handle = -ENOMEM;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( container );
       free( request );
       return;
@@ -144,7 +144,7 @@ void rpc_handle_open(
     if ( EOK != result ) {
       common_transaction_rollback( fs->bdev );
       response.handle = -result;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( dir );
       free( container );
       free( request );
@@ -154,7 +154,7 @@ void rpc_handle_open(
     result = common_transaction_rollback( fs->bdev );
     if ( EOK != result ) {
       response.handle = -result;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( dir );
       free( container );
       free( request );
@@ -164,7 +164,7 @@ void rpc_handle_open(
     process_node_t* node = process_generate( request->origin );
     if ( ! node ) {
       response.handle = -result;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( dir );
       free( container );
       free( request );
@@ -187,7 +187,7 @@ void rpc_handle_open(
     );
     if ( 0 != result ) {
       response.handle = result;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( dir );
       free( container );
       free( request );
@@ -200,7 +200,7 @@ void rpc_handle_open(
     if ( ! file ) {
       common_transaction_rollback( fs->bdev );
       response.handle = -ENOMEM;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( container );
       free( request );
       return;
@@ -212,7 +212,7 @@ void rpc_handle_open(
     if ( EOK != result ) {
       common_transaction_rollback( fs->bdev );
       response.handle = -result;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( file );
       free( container );
       free( request );
@@ -226,7 +226,7 @@ void rpc_handle_open(
     }
     if ( EOK != result ) {
       response.handle = -result;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( file );
       free( container );
       free( request );
@@ -236,7 +236,7 @@ void rpc_handle_open(
     process_node_t* node = process_generate( request->origin );
     if ( ! node ) {
       response.handle = -result;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( file );
       free( container );
       free( request );
@@ -259,7 +259,7 @@ void rpc_handle_open(
     );
     if ( 0 != result ) {
       response.handle = result;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( file );
       free( container );
       free( request );
@@ -271,6 +271,6 @@ void rpc_handle_open(
   response.handle = request->handle;
   response.handler = getpid();
   // return data
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
   free( request );
 }

@@ -82,7 +82,7 @@ pid_node_t* pid_node_extract( const pid_t pid ) {
   if ( 0 == n->group_count ) {
     // allocate group list
     size_t old_size = 0;
-    gid_t* group_list = NULL;
+    gid_t* group_list = nullptr;
     // open group
     setgrent();
     // loop through groups
@@ -95,7 +95,7 @@ pid_node_t* pid_node_extract( const pid_t pid ) {
         struct passwd* pass = getpwnam( grp->gr_mem[ idx ] );
         if ( ! pass ) {
           free( group_list );
-          return NULL;
+          return nullptr;
         }
         EARLY_STARTUP_PRINT( "pass->pw_name = %s\r\n", pass->pw_name )
         // handle no match
@@ -112,7 +112,7 @@ pid_node_t* pid_node_extract( const pid_t pid ) {
         }
         if ( ! temp ) {
           free( group_list );
-          return NULL;
+          return nullptr;
         }
         group_list = temp;
         group_list[ old_size ] = grp->gr_gid;
@@ -128,7 +128,7 @@ pid_node_t* pid_node_extract( const pid_t pid ) {
         sizeof( *new_node ) + sizeof( gid_t ) * old_size );
       if ( ! new_node ) {
         free( group_list );
-        return NULL;
+        return nullptr;
       }
       memset( new_node, 0, sizeof( *new_node ) + sizeof( gid_t ) * old_size );
       // copy over stuff
@@ -144,7 +144,7 @@ pid_node_t* pid_node_extract( const pid_t pid ) {
       if ( pid_node_tree_insert( &management_tree, new_node ) ) {
         free( new_node );
         free( group_list );
-        return NULL;
+        return nullptr;
       }
       // overwrite found node
       n = new_node;

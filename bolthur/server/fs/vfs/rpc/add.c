@@ -55,7 +55,7 @@ void rpc_handle_add_async(
   }
   // get message and data size
   size_t data_size;
-  void* response_data = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  void* response_data = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! response_data ) {
     response.status = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
@@ -127,22 +127,22 @@ void rpc_handle_add(
   vfs_add_response_t response = { .status = -EINVAL, .handler = 0 };
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
-  void* request_data = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  void* request_data = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request_data ) {
     response.status = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // allocate space for request
   vfs_add_request_t* request = request_data;
   // handle invalid process compared to origin
   if ( request->handler != origin ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request_data );
     return;
   }
@@ -150,7 +150,7 @@ void rpc_handle_add(
   mountpoint_node_t* mount_point = mountpoint_node_extract( request->file_path );
   if ( ! mount_point ) {
     response.status = -EIO;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request_data );
     return;
   }
@@ -168,7 +168,7 @@ void rpc_handle_add(
     // don't push back data info when handler and origin are the same to prevent
     // async callback in target process to kick in
     mount_point->pid == origin ? 0 : data_info,
-    NULL,
+    nullptr,
     false
   );
   free( request_data );

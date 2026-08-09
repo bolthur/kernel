@@ -33,12 +33,12 @@
  * @brief Current running thread
  * @todo Transform to pointer to multiple threads ( depending on cpu size )
  */
-task_thread_t* task_thread_current_thread = NULL;
+task_thread_t* task_thread_current_thread = nullptr;
 
 /**
  * @brief next thread to try to switch to
  */
-task_thread_t* task_thread_try_switch_to = NULL;
+task_thread_t* task_thread_try_switch_to = nullptr;
 
 /**
  * @fn int32_t thread_compare_id_callback(const avl_node_t*, const avl_node_t*)
@@ -178,7 +178,7 @@ void task_thread_reset_current( void ) {
     }
   }
   // unset current thread
-  task_thread_current_thread = NULL;
+  task_thread_current_thread = nullptr;
 }
 
 /**
@@ -190,7 +190,7 @@ void task_thread_reset_current( void ) {
 avl_tree_t* task_thread_init( void ) {
   return avl_create_tree(
     thread_compare_id_callback,
-    NULL,
+    nullptr,
     thread_destroy_callback
   );
 }
@@ -242,14 +242,14 @@ bool task_thread_is_active( task_thread_t* thread ) {
 task_thread_t* task_thread_next( void ) {
   // check process manager
   if ( ! process_manager ) {
-    return NULL;
+    return nullptr;
   }
 
   // min / max queue
-  task_priority_queue_t* min_queue = NULL;
-  task_priority_queue_t* max_queue = NULL;
-  avl_node_t* min = NULL;
-  avl_node_t* max = NULL;
+  task_priority_queue_t* min_queue = nullptr;
+  task_priority_queue_t* max_queue = nullptr;
+  avl_node_t* min = nullptr;
+  avl_node_t* max = nullptr;
 
   // get min and max priority queue
   min = avl_get_min( process_manager->thread_priority->root );
@@ -268,7 +268,7 @@ task_thread_t* task_thread_next( void ) {
   }
   // handle no min or no max queue
   if ( ! min_queue || ! max_queue ) {
-    return NULL;
+    return nullptr;
   }
 
   // loop through priorities and try to get next task
@@ -378,7 +378,7 @@ task_thread_t* task_thread_next( void ) {
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "no task found!\r\n" )
   #endif
-  return NULL;
+  return nullptr;
 }
 
 /**
@@ -581,7 +581,7 @@ task_thread_t* task_thread_get_blocked(
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    avl_print( process_manager->process_id, NULL );
+    avl_print( process_manager->process_id, nullptr );
   #endif
   avl_node_t* avl_proc = avl_iterate_first( process_manager->process_id );
   while ( avl_proc ) {
@@ -623,7 +623,7 @@ task_thread_t* task_thread_get_blocked(
     // get next process
     avl_proc = avl_iterate_next( process_manager->process_id, avl_proc );
   }
-  return NULL;
+  return nullptr;
 }
 
 /**

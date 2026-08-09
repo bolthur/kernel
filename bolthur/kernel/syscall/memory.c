@@ -101,11 +101,11 @@ void syscall_memory_acquire( void* context ) {
   if ( ( flag & MEMORY_FLAG_PHYS ) && ! ( flag & MEMORY_FLAG_BUS ) ) {
     // set phys to given address
     phys = ( uintptr_t )addr;
-    // overwrite address with NULL
-    uint64_t offset = phys - ROUND_DOWN_TO_FULL_PAGE( addr );
+    // calculate and subtract offset
+    const uint64_t offset = phys - ROUND_DOWN_TO_FULL_PAGE( addr );
     phys -= offset;
-    // overwrite address with NULL
-    addr = NULL;
+    // overwrite address with found
+    addr = nullptr;
     // check if already used
     if ( phys_is_range_used( phys, len ) ) {
       // debug output

@@ -425,7 +425,7 @@ static uint64_t get_temporary_mapping( uintptr_t addr ) {
  */
 static uintptr_t get_new_table( uintptr_t table ) {
   // static address and remaining amount
-  static uintptr_t* addr = NULL;
+  static uintptr_t* addr = nullptr;
   static size_t max_addr;
   static size_t free_addr;
 
@@ -699,7 +699,7 @@ uint64_t v7_short_create_table(
     return tbl;
   }
 
-  // invalid type => NULL
+  // invalid type => nullptr
   return 0;
 }
 
@@ -1180,7 +1180,7 @@ virt_context_t* v7_short_create_context( virt_context_type_t type ) {
     void* tmp = aligned_alloc( alignment, size );
     // handle error
     if ( ! tmp ) {
-      return NULL;
+      return nullptr;
     }
     memset( tmp, 0, size );
     phys = ( uintptr_t )tmp;
@@ -1189,7 +1189,7 @@ virt_context_t* v7_short_create_context( virt_context_type_t type ) {
     phys = phys_find_free_page_range( alignment, size, PHYS_MEMORY_TYPE_NORMAL );
     // handle error
     if ( INVALID_ADDRESS == phys ) {
-      return NULL;
+      return nullptr;
     }
   }
   uintptr_t ctx = ( uintptr_t )phys;
@@ -1209,7 +1209,7 @@ virt_context_t* v7_short_create_context( virt_context_type_t type ) {
     } else {
       phys_free_page_range( ctx, size );
     }
-    return NULL;
+    return nullptr;
   }
   // initialize with zero
   memset( ( void* )tmp, 0, size );
@@ -1228,7 +1228,7 @@ virt_context_t* v7_short_create_context( virt_context_type_t type ) {
     } else {
       phys_free_page_range( ctx, size );
     }
-    return NULL;
+    return nullptr;
   }
 
   // debug output
@@ -1414,13 +1414,13 @@ bool v7_short_fork_global_directory(
  * @brief Fork virtual context without long page address extension
  * @param ctx context to fork
  * @param proc forked process structure
- * @return forked context or NULL
+ * @return forked context or nullptr
  */
 virt_context_t* v7_short_fork_context( virt_context_t* ctx, task_process_t* proc ) {
   // create new context
   virt_context_t* forked = virt_create_context( ctx->type );
   if ( ! forked ) {
-    return NULL;
+    return nullptr;
   }
   memcpy( forked->bitmap, ctx->bitmap, ctx->bitmap_length );
   forked->bitmap_length = ctx->bitmap_length;
@@ -1431,7 +1431,7 @@ virt_context_t* v7_short_fork_context( virt_context_t* ctx, task_process_t* proc
   // handle error
   if ( 0 == ctx_to_fork ) {
     assert( virt_destroy_context( forked, false ) )
-    return NULL;
+    return nullptr;
   }
   // map new context temporarily
   uintptr_t ctx_forked = map_temporary(
@@ -1440,7 +1440,7 @@ virt_context_t* v7_short_fork_context( virt_context_t* ctx, task_process_t* proc
   if ( 0 == ctx_forked ) {
     unmap_temporary( ctx_to_fork, SD_TTBR_SIZE_2G );
     assert( virt_destroy_context( forked, false ) )
-    return NULL;
+    return nullptr;
   }
   // clear page
   memset( ( void* )ctx_forked, 0, SD_TTBR_SIZE_2G );
@@ -1454,7 +1454,7 @@ virt_context_t* v7_short_fork_context( virt_context_t* ctx, task_process_t* proc
     unmap_temporary( ctx_to_fork, SD_TTBR_SIZE_2G );
     unmap_temporary( ctx_forked, SD_TTBR_SIZE_2G );
     assert( virt_destroy_context( forked, false ) )
-    return NULL;
+    return nullptr;
   }
 
   // unmap temporary
@@ -1671,7 +1671,7 @@ bool v7_short_is_mapped_in_context( virt_context_t* ctx, uintptr_t addr ) {
   #endif
   // map temporary
   table = ( sd_page_table_t* )map_temporary( ( uintptr_t )table, SD_TBL_SIZE );
-  // not mapped if null
+  // not mapped if nullptr
   if ( ! table ) {
     return false;
   }
@@ -1729,7 +1729,7 @@ uint64_t v7_short_get_mapped_address_in_context(
   #endif
   // map temporary
   table = ( sd_page_table_t* )map_temporary( ( uintptr_t )table, SD_TBL_SIZE );
-  // not mapped if null
+  // not mapped if nullptr
   if ( ! table ) {
     return INVALID_ADDRESS;
   }

@@ -69,7 +69,7 @@ mount_node_t* mount_extract( const char* path, bool create ) {
   mount_node_t* node = malloc( sizeof( *node ) );
   // handle error
   if ( ! node ) {
-    return NULL;
+    return nullptr;
   }
   // clear out node
   memset( node, 0, sizeof( *node ) );
@@ -77,7 +77,7 @@ mount_node_t* mount_extract( const char* path, bool create ) {
   node->path = strdup( path );
   if ( ! node->path ) {
     free( node );
-    return NULL;
+    return nullptr;
   }
   // lookup for node
   mount_node_t* found = mount_node_tree_find( &management_tree, node );
@@ -86,12 +86,12 @@ mount_node_t* mount_extract( const char* path, bool create ) {
     if ( ! create ) {
       free( node->path );
       free( node );
-      return NULL;
+      return nullptr;
     }
     if ( mount_node_tree_insert( &management_tree, node ) ) {
       free( node->path );
       free( node );
-      return NULL;
+      return nullptr;
     }
     return mount_node_tree_find( &management_tree, node );
   }
@@ -188,7 +188,7 @@ mount_node_t* mount_extract_by_path_walk( const char* path ) {
   mount_node_t* node = malloc( sizeof( *node ) );
   // handle error
   if ( ! node ) {
-    return NULL;
+    return nullptr;
   }
   // clear out node
   memset( node, 0, sizeof( *node ) );
@@ -196,7 +196,7 @@ mount_node_t* mount_extract_by_path_walk( const char* path ) {
   node->path = strdup( path );
   if ( ! node->path ) {
     free( node );
-    return NULL;
+    return nullptr;
   }
 
   // local duplicate for path
@@ -204,12 +204,12 @@ mount_node_t* mount_extract_by_path_walk( const char* path ) {
   if ( ! p ) {
     free( node->path );
     free( node );
-    return NULL;
+    return nullptr;
   }
   // set loop path and found
   char* loop_path = p;
-  char* previous_loop = NULL;
-  mount_node_t* found = NULL;
+  char* previous_loop = nullptr;
+  mount_node_t* found = nullptr;
   // try to get mount point
   while ( ! found && *loop_path ) {
     // lookup

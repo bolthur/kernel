@@ -38,5 +38,5 @@ atag_t* atag_find( atag_t* head, atag_tag_t tag ) {
     head = atag_next( head );
   }
 
-  return NULL;
+  return nullptr;
 }

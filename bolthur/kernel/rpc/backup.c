@@ -32,7 +32,7 @@
  * @param backup
  */
 void rpc_backup_destroy( rpc_backup_t* backup ) {
-  // handle null
+  // handle invalid
   if ( ! backup ) {
     return;
   }
@@ -50,7 +50,7 @@ void rpc_backup_destroy( rpc_backup_t* backup ) {
  *
  * @param thread thread to get backup from
  * @param data_id data id to get backup from
- * @return active backup or null if no rpc is active or not found
+ * @return active backup or nullptr if no rpc is active or not found
  */
 rpc_backup_t* rpc_backup_get_active( task_thread_t* thread, size_t data_id ) {
   // ensure proper states
@@ -63,14 +63,14 @@ rpc_backup_t* rpc_backup_get_active( task_thread_t* thread, size_t data_id ) {
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT( "thread->state = %d\r\n", thread->state )
     #endif
-    return NULL;
+    return nullptr;
   }
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "thread->state = %d\r\n", thread->state )
   #endif
   // variables
   const list_item_t* current = thread->process->rpc_queue->first;
-  rpc_backup_t* found = NULL;
+  rpc_backup_t* found = nullptr;
   // handle data id set
   if ( data_id ) {
     #if defined( PRINT_RPC )
@@ -93,7 +93,7 @@ rpc_backup_t* rpc_backup_get_active( task_thread_t* thread, size_t data_id ) {
       // go to next
       current = current->next;
     }
-    // return null
+    // return found
     return found;
   }
   #if defined( PRINT_RPC )
@@ -109,6 +109,6 @@ rpc_backup_t* rpc_backup_get_active( task_thread_t* thread, size_t data_id ) {
     // go to next
     current = current->next;
   }
-  // return null
+  // return found
   return found;
 }

@@ -63,7 +63,7 @@ void rpc_handle_read_async(
   }
   // get message and data size
   size_t data_size;
-  vfs_read_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_read_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! response ) {
     return;
   }
@@ -120,16 +120,16 @@ void rpc_handle_read(
   response->len = -EINVAL;
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     return;
   }
   // get message and data size
   size_t data_size;
-  vfs_read_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_read_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     response->len = -errno;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     return;
   }
@@ -138,15 +138,15 @@ void rpc_handle_read(
   // handle error
   if ( 0 > result ) {
     response->len = result;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     free( request );
     return;
   }
-  // special handling for null device
+  // special handling for nullptr device
   if ( 0 == strcmp( container->path, "/dev/null" ) ) {
     response->len = 0;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     free( request );
     return;
@@ -167,12 +167,12 @@ void rpc_handle_read(
     sizeof( *request ),
     origin,
     data_info,
-    NULL,
+    nullptr,
     false
   );
   if ( errno ) {
     response->len = -errno;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     free( request );
     return;

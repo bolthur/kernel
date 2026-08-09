@@ -32,7 +32,7 @@
 /**
  * @brief Tree of shared memory items
  */
-avl_tree_t* shared_tree = NULL;
+avl_tree_t* shared_tree = nullptr;
 
 /**
  * @fn int32_t lookup_process(const list_item_t*, const void*)
@@ -132,7 +132,7 @@ static shared_memory_entry_t* create_entry( size_t size ) {
   shared_memory_entry_t* entry = malloc( sizeof( *entry ) );
   // check
   if ( ! entry ) {
-    return NULL;
+    return nullptr;
   }
   // prepare area
   memset( entry, 0, sizeof( *entry ) );
@@ -146,7 +146,7 @@ static shared_memory_entry_t* create_entry( size_t size ) {
   // check
   if ( ! entry->address ) {
     destroy_entry( entry );
-    return NULL;
+    return nullptr;
   }
   // request necessary pages
   for ( size_t idx = 0; idx < count; idx++ ) {
@@ -154,7 +154,7 @@ static shared_memory_entry_t* create_entry( size_t size ) {
     // handle error
     if ( INVALID_ADDRESS == entry->address[ idx ] ) {
       destroy_entry( entry );
-      return NULL;
+      return nullptr;
     }
   }
 
@@ -162,11 +162,11 @@ static shared_memory_entry_t* create_entry( size_t size ) {
   entry->process_mapping = list_construct(
     lookup_process,
     cleanup_process,
-    NULL
+    nullptr
   );
   if ( ! entry->process_mapping ) {
     destroy_entry( entry );
-    return NULL;
+    return nullptr;
   }
 
   // populate remaining data
@@ -224,7 +224,7 @@ bool shared_memory_init( void ) {
     DEBUG_OUTPUT( "shared_memory_init()\r\n" )
   #endif
   // create tree
-  shared_tree = avl_create_tree( shared_compare_id_callback, NULL, NULL );
+  shared_tree = avl_create_tree( shared_compare_id_callback, nullptr, nullptr );
   if ( ! shared_tree ) {
     return false;
   }
@@ -246,23 +246,23 @@ shared_memory_entry_t* shared_memory_create( size_t len ) {
   #endif
   // handle not initialized or invalid length
   if ( ! shared_tree || 0 == len ) {
-    return NULL;
+    return nullptr;
   }
   // create new block
   shared_memory_entry_t* entry = create_entry( len );
   if ( ! entry ) {
-    return NULL;
+    return nullptr;
   }
   // prepare node
   avl_prepare_node( &entry->node, ( void* )entry->id );
   // add new item to tree
   if ( ! avl_insert_by_node( shared_tree, &entry->node ) ) {
     destroy_entry( entry );
-    return NULL;
+    return nullptr;
   }
   // debug output
   #if defined( PRINT_MM_SHARED )
-    avl_print( shared_tree, NULL );
+    avl_print( shared_tree, nullptr );
   #endif
   // return id of new shared area
   return entry;
@@ -591,7 +591,7 @@ bool shared_memory_detach( task_process_t* process, size_t id ) {
   }
   // debug output
   #if defined( PRINT_MM_SHARED )
-    avl_print( shared_tree, NULL );
+    avl_print( shared_tree, nullptr );
   #endif
   // return success
   return true;
@@ -613,7 +613,7 @@ bool shared_memory_phys_is_shared(
   // get start node
   avl_node_t* node = avl_iterate_first( shared_tree );
   // loop until end
-  while ( NULL != node ) {
+  while ( node ) {
     // get mapped entry
     auto const entry = SHARED_ENTRY_GET_BLOCK( node );
     // lookup process
@@ -656,7 +656,7 @@ bool shared_memory_address_is_shared(
   // get start node
   avl_node_t* node = avl_iterate_first( shared_tree );
   // loop until end
-  while ( NULL != node ) {
+  while ( node ) {
     // get mapped entry
     const shared_memory_entry_t* entry = SHARED_ENTRY_GET_BLOCK( node );
     // lookup process
@@ -702,7 +702,7 @@ bool shared_memory_fork(
   // get start node
   avl_node_t* node = avl_iterate_first( shared_tree );
   // loop until end
-  while ( NULL != node ) {
+  while ( node ) {
     // get mapped entry
     auto const entry = SHARED_ENTRY_GET_BLOCK( node );
     // lookup process
@@ -748,7 +748,7 @@ bool shared_memory_cleanup_process( task_process_t* proc ) {
   // get start node
   avl_node_t* node = avl_iterate_first( shared_tree );
   // loop until end
-  while ( NULL != node ) {
+  while ( node ) {
     // get mapped entry
     auto const entry = SHARED_ENTRY_GET_BLOCK( node );
     // detach shared memory

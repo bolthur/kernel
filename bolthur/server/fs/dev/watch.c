@@ -128,7 +128,7 @@ watch_node_t* watch_extract( const char* path, bool create ) {
   watch_node_t* node = malloc( sizeof( *node ) );
   // handle error
   if ( ! node ) {
-    return NULL;
+    return nullptr;
   }
   // clear out node
   memset( node, 0, sizeof( *node ) );
@@ -136,13 +136,13 @@ watch_node_t* watch_extract( const char* path, bool create ) {
   node->name = strdup( path );
   if ( ! node->name ) {
     free( node );
-    return NULL;
+    return nullptr;
   }
   // populate tree
   if ( 0 != watch_pid_setup( node ) ) {
     free( node->name );
     free( node );
-    return NULL;
+    return nullptr;
   }
   // lookup for node
   watch_node_t* found = watch_node_tree_find( &management_tree, node );
@@ -152,13 +152,13 @@ watch_node_t* watch_extract( const char* path, bool create ) {
       watch_pid_tree_destroy( node->pid, watch_pid_destroy );
       free( node->name );
       free( node );
-      return NULL;
+      return nullptr;
     }
     if ( watch_node_tree_insert( &management_tree, node ) ) {
       watch_pid_tree_destroy( node->pid, watch_pid_destroy );
       free( node->name );
       free( node );
-      return NULL;
+      return nullptr;
     }
     return watch_node_tree_find( &management_tree, node );
   }

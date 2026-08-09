@@ -29,7 +29,7 @@
 #include "../../../../../library/vfs/add.h"
 
 size_t mbr_size = 0;
-uint8_t* mbr_data = NULL;
+uint8_t* mbr_data = nullptr;
 
 /**
  * @fn int main(int, char*[])

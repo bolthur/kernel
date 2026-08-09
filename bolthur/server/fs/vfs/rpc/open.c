@@ -108,7 +108,7 @@
   }
   // generate container
   /// FIXME: PASS HANDLING PROCESS IN HERE INSTEAD OF MOUNT POINT
-  handle_node_t* container = NULL;
+  handle_node_t* container = nullptr;
   int result = handle_generate(
     &container,
     async_data
@@ -169,7 +169,7 @@ void rpc_handle_open_async(
   }
   // get message and data size
   size_t data_size;
-  vfs_open_response_t* open_response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_open_response_t* open_response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! open_response ) {
     response.handle = -errno;
     bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data, 0 );
@@ -228,15 +228,15 @@ void rpc_handle_open(
   vfs_open_response_t response = { .handle = -EINVAL };
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
-  vfs_open_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_open_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     response.handle = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // get mount point
@@ -245,11 +245,11 @@ void rpc_handle_open(
   if ( ! mount_point ) {
     free( request );
     response.handle = -ENOENT;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // generate handle
-  handle_node_t* container = NULL;
+  handle_node_t* container = nullptr;
   int result = handle_generate(
     &container,
     origin,
@@ -263,7 +263,7 @@ void rpc_handle_open(
   if ( ! container ) {
     // prepare error return
     response.handle = result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // prepare internal stuff
@@ -281,12 +281,12 @@ void rpc_handle_open(
     sizeof( *request ),
     origin,
     data_info,
-    NULL,
+    nullptr,
     false
   );
   // handle error
   if ( errno ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }

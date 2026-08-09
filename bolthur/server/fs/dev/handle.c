@@ -110,14 +110,14 @@ bool handle_init( void ) {
  * @fn device_handle_t* handle_get_by_path(const char*)
  * @brief Method to get device by path
  *
- * @param name
+ * @param path
  * @return
  */
 device_handle_t* handle_get_by_path( const char* path ) {
   // create temporary data item
   device_handle_t* device = malloc( sizeof( *device ) );
   if ( ! device ) {
-    return NULL;
+    return nullptr;
   }
   // clear out
   memset( device, 0, sizeof( *device ) );
@@ -125,14 +125,14 @@ device_handle_t* handle_get_by_path( const char* path ) {
   device->path = strdup( path );
   if ( ! device->path ) {
     destroy_device( device );
-    return NULL;
+    return nullptr;
   }
   // look up
   list_item_t* item = list_lookup_data( device_list, device );
   // destroy temporary device
   destroy_device( device );
   // return result
-  return item ? item->data : NULL;
+  return item ? item->data : nullptr;
 }
 
 /**
@@ -153,8 +153,8 @@ device_handle_t* handle_get_by_id( pid_t id ) {
     // get next item
     item = item->next;
   }
-  // return found item or null
-  return item ? item->data : NULL;
+  // return found item or nullptr
+  return item ? item->data : nullptr;
 }
 
 /**

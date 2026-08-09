@@ -52,7 +52,7 @@ size_t strlen( const char* str ) {
  * @return
  */
 size_t strlen_unsafe( const char* str ) {
-  // handle null / invalid address
+  // handle invalid address
   if ( ! str ) {
     return 0;
   }

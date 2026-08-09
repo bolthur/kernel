@@ -52,7 +52,7 @@ void vfs_remove(
       sizeof( *msg ),
       0,
       0,
-      NULL,
+      nullptr,
       false
     );
     if ( errno ) {
@@ -67,7 +67,7 @@ void vfs_remove(
   if ( ! handler ) {
     // get message and data size
     size_t data_size;
-    vfs_remove_response_t* response = bolthur_rpc_fetch_from_mailbox( response_id, &data_size, true, NULL );
+    vfs_remove_response_t* response = bolthur_rpc_fetch_from_mailbox( response_id, &data_size, true, nullptr );
     if ( ! response ) {
       exit( -1 );
     }

@@ -154,7 +154,7 @@ void task_process_schedule( [[maybe_unused]] event_origin_t origin, void* contex
   // set running thread
   task_thread_t* running_thread = task_thread_current_thread;
   // get running queue if set
-  task_priority_queue_t* running_queue = NULL;
+  task_priority_queue_t* running_queue = nullptr;
   if ( running_thread ) {
     // load queue until success has been returned
     while ( ! running_queue ) {
@@ -171,7 +171,7 @@ void task_process_schedule( [[maybe_unused]] event_origin_t origin, void* contex
     }
   }
 
-  task_thread_t* next_thread = NULL;
+  task_thread_t* next_thread = nullptr;
   // try to switch to task thread try switch if set
   if (
     task_thread_try_switch_to
@@ -240,7 +240,7 @@ void task_process_schedule( [[maybe_unused]] event_origin_t origin, void* contex
   #endif
 
   // variable for next queue
-  task_priority_queue_t* next_queue = NULL;
+  task_priority_queue_t* next_queue = nullptr;
   // get queue of next thread
   while ( ! next_queue ) {
     next_queue = task_queue_get_queue( process_manager, next_thread->priority );
@@ -248,7 +248,7 @@ void task_process_schedule( [[maybe_unused]] event_origin_t origin, void* contex
 
   // reset current if queue changed
   if ( running_queue && running_queue != next_queue ) {
-    running_queue->current = NULL;
+    running_queue->current = nullptr;
   }
 
   // save context of current thread

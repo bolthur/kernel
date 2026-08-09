@@ -84,13 +84,13 @@ __weak_symbol __attribute__((__optimize__("O0"))) int ioctl( int file, uint64_t 
     VFS_DAEMON_ID,
     rpc_request,
     rpc_request_size,
-    NULL,
+    nullptr,
     RPC_VFS_IOCTL,
     rpc_request,
     rpc_request_size,
     0,
     0,
-    NULL,
+    nullptr,
     false
   );
   if ( ! response_id ) {
@@ -106,7 +106,7 @@ __weak_symbol __attribute__((__optimize__("O0"))) int ioctl( int file, uint64_t 
     response_id,
     &rpc_response_size,
     true,
-    NULL
+    nullptr
   );
   // handle error
   if ( ! rpc_response ) {

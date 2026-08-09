@@ -212,7 +212,7 @@ bool serial_register_interrupt( void ) {
   // get peripheral base
   const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
   // register interrupt
-  if ( ! interrupt_register_handler( IRQ_UART, serial_clear, NULL, INTERRUPT_FAST, true, false ) ) {
+  if ( ! interrupt_register_handler( IRQ_UART, serial_clear, nullptr, INTERRUPT_FAST, true, false ) ) {
     return false;
   }
   // mask interrupt

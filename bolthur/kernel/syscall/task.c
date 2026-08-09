@@ -113,7 +113,7 @@ void syscall_process_exist( void* context ) {
   // populate return
   syscall_populate_success(
     context,
-    ( size_t )( NULL != target && target->rpc_ready ? true : false )
+    ( size_t )( target && target->rpc_ready ? true : false )
   );
 }
 

@@ -38,12 +38,12 @@ int32_t ptb_index = 0;
 /**
  * @brief property tag buffer
  */
-int32_t* ptb_buffer = NULL;
+int32_t* ptb_buffer = nullptr;
 
 /**
  * @brief phys property tag buffer
  */
-volatile int32_t* ptb_buffer_phys = NULL;
+volatile int32_t* ptb_buffer_phys = nullptr;
 
 /**
  * @fn void mailbox_property_init(void)
@@ -297,12 +297,12 @@ uint32_t mailbox_property_process( void ) {
  * @brief Read tag from previous executed mailbox property process
  *
  * @param tag tag to read from mailbox property process
- * @return pointer to structure of tag or NULL
+ * @return pointer to structure of tag or nullptr
  */
 raspi_mailbox_property_t* mailbox_property_get( const raspi_mailbox_tag_t tag ) {
   // property structure for return and tag buffer
   static raspi_mailbox_property_t property;
-  int32_t* tag_buffer = NULL;
+  int32_t* tag_buffer = nullptr;
 
   // Get the tag from the buffer and start with first available tag position
   int32_t index = 2;
@@ -325,9 +325,9 @@ raspi_mailbox_property_t* mailbox_property_get( const raspi_mailbox_tag_t tag ) 
     index += ( ptb_buffer[ index + 1 ] >> 2 ) + 3;
   }
 
-  // nothing found, return NULL
+  // nothing found, return nullptr
   if ( ! tag_buffer ) {
-    return NULL;
+    return nullptr;
   }
 
   // clear return

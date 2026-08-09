@@ -773,7 +773,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
     if ( is_read || is_write ) {
       // create shared memory
       size_t shm_id = 0;
-      void* shm_addr = NULL;
+      void* shm_addr = nullptr;
       // setup dma if enabled
       if ( device->shm_id ) {
         // debug output
@@ -1090,7 +1090,7 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
   #if defined( SDHOST_ENABLE_DMA )
     // create shared memory
     size_t shm_id = 0;
-    void* shm_addr = NULL;
+    void* shm_addr = nullptr;
     // setup dma if enabled
     if ( is_data && 0 < device->block_count ) {
       if ( device->shm_id ) {

@@ -36,7 +36,7 @@
 void* ramdisk_lookup( TAR* t, const char* name, size_t* size ) {
   // variables
   ramdisk_read_offset = 0;
-  void* file = NULL;
+  void* file = nullptr;
 
   // loop through ramdisk and lookup file
   while ( th_read( t ) == 0 ) {

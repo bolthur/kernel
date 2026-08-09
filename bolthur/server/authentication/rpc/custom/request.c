@@ -42,21 +42,21 @@ void rpc_custom_handle_request(
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // handle no data
   if ( ! data_info ) {
     error.status = -ENOMSG;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // get data from mailbox
   size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // get authentication request from command
@@ -66,7 +66,7 @@ void rpc_custom_handle_request(
     authentication_request->shm_id, (uintptr_t)NULL );
   if ( errno ) {
     error.status = -errno;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     free( request );
     return;
   }
@@ -77,7 +77,7 @@ void rpc_custom_handle_request(
     error.status = -EIO;
     _syscall_memory_shared_detach( authentication_request->shm_id );
     free( request );
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // verify password
@@ -86,14 +86,14 @@ void rpc_custom_handle_request(
     error.status = -EIO;
     _syscall_memory_shared_detach( authentication_request->shm_id );
     free( request );
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   if ( 0 != strcmp( hash, pw->pw_passwd ) ) {
     error.status = -EIO;
     _syscall_memory_shared_detach( authentication_request->shm_id );
     free( request );
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // remove existing node
@@ -103,7 +103,7 @@ void rpc_custom_handle_request(
     error.status = -EIO;
     _syscall_memory_shared_detach( authentication_request->shm_id );
     free( request );
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // populate data with user, home and shell
@@ -112,7 +112,7 @@ void rpc_custom_handle_request(
   strcpy( data->pw_shell, pw->pw_shell );
   // return success
   error.status = 0;
-  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
   // free allocated memory again
   _syscall_memory_shared_detach( authentication_request->shm_id );
   free( request );

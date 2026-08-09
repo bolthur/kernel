@@ -28,7 +28,7 @@
 #include "../../../../library/platform/raspi/iomem/libiomem.h"
 #include "../../../../library/platform/raspi/iomem/libperipheral.h"
 
-static dma_control_block_t* block = NULL;
+static dma_control_block_t* block = nullptr;
 static int last_error = 0;
 
 /**
@@ -41,7 +41,7 @@ static int last_error = 0;
 static int dma_block_init( dma_control_block_t** to_save ) {
   // allocate control block
   block = mmap(
-    NULL,
+    nullptr,
     sizeof( *block ),
     PROT_READ | PROT_WRITE,
     MAP_ANONYMOUS | MAP_DEVICE | MAP_BUS,
@@ -610,14 +610,14 @@ int dma_last_error( void ) {
  * @brief Wrapper to allocate dma memory
  *
  * @param size memory size to allocate
- * @return void* allocated memory or null on error
+ * @return void* allocated memory or nullptr on error
  */
 void* dma_allocate_memory( size_t size ) {
   // allocate control block
-  void* dma_block = mmap( NULL, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_BUS | MAP_DEVICE , -1, 0 );
+  void* dma_block = mmap( nullptr, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_BUS | MAP_DEVICE , -1, 0 );
   if ( MAP_FAILED == block ) {
     last_error = -errno;
-    return NULL;
+    return nullptr;
   }
   // clear out
   memset( dma_block, 0, size );

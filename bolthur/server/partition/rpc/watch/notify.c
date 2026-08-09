@@ -60,7 +60,7 @@ void rpc_handle_watch_notify(
   STARTUP_PRINT( "Fetching request\r\n" )
   // fetch rpc data
   size_t data_size;
-  vfs_watch_notify_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_watch_notify_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     STARTUP_PRINT( "No notify request: %s\r\n", strerror( errno ) )
     return;

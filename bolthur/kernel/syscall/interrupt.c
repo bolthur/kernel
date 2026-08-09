@@ -63,7 +63,7 @@ void syscall_interrupt_acquire( void* context ) {
   // register interrupt
   if ( ! interrupt_register_handler(
     num,
-    NULL,
+    nullptr,
     proc,
     INTERRUPT_NORMAL,
     false,
@@ -112,7 +112,7 @@ void syscall_interrupt_release( void* context ) {
   // remove registered interrupt handler
   if ( ! interrupt_unregister_handler(
     num,
-    NULL,
+    nullptr,
     proc,
     INTERRUPT_NORMAL,
     false,

@@ -46,7 +46,7 @@
   pid_t forked = fork();
   if ( forked == 0 ) {
     // build command
-    char* cmd[] = { "login", NULL, };
+    char* cmd[] = { "login", nullptr, };
     // exec to replace
     if ( -1 == execv( "/bin/login", cmd ) ) {
       EARLY_STARTUP_PRINT( "Error during exec, exiting: %s\r\n", strerror( errno ) )
@@ -71,8 +71,8 @@
 
   EARLY_STARTUP_PRINT( "Adjust stdout / stderr buffering\r\n" )
   // adjust buffering of stdout and stderr
-  setvbuf( stdout, NULL, _IOLBF, 0 );
-  setvbuf( stderr, NULL, _IONBF, 0 );
+  setvbuf( stdout, nullptr, _IOLBF, 0 );
+  setvbuf( stderr, nullptr, _IONBF, 0 );
 
   EARLY_STARTUP_PRINT( "äöüÄÖÜ\r\n" )
   int a = printf( "äöüÄÖÜ\r\n" );

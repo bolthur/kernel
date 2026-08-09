@@ -1153,7 +1153,7 @@ virt_context_t* v7_long_create_context( virt_context_type_t type ) {
     void* tmp = aligned_alloc( PAGE_SIZE, sizeof( ld_global_page_directory_t ) );
     // handle error
     if ( ! tmp ) {
-      return NULL;
+      return nullptr;
     }
     memset( tmp, 0, sizeof( ld_global_page_directory_t ) );
     ctx = ( uintptr_t )tmp;
@@ -1162,7 +1162,7 @@ virt_context_t* v7_long_create_context( virt_context_type_t type ) {
     ctx = phys_find_free_page_range( PAGE_SIZE, sizeof( ld_global_page_directory_t ), PHYS_MEMORY_TYPE_NORMAL );
     // handle error
     if ( INVALID_ADDRESS == ctx ) {
-      return NULL;
+      return nullptr;
     }
   }
 
@@ -1180,7 +1180,7 @@ virt_context_t* v7_long_create_context( virt_context_type_t type ) {
     } else {
       phys_free_page_range( ctx, PAGE_SIZE );
     }
-    return NULL;
+    return nullptr;
   }
   // initialize with zero
   memset( ( void* )tmp, 0, PAGE_SIZE );
@@ -1197,7 +1197,7 @@ virt_context_t* v7_long_create_context( virt_context_type_t type ) {
     } else {
       phys_free_page_range( ctx, PAGE_SIZE );
     }
-    return NULL;
+    return nullptr;
   }
 
   // debug output
@@ -1452,13 +1452,13 @@ bool v7_long_fork_global_directory(
  *
  * @param ctx context to fork
  * @param proc forked process structure
- * @return forked context or null
+ * @return forked context or nullptr
  */
 virt_context_t* v7_long_fork_context( virt_context_t* ctx, task_process_t* proc ) {
   // create new context
   virt_context_t* forked = virt_create_context( ctx->type );
   if ( ! forked ) {
-    return NULL;
+    return nullptr;
   }
   memcpy( forked->bitmap, ctx->bitmap, ctx->bitmap_length );
   forked->bitmap_length = ctx->bitmap_length;
@@ -1468,7 +1468,7 @@ virt_context_t* v7_long_fork_context( virt_context_t* ctx, task_process_t* proc 
   // handle error
   if ( 0 == ctx_to_fork ) {
     assert( virt_destroy_context( forked, false ) )
-    return NULL;
+    return nullptr;
   }
   // map new context temporarily
   uintptr_t ctx_forked = map_temporary( forked->context, PAGE_SIZE );
@@ -1476,7 +1476,7 @@ virt_context_t* v7_long_fork_context( virt_context_t* ctx, task_process_t* proc 
   if ( 0 == ctx_forked ) {
     unmap_temporary( ctx_to_fork, PAGE_SIZE );
     assert( virt_destroy_context( forked, false ) )
-    return NULL;
+    return nullptr;
   }
   // clear page
   memset( ( void* )ctx_forked, 0, PAGE_SIZE );
@@ -1490,7 +1490,7 @@ virt_context_t* v7_long_fork_context( virt_context_t* ctx, task_process_t* proc 
     unmap_temporary( ctx_to_fork, PAGE_SIZE );
     unmap_temporary( ctx_forked, PAGE_SIZE );
     assert( virt_destroy_context( forked, false ) )
-    return NULL;
+    return nullptr;
   }
 
   // unmap temporary

@@ -55,7 +55,7 @@ bool mountpoint_node_setup( void ) {
  * @fn mountpoint_node_t mountpoint_node_extract*(const char*)
  * @brief Extract mount point node by name
  *
- * @param name
+ * @param path
  * @return
  */
 mountpoint_node_t* mountpoint_node_extract( const char* path ) {
@@ -63,7 +63,7 @@ mountpoint_node_t* mountpoint_node_extract( const char* path ) {
   mountpoint_node_t* node = malloc( sizeof( *node ) );
   // handle error
   if ( ! node ) {
-    return NULL;
+    return nullptr;
   }
   // clear out node
   memset( node, 0, sizeof( *node ) );
@@ -71,7 +71,7 @@ mountpoint_node_t* mountpoint_node_extract( const char* path ) {
   node->name = strdup( path );
   if ( ! node->name ) {
     free( node );
-    return NULL;
+    return nullptr;
   }
 
   // local duplicate for path
@@ -79,12 +79,12 @@ mountpoint_node_t* mountpoint_node_extract( const char* path ) {
   if ( ! p ) {
     free( node->name );
     free( node );
-    return NULL;
+    return nullptr;
   }
   // set loop path and found
   char* loop_path = p;
-  char* previous_loop = NULL;
-  mountpoint_node_t* found = NULL;
+  char* previous_loop = nullptr;
+  mountpoint_node_t* found = nullptr;
   // try to get mount point
   while ( ! found && *loop_path ) {
     // lookup

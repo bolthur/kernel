@@ -29,9 +29,9 @@
  * @return char*
  */
 char* strcpy( char* dst, const char* src ) {
-  // handle null
+  // handle invalid
   if ( ! dst ) {
-    return NULL;
+    return nullptr;
   }
   // cache destination due to loop
   char *p = dst;

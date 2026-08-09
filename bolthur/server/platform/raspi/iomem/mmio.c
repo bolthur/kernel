@@ -31,8 +31,8 @@
   #define PERIPHERAL_SIZE 0xFFFFFF
 #endif
 
-void* mmio_start = NULL;
-void* mmio_end = NULL;
+void* mmio_start = nullptr;
+void* mmio_end = nullptr;
 
 /**
  * @fn bool mmio_setup(void)

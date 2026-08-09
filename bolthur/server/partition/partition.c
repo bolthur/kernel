@@ -72,7 +72,7 @@ partition_node_t* partition_extract( const char* path, bool create ) {
   partition_node_t* node = malloc( sizeof( *node ) );
   // handle error
   if ( ! node ) {
-    return NULL;
+    return nullptr;
   }
   // clear out node
   memset( node, 0, sizeof( *node ) );
@@ -80,7 +80,7 @@ partition_node_t* partition_extract( const char* path, bool create ) {
   node->name = strdup( path );
   if ( ! node->name ) {
     free( node );
-    return NULL;
+    return nullptr;
   }
   // lookup for node
   partition_node_t* found = partition_node_tree_find( &management_tree, node );
@@ -89,12 +89,12 @@ partition_node_t* partition_extract( const char* path, bool create ) {
     if ( ! create ) {
       free( node->name );
       free( node );
-      return NULL;
+      return nullptr;
     }
     if ( partition_node_tree_insert( &management_tree, node ) ) {
       free( node->name );
       free( node );
-      return NULL;
+      return nullptr;
     }
     return partition_node_tree_find( &management_tree, node );
   }

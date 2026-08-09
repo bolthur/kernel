@@ -78,7 +78,7 @@ static void terminal_cleanup( list_item_t* a ) {
  */
 bool terminal_init( void ) {
   // construct list
-  terminal_list = list_construct( terminal_lookup, terminal_cleanup, NULL );
+  terminal_list = list_construct( terminal_lookup, terminal_cleanup, nullptr );
   if ( ! terminal_list ) {
     return false;
   }

@@ -30,7 +30,7 @@
  * @return
  */
 char** duplicate( const char** src ) {
-  char** dst = NULL;
+  char** dst = nullptr;
   size_t len = 0;
   size_t count;
   size_t src_count = 0;
@@ -39,12 +39,12 @@ char** duplicate( const char** src ) {
     // reserve buffer
     dst = ( char** )malloc( ( src_count + 1 ) * sizeof( char* ) + len );
     if ( ! dst ) {
-      return NULL;
+      return nullptr;
     }
     // clear out
     memset( dst, 0, ( src_count + 1 ) * sizeof( char* ) + len );
     // fill in termination only
-    dst[ src_count ] = NULL;
+    dst[ src_count ] = nullptr;
     // return
     return dst;
   }
@@ -55,9 +55,9 @@ char** duplicate( const char** src ) {
       ( uintptr_t )&src[ src_count ],
       sizeof( char* )
     ) ) {
-      return NULL;
+      return nullptr;
     }
-    // break if NULL termination reached
+    // break if nullptr termination reached
     if ( ! src[ src_count ] ) {
       break;
     }
@@ -69,7 +69,7 @@ char** duplicate( const char** src ) {
     // unsafe strlen with check for error
     size_t tmp_len = strlen_unsafe( src[ count ] );
     if ( ! tmp_len ) {
-      return NULL;
+      return nullptr;
     }
     // increase total length
     len += tmp_len + 1;
@@ -77,7 +77,7 @@ char** duplicate( const char** src ) {
   // reserve new buffer
   dst = ( char** )malloc( ( src_count + 1 ) * sizeof( char* ) + len );
   if ( ! dst ) {
-    return NULL;
+    return nullptr;
   }
   // clear out
   memset( dst, 0, ( src_count + 1 ) * sizeof( char* ) + len );
@@ -91,19 +91,19 @@ char** duplicate( const char** src ) {
     size_t tmp_len = strlen_unsafe( src[ count ] );
     if ( 0 == tmp_len ) {
       free( dst );
-      return NULL;
+      return nullptr;
     }
     tmp_len++;
     // copy string content with unsafe copy
     if ( ! memcpy_unsafe_src( dst[ count ], src[ count ], tmp_len ) ) {
       free( dst );
-      return NULL;
+      return nullptr;
     }
     // increase length for next offset
     len += strlen( src[ count ] ) + 1;
   }
-  // append null termination
-  dst[ src_count ] = NULL;
+  // append nullptr termination
+  dst[ src_count ] = nullptr;
   // return buffer
   return dst;
 }

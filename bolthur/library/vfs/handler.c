@@ -44,13 +44,13 @@ pid_t vfs_get_file_handler( const char* path ) {
     VFS_DAEMON_ID,
     request,
     sizeof( vfs_stat_request_t ),
-    NULL,
+    nullptr,
     RPC_VFS_STAT,
     request,
     sizeof( vfs_stat_request_t ),
     0,
     0,
-    NULL,
+    nullptr,
     false
   );
   // handle error
@@ -63,7 +63,7 @@ pid_t vfs_get_file_handler( const char* path ) {
     response_id,
     &data_size,
     true,
-    NULL
+    nullptr
   );
   // handle error
   if ( ! response ) {

@@ -73,7 +73,7 @@ static dl_message_entry_t dl_error_message[] = {
 uint32_t dl_error;
 const char* dl_error_location;
 const char* dl_error_data;
-dl_image_handle_ptr_t root_object_handle = NULL;
+dl_image_handle_ptr_t root_object_handle = nullptr;
 
 static char dl_open_buffer[ PATH_MAX ];
 
@@ -197,7 +197,7 @@ uint32_t dl_gnu_symbol_name_hash( const char* name ) {
  * @param name
  */
 void* dl_lookup_symbol( dl_image_handle_ptr_t handle, const char* name ) {
-  void* found_symbol = NULL;
+  void* found_symbol = nullptr;
   dl_image_handle_ptr_t current = handle;
   if ( ! handle ) {
     current = root_object_handle;
@@ -280,7 +280,7 @@ dl_image_handle_ptr_t dl_find_loaded_library( const char* file ) {
     // next entry
     current = current->next;
   }
-  // will be null if not found
+  // will be nullptr if not found
   return current;
 }
 
@@ -301,12 +301,12 @@ dl_image_handle_ptr_t dl_find_loaded_library( const char* file ) {
  */
 int dl_lookup_library( char* buffer, size_t buffer_size, const char* file ) {
   char* path = "/lib:/usr/lib:/ramdisk/lib:/ramdisk/usr/lib";
-  char* part = NULL;
-  char* last_part = NULL;
+  char* part = nullptr;
+  char* last_part = nullptr;
   for (
     part = strtok_r( path, ":", &last_part );
     part;
-    part = strtok_r( NULL, ":", &last_part )
+    part = strtok_r( nullptr, ":", &last_part )
   ) {
     char* p = buffer;
     size_t size_part = strlen( part );
@@ -342,7 +342,7 @@ dl_image_handle_ptr_t dl_allocate_handle( void ) {
   dl_image_handle_ptr_t handle = malloc( sizeof( dl_image_handle_t ) );
   // handle error
   if ( ! handle ) {
-    return NULL;
+    return nullptr;
   }
   // clear handle
   memset( handle, 0, sizeof( dl_image_handle_t ) );
@@ -372,7 +372,7 @@ dl_image_handle_ptr_t dl_allocate_handle( void ) {
  * @param handle
  */
 void dl_free_handle( dl_image_handle_ptr_t handle ) {
-  // stop if null
+  // stop if invalid
   if ( ! handle ) {
     return;
   }
@@ -436,7 +436,7 @@ dl_image_handle_ptr_t dl_load_dependency( dl_image_handle_ptr_t handle ) {
         // free cached
         dl_free_handle( tmp );
       }
-      return NULL;
+      return nullptr;
     }
   }
   return handle;
@@ -509,7 +509,7 @@ dl_image_handle_ptr_t dl_load_entry(
   dl_image_handle_ptr_t handle = dl_allocate_handle();
   if ( ! handle ) {
     dl_error = E_DL_NO_MEMORY;
-    return NULL;
+    return nullptr;
   }
   // read elf header
   r = read( descriptor, &handle->header, sizeof( handle->header ) );
@@ -517,7 +517,7 @@ dl_image_handle_ptr_t dl_load_entry(
   if ( r != sizeof( handle->header ) ) {
     dl_error = E_DL_READ_HDR;
     dl_free_handle( handle );
-    return NULL;
+    return nullptr;
   }
 
   // check magic
@@ -529,37 +529,37 @@ dl_image_handle_ptr_t dl_load_entry(
   ) {
     dl_error = E_DL_HEADER_VALIDATE_MAGIC;
     dl_free_handle( handle );
-    return NULL;
+    return nullptr;
   }
   // check architecture
   if ( ELFCLASS32 != handle->header.e_ident[ EI_CLASS ] ) {
     dl_error = E_DL_HEADER_VALIDATE_BYTE;
     dl_free_handle( handle );
-    return NULL;
+    return nullptr;
   }
   if ( EM_ARM != handle->header.e_machine ) {
     dl_error = E_DL_HEADER_VALIDATE_MACHINE;
     dl_free_handle( handle );
-    return NULL;
+    return nullptr;
   }
   // further header checks
   if ( 0 == handle->header.e_phentsize ) {
     dl_error = E_DL_HEADER_VALIDATE_PROGRAM;
     dl_free_handle( handle );
-    return NULL;
+    return nullptr;
   }
   // ensure section header existence
   if ( 0 == handle->header.e_shentsize ) {
     dl_error = E_DL_HEADER_VALIDATE_SECTION;
     dl_free_handle( handle );
-    return NULL;
+    return nullptr;
   }
   // allocate name
   handle->filename = strdup( file );
   if ( ! handle->filename ) {
     dl_error = E_DL_NO_MEMORY;
     dl_free_handle( handle );
-    return NULL;
+    return nullptr;
   }
   // populate handle attributes
   handle->open_mode = mode;
@@ -578,22 +578,23 @@ dl_image_handle_ptr_t dl_load_entry(
     if ( -1 == offset ) {
       dl_error = E_DL_IO_ERROR;
       dl_free_handle( handle );
-      return NULL;
+      return nullptr;
     }
     // try to read
     r = read( handle->descriptor, &program_header, sizeof( Elf32_Phdr ) );
     if ( r != sizeof( Elf32_Phdr ) ) {
       dl_error = E_DL_IO_ERROR;
       dl_free_handle( handle );
-      return NULL;
+      return nullptr;
     }
     // reallocate phdr of handle
-    handle->phdr = realloc( handle->phdr, ( idx + 1 ) * sizeof( Elf32_Phdr ) );
-    if ( ! handle->phdr ) {
+    Elf32_Phdr* tmp = realloc( handle->phdr, ( idx + 1 ) * sizeof( Elf32_Phdr ) );
+    if ( ! tmp ) {
       dl_error = E_DL_NO_MEMORY;
       dl_free_handle( handle );
-      return NULL;
+      return nullptr;
     }
+    handle->phdr = tmp;
     // copy header
     memcpy( &handle->phdr[ idx ], &program_header, sizeof( Elf32_Phdr ) );
     // increase load count if of type load
@@ -604,7 +605,7 @@ dl_image_handle_ptr_t dl_load_entry(
 
   // populate load header array and cache temporarily dynamic section
   Elf32_Phdr* load_header = malloc( phdr_load_count * sizeof( Elf32_Phdr ) );
-  Elf32_Phdr* dyn = NULL;
+  Elf32_Phdr* dyn = nullptr;
   for ( uint32_t idx = 0, load_idx = 0; idx < handle->header.e_phnum; idx++ ) {
     if ( PT_LOAD == handle->phdr[ idx ].p_type ) {
       load_header[ load_idx++ ] = handle->phdr[ idx ];
@@ -615,7 +616,7 @@ dl_image_handle_ptr_t dl_load_entry(
   }
 
   // Load headers ( either one or two )
-  char* memory = NULL;
+  char* memory = nullptr;
   if ( 1 == phdr_load_count ) {
     offset = ( off_t )ROUND_DOWN_TO_FULL_PAGE( load_header[ 0 ].p_offset );
     // FIXME: MAP SECTION IN CASE OF DEPENDENCY INTO SHARED AREA
@@ -630,7 +631,7 @@ dl_image_handle_ptr_t dl_load_entry(
     if ( memory == MAP_FAILED ) {
       dl_error = E_DL_NO_MEMORY;
       dl_free_handle( handle );
-      return NULL;
+      return nullptr;
     }
     EARLY_STARTUP_PRINT( "loading to %#"PRIxPTR" with length %#"PRIx32"\r\n",
       ( uintptr_t )memory,
@@ -690,7 +691,7 @@ dl_image_handle_ptr_t dl_load_entry(
     if ( memory == MAP_FAILED ) {
       dl_error = E_DL_NO_MEMORY;
       dl_free_handle( handle );
-      return NULL;
+      return nullptr;
     }
     EARLY_STARTUP_PRINT(
       "loaded to %#x with length %#zx. File offset: %#llx, data = %p\r\n",
@@ -709,7 +710,7 @@ dl_image_handle_ptr_t dl_load_entry(
     if ( data == MAP_FAILED ) {
       dl_error = E_DL_NO_MEMORY;
       dl_free_handle( handle );
-      return NULL;
+      return nullptr;
     }
     size_t len = ( size_t )data_off + load_header[ 1 ].p_filesz;
     memset( data + len, 0, data_file_size - len );
@@ -744,7 +745,7 @@ dl_image_handle_ptr_t dl_load_entry(
       if ( bss == MAP_FAILED ) {
         dl_error = E_DL_NO_MEMORY;
         dl_free_handle( handle );
-        return NULL;
+        return nullptr;
       }
       EARLY_STARTUP_PRINT(
         "Allocated space of %#zx at address %p.\r\n",
@@ -766,7 +767,7 @@ dl_image_handle_ptr_t dl_load_entry(
   } else {
     dl_error = E_DL_UNKNOWN;
     dl_free_handle( handle );
-    return NULL;
+    return nullptr;
   }
 
   // populate further stuff
@@ -778,7 +779,7 @@ dl_image_handle_ptr_t dl_load_entry(
     Elf32_Addr symtab = 0;
     Elf32_Addr hash = 0;
     dl_image_hash_style_t hash_style = 0;
-    hash_callback_t build = NULL;
+    hash_callback_t build = nullptr;
     Elf32_Addr jmprel = 0;
     Elf32_Word pltrel = 0;
     Elf32_Word pltrelsz = 0;
@@ -789,11 +790,11 @@ dl_image_handle_ptr_t dl_load_entry(
     Elf32_Word relasz = 0;
     Elf32_Word relaent = 0;
     Elf32_Addr pltgot = 0;
-    init_callback_t init = NULL;
-    init_callback_t fini = NULL;
-    init_array_callback_t init_array = NULL;
+    init_callback_t init = nullptr;
+    init_callback_t fini = nullptr;
+    init_array_callback_t init_array = nullptr;
     Elf32_Word init_array_size = 0;
-    init_array_callback_t fini_array = NULL;
+    init_array_callback_t fini_array = nullptr;
     Elf32_Word fini_array_size = 0;
 
     // loop through dyn section entries and populate some necessary data
@@ -883,14 +884,14 @@ dl_image_handle_ptr_t dl_load_entry(
     if ( strsz > UINT32_MAX - strtab || strtab + strsz > handle->memory_size ) {
       dl_error = E_DL_MALFORMED;
       dl_free_handle( handle );
-      return NULL;
+      return nullptr;
     }
     // set local pointer for strtab and ensure termination
     char* str = ( char* )( handle->memory_start + strtab );
     if ( '\0' != str[ strsz - 1 ] ) {
       dl_error = E_DL_MALFORMED;
       dl_free_handle( handle );
-      return NULL;
+      return nullptr;
     }
     // push to handle structure
     handle->strtab = str;
@@ -900,7 +901,7 @@ dl_image_handle_ptr_t dl_load_entry(
     if ( symtab > handle->memory_size ) {
       dl_error = E_DL_MALFORMED;
       dl_free_handle( handle );
-      return NULL;
+      return nullptr;
     }
     handle->symtab = ( Elf32_Sym* )( handle->memory_start + symtab );
 
@@ -908,7 +909,7 @@ dl_image_handle_ptr_t dl_load_entry(
     if ( hash > handle->memory_size - 8 ) {
       dl_error = E_DL_MALFORMED;
       dl_free_handle( handle );
-      return NULL;
+      return nullptr;
     }
     handle->hash.table = ( uint32_t* )( handle->memory_start + hash );
     handle->hash.style = hash_style;
@@ -922,14 +923,14 @@ dl_image_handle_ptr_t dl_load_entry(
     ) {
       dl_error = E_DL_MALFORMED;
       dl_free_handle( handle );
-      return NULL;
+      return nullptr;
     }
 
     // jmprel
     if ( pltrelsz > UINT32_MAX - jmprel || jmprel + pltrelsz > handle->memory_size ) {
       dl_error = E_DL_MALFORMED;
       dl_free_handle( handle );
-      return NULL;
+      return nullptr;
     }
     if ( jmprel ) {
       handle->jmprel = ( void* )( handle->memory_start + jmprel );
@@ -941,7 +942,7 @@ dl_image_handle_ptr_t dl_load_entry(
     if ( relsz > UINT32_MAX - rel || rel + relsz > handle->memory_size ) {
       dl_error = E_DL_MALFORMED;
       dl_free_handle( handle );
-      return NULL;
+      return nullptr;
     }
     if ( rel ) {
       handle->rel = ( void* )( handle->memory_start + rel );
@@ -952,7 +953,7 @@ dl_image_handle_ptr_t dl_load_entry(
     if ( relasz > UINT32_MAX - rela || rela + relasz > handle->memory_size ) {
       dl_error = E_DL_MALFORMED;
       dl_free_handle( handle );
-      return NULL;
+      return nullptr;
     }
     if ( rela ) {
       handle->rela = ( void* )( handle->memory_start + rela );
@@ -1029,7 +1030,7 @@ void* dl_resolve_lazy( dl_image_handle_ptr_t handle, uint32_t offset ) {
   uint32_t symbol_index = ELF32_R_SYM( rel->r_info );
   // get symbol name and symbol by name
   char* symbol_name = handle->strtab + handle->symtab[ symbol_index ].st_name;
-  void* symbol_value = dlsym( NULL, symbol_name );
+  void* symbol_value = dlsym( nullptr, symbol_name );
   // handle no symbol found!
   if ( ! symbol_value ) {
     exit( 42 );
@@ -1063,7 +1064,7 @@ void dl_handle_rel_symbol( dl_image_handle_ptr_t handle, void* address, size_t s
       uint32_t symbol_index = ELF32_R_SYM( rel->r_info );
       // get symbol name and symbol by name
       char* symbol_name = handle->strtab + handle->symtab[ symbol_index ].st_name;
-      void* symbol_value = dlsym( NULL, symbol_name );
+      void* symbol_value = dlsym( nullptr, symbol_name );
       // handle no symbol found!
       if ( ! symbol_value ) {
         continue;
@@ -1126,7 +1127,7 @@ bool dl_handle_rel_relocate( dl_image_handle_ptr_t handle, void* address, size_t
       if ( val ) {
         new_address = ( uintptr_t )( handle->memory_start + val );
       } else {
-        new_address = ( uintptr_t )dlsym( NULL, name );
+        new_address = ( uintptr_t )dlsym( nullptr, name );
       }
     } else if (
       R_ARM_JUMP_SLOT == symbol_type
@@ -1177,7 +1178,7 @@ dl_image_handle_ptr_t dl_relocate( dl_image_handle_ptr_t handle ) {
       );
     } else if ( DT_RELA == handle->pltrel ) {
       dl_error = E_DL_DT_RELA_NOT_IMPLEMENTED;
-      return NULL;
+      return nullptr;
     }
   }
   // normal relocations
@@ -1187,12 +1188,12 @@ dl_image_handle_ptr_t dl_relocate( dl_image_handle_ptr_t handle ) {
       handle->rel,
       handle->relsz / handle->relent
     ) ) {
-      return NULL;
+      return nullptr;
     }
   }
   if ( handle->rela ) {
     dl_error = E_DL_DT_RELA_NOT_IMPLEMENTED;
-    return NULL;
+    return nullptr;
   }
   // return with init after relocate
   return dl_post_init( handle );
@@ -1248,14 +1249,14 @@ void* dlopen( const char* file, int mode ) {
     // error handling
     if ( -1 == fd ) {
       dl_error = E_DL_CANNOT_OPEN;
-      return NULL;
+      return nullptr;
     }
     // load given handle with dependencies
     dl_image_handle_ptr_t handle = dl_load_entry( p, mode, fd );
     // handle error
     if ( ! handle ) {
       close( fd );
-      return NULL;
+      return nullptr;
     }
     // return with possible relocation
     return dl_relocate( handle );

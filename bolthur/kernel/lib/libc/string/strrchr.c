@@ -33,7 +33,7 @@ char* strrchr( const char* str, int delimiter ) {
     return strchr( str, delimiter );
   }
   // variables for found and current
-  const char* found = NULL;
+  const char* found = nullptr;
   const char* current;
   // loop until last occurrence
   while ( ( current = strchr( str, delimiter ) ) ) {

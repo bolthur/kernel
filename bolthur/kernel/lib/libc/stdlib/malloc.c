@@ -25,7 +25,7 @@
  * @brief Malloc implementation
  *
  * @param size size to allocate
- * @return void* allocated address or NULL
+ * @return void* allocated address or nullptr
  */
 __allocator void* malloc( size_t size ) {
   return aligned_alloc( alignof( max_align_t ), size );

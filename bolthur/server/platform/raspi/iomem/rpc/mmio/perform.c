@@ -195,22 +195,22 @@ void rpc_handle_mmio_perform(
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     EARLY_STARTUP_PRINT( "Invalid origin\r\n" )
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // handle no data
   error.status = -EINVAL;
   if ( ! data_info ) {
     EARLY_STARTUP_PRINT( "No data\r\n" )
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     EARLY_STARTUP_PRINT( "Unable to fetch data\r\n" )
     error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // get perform entry
@@ -220,7 +220,7 @@ void rpc_handle_mmio_perform(
   if ( errno ) {
     error.status = -errno;
     EARLY_STARTUP_PRINT( "Unable to attach shared memory\r\n" )
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     free( request );
     return;
   }
@@ -231,7 +231,7 @@ void rpc_handle_mmio_perform(
   if ( ! response ) {
     EARLY_STARTUP_PRINT( "unable to allocate response\r\n" )
     error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     free( request );
     return;
   }
@@ -268,7 +268,7 @@ void rpc_handle_mmio_perform(
     ) {
       EARLY_STARTUP_PRINT( "Validation failed\r\n" )
       error.status = -EINVAL;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
       _syscall_memory_shared_detach( perform->shm_id );
       free( request );
       free( response );
@@ -296,7 +296,7 @@ void rpc_handle_mmio_perform(
     ) {
       EARLY_STARTUP_PRINT( "type not valid\r\n" )
       error.status = -EINVAL;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
       _syscall_memory_shared_detach( perform->shm_id );
       free( request );
       free( response );
@@ -306,7 +306,7 @@ void rpc_handle_mmio_perform(
     if ( ! mmio_validate_offset( ( *mmio_request )[ i ].offset, sizeof( uint32_t ) ) ) {
       EARLY_STARTUP_PRINT( "Invalid offset\r\n" )
       error.status = -EINVAL;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
       _syscall_memory_shared_detach( perform->shm_id );
       free( request );
       free( response );
@@ -1213,7 +1213,7 @@ void rpc_handle_mmio_perform(
     }
   }
   // return data and finish with free
-  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, 0 );
   _syscall_memory_shared_detach( perform->shm_id );
   // free request data
   free( request );

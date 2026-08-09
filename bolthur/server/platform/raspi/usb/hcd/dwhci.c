@@ -488,7 +488,7 @@ response_t dwhci_queue_add_entry( void* data, const size_t size, const dwhci_que
   entry->status = status;
   entry->error = LIBUSB_TRANSFER_ERROR_NO_ERROR;
   // map buffer
-  entry->buffer = mmap( NULL, size, PROT_READ | PROT_WRITE,
+  entry->buffer = mmap( nullptr, size, PROT_READ | PROT_WRITE,
     MAP_ANONYMOUS | MAP_BUS | MAP_DEVICE , -1, 0 );
   // handle map failed
   if ( MAP_FAILED == entry->buffer ) {

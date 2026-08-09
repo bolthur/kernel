@@ -75,7 +75,7 @@ process_node_t* process_generate( const pid_t proc ) {
   process_node_t* node = malloc( sizeof( *node ) );
   // handle error
   if ( ! node ) {
-    return NULL;
+    return nullptr;
   }
   // clear out node
   memset( node, 0, sizeof( *node ) );
@@ -93,7 +93,7 @@ process_node_t* process_generate( const pid_t proc ) {
   // handle already existing and insert
   if ( process_node_tree_insert( &process_management_tree, node ) ) {
     free( node );
-    return NULL;
+    return nullptr;
   }
   return node;
 }
@@ -121,7 +121,7 @@ handle_node_t* process_duplicate( process_node_t* new_container, const handle_no
   handle_node_t* new_handle = malloc( sizeof( *new_handle ) );
   if ( ! new_handle ) {
     errno = ENOMEM;
-    return NULL;
+    return nullptr;
   }
   // copy over contents
   memcpy( new_handle, handle, sizeof( *new_handle ) );
@@ -133,7 +133,7 @@ handle_node_t* process_duplicate( process_node_t* new_container, const handle_no
     if ( ! new_handle->data ) {
       free( new_handle );
       errno = ENOMEM;
-      return NULL;
+      return nullptr;
     }
     // copy over content
     memcpy( new_handle->data, handle->data, new_handle->data_size );
@@ -143,7 +143,7 @@ handle_node_t* process_duplicate( process_node_t* new_container, const handle_no
     free( new_handle->data );
     free( new_handle );
     errno = EEXIST;
-    return NULL;
+    return nullptr;
   }
   // return success
   return new_handle;

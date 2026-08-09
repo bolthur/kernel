@@ -44,13 +44,13 @@ static int fstat_handler( int file, struct stat* st, pid_t* handler ) {
     VFS_DAEMON_ID,
     request,
     sizeof( vfs_stat_request_t ),
-    NULL,
+    nullptr,
     RPC_VFS_STAT,
     request,
     sizeof( vfs_stat_request_t ),
     0,
     0,
-    NULL,
+    nullptr,
     false
   );
   // handle error
@@ -60,7 +60,7 @@ static int fstat_handler( int file, struct stat* st, pid_t* handler ) {
   }
   // get response
   size_t data_size;
-  vfs_stat_response_t* response = bolthur_rpc_fetch_from_mailbox( response_id, &data_size, true, NULL );
+  vfs_stat_response_t* response = bolthur_rpc_fetch_from_mailbox( response_id, &data_size, true, nullptr );
   // handle error
   if ( ! response ) {
     free( request );
@@ -102,28 +102,28 @@ void rpc_handle_mount(
   vfs_mount_response_t response = { .result = -ENOTSUP };
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // fetch rpc data
   size_t data_size;
-  vfs_mount_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_mount_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   // handle error
   if ( ! request ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
 
   // validate strings
   if ( 0 == strlen( request->source ) || 0 == strlen( request->target ) ) {
     response.result = -EINVAL;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -133,7 +133,7 @@ void rpc_handle_mount(
   if ( -1 == fd_auth ) {
     response.result = -errno;
     EARLY_STARTUP_PRINT( "UNABLE TO OPEN AUTHENTICATION DEVICE %s!\r\n", strerror( errno ) )
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -142,7 +142,7 @@ void rpc_handle_mount(
   if ( 0 != fstat( fd_auth, &auth ) ) {
     response.result = -errno;
     EARLY_STARTUP_PRINT( "UNABLE TO QUERY STAT OF AUTHENTICATION DEVICE %s!\r\n", strerror( errno ) )
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     close( fd_auth );
     return;
@@ -155,7 +155,7 @@ void rpc_handle_mount(
   if ( -1 == fd_source ) {
     response.result = -errno;
     EARLY_STARTUP_PRINT( "UNABLE TO OPEN SOURCE PATH %s!\r\n", strerror( errno ) )
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -165,7 +165,7 @@ void rpc_handle_mount(
   if ( 0 != fstat_handler( fd_source, &source, &source_handler ) ) {
     response.result = -errno;
     EARLY_STARTUP_PRINT( "UNABLE TO QUERY STAT OF AUTHENTICATION DEVICE %s!\r\n", strerror( errno ) )
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     close( fd_source );
     return;
@@ -178,7 +178,7 @@ void rpc_handle_mount(
   if ( ! target && ENOENT != errno ) {
     response.result = -errno;
     EARLY_STARTUP_PRINT( "UNABLE TO OPEN TARGET PATH %s!\r\n", strerror( errno ) )
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -198,7 +198,7 @@ void rpc_handle_mount(
     if ( errno ) {
       response.result = -errno;
       EARLY_STARTUP_PRINT( "ERROR WHILE READING DIRECTORY %s!\r\n", strerror( errno ) )
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( request );
       return;
     }
@@ -208,7 +208,7 @@ void rpc_handle_mount(
     if ( count > 2 ) {
       EARLY_STARTUP_PRINT( "DIRECTORY NOT EMPTY!\r\n" )
       response.result = -ENOTEMPTY;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( request );
       return;
     }
@@ -220,42 +220,42 @@ void rpc_handle_mount(
     source_handler,
     request,
     sizeof( *request ),
-    NULL,
+    nullptr,
     type,
     request,
     sizeof( *request ),
     0,
     0,
-    NULL,
+    nullptr,
     false
   );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "UNABLE TO ROUTE MOUNT REQUEST %s!\r\n", strerror( errno ) )
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
   // handle error
   if ( 0 == response_id ) {
     response.result = -EIO;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
   // get response
-  vfs_mount_response_t* response_data = bolthur_rpc_fetch_from_mailbox( response_id, &data_size, true, NULL );
+  vfs_mount_response_t* response_data = bolthur_rpc_fetch_from_mailbox( response_id, &data_size, true, nullptr );
   // handle error
   if ( ! response_data ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
 
   /// FIXME: copy over stat
 
-  bolthur_rpc_return( type, response_data, sizeof( *response_data ), NULL, 0 );
+  bolthur_rpc_return( type, response_data, sizeof( *response_data ), nullptr, 0 );
   free( request );
   free( response_data );
 }

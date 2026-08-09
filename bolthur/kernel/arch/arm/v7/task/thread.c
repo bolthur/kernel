@@ -74,7 +74,7 @@ task_thread_t* task_thread_create(
   );
   // handle error
   if ( INVALID_ADDRESS == stack_physical ) {
-    return NULL;
+    return nullptr;
   }
 
   // get next stack address for user area
@@ -84,7 +84,7 @@ task_thread_t* task_thread_create(
   // handle error
   if ( 0 == stack_virtual ) {
     phys_free_page_range( stack_physical, STACK_SIZE );
-    return NULL;
+    return nullptr;
   }
   // debug output
   #if defined( PRINT_PROCESS )
@@ -96,7 +96,7 @@ task_thread_t* task_thread_create(
   // check
   if ( ! thread ) {
     phys_free_page_range( stack_physical, STACK_SIZE );
-    return NULL;
+    return nullptr;
   }
   // prepare
   memset( thread, 0, sizeof( task_thread_t ) );
@@ -111,7 +111,7 @@ task_thread_t* task_thread_create(
   if ( ! thread->current_context ) {
     phys_free_page_range( stack_physical, STACK_SIZE );
     free( thread );
-    return NULL;
+    return nullptr;
   }
 
   // cache locally
@@ -161,7 +161,7 @@ task_thread_t* task_thread_create(
     phys_free_page_range( stack_physical, STACK_SIZE );
     free( thread->current_context );
     free( thread );
-    return NULL;
+    return nullptr;
   }
   // prepare stack
   memset( ( void* )tmp_virtual_user, 0, STACK_SIZE );
@@ -179,7 +179,7 @@ task_thread_t* task_thread_create(
     phys_free_page_range( stack_physical, STACK_SIZE );
     free( thread->current_context );
     free( thread );
-    return NULL;
+    return nullptr;
   }
   for(
     uintptr_t stack_current = 0;
@@ -202,7 +202,7 @@ task_thread_t* task_thread_create(
       phys_free_page_range( stack_physical, STACK_SIZE );
       free( thread->current_context );
       free( thread );
-      return NULL;
+      return nullptr;
     }
   }
 
@@ -223,7 +223,7 @@ task_thread_t* task_thread_create(
     virt_unmap_address( process->virtual_context, stack_virtual, true );
     free( thread->current_context );
     free( thread );
-    return NULL;
+    return nullptr;
   }
 
   // get thread queue by priority
@@ -239,7 +239,7 @@ task_thread_t* task_thread_create(
     virt_unmap_address( process->virtual_context, stack_virtual, true );
     free( thread->current_context );
     free( thread );
-    return NULL;
+    return nullptr;
   }
 
   // return created thread
@@ -251,7 +251,7 @@ task_thread_t* task_thread_create(
  * @brief Create a copy of a thread of a process
  * @param forked_process process where thread shall be pushed into
  * @param thread_to_fork thread to be forked
- * @return new thread structure or null
+ * @return new thread structure or nullptr
  */
 task_thread_t* task_thread_fork(
   task_process_t* forked_process,
@@ -261,7 +261,7 @@ task_thread_t* task_thread_fork(
   task_thread_t* thread = malloc( sizeof( *thread ) );
   // handle error
   if ( ! thread ) {
-    return NULL;
+    return nullptr;
   }
   // erase memory
   memset( thread, 0, sizeof( task_thread_t ) );
@@ -271,7 +271,7 @@ task_thread_t* task_thread_fork(
   // handle error
   if ( ! thread->current_context ) {
     free( thread );
-    return NULL;
+    return nullptr;
   }
   // erase memory
   memset( thread->current_context, 0, sizeof( cpu_register_context_t ) );
@@ -314,7 +314,7 @@ task_thread_t* task_thread_fork(
   ) ) {
     free( thread->current_context );
     free( thread );
-    return NULL;
+    return nullptr;
   }
 
   // prepare node
@@ -327,7 +327,7 @@ task_thread_t* task_thread_fork(
     );
     free( thread->current_context );
     free( thread );
-    return NULL;
+    return nullptr;
   }
   // get thread queue by priority
   task_priority_queue_t* queue = task_queue_get_queue(
@@ -346,7 +346,7 @@ task_thread_t* task_thread_fork(
     avl_remove_by_node( thread->process->thread_manager, &thread->node_id );
     free( thread->current_context );
     free( thread );
-    return NULL;
+    return nullptr;
   }
 
   return thread;

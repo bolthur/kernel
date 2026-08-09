@@ -108,7 +108,7 @@ const char* sd_last_error( void ) {
     STARTUP_PRINT( "sd last error request\r\n" )
   #endif
   if ( ! device || 0 == device->last_error ) {
-    return NULL;
+    return nullptr;
   }
   // debug output
   #if defined( SD_ENABLE_DEBUG )

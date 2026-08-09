@@ -65,7 +65,7 @@ static void destroy_handle( handle_node_t* node ) {
   }
   if ( node->data ) {
     free( node->data );
-    node->data = NULL;
+    node->data = nullptr;
   }
   free( node );
 }
@@ -151,7 +151,7 @@ int handle_set(
   // ensure max path
   if ( PATH_MAX < strlen( path ) ) {
     free( *handle );
-    *handle = NULL;
+    *handle = nullptr;
     return -EINVAL;
   }
   // populate structure
@@ -165,7 +165,7 @@ int handle_set(
   // insert
   if ( handle_node_tree_insert( &process_container->management_tree, *handle ) ) {
     free( *handle );
-    *handle = NULL;
+    *handle = nullptr;
     return -EEXIST;
   }
   // return success
@@ -345,7 +345,7 @@ handle_node_t* handle_get_next( const pid_t process ) {
   process_node_t* process_container = process_generate( process );
   if ( ! process_container ) {
     errno = EBADF;
-    return NULL;
+    return nullptr;
   }
   // get next handle
   return handle_node_tree_min( &process_container->management_tree );

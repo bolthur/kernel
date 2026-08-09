@@ -51,23 +51,23 @@ void rpc_handle_write(
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     response->len = -EINVAL;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     return;
   }
   // handle no data
   if ( ! data_info ) {
     response->len = -EINVAL;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     return;
   }
   size_t data_size;
-  vfs_write_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_write_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   // handle error
   if ( ! request ) {
     response->len = -EIO;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     return;
   }
@@ -78,7 +78,7 @@ void rpc_handle_write(
     || request->offset % sd_block_size
   ) {
     response->len = -EAGAIN;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     free( request );
     return;
@@ -92,7 +92,7 @@ void rpc_handle_write(
   )*/
   // try to read data
   if ( ! sd_write_block(
-    NULL,
+    nullptr,
     request->len,
     request->offset,
     request->shm_id
@@ -108,7 +108,7 @@ void rpc_handle_write(
     // prepare response
     response->len = -EIO;
     // return response
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     // free stuff
     free( request );
     free( response );
@@ -117,7 +117,7 @@ void rpc_handle_write(
   // prepare read amount
   response->len = ( ssize_t )request->len;
   // return response
-  bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+  bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
   // free stuff
   free( request );
   free( response );

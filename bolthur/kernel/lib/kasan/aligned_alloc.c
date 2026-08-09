@@ -35,7 +35,7 @@ __no_sanitize void* kasan_aligned_alloc_hook( const size_t alignment, const size
   if ( heap_get_state() == HEAP_INIT_EARLY ) {
     return heap_allocate( alignment, size );
   }
-  kasan_heap_header_t* kasan_heap_header = NULL;
+  kasan_heap_header_t* kasan_heap_header = nullptr;
   const size_t aligned_size = ( size + KASAN_SHADOW_MASK ) & ~KASAN_SHADOW_MASK;
   const size_t total_size = aligned_size + KASAN_HEAP_HEAD_REDZONE_SIZE
     + KASAN_HEAP_TAIL_REDZONE_SIZE;
@@ -43,7 +43,7 @@ __no_sanitize void* kasan_aligned_alloc_hook( const size_t alignment, const size
   // allocate some block
   void* ptr = heap_allocate( alignment, total_size );
   if ( ! ptr ) {
-    return NULL;
+    return nullptr;
   }
   //DEBUG_OUTPUT( "ptr = %#"PRIxPTR"\r\n", ( uintptr_t )ptr )
   // populate kasan information

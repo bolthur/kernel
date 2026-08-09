@@ -275,7 +275,7 @@ virt_context_t* virt_create_context( virt_context_type_t type ) {
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == virt_supported_mode ) {
     virt_context_t* context = v7_long_create_context( type );
     if ( ! context ) {
-      return NULL;
+      return nullptr;
     }
     // allocate bitmap for lookup
     const uintptr_t min = virt_get_context_min_address( context );
@@ -286,7 +286,7 @@ virt_context_t* virt_create_context( virt_context_type_t type ) {
       context->bitmap_length * sizeof( uint32_t ) );
     if ( ! context->bitmap ) {
       v7_long_destroy_context( context, false );
-      return NULL;
+      return nullptr;
     }
     memset( context->bitmap, 0, context->bitmap_length * sizeof( uint32_t ) );
     return context;
@@ -297,7 +297,7 @@ virt_context_t* virt_create_context( virt_context_type_t type ) {
   ) {
     virt_context_t* context = v7_short_create_context( type );
     if ( ! context ) {
-      return NULL;
+      return nullptr;
     }
     // allocate bitmap for lookup
     const uintptr_t min = virt_get_context_min_address( context );
@@ -308,7 +308,7 @@ virt_context_t* virt_create_context( virt_context_type_t type ) {
       context->bitmap_length * sizeof( uint32_t ) );
     if ( ! context->bitmap ) {
       v7_long_destroy_context( context, false );
-      return NULL;
+      return nullptr;
     }
     memset( context->bitmap, 0, context->bitmap_length * sizeof( uint32_t ) );
     return context;
@@ -328,7 +328,7 @@ virt_context_t* virt_create_context( virt_context_type_t type ) {
 virt_context_t* virt_fork_context( virt_context_t* ctx, task_process_t* proc ) {
   // check context
   if ( ! ctx || ctx->type != VIRT_CONTEXT_TYPE_USER ) {
-    return NULL;
+    return nullptr;
   }
 
   // check for v7 long descriptor format

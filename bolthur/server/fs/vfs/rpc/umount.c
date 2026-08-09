@@ -109,16 +109,16 @@ void rpc_handle_umount(
   }
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // fetch rpc data
   size_t request_size;
-  vfs_umount_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &request_size, true, NULL );
+  vfs_umount_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &request_size, true, nullptr );
   // handle error
   if ( ! request ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -127,7 +127,7 @@ void rpc_handle_umount(
   if ( ! handler ) {
     EARLY_STARTUP_PRINT( "No handler found for %d\r\n", RPC_VFS_MOUNT )
     response.result = -ESRCH;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -136,21 +136,21 @@ void rpc_handle_umount(
   // handle no mount point found
   if ( ! mount_point ) {
     response.result = -ENOENT;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
   // self handled cannot be unmounted
   if ( mount_point->pid == getpid() ) {
     response.result = -ENOTSUP;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
   // handle no stat
   if ( ! mount_point->st ) {
     response.result = -ENOTSUP;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -171,7 +171,7 @@ void rpc_handle_umount(
         // set result to busy
         response.result = -EBUSY;
         // return from rpc
-        bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+        bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
         // free request
         free( request );
         // skip rest
@@ -194,13 +194,13 @@ void rpc_handle_umount(
     request_size,
     origin,
     data_info,
-    NULL,
+    nullptr,
     false
   );
   // handle error
   if ( errno ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }

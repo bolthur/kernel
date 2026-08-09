@@ -74,7 +74,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     return -1;
   }
   // register vfs itself to /vfs
-  if ( ! mountpoint_node_add( ":/vfs", getpid(), NULL ) ) {
+  if ( ! mountpoint_node_add( ":/vfs", getpid(), nullptr ) ) {
     EARLY_STARTUP_PRINT( "Unable to register vfs itself!\r\n" )
     return -1;
   }

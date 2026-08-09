@@ -1088,7 +1088,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   }
   // create shared memory
   size_t shm_id = 0;
-  void* shm_addr = NULL;
+  void* shm_addr = nullptr;
   if ( is_data && 0 < device->block_count ) {
     if ( device->shm_id ) {
       // debug output

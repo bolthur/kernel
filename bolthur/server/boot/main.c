@@ -41,7 +41,7 @@ size_t ramdisk_decompressed_size;
 size_t ramdisk_shared_id;
 size_t ramdisk_read_offset = 0;
 pid_t own_pid = 0;
-TAR *disk = NULL;
+TAR *disk = nullptr;
 int fd_dev_manager = 0;
 
 /**
@@ -173,9 +173,9 @@ int main( int argc, char* argv[] ) {
   }
 
   // transform arguments to hex
-  ramdisk_compressed = strtoul( argv[ 1 ], NULL, 16 );
-  ramdisk_compressed_size = strtoul( argv[ 2 ], NULL, 16 );
-  uintptr_t device_tree = strtoul( argv[ 3 ], NULL, 16 );
+  ramdisk_compressed = strtoul( argv[ 1 ], nullptr, 16 );
+  ramdisk_compressed_size = strtoul( argv[ 2 ], nullptr, 16 );
+  uintptr_t device_tree = strtoul( argv[ 3 ], nullptr, 16 );
   // address size constant
   constexpr int address_size = ( int )( sizeof( uintptr_t ) * 2 );
 
@@ -198,7 +198,7 @@ int main( int argc, char* argv[] ) {
   // allocate space for bootargs
   char* nbootargs = malloc( ( size_t )( bootargs_length + 1 ) );
   if ( ! nbootargs ) {
-    EARLY_STARTUP_PRINT( "ERROR: Unable to allocate space for null terminated bootargs!\r\n" )
+    EARLY_STARTUP_PRINT( "ERROR: Unable to allocate space for nullptr terminated bootargs!\r\n" )
     free( msg );
     return -1;
   }

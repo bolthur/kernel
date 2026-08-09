@@ -53,7 +53,7 @@ static void on_folder_file_added(
   }
   // get message and data size
   size_t data_size;
-  vfs_add_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_add_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! response ) {
     const int e = errno;
     EARLY_STARTUP_PRINT( "Unable to fetch response: %s\r\n", strerror( e ) )

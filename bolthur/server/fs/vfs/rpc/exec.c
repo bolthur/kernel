@@ -59,7 +59,7 @@ static void rpc_handle_exec_table(
   }
   // get message and data size
   size_t data_size;
-  vfs_exec_response_t* exec_response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_exec_response_t* exec_response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! exec_response ) {
     // set response status
     response.result = -errno;
@@ -146,15 +146,15 @@ void rpc_handle_exec(
   vfs_exec_response_t response = { .result = -EINVAL };
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
-  vfs_exec_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_exec_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // get process container
@@ -162,7 +162,7 @@ void rpc_handle_exec(
   // handle not existing
   if ( ! process_container ) {
     response.result = 0;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -171,14 +171,14 @@ void rpc_handle_exec(
   // destroy hash set if existing
   if ( process_container->exec_table ) {
     ht_destroy( process_container->exec_table );
-    process_container->exec_table = NULL;
+    process_container->exec_table = nullptr;
   }
   // setup hash set
   process_container->exec_table = ht_create();
   // handle failure
   if ( ! process_container->exec_table ) {
     response.result = -ENOMEM;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -192,7 +192,7 @@ void rpc_handle_exec(
     // handle error
     if ( -1 == res ) {
       response.result = -ENOMEM;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( request );
       return;
     }
@@ -219,7 +219,7 @@ void rpc_handle_exec(
       sizeof( *request ),
       origin,
       data_info,
-      NULL,
+      nullptr,
       false
     );
     // handle error
@@ -232,7 +232,7 @@ void rpc_handle_exec(
       // free request and str
       free( request );
       // return error
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       // return execution
       return;
     }
@@ -246,6 +246,6 @@ void rpc_handle_exec(
     // set result to success
     response.result = 0;
     // return
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
   }
 }

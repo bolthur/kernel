@@ -27,7 +27,7 @@
 
 // FIXME: ADD VALUE CONVERSION FROM ENDIAN HEADER OVERALL
 
-psf_font_t* font = NULL;
+psf_font_t* font = nullptr;
 
 /**
  * @fn bool psf_load_font(psf_font_t*)

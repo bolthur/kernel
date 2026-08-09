@@ -58,9 +58,9 @@ void virt_init( void ) {
   if ( virt_initialized ) {
     return;
   }
-  // set global context to null
-  virt_current_kernel_context = NULL;
-  virt_current_user_context = NULL;
+  // set global context to nullptr
+  virt_current_kernel_context = nullptr;
+  virt_current_user_context = nullptr;
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "arch init!\r\n" )

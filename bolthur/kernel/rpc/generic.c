@@ -32,7 +32,7 @@
 
 #include "../debug/debug.h"
 #include "../lib/inttypes.h"
-static avl_tree_t* origin_tree = NULL;
+static avl_tree_t* origin_tree = nullptr;
 
 /**
  * @fn int32_t compare_callback(const avl_node_t*, const avl_node_t*)
@@ -126,8 +126,8 @@ rpc_origin_source_t* rpc_generic_source_info( const size_t id ) {
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT( "origin information for id %zu not found!\r\n", id )
     #endif
-    // return null
-    return NULL;
+    // return nullptr
+    return nullptr;
   }
   // return block
   return RPC_GET_ORIGIN_SOURCE( node );
@@ -151,7 +151,7 @@ void rpc_generic_destroy_source_info( rpc_origin_source_t* info ) {
   // debug output
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "Trying to remove source info %zu!\r\n", info->rpc_id )
-    avl_print( origin_tree, NULL );
+    avl_print( origin_tree, nullptr );
   #endif
   // remove from tree
   avl_remove_by_node( origin_tree, &info->node );
@@ -343,7 +343,7 @@ rpc_backup_t* rpc_generic_raise(
       DEBUG_OUTPUT( "Error while creating backup for target %d\r\n", target->id )
     #endif
     // skip if backup could not be created
-    return NULL;
+    return nullptr;
   }
   // allocate new structure for tree
   if ( backup->data_id ) {
@@ -354,7 +354,7 @@ rpc_backup_t* rpc_generic_raise(
         DEBUG_OUTPUT( "Error while allocating rpc info object\r\n" )
       #endif
       rpc_backup_destroy( backup );
-      return NULL;
+      return nullptr;
     }
     // clear out
     memset( rpc_info, 0, sizeof( *rpc_info ) );
@@ -374,7 +374,7 @@ rpc_backup_t* rpc_generic_raise(
       #endif
       free( rpc_info );
       rpc_backup_destroy( backup );
-      return NULL;
+      return nullptr;
     }
     // cache rpc info structure
     backup->rpc_info = rpc_info;
@@ -387,7 +387,7 @@ rpc_backup_t* rpc_generic_raise(
     #endif
     rpc_backup_destroy( backup );
     // skip if error occurred during rpc invoke
-    return NULL;
+    return nullptr;
   }
   // return created backup
   return backup;

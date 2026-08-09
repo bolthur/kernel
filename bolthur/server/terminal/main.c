@@ -104,7 +104,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   _syscall_rpc_set_ready( true );
 
   // push terminal device as indicator init is done
-  if ( ! vfs_dev_add_file( "/dev/terminal", NULL, 0, nullptr ) ) {
+  if ( ! vfs_dev_add_file( "/dev/terminal", nullptr, 0, nullptr ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }

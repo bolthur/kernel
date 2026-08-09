@@ -97,7 +97,7 @@ int configuration_confini_handler (
  */
 configuration_node_t* by_name( const char* name ) {
   // variable
-  configuration_node_t* e = NULL;
+  configuration_node_t* e = nullptr;
   // loop through list and try to find by name
   TAILQ_FOREACH(e, &head, queue) {
     if (
@@ -108,7 +108,7 @@ configuration_node_t* by_name( const char* name ) {
     }
   }
   // not found
-  return NULL;
+  return nullptr;
 }
 
 /**
@@ -133,9 +133,9 @@ bool configuration_handle( const char* path, const char* bootarg ) {
   if ( load_ini_file(
     ini_file,
     INI_DEFAULT_FORMAT,
-    NULL,
+    nullptr,
     configuration_confini_handler,
-    NULL
+    nullptr
   ) ) {
     EARLY_STARTUP_PRINT( "Cannot load ini file!\r\n" )
     return false;
@@ -214,13 +214,13 @@ bool configuration_handle( const char* path, const char* bootarg ) {
         VFS_DAEMON_ID,
         request,
         sizeof( *request ),
-        NULL,
+        nullptr,
         RPC_VFS_BOOT_INIT,
         request,
         sizeof( *request ),
         0,
         0,
-        NULL,
+        nullptr,
         false
       );
       if ( errno ) {
@@ -232,7 +232,7 @@ bool configuration_handle( const char* path, const char* bootarg ) {
       // get message and data size
       size_t data_size;
       vfs_boot_init_response_t* response = bolthur_rpc_fetch_from_mailbox(
-        response_id, &data_size, true, NULL );
+        response_id, &data_size, true, nullptr );
       if ( ! response ) {
         EARLY_STARTUP_PRINT( "Unable to fetch boot init response: %s\r\n", strerror(errno) )
         exit( -1 );
@@ -255,8 +255,8 @@ bool configuration_handle( const char* path, const char* bootarg ) {
     TAILQ_REMOVE( &head, n, queue );
     // free data
     free( n );
-    // set pointer to null
-    n = NULL;
+    // set pointer to nullptr
+    n = nullptr;
   }
   // close file again;
   if ( 0 != fclose( ini_file ) ) {

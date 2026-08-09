@@ -70,7 +70,7 @@ int main( int argc, char* argv[] ) {
   vfs_wait_for_path( "/dev/manager/device" );
 
   // add device file
-  if ( ! vfs_dev_add_file( "/dev/ramdisk", NULL, 0, nullptr ) ) {
+  if ( ! vfs_dev_add_file( "/dev/ramdisk", nullptr, 0, nullptr ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }

@@ -42,8 +42,8 @@ void init_stage2( const char* bootarg ) {
   // determine root device and partition type from config
   STARTUP_PRINT( "Extracting root device and partition type...\r\n" )
   char* p = strtok( ( char* )bootarg, " " );
-  char* root_device = NULL;
-  char* root_partition_type = NULL;
+  char* root_device = nullptr;
+  char* root_partition_type = nullptr;
   while ( p ) {
     constexpr size_t len_root_device = 5;
     constexpr size_t len_root_partition_type = 11;
@@ -76,7 +76,7 @@ void init_stage2( const char* bootarg ) {
       strcpy( root_partition_type, p + len_root_partition_type );
     }
     // get next one
-    p = strtok( NULL, " " );
+    p = strtok( nullptr, " " );
   }
   // handle no root device and/or file system type found
   if ( ! root_device || ! root_partition_type ) {
@@ -100,7 +100,7 @@ void init_stage2( const char* bootarg ) {
   }
 
   FILE* fstab = setmntent("/etc/fstab", "r");
-  struct mntent* m = NULL;
+  struct mntent* m = nullptr;
   if ( fstab ) {
     while( ( m = getmntent( fstab ) ) ) {
       STARTUP_PRINT( "m->mnt_dir = %s\r\n", m->mnt_dir )

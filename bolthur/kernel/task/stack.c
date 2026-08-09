@@ -29,7 +29,7 @@
 /**
  * @brief Stack management structure
  */
-task_stack_manager_t* task_stack_manager = NULL;
+task_stack_manager_t* task_stack_manager = nullptr;
 
 /**
  * @fn int32_t task_stack_callback(const avl_node_t*, const avl_node_t*)
@@ -105,19 +105,19 @@ task_stack_manager_t* task_stack_manager_create( void ) {
   task_stack_manager_t* manager = malloc( sizeof( *manager ) );
   // check
   if ( ! manager ) {
-    return NULL;
+    return nullptr;
   }
   // prepare
   memset( ( void* )manager, 0, sizeof( *manager ) );
   // create tree
   manager->tree = avl_create_tree(
     task_stack_callback,
-    NULL,
+    nullptr,
     task_stack_cleanup
   );
   if ( ! manager->tree ) {
     free( manager );
-    return NULL;
+    return nullptr;
   }
   // return manager
   return manager;

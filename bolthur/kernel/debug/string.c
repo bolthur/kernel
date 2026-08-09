@@ -79,7 +79,7 @@ char* debug_strchr( const char *str, int delimiter ) {
     str++;
   }
   // no match
-  return NULL;
+  return nullptr;
 }
 
 /**

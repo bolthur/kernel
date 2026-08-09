@@ -44,5 +44,5 @@ void* memchr( const void* buf, int c, size_t n ) {
   }
 
   // nothing found
-  return NULL;
+  return nullptr;
 }

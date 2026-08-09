@@ -31,17 +31,17 @@
  */
 __attribute__((__malloc__(iomem_mailbox_release, 1))) void* iomem_prepare_mailbox( const size_t count, size_t* total ) {
   if ( 0 == count ) {
-    return NULL;
+    return nullptr;
   }
   // allocate
   const size_t tmp_total = count * sizeof( uint32_t );
   iomem_mmio_entry_t* tmp = malloc( tmp_total );
   if ( ! tmp ) {
-    return NULL;
+    return nullptr;
   }
   // erase
   memset( tmp, 0, tmp_total );
-  // set total if not null
+  // set total if valid
   if ( total ) {
     *total = tmp_total;
   }

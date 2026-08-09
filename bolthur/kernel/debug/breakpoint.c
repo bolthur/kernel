@@ -28,7 +28,7 @@
 /**
  * @brief debug breakpoint manager
  */
-list_manager_t* debug_breakpoint_manager = NULL;
+list_manager_t* debug_breakpoint_manager = nullptr;
 
 /**
  * @fn bool debug_breakpoint_init(void)
@@ -43,7 +43,7 @@ bool debug_breakpoint_init( void ) {
     return true;
   }
   // setup list
-  debug_breakpoint_manager = list_construct( NULL, NULL, NULL );
+  debug_breakpoint_manager = list_construct( nullptr, nullptr, nullptr );
   return ( bool )debug_breakpoint_manager;
 }
 
@@ -57,7 +57,7 @@ bool debug_breakpoint_init( void ) {
 debug_breakpoint_entry_t* debug_breakpoint_find( uintptr_t address ) {
   // handle not existing
   if ( ! debug_breakpoint_manager ) {
-    return NULL;
+    return nullptr;
   }
   // check for possible existence
   list_item_t* current = debug_breakpoint_manager->first;
@@ -74,7 +74,7 @@ debug_breakpoint_entry_t* debug_breakpoint_find( uintptr_t address ) {
     current = current->next;
   }
   // return found / not found entry
-  return NULL;
+  return nullptr;
 }
 
 /**

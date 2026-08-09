@@ -29,7 +29,7 @@
 
 static void* ramdisk;
 static size_t length;
-TAR* disk = NULL;
+TAR* disk = nullptr;
 static size_t ramdisk_offset = 0;
 
 
@@ -236,11 +236,11 @@ void* ramdisk_get_start( const char* path ) {
       // skip to next file
       if ( tar_skip_regfile( disk ) != 0 ) {
         EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) );
-        return NULL;
+        return nullptr;
       }
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 /**
@@ -269,9 +269,9 @@ TAR* ramdisk_get_info( const char* path ) {
       // skip to next file
       if ( tar_skip_regfile( disk ) != 0 ) {
         EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) );
-        return NULL;
+        return nullptr;
       }
     }
   }
-  return NULL;
+  return nullptr;
 }

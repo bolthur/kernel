@@ -35,7 +35,7 @@
 __allocator void* aligned_alloc( size_t alignment, size_t size ) {
   // standard conformance
   if ( 0 == size ) {
-    return NULL;
+    return nullptr;
   }
   // sanitizer stuff
   #if defined( HAS_SANITIZER )

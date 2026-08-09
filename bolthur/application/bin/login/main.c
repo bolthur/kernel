@@ -40,7 +40,7 @@ static char* build_env( const char* value, const char* prefix ) {
   const size_t env_len = strlen( value ) + strlen( prefix ) + 1;
   char* home_env = malloc( env_len );
   if ( ! home_env ) {
-    return NULL;
+    return nullptr;
   }
   memset( home_env, 0, env_len );
   sprintf( home_env, "%s=%s", prefix, value );
@@ -169,7 +169,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
         exit( 1 );
       }
       // build command
-      char* cmd[] = { base, NULL, };
+      char* cmd[] = { base, nullptr, };
       // build home env
       char* home_env = build_env( request_data->pw_home, "HOME=" );
       if ( ! home_env ) {
@@ -180,7 +180,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
       if ( ! shell_env ) {
         exit( 1 );
       }
-      char* env[] = { home_env, shell_env, NULL };
+      char* env[] = { home_env, shell_env, nullptr };
       // exec to replace
       if ( -1 == execve( request_data->pw_shell, cmd, env ) ) {
         exit( 1 );

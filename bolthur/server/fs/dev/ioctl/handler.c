@@ -23,7 +23,7 @@
 #include <string.h>
 #include "handler.h"
 
-static avl_tree_t* ioctl_tree = NULL;
+static avl_tree_t* ioctl_tree = nullptr;
 
 /**
  * @fn int32_t compare_ioctl(const avl_node_t*, const avl_node_t*)
@@ -174,7 +174,7 @@ ioctl_container_t* ioctl_lookup_command(
   );
   // handle nothing found
   if ( ! found ) {
-    return NULL;
+    return nullptr;
   }
   // get entry
   auto const entry = IOCTL_HANDLER_GET_ENTRY( found );
@@ -185,7 +185,7 @@ ioctl_container_t* ioctl_lookup_command(
   );
   // handle nothing found
   if ( ! found ) {
-    return NULL;
+    return nullptr;
   }
   // return found entry
   return IOCTL_HANDLER_GET_CONTAINER( found );
@@ -212,7 +212,7 @@ bool ioctl_push_command(
     ioctl_tree,
     ( void* )process
   );
-  ioctl_tree_entry_t* entry = NULL;
+  ioctl_tree_entry_t* entry = nullptr;
   // handle existing tree
   if ( found ) {
     // get entry
