@@ -39,7 +39,7 @@ static void rpc_get_string_finished(
   [[maybe_unused]] size_t type,
   [[maybe_unused]] pid_t origin,
   [[maybe_unused]] size_t data_info,
-  size_t response_info
+  const size_t response_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
@@ -97,8 +97,8 @@ static void rpc_get_string_finished(
  */
 void rpc_get_string(
   [[maybe_unused]] size_t type,
-  pid_t origin,
-  size_t data_info,
+  const pid_t origin,
+  const size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };

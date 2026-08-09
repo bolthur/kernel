@@ -176,8 +176,8 @@ static bool perform_check( hub_check_change_context_t* ctx ) {
  */
 static void continue_check_change(
   [[maybe_unused]] size_t type,
-  pid_t origin,
-  size_t data_info,
+  const pid_t origin,
+  const size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t response = { .status = -EINVAL, };
@@ -261,8 +261,8 @@ static void continue_check_change(
  */
 void rpc_hub_check_change(
   [[maybe_unused]] size_t type,
-  pid_t origin,
-  size_t data_info,
+  const pid_t origin,
+  const size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t response = { .status = -EINVAL, };

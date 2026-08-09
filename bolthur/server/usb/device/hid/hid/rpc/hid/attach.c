@@ -41,9 +41,9 @@
  */
 static void rpc_hid_attach_finished(
   [[maybe_unused]] size_t type,
-  pid_t origin,
-  size_t data_info,
-  size_t response_info
+  const pid_t origin,
+  const size_t data_info,
+  const size_t response_info
 ) {
   // debug output
   #if defined( HID_ENABLE_DEBUG )
@@ -109,8 +109,8 @@ static void rpc_hid_attach_finished(
  */
 void rpc_hid_attach(
   [[maybe_unused]] size_t type,
-  pid_t origin,
-  size_t data_info,
+  const pid_t origin,
+  const size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
   // debug output

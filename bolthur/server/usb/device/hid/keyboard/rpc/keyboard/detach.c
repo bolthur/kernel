@@ -34,8 +34,8 @@
  */
 void rpc_keyboard_detach(
   [[maybe_unused]] size_t type,
-  pid_t origin,
-  size_t data_info,
+  const pid_t origin,
+  const size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL, };

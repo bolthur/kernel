@@ -36,13 +36,11 @@
  * @param origin origin of the message
  * @param data_info data id
  * @param response_info response info
- *
- * @todo destroy fetched hid report correctly
  */
 void rpc_keyboard_attach(
   [[maybe_unused]] size_t type,
-  pid_t origin,
-  size_t data_info,
+  const pid_t origin,
+  const size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
   #if defined( KEYBOARD_ENABLE_DEBUG )

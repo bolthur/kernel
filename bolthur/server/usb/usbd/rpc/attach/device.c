@@ -36,14 +36,12 @@
  * @param origin
  * @param data_info
  * @param response_info
- *
- * @todo add error retry
  */
 static void rpc_attach_device_finished(
   [[maybe_unused]] size_t type,
-  pid_t origin,
-  size_t data_info,
-  size_t response_info
+  const pid_t origin,
+  const size_t data_info,
+  const size_t response_info
 ) {
   #if defined( USBD_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "device finished\r\n" )
@@ -121,8 +119,8 @@ static void rpc_attach_device_finished(
  */
 void rpc_attach_device(
   [[maybe_unused]] size_t type,
-  pid_t origin,
-  size_t data_info,
+  const pid_t origin,
+  const size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };

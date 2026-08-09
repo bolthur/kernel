@@ -40,9 +40,9 @@
  */
 static void rpc_interrupt_poll_finished(
   [[maybe_unused]] size_t type,
-  pid_t origin,
-  size_t data_info,
-  size_t response_info
+  const pid_t origin,
+  const size_t data_info,
+  const size_t response_info
 ) {
   // get matching async data
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
@@ -98,8 +98,8 @@ static void rpc_interrupt_poll_finished(
  */
 void rpc_interrupt_poll(
   [[maybe_unused]] size_t type,
-  pid_t origin,
-  size_t data_info,
+  const pid_t origin,
+  const size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };

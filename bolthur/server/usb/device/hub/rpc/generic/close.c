@@ -32,13 +32,18 @@
  * @param response_info
  */
 void rpc_generic_close(
-  size_t type,
-  [[maybe_unused]] pid_t origin,
-  size_t data_info,
+  const size_t type,
+  const pid_t origin,
+  const size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
   // dummy error response
   vfs_close_response_t response = { .status = -EINVAL };
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    return;
+  }
   // handle no data
   if ( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );

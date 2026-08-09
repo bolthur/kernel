@@ -39,9 +39,9 @@
  */
 static void console_complete(
   [[maybe_unused]] size_t type,
-  pid_t origin,
-  size_t data_info,
-  size_t response_info
+  const pid_t origin,
+  const size_t data_info,
+  const size_t response_info
 ) {
   // get async data and destroy it directly
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async( RPC_VFS_IOCTL, response_info );
@@ -78,8 +78,8 @@ static void console_complete(
  */
 void rpc_keyboard_key(
   [[maybe_unused]] size_t type,
-  pid_t origin,
-  size_t data_info,
+  const pid_t origin,
+  const size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
   // validate origin

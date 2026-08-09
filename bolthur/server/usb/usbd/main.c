@@ -39,7 +39,7 @@
 static void check_change_done(
   [[maybe_unused]] size_t type,
   [[maybe_unused]] pid_t origin,
-  size_t data_info,
+  const size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
   if ( ! data_info ) {

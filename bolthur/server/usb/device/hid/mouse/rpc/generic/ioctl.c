@@ -31,16 +31,19 @@
  * @param origin
  * @param data_info
  * @param response_info
- *
- * @todo save result of info to prevent similar requests somehow
  */
 void rpc_generic_ioctl(
-  size_t type,
-  [[maybe_unused]] pid_t origin,
-  size_t data_info,
+  const size_t type,
+  const pid_t origin,
+  const size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL, 0 );
+    return;
+  }
   // handle no data
   if ( ! data_info ) {
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL, 0 );

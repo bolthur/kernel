@@ -36,9 +36,9 @@
  * @param response_info
  */
 void rpc_generic_stat(
-  size_t type,
-  pid_t origin,
-  size_t data_info,
+  const size_t type,
+  const pid_t origin,
+  const size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
   vfs_stat_response_t response = { .success = false };
