@@ -83,6 +83,9 @@ static void rpc_attach_roothub_finished(
     return;
   }
   roothub->status = LIBUSB_DEVICE_STATUS_ATTACH_FINISHED;
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "roothub finished\r\n" )
+  #endif
   // clear memory
   memset( &error, 0, sizeof( error ) );
   // return from rpc

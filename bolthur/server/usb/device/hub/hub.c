@@ -780,8 +780,11 @@ static void hub_attach_finished(
         _syscall_rpc_cleanup();
         return;
       }
+      // decrement to attach if result is 0
+      if ( 0 == result ) {
+        ctx->to_attach--;
       // handle general error
-      if ( 0 != result ) {
+      } else {
         #if defined ( HUB_ENABLE_DEBUG )
           EARLY_STARTUP_PRINT( "Unable to check connection for port: %"PRIu8"\r\n",
             ( uint8_t )port)

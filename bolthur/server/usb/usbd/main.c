@@ -160,9 +160,9 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
       // set check running
       roothub->check_running = true;
       // debug output
-      //#if defined( USBD_ENABLE_DEBUG )
+      #if defined( USBD_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Checking for changes\r\n" )
-      //#endif
+      #endif
       // check for change
       result = call_check_for_change( roothub, check_change_done );
       // debug output
@@ -183,7 +183,5 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
       #endif
     } while ( result != 0 );
   }
-  // wait for rpc ( should never be reached )
-  bolthur_rpc_wait_block();
   return 0;
 }
