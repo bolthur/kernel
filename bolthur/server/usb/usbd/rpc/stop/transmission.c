@@ -102,7 +102,7 @@ void rpc_stop_transmission(
   const size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "POLLING\r\n" )
   #endif
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };

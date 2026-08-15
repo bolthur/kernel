@@ -58,7 +58,7 @@ int usbd_descriptor_get_async(
   const size_t minimum_length
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "USB DESCRIPTOR GET ASYNC\r\n" )
   #endif
   // perform control message
@@ -95,7 +95,7 @@ int usbd_descriptor_get_async(
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Failed to get descriptor: %#x:%#"PRIx8" for device: %s. Result: %s\r\n",
         type, idx, usbd_description_get( dev ), strerror( result ) )
     #endif
@@ -121,7 +121,7 @@ static void descriptor_read_device_finished(
   size_t response_info
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Read device descriptor finished\r\n" )
   #endif
   // peek matching async data without destroy for call chain
@@ -199,7 +199,7 @@ static void descriptor_read_device_finished(
   // response is equal to input
   if ( usb_control_message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "error = %#x\r\n", usb_control_message->error )
     #endif
     // free up stuff
@@ -246,7 +246,7 @@ int usbd_descriptor_read_device(
   usbd_attach_context_t* context
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Read device descriptor\r\n" )
   #endif
   // determine descriptor speed
@@ -265,7 +265,7 @@ int usbd_descriptor_read_device(
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate context\r\n" )
     #endif
     // return result
@@ -291,7 +291,7 @@ int usbd_descriptor_read_device(
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to get descriptor async\r\n" )
     #endif
     // destroy context

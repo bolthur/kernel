@@ -42,7 +42,7 @@ static void rpc_get_string_finished(
   const size_t response_info
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "rpc_get_string_finished\r\n" )
   #endif
   // peek matching async data without destroy for call chain

@@ -50,7 +50,7 @@ int usbd_context_attach_create(
   // handle error
   if ( ! *ctx ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
     #endif
     // return error
@@ -64,7 +64,7 @@ int usbd_context_attach_create(
     // free context
     usbd_context_attach_destroy( *ctx, true );
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
     #endif
     // return error
@@ -122,7 +122,7 @@ int usbd_context_descriptor_create(
   // handle error
   if ( ! *ctx ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
     #endif
     // return error
@@ -147,7 +147,7 @@ void usbd_context_descriptor_destroy( usbd_descriptor_context_t* ctx ) {
     return;
   }
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Destroy descriptor context %p\r\n", ( void* )ctx )
   #endif
   free( ctx );
@@ -173,7 +173,7 @@ int usbd_context_address_create(
   // handle error
   if ( ! *ctx ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
     #endif
     // return error
@@ -199,7 +199,7 @@ void usbd_context_address_destroy( usbd_address_context_t* ctx ) {
     return;
   }
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Destroy address context %p\r\n", ( void* )ctx )
   #endif
   free( ctx );
@@ -225,7 +225,7 @@ int usbd_context_configure_create(
   // handle error
   if ( ! *ctx ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
     #endif
     // return error
@@ -251,7 +251,7 @@ void usbd_context_configure_destroy( usbd_configure_context_t* ctx ) {
     return;
   }
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Destroy configure context %p\r\n", ( void* )ctx )
   #endif
   free( ctx );
@@ -277,7 +277,7 @@ int usbd_context_configuration_create(
   // handle error
   if ( ! *ctx ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
     #endif
     // return error
@@ -303,7 +303,7 @@ void usbd_context_configuration_destroy( usbd_configuration_context_t* ctx ) {
     return;
   }
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Destroy configuration context %p\r\n", ( void* )ctx )
   #endif
   free( ctx );
@@ -323,7 +323,7 @@ int usbd_context_control_create( rpc_handler_t callback, void* context, usbd_con
   // handle error
   if ( ! *ctx ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
     #endif
     // return error
@@ -365,7 +365,7 @@ int usbd_context_deallocate_create( const rpc_handler_t handler, libusb_device_t
   // handle error
   if ( ! *ctx ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
     #endif
     // return error
@@ -420,7 +420,7 @@ int usbd_context_read_string_create(
   // handle error
   if ( ! *ctx ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
     #endif
     // return error
@@ -474,7 +474,7 @@ int usbd_context_get_string_create( const rpc_handler_t callback, void* buffer,
 ) {
   *out = malloc( sizeof( usbd_get_string_context_t ) );
   if ( ! *out ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
     #endif
     return ENOMEM;
@@ -517,7 +517,7 @@ int usbd_context_read_lang_create( void* buffer, const size_t buffer_length,
 ) {
   *out = malloc( sizeof( usbd_read_lang_context_t ) );
   if ( ! *out ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
     #endif
     return ENOMEM;

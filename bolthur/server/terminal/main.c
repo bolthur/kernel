@@ -31,6 +31,7 @@
 #include "output.h"
 #include "terminal.h"
 #include "main.h"
+#include "global.h"
 
 #include "../../library/vfs/dev.h"
 #include "../../library/vfs/handler.h"
@@ -46,19 +47,25 @@ int console_manager_fd = 0;
  * @return
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
-  EARLY_STARTUP_PRINT( "Setup rpc\r\n" )
+  #if defined( TERMINAL_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Setup rpc\r\n" )
+  #endif
   if ( ! rpc_init() ) {
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "Open output driver device\r\n" )
+  #if defined( TERMINAL_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Open output driver device\r\n" )
+  #endif
   // open file to framebuffer device
   output_driver_fd = open( OUTPUT_DRIVER, O_RDWR );
   if ( -1 == output_driver_fd ) {
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "Open console manager device\r\n" )
+  #if defined( TERMINAL_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Open console manager device\r\n" )
+  #endif
   // open file to console manager device
   console_manager_fd = open( _PATH_CONSOLE, O_RDWR );
   if ( -1 == console_manager_fd ) {
@@ -66,7 +73,9 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "Setup output\r\n" )
+  #if defined( TERMINAL_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Setup output\r\n" )
+  #endif
   // generic output init
   if ( ! output_init() ) {
     close( console_manager_fd );
@@ -82,7 +91,9 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "Setup pc screen font\r\n" )
+  #if defined( TERMINAL_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Setup pc screen font\r\n" )
+  #endif
   // psf init
   // FIXME: MOVE TO OUTPUT?
   if ( ! psf_init() ) {
@@ -91,7 +102,9 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "Setup terminal\r\n" )
+  #if defined( TERMINAL_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Setup terminal\r\n" )
+  #endif
   // init terminal
   if ( ! terminal_init() ) {
     close( console_manager_fd );
@@ -100,17 +113,23 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   }
 
   // enable rpc
-  EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
+  #if defined( TERMINAL_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
+  #endif
   _syscall_rpc_set_ready( true );
 
   // push terminal device as indicator init is done
   if ( ! vfs_dev_add_file( "/dev/terminal", nullptr, 0, nullptr ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    #if defined( TERMINAL_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    #endif
     return -1;
   }
 
   // wait for rpc
-  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  #if defined( TERMINAL_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  #endif
   bolthur_rpc_wait_block();
   // return exit code 0
   return 0;

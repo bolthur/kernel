@@ -22,9 +22,9 @@
 
 #include "libusbd.h"
 
-//#define CALL_ENABLE_DEBUG 1
+//#define CALL_ENABLE_OUTPUT 1
 // if call debug is defined include inttypes for printing stuff
-#if defined( CALL_ENABLE_DEBUG )
+#if defined( CALL_ENABLE_OUTPUT )
   #include <inttypes.h>
 #endif
 

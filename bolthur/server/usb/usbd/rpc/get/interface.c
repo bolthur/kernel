@@ -42,7 +42,7 @@ void rpc_get_interface(
   [[maybe_unused]] size_t response_info
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "GET INTERFACE\r\n" )
   #endif
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
@@ -92,7 +92,7 @@ void rpc_get_interface(
     return;
   }
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "GET INTERFACE\r\n" )
   #endif
   // populate response

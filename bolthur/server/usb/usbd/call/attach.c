@@ -41,7 +41,7 @@ int call_attach(
   const int result = usbd_handler_get( dev->interfaces[ 0 ].class, &handler );
   if ( 0 != result ) {
     // debug output
-    #if defined( CALL_ENABLE_DEBUG )
+    #if defined( CALL_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Error while fetching handler for %d: %s\r\n",
         dev->interfaces[ 0 ].class, strerror( result ) )
     #endif
@@ -51,7 +51,7 @@ int call_attach(
   // handle no handler bound
   if ( -1 == handler ) {
     // debug output
-    #if defined( CALL_ENABLE_DEBUG )
+    #if defined( CALL_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "No handler found for %d\r\n", dev->interfaces[ 0 ].class )
     #endif
     // return success
@@ -71,7 +71,7 @@ int call_attach(
   vfs_ioctl_perform_request_t* request = malloc( request_size );
   if ( ! request ) {
     // debug output
-    #if defined( CALL_ENABLE_DEBUG )
+    #if defined( CALL_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Error while allocating rpc request\r\n" )
     #endif
     // return nomem
@@ -85,7 +85,7 @@ int call_attach(
   if ( dev->parent ) {
     ( ( usb_generic_attach_t* )request->container )->parent_device_number = dev->parent->number;
   }
-  #if defined( CALL_ENABLE_DEBUG )
+  #if defined( CALL_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Attaching %"PRIu32" with %"PRIu32"\r\n", dev->number, interface_number );
   #endif
   // attach is defined as first custom message
@@ -108,7 +108,7 @@ int call_attach(
     // cache errno
     const int e = errno;
     // debug output
-    #if defined( CALL_ENABLE_DEBUG )
+    #if defined( CALL_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Error while sending request to handler: %s\r\n",
         strerror( e ) )
     #endif

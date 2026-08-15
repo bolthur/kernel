@@ -31,7 +31,7 @@ int call_check_for_change( const libusb_device_t* dev, rpc_handler_t handler ) {
   // get handler for attaching root hub
   if ( ! dev->device_check_for_change_handler ) {
     // debug output
-    #if defined( CALL_ENABLE_DEBUG )
+    #if defined( CALL_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "No handler found for %d\r\n", dev->interfaces[ 0 ].class )
     #endif
     // return success
@@ -43,7 +43,7 @@ int call_check_for_change( const libusb_device_t* dev, rpc_handler_t handler ) {
   vfs_ioctl_perform_request_t* request = malloc( request_size );
   if ( ! request ) {
     // debug output
-    #if defined( CALL_ENABLE_DEBUG )
+    #if defined( CALL_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Error while allocating rpc request\r\n" )
     #endif
     // return nomem
@@ -73,7 +73,7 @@ int call_check_for_change( const libusb_device_t* dev, rpc_handler_t handler ) {
     // cache errno
     const int e = errno;
     // debug output
-    #if defined( CALL_ENABLE_DEBUG )
+    #if defined( CALL_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Error while sending request to handler: %s\r\n",
         strerror( e ) )
     #endif

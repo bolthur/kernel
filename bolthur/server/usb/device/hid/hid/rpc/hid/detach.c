@@ -134,7 +134,7 @@ void rpc_hid_detach(
     );
     // handle error
     if ( 0 != result ) {
-      #if defined( HID_ENABLE_DEBUG )
+      #if defined( HID_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Unable to call detach device: %s\r\n",
           strerror( result ) )
       #endif

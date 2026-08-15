@@ -126,7 +126,7 @@ void rpc_mouse_attach(
       free( request );
       return;
     }
-    #if defined( MOUSE_ENABLE_DEBUG )
+    #if defined( MOUSE_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "descriptor.endpoint_address.number = %"PRIu8", descriptor.endpoint_address.direction = %d\r\n",
         descriptor.endpoint_address.number, descriptor.endpoint_address.direction)
     #endif
@@ -179,20 +179,20 @@ void rpc_mouse_attach(
       return;
     }
     // some debug output
-    #if defined( MOUSE_ENABLE_DEBUG )
+    #if defined( MOUSE_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "type = %x, report = %"PRIu8", fields = %"PRIu8"\r\n",
         report->type, idx, report->field_count )
     #endif
     // handle input
     if ( report->type == LIBUSB_HID_REPORT_TYPE_INPUT && ! device->mouse_report ) {
       // change idle state to only on key change
-      #if defined( MOUSE_ENABLE_DEBUG )
+      #if defined( MOUSE_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Setting idle to 0 for %"PRIu32" / %"PRIu32" / %"PRIu8"\r\n",
           message->device_number, message->interface_number, report->id )
       #endif
       result = hid_set_idle( message->device_number, message->interface_number, report->id, 0);
       if ( 0 != result ) {
-        #if defined( MOUSE_ENABLE_DEBUG )
+        #if defined( MOUSE_ENABLE_OUTPUT )
           EARLY_STARTUP_PRINT( "Unable to put hid into idle mode: %s\r\n",
             strerror( result ) )
         #endif
@@ -203,7 +203,7 @@ void rpc_mouse_attach(
         bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
         return;
       }
-      #if defined( MOUSE_ENABLE_DEBUG )
+      #if defined( MOUSE_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Setting idle to 0 for %"PRIu32" / %"PRIu32" / %"PRIu8" done\r\n",
           message->device_number, message->interface_number, report->id )
       #endif
@@ -223,7 +223,7 @@ void rpc_mouse_attach(
         return;
       }
     }
-    #if defined( MOUSE_ENABLE_DEBUG )
+    #if defined( MOUSE_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Freeing report\r\n" )
     #endif
     // free report again
@@ -238,14 +238,14 @@ void rpc_mouse_attach(
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
-  #if defined( MOUSE_ENABLE_DEBUG )
+  #if defined( MOUSE_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Clear allocated buffer\r\n" )
   #endif
   // clear it out
   memset( device->buffer, 0, MOUSE_REPORT_SIZE );
   // finally append device to list
   mouse_append( device );
-  #if defined( MOUSE_ENABLE_DEBUG )
+  #if defined( MOUSE_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "endpoint_descriptor.endpoint_address.number = %"PRIu8"\r\n",
       endpoint_descriptor.endpoint_address.number );
     EARLY_STARTUP_PRINT( "endpoint_descriptor.interval = %"PRIu8"\r\n",

@@ -37,7 +37,7 @@ static void set_configuration_finished(
   size_t response_info
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Set configuration finished internal\r\n" )
   #endif
   // peek matching async data without destroy for call chain
@@ -108,7 +108,7 @@ static void set_configuration_finished(
   // response is equal to input
   if ( usb_control_message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "error = %#x\r\n", usb_control_message->error )
     #endif
     // free up stuff
@@ -154,7 +154,7 @@ int usbd_configuration_set(
   // validate
   if ( LIBUSB_DEVICE_STATUS_ADDRESSED != dev->status ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Illegal attempt to configure device %s with status %d\r\n",
         usbd_description_get( dev ), dev->status )
     #endif
@@ -162,7 +162,7 @@ int usbd_configuration_set(
     return EINVAL;
   }
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Set configuration\r\n" )
   #endif
   // create context
@@ -176,7 +176,7 @@ int usbd_configuration_set(
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to register context\r\n" )
     #endif
     // return error
@@ -214,7 +214,7 @@ int usbd_configuration_set(
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to invoke control message\r\n" )
     #endif
     // destroy context again

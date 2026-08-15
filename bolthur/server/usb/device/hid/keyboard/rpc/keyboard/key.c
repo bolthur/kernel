@@ -137,7 +137,7 @@ void rpc_keyboard_key(
       );
       // handle error
       if ( 0 != result ) {
-        #if defined( KEYBOARD_ENABLE_DEBUG )
+        #if defined( KEYBOARD_ENABLE_OUTPUT )
           EARLY_STARTUP_PRINT( "Unable to clear feature\r\n" )
         #endif
         free( response );
@@ -147,7 +147,7 @@ void rpc_keyboard_key(
       // restart polling
       keyboard_start_polling( dev );
     } else {
-      #if defined( KEYBOARD_ENABLE_DEBUG )
+      #if defined( KEYBOARD_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "ERROR: %x\r\n", message->error );
       #endif
     }
@@ -203,7 +203,7 @@ void rpc_keyboard_key(
   // set modifiers
   if ( dev->key_field[ 0 ] ) {
     dev->modifier.left_control = dev->key_field[ 0 ]->value._bool;
-    #if defined( KEYBOARD_ENABLE_DEBUG )
+    #if defined( KEYBOARD_ENABLE_OUTPUT )
       if (dev->modifier.left_control) {
         EARLY_STARTUP_PRINT( "Left control\r\n" )
       }
@@ -211,7 +211,7 @@ void rpc_keyboard_key(
   }
   if ( dev->key_field[ 1 ] ) {
     dev->modifier.left_shift = dev->key_field[ 1 ]->value._bool;
-    #if defined( KEYBOARD_ENABLE_DEBUG )
+    #if defined( KEYBOARD_ENABLE_OUTPUT )
       if (dev->modifier.left_shift) {
         EARLY_STARTUP_PRINT( "Left shift\r\n" )
       }
@@ -219,7 +219,7 @@ void rpc_keyboard_key(
   }
   if ( dev->key_field[ 2 ] ) {
     dev->modifier.left_alt = dev->key_field[ 2 ]->value._bool;
-    #if defined( KEYBOARD_ENABLE_DEBUG )
+    #if defined( KEYBOARD_ENABLE_OUTPUT )
       if (dev->modifier.left_alt) {
         EARLY_STARTUP_PRINT( "Left alt\r\n" )
       }
@@ -227,7 +227,7 @@ void rpc_keyboard_key(
   }
   if ( dev->key_field[ 3 ] ) {
     dev->modifier.left_gui = dev->key_field[ 3 ]->value._bool;
-    #if defined( KEYBOARD_ENABLE_DEBUG )
+    #if defined( KEYBOARD_ENABLE_OUTPUT )
       if (dev->modifier.left_gui) {
         EARLY_STARTUP_PRINT( "Left gui\r\n" )
       }
@@ -235,7 +235,7 @@ void rpc_keyboard_key(
   }
   if ( dev->key_field[ 4 ] ) {
     dev->modifier.right_control = dev->key_field[ 4 ]->value._bool;
-    #if defined( KEYBOARD_ENABLE_DEBUG )
+    #if defined( KEYBOARD_ENABLE_OUTPUT )
       if (dev->modifier.right_control) {
         EARLY_STARTUP_PRINT( "Right control\r\n" )
       }
@@ -243,7 +243,7 @@ void rpc_keyboard_key(
   }
   if ( dev->key_field[ 5 ] ) {
     dev->modifier.right_shift = dev->key_field[ 5 ]->value._bool;
-    #if defined( KEYBOARD_ENABLE_DEBUG )
+    #if defined( KEYBOARD_ENABLE_OUTPUT )
       if (dev->modifier.right_shift) {
         EARLY_STARTUP_PRINT( "Right shift\r\n" )
       }
@@ -251,7 +251,7 @@ void rpc_keyboard_key(
   }
   if ( dev->key_field[ 6 ] ) {
     dev->modifier.right_alt = dev->key_field[ 6 ]->value._bool;
-    #if defined( KEYBOARD_ENABLE_DEBUG )
+    #if defined( KEYBOARD_ENABLE_OUTPUT )
       if (dev->modifier.right_alt) {
         EARLY_STARTUP_PRINT( "Right alt\r\n" )
       }
@@ -259,7 +259,7 @@ void rpc_keyboard_key(
   }
   if ( dev->key_field[ 7 ] ) {
     dev->modifier.right_gui = dev->key_field[ 7 ]->value._bool;
-    #if defined( KEYBOARD_ENABLE_DEBUG )
+    #if defined( KEYBOARD_ENABLE_OUTPUT )
       if (dev->modifier.right_gui) {
         EARLY_STARTUP_PRINT( "Right gui\r\n" )
       }
@@ -288,7 +288,7 @@ void rpc_keyboard_key(
         }
       }
       // debug output
-      #if defined( KEYBOARD_ENABLE_DEBUG )
+      #if defined( KEYBOARD_ENABLE_OUTPUT )
         for ( size_t i = 0; i < dev->key_count; i++ ) {
           EARLY_STARTUP_PRINT( "key: %"PRIu16"\r\n", dev->max_key_down[ i ] );
         }
@@ -314,7 +314,7 @@ void rpc_keyboard_key(
       continue;
     }
     // debug print physical key and key code
-    #if defined ( KEYBOARD_ENABLE_DEBUG )
+    #if defined ( KEYBOARD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "key: %02"PRIx16" / %02"PRIx16" / %c\r\n",
         dev->max_key_down[ i ], key, (uint8_t)key );
     #endif
@@ -362,7 +362,7 @@ void rpc_keyboard_key(
         .mute = dev->led.mute ? dev->led_field[ 7 ]->value._bool : false,
       });
       // check result
-      #if defined( KEYBOARD_ENABLE_DEBUG )
+      #if defined( KEYBOARD_ENABLE_OUTPUT )
         if ( 0 != result ) {
           EARLY_STARTUP_PRINT( "Unable to set led: %s\r\n", strerror( result ) );
         }
@@ -407,7 +407,7 @@ void rpc_keyboard_key(
       input_buffer,
       size_min( strlen( input_buffer ) + 1, CONSOLE_MAX_INPUT_SEQUENCE - 1 )
     );
-    #if defined( KEYBOARD_ENABLE_DEBUG )
+    #if defined( KEYBOARD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "input_buffer = %s\r\n", input_buffer )
     #endif
     // raise input request async
@@ -449,7 +449,7 @@ void rpc_keyboard_key(
     // handle response issue
     if ( ! response_id ) {
       // debug output
-      #if defined( KEYBOARD_ENABLE_DEBUG )
+      #if defined( KEYBOARD_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Pushing input to console failed\r\n" )
       #endif
       free( rpc_request );

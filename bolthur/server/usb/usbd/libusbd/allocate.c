@@ -32,7 +32,7 @@
  */
 int usbd_allocate_device( libusb_device_t** dev, const bool insert_head ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Allocating device\r\n" )
   #endif
   // validate parameter

@@ -22,7 +22,7 @@
 
 #include "../../../../libusb.h"
 
-#define MOUSE_ENABLE_DEBUG 1
+#define MOUSE_ENABLE_OUTPUT 1
 
 void mouse_append( libusb_mouse_device_t* );
 void mouse_detach( const libusb_mouse_device_t* );

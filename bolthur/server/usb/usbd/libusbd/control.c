@@ -45,7 +45,7 @@ int usbd_control_message(
   const size_t timeout
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "firing hcd control message\r\n" )
   #endif
   // allocate shared memory
@@ -55,7 +55,7 @@ int usbd_control_message(
   if ( errno ) {
     const int e = errno;
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to acquire shared memory!\r\n" )
     #endif
     // return error
@@ -67,7 +67,7 @@ int usbd_control_message(
   if ( errno ) {
     const int e = errno;
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to attach shared memory!\r\n" )
     #endif
     // return error
@@ -89,7 +89,7 @@ int usbd_control_message(
   usbd_control_message_t* control_request = malloc( sizeof( *control_request ) );
   if ( ! control_request ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate request\r\n" )
     #endif
     // detach shared memory
@@ -114,7 +114,7 @@ int usbd_control_message(
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       const int e = errno;
       EARLY_STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
@@ -128,7 +128,7 @@ int usbd_control_message(
   // response is equal to input
   if ( message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "error = %#x\r\n", message->error )
     #endif
     // detach shared memory
@@ -192,7 +192,7 @@ int usbd_control_message_async(
   const size_t minimum_length
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "firing hcd control message\r\n" )
   #endif
   // allocate shared memory
@@ -202,7 +202,7 @@ int usbd_control_message_async(
   if ( errno ) {
     const int e = errno;
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to acquire shared memory!\r\n" )
     #endif
     // return error
@@ -214,7 +214,7 @@ int usbd_control_message_async(
   if ( errno ) {
     const int e = errno;
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to attach shared memory!\r\n" )
     #endif
     // return error
@@ -237,7 +237,7 @@ int usbd_control_message_async(
   usbd_control_message_t* control_request = malloc( sizeof( *control_request ) );
   if ( ! control_request ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate request\r\n" )
     #endif
     // detach shared memory
@@ -268,7 +268,7 @@ int usbd_control_message_async(
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       const int e = errno;
       EARLY_STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif

@@ -68,13 +68,13 @@ void rpc_hub_attach(
   const usb_generic_attach_t* message = ( usb_generic_attach_t* )request->container;
 
   // debug output
-  #if defined ( HUB_ENABLE_DEBUG )
+  #if defined ( HUB_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Attach called for %"PRIu32" with interface %"PRIu32"\r\n",
       message->device_number, message->interface_number )
   #endif
 
   // debug output
-  #if defined( HUB_ENABLE_DEBUG )
+  #if defined( HUB_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Fetching interface descriptor\r\n" )
   #endif
   // get interface information
@@ -90,7 +90,7 @@ void rpc_hub_attach(
   }
 
   // debug output
-  #if defined( HUB_ENABLE_DEBUG )
+  #if defined( HUB_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Fetching endpoint descriptor\r\n" )
   #endif
   // get endpoint information
@@ -106,7 +106,7 @@ void rpc_hub_attach(
   }
 
   // debug output
-  #if defined( HUB_ENABLE_DEBUG )
+  #if defined( HUB_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Checking endpoint count\r\n" )
   #endif
   // check for multiple endpoints
@@ -143,7 +143,7 @@ void rpc_hub_attach(
   memset( hub, 0, sizeof( *hub ) );
 
   // debug output
-  #if defined( HUB_ENABLE_DEBUG )
+  #if defined( HUB_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Reading hub descriptor into memory\r\n" )
   #endif
   // read descriptor
@@ -163,7 +163,7 @@ void rpc_hub_attach(
   hub->descriptor = descriptor;
   hub->max_children = hub->descriptor->port_count;
   hub->device_number = message->device_number;
-  #if defined ( HUB_ENABLE_DEBUG )
+  #if defined ( HUB_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "hub->max_children = %"PRIu32"\r\n", hub->max_children )
   #endif
   // validate power switching mode
@@ -173,7 +173,7 @@ void rpc_hub_attach(
     && LIBUSB_HUB_PORT_CONTROL_NO_POWER_SWITCHING != hub->descriptor->attributes.power_switching_mode
   ) {
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unknown power type %d on %s\r\n",
         hub->descriptor->attributes.power_switching_mode,
         usb_get_description( message->device_number ) )
@@ -185,7 +185,7 @@ void rpc_hub_attach(
     return;
   }
   // some debug output
-  #if defined( HUB_ENABLE_DEBUG )
+  #if defined( HUB_ENABLE_OUTPUT )
     switch ( hub->descriptor->attributes.power_switching_mode ) {
       case LIBUSB_HUB_PORT_CONTROL_GLOBAL:
         EARLY_STARTUP_PRINT( "Power mode is global\r\n" )
@@ -210,7 +210,7 @@ void rpc_hub_attach(
     && LIBUSB_HUB_PORT_CONTROL_NO_POWER_SWITCHING != hub->descriptor->attributes.over_current_protection
   ) {
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unknown hub over current type %d on %s\r\n",
         hub->descriptor->attributes.power_switching_mode,
         usb_get_description( message->device_number ) )
@@ -222,7 +222,7 @@ void rpc_hub_attach(
     return;
   }
   // some debug output
-  #if defined( HUB_ENABLE_DEBUG )
+  #if defined( HUB_ENABLE_OUTPUT )
     switch ( hub->descriptor->attributes.over_current_protection ) {
       case LIBUSB_HUB_PORT_CONTROL_GLOBAL:
         EARLY_STARTUP_PRINT( "Hub over current protection is global\r\n" )
@@ -243,7 +243,7 @@ void rpc_hub_attach(
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to fetch hub status for %s: %s\r\n",
         usb_get_description( message->device_number ), strerror( result ) )
     #endif
@@ -254,7 +254,7 @@ void rpc_hub_attach(
     return;
   }
   // some debug output
-  #if defined ( HUB_ENABLE_DEBUG )
+  #if defined ( HUB_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Hub power: %s\r\n",
       !hub->status.status.local_power ? "Good" : "Lost")
     EARLY_STARTUP_PRINT( "Hub over current condition: %s\r\n",
@@ -265,7 +265,7 @@ void rpc_hub_attach(
   result = usb_get_root_hub( &roothub_device_number );
   if ( 0 != result ) {
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to retrieve root hub: %s\r\n", strerror( result ) )
     #endif
     hub_destroy( hub );
@@ -276,14 +276,14 @@ void rpc_hub_attach(
   }
   // power on in case it's not the root hub
   if ( message->device_number != roothub_device_number ) {
-      #if defined ( HUB_ENABLE_DEBUG )
+      #if defined ( HUB_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Power on hub!\r\n" )
       #endif
     // power on hub
     result = hub_power_on( message->device_number, hub );
     if ( 0 != result ) {
       // debug output
-      #if defined ( HUB_ENABLE_DEBUG )
+      #if defined ( HUB_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Unable to power on hub!\r\n" )
       #endif
       hub_destroy( hub );
@@ -294,14 +294,14 @@ void rpc_hub_attach(
     }
   }
   // debug output
-  #if defined( HUB_ENABLE_DEBUG )
+  #if defined( HUB_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Fetching hub status\r\n" )
   #endif
   // fetch status again
   result = hub_get_status( message->device_number, hub );
   if ( 0 != result ) {
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to get hub status for %s: %s\r\n",
         usb_get_description( message->device_number ), strerror( result ) )
     #endif
@@ -312,7 +312,7 @@ void rpc_hub_attach(
     return;
   }
   // some debug output
-  #if defined ( HUB_ENABLE_DEBUG )
+  #if defined ( HUB_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Hub power: %s\r\n",
       !hub->status.status.local_power ? "Good" : "Lost")
     EARLY_STARTUP_PRINT( "Hub over current condition: %s\r\n",
@@ -321,7 +321,7 @@ void rpc_hub_attach(
   // allocate context
   hub_attach_context_t* ctx = malloc( sizeof( *ctx ) );
   if ( ! ctx ) {
-      #if defined ( HUB_ENABLE_DEBUG )
+      #if defined ( HUB_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Unable to allocate memory for context\r\n" )
       #endif
       hub_destroy( hub );
@@ -341,14 +341,14 @@ void rpc_hub_attach(
   ctx->device_number = message->device_number;
   // check for connection
   for ( uint32_t port = 0; port < hub->max_children; port++ ) {
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Checking port %"PRIu32"\r\n", port )
     #endif
     result = hub_check_connection( message->device_number, hub, ( uint8_t )port, ctx );
     // handle queued
     if ( EAGAIN == result ) {
       // debug output
-      #if defined ( HUB_ENABLE_DEBUG )
+      #if defined ( HUB_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Attach needs to continue async\r\n" )
       #endif
       // exit loop
@@ -356,7 +356,7 @@ void rpc_hub_attach(
     }
     // handle general error
     if ( 0 != result ) {
-      #if defined ( HUB_ENABLE_DEBUG )
+      #if defined ( HUB_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Unable to check connection for port: %"PRIu8"\r\n",
           ( uint8_t )port)
       #endif
@@ -380,12 +380,12 @@ void rpc_hub_attach(
     memset( &err_response, 0, sizeof( err_response ) );
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "done\r\n" )
     #endif
   }
   // debug output
-  #if defined ( HUB_ENABLE_DEBUG )
+  #if defined ( HUB_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "done\r\n" )
   #endif
 }

@@ -37,7 +37,7 @@ static void set_address_finished(
   size_t response_info
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Set address finished finished\r\n" )
   #endif
   // peek matching async data without destroy for call chain
@@ -102,7 +102,7 @@ static void set_address_finished(
   // response is equal to input
   if ( usb_control_message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "error = %#x\r\n", usb_control_message->error )
     #endif
     // free up stuff
@@ -145,13 +145,13 @@ int usbd_address_set(
   usbd_attach_context_t* context
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Set address\r\n" )
   #endif
   // validate
   if ( LIBUSB_DEVICE_STATUS_DEFAULT != dev->status ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Illegal attempt to configure device %s with status %d\r\n",
         usbd_description_get( dev ), dev->status )
     #endif

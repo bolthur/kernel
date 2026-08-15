@@ -45,28 +45,28 @@ libusb_device_t* head = nullptr;
  */
 int usbd_init( void ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Init usbd\r\n" )
   #endif
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Opening device %s\r\n", HCD_DEVICE_PATH )
   #endif
   // open file descriptor for mmio actions
   if ( -1 == ( fd_hcd = open( HCD_DEVICE_PATH, O_RDWR ) ) ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to open device\r\n" )
     #endif
     // return error response
     return ENXIO;
   }
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Starting enumeration\r\n" )
   #endif
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Attaching root hub async\r\n" )
   #endif
   // try to attach root hub
@@ -74,7 +74,7 @@ int usbd_init( void ) {
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Attaching root hub failed: %s\r\n", strerror( result ) )
     #endif
     // return result

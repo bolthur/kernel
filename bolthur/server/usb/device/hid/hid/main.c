@@ -38,35 +38,35 @@
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // register rpc
-  #if defined( HID_ENABLE_DEBUG )
+  #if defined( HID_ENABLE_OUTPUT )
     STARTUP_PRINT( "Setup rpc handler\r\n" )
   #endif
   if ( !rpc_init() ) {
-    #if defined( HID_ENABLE_DEBUG )
+    #if defined( HID_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
     #endif
     return -1;
   }
 
   // initialize handler management
-  #if defined( HID_ENABLE_DEBUG )
+  #if defined( HID_ENABLE_OUTPUT )
     STARTUP_PRINT( "Setup handler management\r\n" )
   #endif
   int result = handler_init();
   if ( 0 != result ) {
-    #if defined( HID_ENABLE_DEBUG )
+    #if defined( HID_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to init handler management: %s\r\n", strerror( result ) )
     #endif
     return -1;
   }
 
   // initialize usb library
-  #if defined( HID_ENABLE_DEBUG )
+  #if defined( HID_ENABLE_OUTPUT )
     STARTUP_PRINT( "Setup usb library\r\n" )
   #endif
   result = usb_init();
   if ( 0 != result ) {
-    #if defined( HID_ENABLE_DEBUG )
+    #if defined( HID_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to bind usb library: %s\r\n", strerror( result ) );
     #endif
     return -1;
@@ -75,7 +75,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // query allowed rpc origin
   const pid_t allowed_rpc_origin = vfs_get_file_handler( USBD_DEVICE_PATH );
   if ( -1 == allowed_rpc_origin ) {
-    #if defined( HID_ENABLE_DEBUG )
+    #if defined( HID_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to get handler id of %s\r\n", USBD_DEVICE_PATH )
     #endif
     return -1;
@@ -83,32 +83,32 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
 
   // push to valid origin
   if ( ! bolthur_rpc_origin_push_valid( allowed_rpc_origin ) ) {
-    #if defined( HID_ENABLE_DEBUG )
+    #if defined( HID_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to push mount pid to valid origin list!\r\n" )
     #endif
     return -1;
   }
 
   // registering handler
-  #if defined( HID_ENABLE_DEBUG )
+  #if defined( HID_ENABLE_OUTPUT )
     STARTUP_PRINT( "Registering handler at usbd\r\n" )
   #endif
   result = usb_register_handler( LIBUSB_INTERFACE_CLASS_HID );
   if ( 0 != result ) {
-    #if defined( HID_ENABLE_DEBUG )
+    #if defined( HID_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register handler at usbd\r\n" )
     #endif
     return -1;
   }
 
   // enable rpc
-  #if defined( HID_ENABLE_DEBUG )
+  #if defined( HID_ENABLE_OUTPUT )
     STARTUP_PRINT( "Enable rpc\r\n" )
   #endif
   _syscall_rpc_set_ready( true );
 
   // add device file
-  #if defined( HID_ENABLE_DEBUG )
+  #if defined( HID_ENABLE_OUTPUT )
     STARTUP_PRINT( "Sending device to vfs\r\n" )
   #endif
   constexpr uint32_t device_info[] = {
@@ -124,18 +124,18 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     HID_SET_IDLE,
   };
   if ( ! vfs_dev_add_file( HID_DEVICE_PATH, device_info, 10, nullptr ) ) {
-    #if defined( HID_ENABLE_DEBUG )
+    #if defined( HID_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to add dev usbd\r\n" )
     #endif
     return -1;
   }
 
   // wait for rpc
-  #if defined( HID_ENABLE_DEBUG )
+  #if defined( HID_ENABLE_OUTPUT )
     STARTUP_PRINT( "Wait for rpc\r\n" )
   #endif
   bolthur_rpc_wait_block();
-  #if defined( HID_ENABLE_DEBUG )
+  #if defined( HID_ENABLE_OUTPUT )
     STARTUP_PRINT( "Exiting\r\n" )
   #endif
   return 0;

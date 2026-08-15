@@ -42,7 +42,7 @@ static void rpc_attach_roothub_finished(
   const size_t data_info,
   const size_t response_info
 ) {
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "roothub finished\r\n" )
   #endif
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
@@ -73,7 +73,7 @@ static void rpc_attach_roothub_finished(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), async_data, 0 );
     return;
   }
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "roothub finished\r\n" )
   #endif
   libusb_device_t* roothub = usbd_roothub_get();
@@ -83,7 +83,7 @@ static void rpc_attach_roothub_finished(
     return;
   }
   roothub->status = LIBUSB_DEVICE_STATUS_ATTACH_FINISHED;
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "roothub finished\r\n" )
   #endif
   // clear memory
@@ -133,7 +133,7 @@ void rpc_attach_roothub(
     return;
   }
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Attaching root hub\r\n" )
   #endif
   // try to attach root hub
@@ -145,7 +145,7 @@ void rpc_attach_roothub(
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Attaching root hub failed: %s\r\n", strerror( result ) )
     #endif
     // return result

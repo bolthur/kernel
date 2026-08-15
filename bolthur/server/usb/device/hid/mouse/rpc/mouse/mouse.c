@@ -95,7 +95,7 @@ void rpc_mouse_mouse(
       );
       // handle error
       if ( 0 != result ) {
-        #if defined( MOUSE_ENABLE_DEBUG )
+        #if defined( MOUSE_ENABLE_OUTPUT )
           EARLY_STARTUP_PRINT( "Unable to clear feature\r\n" )
         #endif
         free( response );
@@ -105,7 +105,7 @@ void rpc_mouse_mouse(
       // restart polling
       mouse_start_polling( dev );
     } else {
-      #if defined( MOUSE_ENABLE_DEBUG )
+      #if defined( MOUSE_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "ERROR: %x\r\n", message->error )
       #endif
     }
@@ -128,7 +128,7 @@ void rpc_mouse_mouse(
   dev->mouse_y = ( int8_t )dev->buffer[ 2 ];
   dev->wheel = ( int8_t )dev->buffer[ 3 ];
   // debug output
-  #if defined( MOUSE_ENABLE_DEBUG )
+  #if defined( MOUSE_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "dev->mouse_x = %"PRId8", dev->mouse_y = %"PRId8"\r\n",
       dev->mouse_x, dev->mouse_y )
   #endif
@@ -190,7 +190,7 @@ void rpc_mouse_mouse(
     // handle response issue
     if ( ! response_id ) {
       // debug output
-      #if defined( MOUSE_ENABLE_DEBUG )
+      #if defined( MOUSE_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Pushing input to handler failed\r\n" )
       #endif
       // go to next

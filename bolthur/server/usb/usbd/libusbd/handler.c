@@ -39,7 +39,7 @@ int usbd_handler_init( void ) {
   // handle error
   if ( ! class_handler ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate memory\r\n" )
     #endif
     // return nomem
@@ -64,7 +64,7 @@ int usbd_handler_register( const libusb_interface_class_t type, const pid_t hand
   // handle not initialized
   if ( ! class_handler ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Handler data not initialized\r\n" )
     #endif
     // return protocol error
@@ -73,7 +73,7 @@ int usbd_handler_register( const libusb_interface_class_t type, const pid_t hand
   // handle already set
   if ( -1 != class_handler[ type ] ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Handler already registered\r\n" )
     #endif
     // return exist
@@ -96,7 +96,7 @@ int usbd_handler_unregister( const libusb_interface_class_t type, const pid_t ha
   // handle not initialized
   if ( ! class_handler ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Handler data not initialized\r\n" )
     #endif
     // return protocol error
@@ -105,7 +105,7 @@ int usbd_handler_unregister( const libusb_interface_class_t type, const pid_t ha
   // handle already set
   if ( handler != class_handler[ type ] ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Handler already registered\r\n" )
     #endif
     // return exist
@@ -128,7 +128,7 @@ int usbd_handler_get( const libusb_interface_class_t type, pid_t* handler ) {
   // handle not initialized
   if ( ! class_handler ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Handler data not initialized\r\n" )
     #endif
     // return protocol error
@@ -137,7 +137,7 @@ int usbd_handler_get( const libusb_interface_class_t type, pid_t* handler ) {
   // handle no handler
   if ( ! handler ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Invalid handler passed\r\n" )
     #endif
     // return protocol error

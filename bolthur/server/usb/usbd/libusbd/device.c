@@ -72,7 +72,7 @@ static void set_configuration(
   size_t response_info
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Set configuration finished\r\n" )
   #endif
   // peek matching async data without destroy for call chain
@@ -113,7 +113,7 @@ static void set_configuration(
   // destroy async data
   bolthur_rpc_destroy_async( async_data );
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "%s configuration %"PRIu8", class: %"PRIu8", subclass: %"PRIu8"\r\n",
       usbd_description_get( attach_context->device ), ctx->configuration,
@@ -141,7 +141,7 @@ static void get_configuration(
   size_t response_info
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Get configuration finished\r\n" )
   #endif
   // peek matching async data without destroy for call chain
@@ -219,7 +219,7 @@ static void get_configuration(
   // response is equal to input
   if ( usb_control_message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "error = %#x\r\n", usb_control_message->error )
     #endif
     // free up stuff
@@ -289,7 +289,7 @@ static void get_configuration(
           || last_endpoint >= attach_context->device->interfaces[ last_interface ].endpoint_count
         ) {
           // debug output
-          #if defined (USBD_ENABLE_DEBUG )
+          #if defined (USBD_ENABLE_OUTPUT )
             EARLY_STARTUP_PRINT( "Unexpected endpoint descriptor in %s.Interface: %"PRIu32,
               usbd_description_get( attach_context->device ), last_interface + 1 )
           #endif
@@ -312,7 +312,7 @@ static void get_configuration(
         break;
     }
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Descriptor %"PRIu8" length %"PRIu8", interface %"PRIu32"\r\n",
         header->descriptor_type, header->descriptor_length, last_interface )
     #endif
@@ -327,7 +327,7 @@ static void get_configuration(
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to set configuration for device %s: %s\r\n",
         usbd_description_get( attach_context->device ), strerror( result ) )
     #endif
@@ -357,7 +357,7 @@ static void get_configuration_size(
   size_t response_info
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Get configuration size finished\r\n" )
   #endif
   // peek matching async data without destroy for call chain
@@ -435,7 +435,7 @@ static void get_configuration_size(
   // response is equal to input
   if ( usb_control_message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "error = %#x\r\n", usb_control_message->error )
     #endif
     // free up stuff
@@ -464,7 +464,7 @@ static void get_configuration_size(
   void* full_descriptor = malloc( attach_context->device->configuration.total_length );
   if ( ! full_descriptor ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Failed to allocate full descriptor for device %s\r\n",
         usbd_description_get( attach_context->device ) )
     #endif
@@ -499,7 +499,7 @@ static void get_configuration_size(
   );
   // handle error
   if ( 0 != result ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Failed to retrieve full configuration descriptor %#"PRIx8" for device %s\r\n",
         ctx->configuration, usbd_description_get( attach_context->device ) )
     #endif
@@ -532,7 +532,7 @@ int usbd_device_configure(
   // validate
   if ( LIBUSB_DEVICE_STATUS_ADDRESSED != dev->status ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Illegal attempt to configure device %s with status %d\r\n",
         usbd_description_get( dev ), dev->status )
     #endif
@@ -569,7 +569,7 @@ int usbd_device_configure(
   );
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Failed to retrieve configuration descriptor %#"PRIx8" for device %s\r\n",
         configuration, usbd_description_get( dev ) )
     #endif

@@ -17,27 +17,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libgen.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/bolthur.h>
-#include "../rpc.h"
-#include "../global.h"
+#ifndef _GLOBAL_H
+#define _GLOBAL_H
 
-/**
- * @fn bool rpc_init(void)
- * @brief Register necessary rpc handler
- *
- * @return
- */
-bool rpc_init( void ) {
-  bolthur_rpc_bind( RPC_VFS_IOCTL, rpc_handle_ioctl, true );
-  if ( errno ) {
-    #if defined( TERMINAL_ENABLE_OUTPUT )
-      EARLY_STARTUP_PRINT( "Unable to register handler for ioctl\r\n" );
-    #endif
-    return false;
-  }
-  return true;
-}
+#define TERMINAL_ENABLE_OUTPUT 1
+
+#endif //_GLOBAL_H

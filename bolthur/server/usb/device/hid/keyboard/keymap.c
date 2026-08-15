@@ -107,14 +107,14 @@ static int confini_callback(
   // handle keymap
   if ( 0 == strcmp( name, "KEYMAP" ) ) {
     // debug output
-    #if defined( KEYBOARD_ENABLE_DEBUG )
+    #if defined( KEYBOARD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Allocate space for path for fopen\r\n" )
     #endif
     // allocate space for path
     char* path = malloc( sizeof( char ) * PATH_MAX );
     // handle allocation error
     if ( ! path ) {
-      #if defined( KEYBOARD_ENABLE_DEBUG )
+      #if defined( KEYBOARD_ENABLE_OUTPUT )
         STARTUP_PRINT( "Unable to allocate path\r\n" )
       #endif
       return 1;
@@ -124,7 +124,7 @@ static int confini_callback(
     // build path to keymap
     snprintf( path, PATH_MAX, "/usr/share/kbd/%s.dat", value );
     // debug output
-    #if defined( KEYBOARD_ENABLE_DEBUG )
+    #if defined( KEYBOARD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Opening %s\r\n", path )
     #endif
     // open keymap
@@ -132,7 +132,7 @@ static int confini_callback(
     // handle error
     if ( ! f ) {
       // debug output
-      #if defined( KEYBOARD_ENABLE_DEBUG )
+      #if defined( KEYBOARD_ENABLE_OUTPUT )
         STARTUP_PRINT( "Unable to open %s\r\n", path )
       #endif
       // free path
@@ -141,7 +141,7 @@ static int confini_callback(
       return 1;
     }
     // debug output
-    #if defined( KEYBOARD_ENABLE_DEBUG )
+    #if defined( KEYBOARD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Reading binary data into keymap array\r\n" )
     #endif
     // load binary into array
@@ -156,7 +156,7 @@ static int confini_callback(
       // check read amount
       if ( read != KEYMAP_ALTSHIFTTAB + 1 ) {
         // debug output
-        #if defined( KEYBOARD_ENABLE_DEBUG )
+        #if defined( KEYBOARD_ENABLE_OUTPUT )
           STARTUP_PRINT( "Unable to read keymap entry %zu\r\n", i )
         #endif
         // close file
@@ -198,7 +198,7 @@ int keymap_init( void ) {
     confini_callback,
     nullptr
   ) ) {
-    #if defined( KEYBOARD_ENABLE_DEBUG )
+    #if defined( KEYBOARD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Cannot load or parse console configuration\r\n" );
     #endif
     return EIO;

@@ -47,7 +47,7 @@ static int attach_roothub( const rpc_handler_t callback, const pid_t origin, con
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Allocating root hub failed: %s\r\n", strerror( result ) )
     #endif
     // return result
@@ -67,7 +67,7 @@ static int attach_roothub( const rpc_handler_t callback, const pid_t origin, con
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Attaching root hub failed: %s\r\n", strerror( result ) )
     #endif
     // return result
@@ -91,7 +91,7 @@ static void deallocate_roothub_finished(
   size_t data_info,
   size_t response_info
 ) {
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "ROOTHUB DEALLOCATE FINISHED\r\n" )
   #endif
   // get matching async data without destroy for call chain
@@ -128,7 +128,7 @@ static void deallocate_roothub_finished(
   // handle error
   if ( response->status < 0 ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to detach roothub\r\n" )
     #endif
     err_response.status = response->status;
@@ -149,7 +149,7 @@ static void deallocate_roothub_finished(
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Attaching root hub failed: %s\r\n", strerror( result ) )
     #endif
     err_response.status = -result;
@@ -174,7 +174,7 @@ int usbd_roothub_attach(
   const size_t data_info
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Attaching root hob\r\n" )
   #endif
   // handle existing by freeing up
@@ -195,7 +195,7 @@ int usbd_roothub_attach(
     // handle error
     if ( 0 != result ) {
       // debug output
-      #if defined( USBD_ENABLE_DEBUG )
+      #if defined( USBD_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Unable to create attach context\r\n" )
       #endif
       // return result
@@ -224,7 +224,7 @@ static void attach_roothub_finished(
   size_t data_info,
   size_t response_info
 ) {
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "ROOTHUB ATTACH FINISHED\r\n" )
   #endif
   // get matching async data without destroy for call chain
@@ -255,7 +255,7 @@ static void attach_roothub_finished(
     return;
   }
   // handle result
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     if ( 0 > response->status ) {
       EARLY_STARTUP_PRINT( "Attach of roothub failed: %s\r\n", strerror( -response->status ) )
     } else {

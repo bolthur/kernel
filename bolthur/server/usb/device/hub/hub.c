@@ -135,7 +135,7 @@ libusb_hub_device_t* hub_get( const uint32_t device_number ) {
  */
 int hub_read_descriptor( const uint32_t device_number, void** descriptor ) {
   // debug output
-  #if defined ( HUB_ENABLE_DEBUG )
+  #if defined ( HUB_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Reading usb hub descriptor\r\n" )
   #endif
   // space for buffer on stack
@@ -146,7 +146,7 @@ int hub_read_descriptor( const uint32_t device_number, void** descriptor ) {
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to get hub descriptor header: %s\r\n",
         strerror( result ) );
     #endif
@@ -156,7 +156,7 @@ int hub_read_descriptor( const uint32_t device_number, void** descriptor ) {
   // allocate space in driver data
   if ( ! *descriptor ) {
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Allocating memory for hub descriptor\r\n" );
     #endif
     // allocate memory
@@ -164,7 +164,7 @@ int hub_read_descriptor( const uint32_t device_number, void** descriptor ) {
     // handle error
     if ( ! *descriptor ) {
       // debug output
-      #if defined ( HUB_ENABLE_DEBUG )
+      #if defined ( HUB_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Unable to allocate memory for hub descriptor\r\n" );
       #endif
       // return nomem
@@ -177,7 +177,7 @@ int hub_read_descriptor( const uint32_t device_number, void** descriptor ) {
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to get hub descriptor: %s\r\n", strerror( result ) );
     #endif
     // return result
@@ -220,7 +220,7 @@ int hub_get_status(
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to get host status: %s\r\n", strerror( result ) )
     #endif
     // return result
@@ -229,7 +229,7 @@ int hub_get_status(
   // handle not enough read
   if ( last_transfer != sizeof( libusb_hub_full_status_t ) ) {
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Failed to read hub status for %s\r\n", usb_get_description( device_number ) )
     #endif
     // return error
@@ -288,12 +288,12 @@ int hub_power_on(
   const libusb_hub_device_t* hub_device
 ) {
   // debug output
-  #if defined ( HUB_ENABLE_DEBUG )
+  #if defined ( HUB_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Powering up %s\r\n", usb_get_description( device_number ) )
   #endif
   // loop through all children and power on the port
   for ( uint32_t child = 0; child < hub_device->max_children; child++ ) {
-    #if defined( HUB_ENABLE_DEBUG )
+    #if defined( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Power up port %"PRIu32" of %s\r\n", child, usb_get_description( device_number ) )
     #endif
     // try to change port feature
@@ -306,7 +306,7 @@ int hub_power_on(
     // handle error
     if ( 0 != result ) {
       // debug output only
-      #if defined ( HUB_ENABLE_DEBUG )
+      #if defined ( HUB_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Unable to power on port %"PRIu32" of %s: %s\r\n",
           child, usb_get_description( device_number ), strerror( result ) )
       #endif
@@ -315,7 +315,7 @@ int hub_power_on(
     }
     // milliseconds to sleep
     const long milliseconds = hub_device->descriptor->power_good_delay * 2;
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "sleeping %ld milliseconds\r\n", milliseconds )
     #endif
     // sleep a bit
@@ -362,7 +362,7 @@ int hub_get_port_status(
   // handle result wrong
   if ( 0 != result ) {
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Fetching port status failed\r\n" )
     #endif
     // return result
@@ -371,7 +371,7 @@ int hub_get_port_status(
   // handle wrong size
   if ( last_transfer != sizeof( libusb_hub_port_full_status_t ) ) {
     // debug output
-    #if defined( HUB_ENABLE_DEBUG )
+    #if defined( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Failed to read port %"PRIu8" status for %s. Received %"PRIu32" but expected %zu\r\n",
         port, usb_get_description( device_number ), last_transfer, sizeof( libusb_hub_port_full_status_t ) )
     #endif
@@ -400,7 +400,7 @@ int hub_port_reset(
   uint32_t retry;
   int result;
   // debug output
-  #if defined ( HUB_ENABLE_DEBUG )
+  #if defined ( HUB_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Resetting port %"PRIu8" of %"PRIu32"\r\n", port, device_number )
     EARLY_STARTUP_PRINT( "Resetting port %"PRIu8" of device %s\r\n", port, usb_get_description( device_number ) )
   #endif
@@ -412,7 +412,7 @@ int hub_port_reset(
     // handle error
     if ( 0 != result ) {
       // debug output
-      #if defined ( HUB_ENABLE_DEBUG )
+      #if defined ( HUB_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Failed to reset port %"PRIu8" of device %s\r\n",
           port, usb_get_description( device_number ) )
       #endif
@@ -433,7 +433,7 @@ int hub_port_reset(
       // handle error
       if ( 0 != result ) {
         // debug output
-        #if defined ( HUB_ENABLE_DEBUG )
+        #if defined ( HUB_ENABLE_OUTPUT )
           EARLY_STARTUP_PRINT( "Failed to get status of port %"PRIu8" from %s\r\n",
             port, usb_get_description( device_number ) )
         #endif
@@ -449,7 +449,7 @@ int hub_port_reset(
 
     if ( full_status->change.connected_changed || ! full_status->status.connected ) {
       // debug output
-      #if defined ( HUB_ENABLE_DEBUG )
+      #if defined ( HUB_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "connected_changed = %d, connected = %d\r\n",
           full_status->change.connected_changed, full_status->status.connected )
       #endif
@@ -465,7 +465,7 @@ int hub_port_reset(
   // handle retry reached
   if ( 3 == retry ) {
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Cannot enable port %"PRIu8" on %s\r\n",
         port, usb_get_description( device_number ) )
     #endif
@@ -477,7 +477,7 @@ int hub_port_reset(
     device_number, LIBUSB_HUB_PORT_FEATURE_RESET_CHANGE, port, false );
   if ( 0 != result ) {
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to clear port %"PRIu8" reset of %s\r\n",
         port, usb_get_description( device_number ) )
     #endif
@@ -516,7 +516,7 @@ static void rpc_hub_detach_finished(
   ctx->to_detach--;
   // handle no data
   if ( ! data_info ) {
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "No data\r\n" )
     #endif
     if ( ! ctx->to_detach ) {
@@ -529,7 +529,7 @@ static void rpc_hub_detach_finished(
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "invalid origin\r\n" )
     #endif
     if ( ! ctx->to_detach ) {
@@ -545,7 +545,7 @@ static void rpc_hub_detach_finished(
   vfs_ioctl_perform_response_t* detach_response = bolthur_rpc_fetch_from_mailbox(
     data_info, &data_size, true, nullptr );
   if ( ! detach_response ) {
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "nothing in mailbox\r\n" )
     #endif
     if ( ! ctx->to_detach ) {
@@ -580,7 +580,7 @@ static void rpc_hub_detach_finished(
       );
       // handle error
       if ( result != 0 ) {
-        #if defined ( HUB_ENABLE_DEBUG )
+        #if defined ( HUB_ENABLE_OUTPUT )
           EARLY_STARTUP_PRINT( "failed to detach device\r\n" )
         #endif
         free( ctx );
@@ -652,7 +652,7 @@ int hub_perform_detach(
   );
   // handle error
   if ( result != 0 ) {
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "failed to call detach first device\r\n" )
     #endif
     free( ctx );
@@ -680,7 +680,7 @@ static void hub_attach_finished(
 ) {
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // debug output
-  #if defined( HUB_ENABLE_DEBUG )
+  #if defined( HUB_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Attach of one port finished\r\n" )
   #endif
   // peek matching async data without destroy for call chain
@@ -689,7 +689,7 @@ static void hub_attach_finished(
   // handle no async data
   if ( ! async_data ) {
     // debug output
-    #if defined( HUB_ENABLE_DEBUG )
+    #if defined( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "No async data\r\n" )
     #endif
     // cleanup
@@ -703,7 +703,7 @@ static void hub_attach_finished(
   ctx->to_attach--;
   // handle no data
   if ( ! data_info ) {
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "No data\r\n" )
     #endif
     if ( ! ctx->to_attach ) {
@@ -717,7 +717,7 @@ static void hub_attach_finished(
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "invalid origin\r\n" )
     #endif
     if ( ! ctx->to_attach ) {
@@ -734,7 +734,7 @@ static void hub_attach_finished(
   vfs_ioctl_perform_response_t* attach_response = bolthur_rpc_fetch_from_mailbox(
     data_info, &data_size, true, nullptr );
   if ( ! attach_response ) {
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "nothing in mailbox\r\n" )
     #endif
     if ( ! ctx->to_attach ) {
@@ -749,7 +749,7 @@ static void hub_attach_finished(
   // get attach data
   auto const attach = ( usbd_attach_device_t* )attach_response->container;
   // debug output
-  #if defined( HUB_ENABLE_DEBUG )
+  #if defined( HUB_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "ctx->port_number = %"PRIu32" / %"PRIu32"\r\n", ctx->port_number, attach->device_number )
   #endif
   // cache children
@@ -758,14 +758,14 @@ static void hub_attach_finished(
   if ( ++ctx->port_number < ctx->hub->max_children ) {
     // check for connection
     for ( uint32_t port = ctx->port_number; port < ctx->hub->max_children; port++ ) {
-      #if defined ( HUB_ENABLE_DEBUG )
+      #if defined ( HUB_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Checking port %"PRIu32"\r\n", port )
       #endif
       const int result = hub_check_connection( ctx->device_number, ctx->hub, ( uint8_t )port, ctx );
       // handle queued
       if ( EAGAIN == result ) {
         // debug output
-        #if defined ( HUB_ENABLE_DEBUG )
+        #if defined ( HUB_ENABLE_OUTPUT )
           EARLY_STARTUP_PRINT( "Attach needs to continue async\r\n" )
         #endif
         bolthur_rpc_destroy_async( async_data );
@@ -779,7 +779,7 @@ static void hub_attach_finished(
         ctx->to_attach--;
       // handle general error
       } else {
-        #if defined ( HUB_ENABLE_DEBUG )
+        #if defined ( HUB_ENABLE_OUTPUT )
           EARLY_STARTUP_PRINT( "Unable to check connection for port: %"PRIu8"\r\n",
             ( uint8_t )port)
         #endif
@@ -794,7 +794,7 @@ static void hub_attach_finished(
   // handle nothing more to attach
   if ( ! ctx->to_attach ) {
     // debug output
-    #if defined( HUB_ENABLE_DEBUG )
+    #if defined( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Successfully attached the hub\r\n")
     #endif
     free( attach_response );
@@ -830,7 +830,7 @@ int hub_port_connection_changed(
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Failed to get status (2) for %s with port %"PRIu8"\r\n",
         usb_get_description( device_number ), ( uint8_t )( port + 1 ) )
     #endif
@@ -842,7 +842,7 @@ int hub_port_connection_changed(
     device_number, LIBUSB_HUB_PORT_FEATURE_CONNECTION_CHANGE, port, false );
   if ( 0 != result ) {
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Failed to clear connection change on %s with port %"PRIu8"\r\n",
         usb_get_description( device_number ), ( uint8_t )( port + 1 ) )
     #endif
@@ -852,7 +852,7 @@ int hub_port_connection_changed(
   // handle not connected and not enabled
   if ( ( ! full_status->status.connected && ! full_status->status.enabled ) || device_data->children[ port ] ) {
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Disconnected %s with port %"PRIu8"\r\n",
         usb_get_description( device_number ), ( uint8_t )( port + 1 ) )
     #endif
@@ -863,7 +863,7 @@ int hub_port_connection_changed(
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Could not reset port %"PRIu8" of %s for new device\r\n",
         ( uint8_t )( port + 1 ), usb_get_description( device_number ) )
     #endif
@@ -875,7 +875,7 @@ int hub_port_connection_changed(
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Failed to get status (3) for %s with port %"PRIu8"\r\n",
         usb_get_description( device_number ), ( uint8_t )( port + 1 ) )
     #endif
@@ -889,7 +889,7 @@ int hub_port_connection_changed(
     speed = LIBUSB_SPEED_LOW;
   }
   // debug output
-  #if defined( HUB_ENABLE_DEBUG )
+  #if defined( HUB_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Attaching device %"PRIu8" to %"PRIu32"\r\n",
         port, device_number )
   #endif
@@ -906,7 +906,7 @@ int hub_port_connection_changed(
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to attach device: %s\r\n", strerror( result ) )
     #endif
     // return result
@@ -934,28 +934,28 @@ int hub_check_connection(
   // push port into hub
   context->port_number = port;
   // debug output
-  #if defined ( HUB_ENABLE_DEBUG )
+  #if defined ( HUB_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "FETCHING PORT STATUS\r\n" )
   #endif
   // get port status
   int result = hub_get_port_status( device_number, device_data, port );
   if ( 0 != result ) {
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to retrieve port status: %s\r\n", strerror( result ) )
     #endif
     // return result
     return result;
   }
   // debug output
-  #if defined ( HUB_ENABLE_DEBUG )
+  #if defined ( HUB_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "CHECKING\r\n" )
   #endif
   // cache full status
   libusb_hub_port_full_status_t port_status;
   memcpy( &port_status, &device_data->port_status[ port ], sizeof( libusb_hub_port_full_status_t ) );
   // handle connected to root device
-  #if defined ( HUB_ENABLE_DEBUG )
+  #if defined ( HUB_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "device_number = %"PRIu32" connected = %d\r\n",
       device_number, port_status.status.connected ? 1 : 0 )
 
@@ -978,12 +978,12 @@ int hub_check_connection(
   #endif
   // handle connection changed
   if ( port_status.change.connected_changed ) {
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "----------------> Connected changed of port %"PRIu8"!\r\n", port )
     #endif
     result = hub_port_connection_changed( device_number, device_data, port, context );
     if ( 0 != result ) {
-      #if defined ( HUB_ENABLE_DEBUG )
+      #if defined ( HUB_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Unable to check for connection changed\r\n" )
       #endif
       // return result
@@ -995,7 +995,7 @@ int hub_check_connection(
     port_status.change.enabled_changed
     && context->roothub != device_number
   ) {
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "----------------> Enabled changed of port %"PRIu8"!\r\n", port )
     #endif
     // clear enable change flag
@@ -1004,7 +1004,7 @@ int hub_check_connection(
     // handle error
     if ( 0 != result ) {
       // debug output
-      #if defined ( HUB_ENABLE_DEBUG )
+      #if defined ( HUB_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Failed to clear enable change for port %"PRIu8" for %s\r\n",
           ( uint8_t )( port + 1 ), usb_get_description( device_number ) )
       #endif
@@ -1014,7 +1014,7 @@ int hub_check_connection(
 
     if ( ! port_status.status.enabled && port_status.status.connected && device_data->children[ port ] ) {
       // debug output
-      #if defined ( HUB_ENABLE_DEBUG )
+      #if defined ( HUB_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT(
           "%s. Port %d has been disabled but is connected. This can be caused by interference. Enabling it again\r\n",
           usb_get_description( device_number ), port + 1 )
@@ -1022,7 +1022,7 @@ int hub_check_connection(
       // call connection changed
       result = hub_port_connection_changed( device_number, device_data, port, context );
       if ( 0 != result ) {
-        #if defined ( HUB_ENABLE_DEBUG )
+        #if defined ( HUB_ENABLE_OUTPUT )
           EARLY_STARTUP_PRINT( "Unable to check for connection changed\r\n" )
         #endif
         // return result
@@ -1035,7 +1035,7 @@ int hub_check_connection(
     port_status.status.suspended
     && context->roothub != device_number
   ) {
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "----------------> Suspended of port %"PRIu8"!\r\n", port )
     #endif
     // clear enable change flag
@@ -1044,7 +1044,7 @@ int hub_check_connection(
     // handle error
     if ( 0 != result ) {
       // debug output
-      #if defined ( HUB_ENABLE_DEBUG )
+      #if defined ( HUB_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Failed to suspend port %"PRIu8" for %s\r\n",
           ( uint8_t )( port + 1 ), usb_get_description( device_number ) )
       #endif
@@ -1054,7 +1054,7 @@ int hub_check_connection(
   }
   if ( port_status.change.over_current_changed ) {
     // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "----------------> Over current changed of port %"PRIu8"!\r\n", port )
     #endif
     // clear enable change flag
@@ -1063,7 +1063,7 @@ int hub_check_connection(
     // handle error
     if ( 0 != result ) {
       // debug output
-      #if defined ( HUB_ENABLE_DEBUG )
+      #if defined ( HUB_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Failed to clear over current for port %"PRIu8" for %s\r\n",
           ( uint8_t )( port + 1 ), usb_get_description( device_number ) )
       #endif
@@ -1075,7 +1075,7 @@ int hub_check_connection(
     // handle error
     if ( 0 != result ) {
       // debug output
-      #if defined ( HUB_ENABLE_DEBUG )
+      #if defined ( HUB_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Unable to power on device %s: %s\r\n",
           usb_get_description( device_number ), strerror( result ) )
       #endif
@@ -1088,7 +1088,7 @@ int hub_check_connection(
     port_status.change.reset_changed
     && context->roothub != device_number
   ) {
-    #if defined ( HUB_ENABLE_DEBUG )
+    #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "RESET CHANGED!\r\n" )
     #endif
     // clear enable change flag
@@ -1097,7 +1097,7 @@ int hub_check_connection(
     // handle error
     if ( 0 != result ) {
       // debug output
-      #if defined ( HUB_ENABLE_DEBUG )
+      #if defined ( HUB_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Failed to clear reset for port %"PRIu8" for %s\r\n",
           ( uint8_t )( port + 1 ), usb_get_description( device_number ) )
       #endif

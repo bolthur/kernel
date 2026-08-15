@@ -43,7 +43,7 @@ void rpc_keyboard_attach(
   const size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  #if defined( KEYBOARD_ENABLE_DEBUG )
+  #if defined( KEYBOARD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "keyboard attach\r\n" )
   #endif
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL, };
@@ -125,12 +125,12 @@ void rpc_keyboard_attach(
       free( request );
       return;
     }
-    #if defined( KEYBOARD_ENABLE_DEBUG )
+    #if defined( KEYBOARD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "descriptor.endpoint_address.number = %"PRIu8", descriptor.endpoint_address.direction = %d\r\n",
         descriptor.endpoint_address.number, descriptor.endpoint_address.direction)
     #endif
   }
-  #if defined( KEYBOARD_ENABLE_DEBUG )
+  #if defined( KEYBOARD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "report_count = %"PRIu8"\r\n", report_count )
   #endif
   // get endpoint information
@@ -191,7 +191,7 @@ void rpc_keyboard_attach(
     sizeof( device_descriptor ),
     0
   );
-  #if defined( KEYBOARD_ENABLE_DEBUG )
+  #if defined( KEYBOARD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "device_descriptor.product = %"PRIu8"\r\n", device_descriptor.product )
     EARLY_STARTUP_PRINT( "device_descriptor.manufacturer = %"PRIu8"\r\n", device_descriptor.manufacturer )
     EARLY_STARTUP_PRINT( "device_descriptor.serial_number = %"PRIu8"\r\n", device_descriptor.serial_number )
@@ -206,7 +206,7 @@ void rpc_keyboard_attach(
     char* buffer = nullptr;
     result = usb_get_string( device->device_number, device_descriptor.product, &buffer );
     if ( buffer ) {
-      #if defined( KEYBOARD_ENABLE_DEBUG )
+      #if defined( KEYBOARD_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Product: %s\r\n", buffer )
       #endif
       free( buffer );
@@ -216,7 +216,7 @@ void rpc_keyboard_attach(
     char* buffer = nullptr;
     result = usb_get_string( device->device_number, device_descriptor.manufacturer, &buffer );
     if ( buffer ) {
-      #if defined( KEYBOARD_ENABLE_DEBUG )
+      #if defined( KEYBOARD_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Manufacturer: %s\r\n", buffer )
       #endif
       free( buffer );
@@ -226,7 +226,7 @@ void rpc_keyboard_attach(
     char* buffer = nullptr;
     result = usb_get_string( device->device_number, device_descriptor.serial_number, &buffer );
     if ( buffer ) {
-      #if defined( KEYBOARD_ENABLE_DEBUG )
+      #if defined( KEYBOARD_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Serial number: %s\r\n", buffer )
       #endif
       free( buffer );
@@ -248,20 +248,20 @@ void rpc_keyboard_attach(
       return;
     }
     // some debug output
-    #if defined( KEYBOARD_ENABLE_DEBUG )
+    #if defined( KEYBOARD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "type = %x, report = %"PRIu8", fields = %"PRIu8"\r\n",
         report->type, idx, report->field_count )
     #endif
     // handle input
     if ( report->type == LIBUSB_HID_REPORT_TYPE_INPUT && ! device->key_report ) {
       // change idle state to only on key change
-      #if defined( KEYBOARD_ENABLE_DEBUG )
+      #if defined( KEYBOARD_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Setting idle to 0 for %"PRIu32" / %"PRIu32" / %"PRIu8"\r\n",
           message->device_number, message->interface_number, report->id )
       #endif
       result = hid_set_idle( message->device_number, message->interface_number, report->id, 0);
       if ( 0 != result ) {
-        #if defined( KEYBOARD_ENABLE_DEBUG )
+        #if defined( KEYBOARD_ENABLE_OUTPUT )
           EARLY_STARTUP_PRINT( "Unable to put hid into idle mode: %s\r\n",
             strerror( result ) )
         #endif
@@ -272,7 +272,7 @@ void rpc_keyboard_attach(
         bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
         return;
       }
-      #if defined( KEYBOARD_ENABLE_DEBUG )
+      #if defined( KEYBOARD_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Setting idle to 0 for %"PRIu32" / %"PRIu32" / %"PRIu8" done\r\n",
           message->device_number, message->interface_number, report->id )
       #endif
@@ -293,7 +293,7 @@ void rpc_keyboard_attach(
       }
       // loop through reports
       for ( uint8_t inner = 0; inner < report->field_count; ++inner ) {
-        #if defined( KEYBOARD_ENABLE_DEBUG )
+        #if defined( KEYBOARD_ENABLE_OUTPUT )
           EARLY_STARTUP_PRINT( "inner = %"PRIu8" / %#x\r\n", inner, report->fields[ inner ].usage.page )
         #endif
         // handle report field usage page
@@ -306,7 +306,7 @@ void rpc_keyboard_attach(
               report->fields[ inner ].usage.keyboard >= LIBUSB_HID_USAGE_PAGE_KEYBOARD_LEFT_CONTROL
               && report->fields[ inner ].usage.keyboard <= LIBUSB_HID_USAGE_PAGE_KEYBOARD_RIGHT_CONTROL
             ) {
-              #if defined( KEYBOARD_ENABLE_DEBUG )
+              #if defined( KEYBOARD_ENABLE_OUTPUT )
                 EARLY_STARTUP_PRINT(
                   "Modifier %d detected. Offset = %"PRIx8", size = %"PRIx8"\r\n",
                   report->fields[ inner ].usage.keyboard,
@@ -319,7 +319,7 @@ void rpc_keyboard_attach(
               device->key_field[ key_field_index ] = &device->key_report->fields[ inner ];
             }
           } else {
-            #if defined( KEYBOARD_ENABLE_DEBUG )
+            #if defined( KEYBOARD_ENABLE_OUTPUT )
               EARLY_STARTUP_PRINT( "Key input detected: %p / %p / %"PRIu8" / %#x\r\n", (void*)&device->key_report->fields[ inner ],
                 device->key_report->fields[ inner ].value.ptr, inner, report->fields[ inner ].usage.page )
             #endif
@@ -351,7 +351,7 @@ void rpc_keyboard_attach(
         // handle led page
         switch ( report->fields[ inner ].usage.led ) {
           case LIBUSB_HID_USAGE_PAGE_LED_NUMBER_LOCK:
-            #if defined( KEYBOARD_ENABLE_DEBUG )
+            #if defined( KEYBOARD_ENABLE_OUTPUT )
               EARLY_STARTUP_PRINT( "Number lock led detected\r\n")
             #endif
             device->led_field[ 0 ] = &device->led_report->fields[ inner ];
@@ -359,7 +359,7 @@ void rpc_keyboard_attach(
             device->led.num_lock = true;
             break;
           case LIBUSB_HID_USAGE_PAGE_LED_CAPSLOCK:
-            #if defined( KEYBOARD_ENABLE_DEBUG )
+            #if defined( KEYBOARD_ENABLE_OUTPUT )
               EARLY_STARTUP_PRINT( "Capslock lock led detected\r\n")
             #endif
             device->led_field[ 1 ] = &device->led_report->fields[ inner ];
@@ -367,7 +367,7 @@ void rpc_keyboard_attach(
             device->led.caps_lock = true;
             break;
           case LIBUSB_HID_USAGE_PAGE_LED_SCROLL_LOCK:
-            #if defined( KEYBOARD_ENABLE_DEBUG )
+            #if defined( KEYBOARD_ENABLE_OUTPUT )
               EARLY_STARTUP_PRINT( "Scroll lock led detected\r\n")
             #endif
             device->led_field[ 2 ] = &device->led_report->fields[ inner ];
@@ -375,7 +375,7 @@ void rpc_keyboard_attach(
             device->led.scroll_lock = true;
             break;
           case LIBUSB_HID_USAGE_PAGE_LED_COMPOSE:
-            #if defined( KEYBOARD_ENABLE_DEBUG )
+            #if defined( KEYBOARD_ENABLE_OUTPUT )
               EARLY_STARTUP_PRINT( "Compose led detected\r\n")
             #endif
             device->led_field[ 3 ] = &device->led_report->fields[ inner ];
@@ -383,7 +383,7 @@ void rpc_keyboard_attach(
             device->led.compose = true;
             break;
           case LIBUSB_HID_USAGE_PAGE_LED_KANA:
-            #if defined( KEYBOARD_ENABLE_DEBUG )
+            #if defined( KEYBOARD_ENABLE_OUTPUT )
               EARLY_STARTUP_PRINT( "Kana led detected\r\n")
             #endif
             device->led_field[ 4 ] = &device->led_report->fields[ inner ];
@@ -391,7 +391,7 @@ void rpc_keyboard_attach(
             device->led.kana = true;
             break;
           case LIBUSB_HID_USAGE_PAGE_LED_POWER:
-            #if defined( KEYBOARD_ENABLE_DEBUG )
+            #if defined( KEYBOARD_ENABLE_OUTPUT )
               EARLY_STARTUP_PRINT( "Power led detected\r\n")
             #endif
             device->led_field[ 5 ] = &device->led_report->fields[ inner ];
@@ -399,7 +399,7 @@ void rpc_keyboard_attach(
             device->led.power = true;
             break;
           case LIBUSB_HID_USAGE_PAGE_LED_SHIFT:
-            #if defined( KEYBOARD_ENABLE_DEBUG )
+            #if defined( KEYBOARD_ENABLE_OUTPUT )
               EARLY_STARTUP_PRINT( "Shift led detected\r\n")
             #endif
             device->led_field[ 6 ] = &device->led_report->fields[ inner ];
@@ -407,7 +407,7 @@ void rpc_keyboard_attach(
             device->led.shift = true;
             break;
           case LIBUSB_HID_USAGE_PAGE_LED_MUTE:
-            #if defined( KEYBOARD_ENABLE_DEBUG )
+            #if defined( KEYBOARD_ENABLE_OUTPUT )
               EARLY_STARTUP_PRINT( "Mute led detected\r\n")
             #endif
             device->led_field[ 7 ] = &device->led_report->fields[ inner ];
@@ -419,13 +419,13 @@ void rpc_keyboard_attach(
         }
       }
     }
-    #if defined( KEYBOARD_ENABLE_DEBUG )
+    #if defined( KEYBOARD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Freeing report\r\n" )
     #endif
     // free report again
     hid_destroy_report( report );
   }
-  #if defined( KEYBOARD_ENABLE_DEBUG )
+  #if defined( KEYBOARD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Allocate report buffer\r\n" )
   #endif
   // allocate report buffer
@@ -437,7 +437,7 @@ void rpc_keyboard_attach(
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
-  #if defined( KEYBOARD_ENABLE_DEBUG )
+  #if defined( KEYBOARD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Clear allocated buffer\r\n" )
   #endif
   // clear it out
@@ -453,7 +453,7 @@ void rpc_keyboard_attach(
   }
   // finally append device to list
   keyboard_append( device );
-  #if defined( KEYBOARD_ENABLE_DEBUG )
+  #if defined( KEYBOARD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "endpoint_descriptor.endpoint_address.number = %"PRIu8"\r\n",
       endpoint_descriptor.endpoint_address.number );
     EARLY_STARTUP_PRINT( "endpoint_descriptor.interval = %"PRIu8"\r\n",
@@ -461,7 +461,7 @@ void rpc_keyboard_attach(
   #endif
   // free request
   free( request );
-  #if defined( KEYBOARD_ENABLE_DEBUG )
+  #if defined( KEYBOARD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Setting keyboard leds initially\r\n" )
   #endif
   // set leds initially
@@ -477,7 +477,7 @@ void rpc_keyboard_attach(
   });
   // handle error
   if ( 0 != result ) {
-    #if defined( KEYBOARD_ENABLE_DEBUG )
+    #if defined( KEYBOARD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Failed to set keyboard leds\r\n" )
     #endif
     keyboard_destroy( device );

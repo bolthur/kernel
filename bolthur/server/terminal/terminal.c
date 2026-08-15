@@ -27,6 +27,7 @@
 #include "psf.h"
 #include "utf8.h"
 #include "main.h"
+#include "global.h"
 #include "../libconsole.h"
 #include "../../library/vfs/dev.h"
 
@@ -54,7 +55,7 @@ static int32_t terminal_lookup(
  * @param a
  */
 static void terminal_cleanup( list_item_t* a ) {
-  terminal_t* term = a->data;
+  const terminal_t* term = a->data;
   // detach shared memory
   if ( term->surface_memory_id ) {
     while ( true ) {
@@ -116,9 +117,11 @@ bool terminal_init( void ) {
     // prepare device path
     snprintf( tty_path, PATH_MAX, TERMINAL_BASE_PATH"%"PRIu32, current );
     // add device file
-    uint32_t device_info[] = { in, out, err, };
+    const uint32_t device_info[] = { in, out, err, };
     if ( ! vfs_dev_add_file( tty_path, device_info, 3, nullptr ) ) {
-      EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+      #if defined( TERMINAL_ENABLE_OUTPUT )
+        EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+      #endif
       list_destruct( terminal_list );
       free( tty_path );
       free( command_add );
@@ -129,11 +132,9 @@ bool terminal_init( void ) {
     // register handler for streams
     bolthur_rpc_bind( out, output_handle_out, false );
     if ( errno ) {
-      EARLY_STARTUP_PRINT(
-        "Unable to bind rpc %zu: %s\r\n",
-        out,
-        strerror( errno )
-      )
+      #if defined( TERMINAL_ENABLE_OUTPUT )
+        EARLY_STARTUP_PRINT( "Unable to bind rpc %zu: %s\r\n", out, strerror( errno ) )
+      #endif
       list_destruct( terminal_list );
       free( tty_path );
       free( command_add );
@@ -143,11 +144,9 @@ bool terminal_init( void ) {
     }
     bolthur_rpc_bind( err, output_handle_err, false );
     if ( errno ) {
-      EARLY_STARTUP_PRINT(
-        "Unable to bind rpc %zu: %s\r\n",
-        err,
-        strerror( errno )
-      )
+      #if defined( TERMINAL_ENABLE_OUTPUT )
+        EARLY_STARTUP_PRINT( "Unable to bind rpc %zu: %s\r\n", err, strerror( errno ) )
+      #endif
       list_destruct( terminal_list );
       free( tty_path );
       free( command_add );
@@ -157,11 +156,9 @@ bool terminal_init( void ) {
     }
     bolthur_rpc_bind( in, output_handle_in, false );
     if ( errno ) {
-      EARLY_STARTUP_PRINT(
-        "Unable to bind rpc %zu: %s\r\n",
-        in,
-        strerror( errno )
-      )
+      #if defined( TERMINAL_ENABLE_OUTPUT )
+        EARLY_STARTUP_PRINT( "Unable to bind rpc %zu: %s\r\n", in, strerror( errno ) )
+      #endif
       list_destruct( terminal_list );
       free( tty_path );
       free( command_add );

@@ -63,7 +63,7 @@ int usbd_stop_transmission(
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       const int e = errno;
       EARLY_STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif

@@ -38,7 +38,7 @@ static void attach_attach_finished(
   const size_t response_info
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Attach call finished\r\n" )
   #endif
   // peek matching async data without destroy for call chain
@@ -91,7 +91,7 @@ static void attach_configure_finished(
   const size_t response_info
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Attach configure finished\r\n" )
   #endif
   // peek matching async data without destroy for call chain
@@ -130,7 +130,7 @@ static void attach_configure_finished(
     return;
   }
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "dev->interfaces[ 0 ].class = %d\r\n", attach_context->device->interfaces[ 0 ].class )
   #endif
   // call to attach the device
@@ -143,7 +143,7 @@ static void attach_configure_finished(
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Failed calling attach: %s\r\n", strerror( result ) )
     #endif
     // return nodev
@@ -176,7 +176,7 @@ static void attach_read_device_finished_2(
   const size_t response_info
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Second read finished\r\n" )
   #endif
   // peek matching async data
@@ -212,7 +212,7 @@ static void attach_read_device_finished_2(
     return;
   }
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Attach Device %s. Address:%"PRIu8" Class:%d Subclass:%"PRIu8
       " USB:%"PRIx16".%"PRIx16". %"PRIu8" configurations, %"PRIu8" interfaces.\n",
       usbd_description_get( attach_context->device ), attach_context->address, attach_context->device->descriptor.class, attach_context->device->descriptor.subclass,
@@ -229,7 +229,7 @@ static void attach_read_device_finished_2(
   );
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Configure failed: %s\r\n", strerror( result ) )
     #endif
     // return nodev
@@ -259,7 +259,7 @@ static void attach_set_address_finished(
   const size_t data_info,
   const size_t response_info
 ) {
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "SET ADDRESS FINISHED\r\n")
   #endif
   // pop matching async data
@@ -305,7 +305,7 @@ static void attach_set_address_finished(
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Reading device descriptor failed: %s\r\n", strerror( result ) )
     #endif
     // cleanup contexts
@@ -336,7 +336,7 @@ static void attach_read_device_finished_1(
   const size_t response_info
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Attaching device first read finished\r\n" )
   #endif
   // peek matching async data
@@ -355,7 +355,7 @@ static void attach_read_device_finished_1(
   usbd_descriptor_context_t* descriptor_context = async_data->context;
   usbd_attach_context_t* attach_context = descriptor_context->context;
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "async_data->original_rpc_id = %zu\r\n", async_data->original_rpc_id )
   #endif
   assert( descriptor_context && attach_context );
@@ -388,7 +388,7 @@ static void attach_read_device_finished_1(
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Set address failed: %s\r\n", strerror( result ) )
     #endif
     // restore number
@@ -424,11 +424,11 @@ int usbd_attach_device(
   const size_t original_request_size
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Attaching device\r\n" )
   #endif
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "dev->number = %"PRIu32" device\r\n", dev->number )
   #endif
   // cache device number
@@ -436,7 +436,7 @@ int usbd_attach_device(
   // reset device number
   dev->number = 0;
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "address = %"PRIu8", dev->number = %"PRIu32" device\r\n",
       address, dev->number )
   #endif
@@ -456,14 +456,14 @@ int usbd_attach_device(
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Failed to allocate context for async chain\r\n" )
     #endif
     // return result
     return result;
   }
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Scanning %"PRIu8". %s.\r\n", address, usb_speed_to_string( dev->speed ) )
   #endif
   // read device descriptor
@@ -475,7 +475,7 @@ int usbd_attach_device(
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Reading device descriptor failed: %s\r\n", strerror( result ) )
     #endif
     // restore number

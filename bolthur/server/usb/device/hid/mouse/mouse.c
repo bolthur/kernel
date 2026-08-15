@@ -207,7 +207,7 @@ int mouse_start_polling( libusb_mouse_device_t* device ) {
     device->descriptor.interval
   );
   // handle error
-  #if defined( MOUSE_ENABLE_DEBUG )
+  #if defined( MOUSE_ENABLE_OUTPUT )
   if ( 0 != result ) {
     const int e = errno;
     EARLY_STARTUP_PRINT( "ERROR: %s\r\n", strerror( e ) );

@@ -44,7 +44,7 @@ int call_detached(
   // get handler for attaching root hub
   if ( ! dev->device_detached_handler ) {
     // debug output
-    #if defined( CALL_ENABLE_DEBUG )
+    #if defined( CALL_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "No handler found for %d\r\n", dev->interfaces[ 0 ].class )
     #endif
     // return success
@@ -56,7 +56,7 @@ int call_detached(
   vfs_ioctl_perform_request_t* request = malloc( request_size );
   if ( ! request ) {
     // debug output
-    #if defined( CALL_ENABLE_DEBUG )
+    #if defined( CALL_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Error while allocating rpc request\r\n" )
     #endif
     // return nomem
@@ -87,7 +87,7 @@ int call_detached(
     // cache errno
     const int e = errno;
     // debug output
-    #if defined( CALL_ENABLE_DEBUG )
+    #if defined( CALL_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Error while sending request to handler: %s\r\n",
         strerror( e ) )
     #endif

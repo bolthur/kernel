@@ -33,84 +33,84 @@ bool rpc_init( void ) {
   // register generic handlers
   bolthur_rpc_bind( RPC_VFS_ADD, rpc_generic_add, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register add handler!\r\n" )
     #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_CLOSE, rpc_generic_close, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register close handler!\r\n" )
     #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_EXEC, rpc_generic_exec, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register exec handler!\r\n" )
     #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_EXIT, rpc_generic_exit, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register exit handler!\r\n" )
     #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_FORK, rpc_generic_fork, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register fork handler!\r\n" )
     #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_IOCTL, rpc_generic_ioctl, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register ioctl handler!\r\n" )
     #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_OPEN, rpc_generic_open, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register open handler!\r\n" )
     #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_READ, rpc_generic_read, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register read handler!\r\n" )
     #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_REMOVE, rpc_generic_remove, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register remove handler!\r\n" )
     #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_SEEK, rpc_generic_seek, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register seek handler!\r\n" )
     #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_STAT, rpc_generic_stat, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register stat handler!\r\n" )
     #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_WRITE, rpc_generic_write, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register write handler!\r\n" )
     #endif
     return false;
@@ -118,7 +118,7 @@ bool rpc_init( void ) {
   // register handler attaching a device
   bolthur_rpc_bind( USBD_ATTACH_DEVICE, rpc_attach_device, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register attach device handler!\r\n" )
     #endif
     return false;
@@ -126,7 +126,7 @@ bool rpc_init( void ) {
   // register handler attaching roothub
   bolthur_rpc_bind( USBD_ATTACH_ROOTHUB, rpc_attach_roothub, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register attach device handler!\r\n" )
     #endif
     return false;
@@ -134,7 +134,7 @@ bool rpc_init( void ) {
   // register handler control message
   bolthur_rpc_bind( USBD_CONTROL_MESSAGE, rpc_control_message, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register control message handler!\r\n" )
     #endif
     return false;
@@ -142,7 +142,7 @@ bool rpc_init( void ) {
   // register handler get description
   bolthur_rpc_bind( USBD_GET_DESCRIPTION, rpc_get_description, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register get description handler!\r\n" )
     #endif
     return false;
@@ -150,7 +150,7 @@ bool rpc_init( void ) {
   // register handler get descriptor
   bolthur_rpc_bind( USBD_GET_DESCRIPTOR, rpc_get_descriptor, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register get descriptor handler!\r\n" )
     #endif
     return false;
@@ -158,7 +158,7 @@ bool rpc_init( void ) {
   // register handler get endpoint
   bolthur_rpc_bind( USBD_GET_ENDPOINT, rpc_get_endpoint, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register get endpoint handler!\r\n" )
     #endif
     return false;
@@ -166,7 +166,7 @@ bool rpc_init( void ) {
   // register handler get description
   bolthur_rpc_bind( USBD_GET_INTERFACE, rpc_get_interface, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register get interface handler!\r\n" )
     #endif
     return false;
@@ -174,7 +174,7 @@ bool rpc_init( void ) {
   // register handler get roothub
   bolthur_rpc_bind( USBD_GET_ROOTHUB, rpc_get_roothub, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register get roothub handler!\r\n" )
     #endif
     return false;
@@ -182,7 +182,7 @@ bool rpc_init( void ) {
   // register handler register
   bolthur_rpc_bind( USBD_REGISTER_HANDLER, rpc_handler_register, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register register device handler!\r\n" )
     #endif
     return false;
@@ -190,7 +190,7 @@ bool rpc_init( void ) {
   // register handler unregister
   bolthur_rpc_bind( USBD_UNREGISTER_HANDLER, rpc_handler_unregister, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register unregister device handler!\r\n" )
     #endif
     return false;
@@ -198,7 +198,7 @@ bool rpc_init( void ) {
   // register handler get configuration
   bolthur_rpc_bind( USBD_GET_CONFIGURATION, rpc_get_configuration, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register get configuration handler!\r\n" )
     #endif
     return false;
@@ -206,7 +206,7 @@ bool rpc_init( void ) {
   // register handler get status
   bolthur_rpc_bind( USBD_GET_STATUS, rpc_get_status, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register get status handler!\r\n" )
     #endif
     return false;
@@ -214,7 +214,7 @@ bool rpc_init( void ) {
   // register handler get string
   bolthur_rpc_bind( USBD_GET_STRING, rpc_get_string, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register get status handler!\r\n" )
     #endif
     return false;
@@ -222,7 +222,7 @@ bool rpc_init( void ) {
   // register handler poll interrupt
   bolthur_rpc_bind( USBD_POLL_INTERRUPT, rpc_interrupt_poll, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register poll interrupt handler!\r\n" )
     #endif
     return false;
@@ -230,7 +230,7 @@ bool rpc_init( void ) {
   // register handler generic poll
   bolthur_rpc_bind( GENERIC_POLL_INTERRUPT, rpc_interrupt_generic, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register generic poll handler!\r\n" )
     #endif
     return false;
@@ -238,7 +238,7 @@ bool rpc_init( void ) {
   // register handler stop transmission
   bolthur_rpc_bind( USBD_STOP_TRANSMISSION, rpc_stop_transmission, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register stop transmission handler!\r\n" )
     #endif
     return false;
@@ -246,7 +246,7 @@ bool rpc_init( void ) {
   // register handler detach device
   bolthur_rpc_bind( USBD_DETACH_DEVICE, rpc_detach_device, true );
   if ( errno ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to register detach device handler!\r\n" )
     #endif
     return false;

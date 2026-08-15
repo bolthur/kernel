@@ -156,7 +156,7 @@ static void rpc_get_descriptor_finished(
     // set result to error
     result = EIO;
   }
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "hcd_submit->last_transfer = %"PRIu32", buffer_length = %zu\r\n",
       usb_control_message->last_transfer, usbd_descriptor_message->buffer_length );
   #endif

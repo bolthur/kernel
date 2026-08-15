@@ -46,7 +46,7 @@ static bool perform_check( hub_check_change_context_t* ctx ) {
     // mark current port as not fetched
     ctx->to_check[ port ] = false;
     // debug output
-    #if defined( HUB_ENABLE_DEBUG )
+    #if defined( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "PORT = %"PRIu32" / %"PRIu32"\r\n", port, ctx->hub->children[ port ] )
     #endif
     // handle device disconnect
@@ -55,7 +55,7 @@ static bool perform_check( hub_check_change_context_t* ctx ) {
       && ! ctx->hub->port_status[ port ].status.connected
     ) {
       // debug output
-      #if defined( HUB_ENABLE_DEBUG )
+      #if defined( HUB_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "DISCONNECT DETECTED\r\n" )
       #endif
       const int result = usb_detach_device(
@@ -67,7 +67,7 @@ static bool perform_check( hub_check_change_context_t* ctx ) {
       );
       if ( 0 != result ) {
         // debug output
-        #if defined( HUB_ENABLE_DEBUG )
+        #if defined( HUB_ENABLE_OUTPUT )
           EARLY_STARTUP_PRINT( "Detach device failed: %s\r\n", strerror( result ) )
         #endif
         // skip
@@ -83,7 +83,7 @@ static bool perform_check( hub_check_change_context_t* ctx ) {
       && ctx->hub->port_status[ port ].status.connected
     ) {
       // debug output
-      #if defined( HUB_ENABLE_DEBUG )
+      #if defined( HUB_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "CONNECT DETECTED\r\n" )
       #endif
       libusb_speed_t speed = LIBUSB_SPEED_FULL;
@@ -103,7 +103,7 @@ static bool perform_check( hub_check_change_context_t* ctx ) {
       );
       if ( 0 != result ) {
         // debug output
-        #if defined( HUB_ENABLE_DEBUG )
+        #if defined( HUB_ENABLE_OUTPUT )
           EARLY_STARTUP_PRINT( "Attach device failed: %s\r\n", strerror( result ) )
         #endif
         // skip
@@ -123,7 +123,7 @@ static bool perform_check( hub_check_change_context_t* ctx ) {
       vfs_ioctl_perform_request_t* request = malloc( request_size );
       if ( ! request ) {
         // debug output
-        #if defined( HUB_ENABLE_DEBUG )
+        #if defined( HUB_ENABLE_OUTPUT )
           EARLY_STARTUP_PRINT( "Error while allocating rpc request\r\n" )
         #endif
         // skip
@@ -152,7 +152,7 @@ static bool perform_check( hub_check_change_context_t* ctx ) {
       // handle error
       if ( ! result ) {
         // debug output
-        #if defined( HUB_ENABLE_DEBUG )
+        #if defined( HUB_ENABLE_OUTPUT )
           EARLY_STARTUP_PRINT( "Error while cascading check change\r\n" )
         #endif
         // skip
@@ -315,7 +315,7 @@ void rpc_hub_check_change(
     // handle error
     if ( result != 0 ) {
       // debug output
-      #if defined( HUB_ENABLE_DEBUG )
+      #if defined( HUB_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Unable to get port status: %s\r\n", strerror( result ) );
       #endif
       // skip rest

@@ -36,7 +36,7 @@ static void child_detach_finished(
   size_t data_info,
   size_t response_info
 ) {
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Child detach call finished\r\n" )
   #endif
   // peek matching async data without destroy for call chain
@@ -44,7 +44,7 @@ static void child_detach_finished(
     RPC_VFS_IOCTL, response_info );
   // handle no async data
   if ( ! async_data ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "NO ASYNC DATA\r\n" )
     #endif
     // cleanup
@@ -59,7 +59,7 @@ static void child_detach_finished(
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // handle no data
   if ( ! data_info ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "NO DATA\r\n" )
     #endif
     // return
@@ -69,7 +69,7 @@ static void child_detach_finished(
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "INVALID ORIGIN\r\n" )
     #endif
     // return
@@ -99,7 +99,7 @@ static void detach_finished(
   size_t data_info,
   size_t response_info
 ) {
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Detach call finished\r\n" )
   #endif
   // peek matching async data without destroy for call chain
@@ -107,7 +107,7 @@ static void detach_finished(
     RPC_VFS_IOCTL, response_info );
   // handle no async data
   if ( ! async_data ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "NO ASYNC DATA\r\n" )
     #endif
     // cleanup
@@ -122,7 +122,7 @@ static void detach_finished(
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // handle no data
   if ( ! data_info ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "NO DATA\r\n" )
     #endif
     // return
@@ -132,7 +132,7 @@ static void detach_finished(
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "INVALID ORIGIN\r\n" )
     #endif
     // return
@@ -156,7 +156,7 @@ static void detach_finished(
     );
     if ( 0 != result ) {
       // debug output
-      #if defined( USBD_ENABLE_DEBUG )
+      #if defined( USBD_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "unable to call child detached handler\r\n" )
       #endif
       // return
@@ -197,7 +197,7 @@ void usbd_deallocate_device(
   void* additional_context
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Deallocating device\r\n" )
   #endif
   // handle invalid parameter
@@ -209,7 +209,7 @@ void usbd_deallocate_device(
   int result = usbd_context_deallocate_create( callback, dev, additional_context, &ctx );
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to create context\r\n" )
     #endif
     // return
@@ -219,7 +219,7 @@ void usbd_deallocate_device(
   result = call_detached( dev, detach_finished, original_request, original_request_size, origin, data_info, ctx );
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "unable to call detached handler\r\n" )
     #endif
     // skip rest

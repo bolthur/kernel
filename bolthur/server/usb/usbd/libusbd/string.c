@@ -19,7 +19,7 @@
 
 #include <errno.h>
 #include <wchar.h>
-#if defined( USBD_ENABLE_DEBUG )
+#if defined( USBD_ENABLE_OUTPUT )
   #include <inttypes.h>
 #endif
 #include "../libusbd.h"
@@ -41,7 +41,7 @@ static void string_get_finished(
   size_t response_info
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Read string finished\r\n" )
   #endif
   // peek matching async data without destroy for call chain
@@ -115,7 +115,7 @@ static void string_get_finished(
     _syscall_memory_shared_detach( usbd_control_message->shm_id );
     free( submit_response );
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Not enough transferred\r\n" )
     #endif
     // return
@@ -130,7 +130,7 @@ static void string_get_finished(
   // response is equal to input
   if ( usb_control_message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "error = %#x\r\n", usb_control_message->error )
     #endif
     // free up stuff
@@ -188,7 +188,7 @@ int usbd_string_get(
   const rpc_handler_t callback
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "get string\r\n" )
   #endif
   // allocate get string context
@@ -233,7 +233,7 @@ static void string_read_lang_read_finished(
   size_t response_info
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Read language text finished\r\n" )
   #endif
   // peek matching async data without destroy for call chain
@@ -254,7 +254,7 @@ static void string_read_lang_read_finished(
   // handle error
   if ( read_lang_context->context->device->error ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Error while reading language length" )
     #endif
     // return
@@ -287,7 +287,7 @@ static void string_read_lang_length_finished(
   size_t response_info
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Read language length finished\r\n" )
   #endif
   // peek matching async data without destroy for call chain
@@ -308,7 +308,7 @@ static void string_read_lang_length_finished(
   // handle error
   if ( read_lang_context->context->device->error ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Error while reading language length" )
     #endif
     // return
@@ -342,7 +342,7 @@ static void string_read_lang_length_finished(
   );
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to fetch string lang\r\n" )
     #endif
     // return
@@ -380,7 +380,7 @@ int usbd_string_read_lang(
   const rpc_handler_t callback
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Read language\r\n" )
   #endif
   // create context
@@ -425,7 +425,7 @@ static void string_read_language_data_finished(
   size_t response_info
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Read string language data finished\r\n" )
   #endif
   // peek matching async data without destroy for call chain
@@ -451,7 +451,7 @@ static void string_read_language_data_finished(
   uint8_t* temp = malloc( temp_length );
   if ( ! temp ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate temp area for string\r\n" )
     #endif
     // dummy error response
@@ -468,7 +468,7 @@ static void string_read_language_data_finished(
   for ( i = 0; i < descriptor_length; i++ ) {
     temp[ i ] = ( uint8_t )wctob( descriptor->data[ data_index++ ] );
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "i = %"PRIu8" / %"PRIu8" / %"PRIu16" / %c\r\n", i, temp[ i ], descriptor->data[ data_index - 1 ], temp[ i ] )
     #endif
   }
@@ -498,7 +498,7 @@ static void string_read_language_id_finished(
   size_t response_info
 ) {
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Read string language id finished\r\n" )
   #endif
   // peek matching async data without destroy for call chain
@@ -520,7 +520,7 @@ static void string_read_language_id_finished(
   // handle error
   if ( read_string_context->device->error || read_string_context->device->last_transfer < 4 ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Error while reading language length" )
     #endif
     usbd_context_get_string_destroy( ctx );
@@ -543,7 +543,7 @@ static void string_read_language_id_finished(
   );
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to read language\r\n" )
     #endif
     usbd_context_get_string_destroy( ctx );
@@ -587,7 +587,7 @@ int usbd_string_read(
     return EINVAL;
   }
   // debug output
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Read string\r\n" )
   #endif
   // create context
@@ -597,7 +597,7 @@ int usbd_string_read(
     origin, data_info, &ctx);
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to create get string context: %s\r\n", strerror( result ) )
     #endif
     // return result
@@ -616,7 +616,7 @@ int usbd_string_read(
   // handle error
   if ( 0 != result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to fetch language ids\r\n" )
     #endif
     // return result

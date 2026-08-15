@@ -77,36 +77,36 @@ static void check_change_done(
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // register rpc
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     STARTUP_PRINT( "Setup rpc handler\r\n" )
   #endif
   if ( !rpc_init() ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
     #endif
     return -1;
   }
 
   // initialize usbd handler
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     STARTUP_PRINT( "Setup handler array\r\n" )
   #endif
   int result = usbd_handler_init();
   if ( 0 != result ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to setup handler: %s\r\n", strerror( result ) );
     #endif
     return -1;
   }
 
   // enable rpc
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     STARTUP_PRINT( "Enable rpc\r\n" )
   #endif
   _syscall_rpc_set_ready( true );
 
   // add device file
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     STARTUP_PRINT( "Sending device to vfs\r\n" )
   #endif
   constexpr uint32_t device_info[] = {
@@ -131,7 +131,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     USBD_GET_STRING,
   };
   if ( ! vfs_dev_add_file( USBD_DEVICE_PATH, device_info, 17, nullptr ) ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to add dev usbd\r\n" )
     #endif
     return -1;
@@ -143,38 +143,38 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // query allowed rpc origin
   const pid_t allowed_rpc_origin = vfs_get_file_handler( HCD_DEVICE_PATH );
   if ( -1 == allowed_rpc_origin ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to get handler id of %s\r\n", HCD_DEVICE_PATH )
     #endif
     return -1;
   }
   // push to valid origin
   if ( ! bolthur_rpc_origin_push_valid( allowed_rpc_origin ) ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to push mount pid to valid origin list!\r\n" )
     #endif
     return -1;
   }
 
   // setup usbd interface
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     STARTUP_PRINT( "Setup usbd\r\n" )
   #endif
   result = usbd_init();
   if ( 0 != result ) {
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to init usbd: %s\r\n", strerror( result ) );
     #endif
     return -1;
   }
 
   // wait for rpc
-  #if defined( USBD_ENABLE_DEBUG )
+  #if defined( USBD_ENABLE_OUTPUT )
     STARTUP_PRINT( "Wait for rpc\r\n" )
   #endif
   while ( true ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "CHECK FOR PLUG AND PLAY\r\n" )
     #endif
     // get roothub
@@ -184,13 +184,13 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
       // set check running
       roothub->check_running = true;
       // debug output
-      #if defined( USBD_ENABLE_DEBUG )
+      #if defined( USBD_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Checking for changes\r\n" )
       #endif
       // check for change
       result = call_check_for_change( roothub, check_change_done );
       // debug output
-      #if defined( USBD_ENABLE_DEBUG )
+      #if defined( USBD_ENABLE_OUTPUT )
         EARLY_STARTUP_PRINT( "Check for change result: %d\r\n", result )
       #endif
     }
