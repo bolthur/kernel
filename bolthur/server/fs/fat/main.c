@@ -79,7 +79,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   reg->process = getpid();
 
   // perform ioctl
-  int result = ioctl(
+  const int result = ioctl(
     fd,
     IOCTL_BUILD_REQUEST(
       PARTITION_REGISTER_HANDLER,

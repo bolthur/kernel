@@ -25,6 +25,7 @@
 #include <mntent.h>
 #include "../init.h"
 #include "../configuration.h"
+#include "../global.h"
 #include "../../../library/vfs/wait.h"
 
 /**
@@ -35,26 +36,34 @@
 void init_stage2( const char* bootarg ) {
   // start servers by configuration
   if ( ! configuration_handle( "/ramdisk/config/stage2.ini", bootarg ) ) {
-    EARLY_STARTUP_PRINT( "Something went wrong with stage2 startup!\r\n" )
+    #if defined( BOOT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Something went wrong with stage2 startup!\r\n" )
+    #endif
     exit( 1 );
   }
 
   // determine root device and partition type from config
-  STARTUP_PRINT( "Extracting root device and partition type...\r\n" )
+  #if defined( BOOT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Extracting root device and partition type...\r\n" )
+  #endif
   char* p = strtok( ( char* )bootarg, " " );
   char* root_device = nullptr;
   char* root_partition_type = nullptr;
   while ( p ) {
     constexpr size_t len_root_device = 5;
     constexpr size_t len_root_partition_type = 11;
-    STARTUP_PRINT( "p = %s\r\n", p )
+    #if defined( BOOT_ENABLE_OUTPUT )
+      STARTUP_PRINT( "p = %s\r\n", p )
+    #endif
     // handle root information
     if ( ! root_device && 0 == strncmp( p, "root=", len_root_device ) ) {
       const size_t size = sizeof( char ) * ( strlen( p ) - len_root_device + 1 );
       // allocate space and clear out
       root_device = malloc( size );
       if ( ! root_device ) {
-        STARTUP_PRINT( "Unable to allocate space for root partition\r\n" )
+        #if defined( BOOT_ENABLE_OUTPUT )
+          STARTUP_PRINT( "Unable to allocate space for root partition\r\n" )
+        #endif
         exit( 1 );
       }
       memset( root_device, 0, size );
@@ -68,7 +77,9 @@ void init_stage2( const char* bootarg ) {
       // allocate space and clear out
       root_partition_type = malloc( size );
       if ( ! root_partition_type ) {
-        STARTUP_PRINT( "Unable to allocate space for root partition\r\n" )
+        #if defined( BOOT_ENABLE_OUTPUT )
+          STARTUP_PRINT( "Unable to allocate space for root partition\r\n" )
+        #endif
         exit( 1 );
       }
       memset( root_partition_type, 0, size );
@@ -80,22 +91,30 @@ void init_stage2( const char* bootarg ) {
   }
   // handle no root device and/or file system type found
   if ( ! root_device || ! root_partition_type ) {
-    STARTUP_PRINT( "No root device and/or no partition type found!\r\n" )
+    #if defined( BOOT_ENABLE_OUTPUT )
+      STARTUP_PRINT( "No root device and/or no partition type found!\r\n" )
+    #endif
     exit( 1 );
   }
-  STARTUP_PRINT( "root_device = %s, root_partition_type = %s\r\n", root_device, root_partition_type )
-  STARTUP_PRINT( "waiting for %s\r\n", root_device )
+  #if defined( BOOT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "root_device = %s, root_partition_type = %s\r\n", root_device, root_partition_type )
+    STARTUP_PRINT( "waiting for %s\r\n", root_device )
+  #endif
   // wait for root device
   vfs_wait_for_path( root_device );
 
   // mount root partition
-  STARTUP_PRINT( "Mounting \"%s\" with type \"%s\" to \"/\" ...\r\n",
-    root_device, root_partition_type )
+  #if defined( BOOT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Mounting \"%s\" with type \"%s\" to \"/\" ...\r\n",
+      root_device, root_partition_type )
+  #endif
   fflush( stdout );
   int result = mount( root_device, "/", root_partition_type, MS_MGC_VAL, "" );
   if ( 0 != result ) {
-    STARTUP_PRINT( "Mount of \"%s\" with type \"%s\" to / failed: \"%s\"\r\n",
-      root_device, root_partition_type, strerror( errno ) )
+    #if defined( BOOT_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Mount of \"%s\" with type \"%s\" to / failed: \"%s\"\r\n",
+        root_device, root_partition_type, strerror( errno ) )
+    #endif
     exit( 1 );
   }
 
@@ -103,7 +122,9 @@ void init_stage2( const char* bootarg ) {
   struct mntent* m = nullptr;
   if ( fstab ) {
     while( ( m = getmntent( fstab ) ) ) {
-      STARTUP_PRINT( "m->mnt_dir = %s\r\n", m->mnt_dir )
+      #if defined( BOOT_ENABLE_OUTPUT )
+        STARTUP_PRINT( "m->mnt_dir = %s\r\n", m->mnt_dir )
+      #endif
       // skip root
       if (
         strlen( "/" ) == strlen( m->mnt_dir )
@@ -113,13 +134,17 @@ void init_stage2( const char* bootarg ) {
       }
       // skip in case no auto mount is set
       if ( hasmntopt( m, MNTOPT_NOAUTO ) ) {
-        STARTUP_PRINT( "Skipping %s to %s due to no auto mount\r\n",
-          m->mnt_fsname, m->mnt_dir )
+        #if defined( BOOT_ENABLE_OUTPUT )
+          STARTUP_PRINT( "Skipping %s to %s due to no auto mount\r\n",
+            m->mnt_fsname, m->mnt_dir )
+        #endif
         continue;
       }
       // try to mount
-      STARTUP_PRINT( "Mounting \"%s\" with type \"%s\" to \"%s\" ...\r\n",
-        m->mnt_fsname, m->mnt_type, m->mnt_dir )
+      #if defined( BOOT_ENABLE_OUTPUT )
+        STARTUP_PRINT( "Mounting \"%s\" with type \"%s\" to \"%s\" ...\r\n",
+          m->mnt_fsname, m->mnt_type, m->mnt_dir )
+      #endif
       fflush( stdout );
       // wait for device, just to be sure
       vfs_wait_for_path( m->mnt_fsname );
@@ -135,9 +160,11 @@ void init_stage2( const char* bootarg ) {
       result = mount( m->mnt_fsname, m->mnt_dir, m->mnt_type, mount_flags, "" );
       // handle error
       if ( 0 != result ) {
-        STARTUP_PRINT(
-          "Mount of \"%s\" with type \"%s\" to \"%s\" failed: \"%s\"\r\n",
-          m->mnt_fsname, m->mnt_type, m->mnt_fsname, strerror( errno ) )
+        #if defined( BOOT_ENABLE_OUTPUT )
+          STARTUP_PRINT(
+            "Mount of \"%s\" with type \"%s\" to \"%s\" failed: \"%s\"\r\n",
+            m->mnt_fsname, m->mnt_type, m->mnt_fsname, strerror( errno ) )
+        #endif
         exit( 1 );
       }
     }
@@ -146,41 +173,60 @@ void init_stage2( const char* bootarg ) {
   // free up device and partition type strings
   free( root_device );
   free( root_partition_type );
-  EARLY_STARTUP_PRINT( "done, yay!\r\n" )
-
-  STARTUP_PRINT( "Opening \"/boot/cmdline.txt\" for reading\r\n" )
+  #if defined( BOOT_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "done, yay!\r\n" )
+    STARTUP_PRINT( "Opening \"/boot/cmdline.txt\" for reading\r\n" )
+  #endif
   // open fstap
   int cmdline = open( "/boot/cmdline.txt", O_RDONLY );
   if ( -1 == cmdline ) {
-    STARTUP_PRINT( "unable to open: %s\r\n", strerror( errno ) )
+    #if defined( BOOT_ENABLE_OUTPUT )
+      STARTUP_PRINT( "unable to open: %s\r\n", strerror( errno ) )
+    #endif
     exit( 1 );
   }
-  STARTUP_PRINT( "Looking for file size\r\n" )
-  off_t position = lseek( cmdline, 0, SEEK_END );
+  #if defined( BOOT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Looking for file size\r\n" )
+  #endif
+  const off_t position = lseek( cmdline, 0, SEEK_END );
   if ( -1 == position ) {
-    STARTUP_PRINT( "unable to set seek end: %s\r\n", strerror( errno ) )
+    #if defined( BOOT_ENABLE_OUTPUT )
+      STARTUP_PRINT( "unable to set seek end: %s\r\n", strerror( errno ) )
+    #endif
     exit( 1 );
   }
   const size_t cmdline_size = ( size_t )position;
   // reset back to beginning
   if ( -1 == lseek( cmdline, 0, SEEK_SET ) ) {
-    STARTUP_PRINT( "unable to set seek start: %s\r\n", strerror( errno ) )
+    #if defined( BOOT_ENABLE_OUTPUT )
+      STARTUP_PRINT( "unable to set seek start: %s\r\n", strerror( errno ) )
+    #endif
     exit( 1 );
   }
   // allocate
-  STARTUP_PRINT( "Allocating file buffer\r\n" )
+  #if defined( BOOT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Allocating file buffer\r\n" )
+  #endif
   char* str = malloc( cmdline_size + 1 );
   if ( ! str ) {
-    STARTUP_PRINT( "unable to allocate buffer\r\n" )
+    #if defined( BOOT_ENABLE_OUTPUT )
+      STARTUP_PRINT( "unable to allocate buffer\r\n" )
+    #endif
     exit( 1 );
   }
   // read whole file
-  STARTUP_PRINT( "Reading file into buffer\r\n" )
+  #if defined( BOOT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Reading file into buffer\r\n" )
+  #endif
   read( cmdline, str, cmdline_size );
   close( cmdline );
   str[ cmdline_size ] = 0;
   // print content
-  STARTUP_PRINT( "str: %s\r\n", str )
+  #if defined( BOOT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "str: %s\r\n", str )
+  #endif
   free( str );
-  STARTUP_PRINT( "continue with stage3!!!\r\n")
+  #if defined( BOOT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "continue with stage3!!!\r\n")
+  #endif
 }

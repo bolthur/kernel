@@ -24,6 +24,7 @@
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../sd.h"
+#include "../global.h"
 
 /**
  * @fn void rpc_handle_write(size_t, pid_t, size_t, size_t)
@@ -86,7 +87,7 @@ void rpc_handle_write(
   // calculate block number
   /*const off_t block_number = request->offset / sd_block_size;
   // try to read from card
-  STARTUP_PRINT(
+  EARLY_STARTUP_PRINT(
     "Writing %#zx bytes with offset of %llx / %lx ( block number: %llx ) to sd card\r\n",
     request->len, request->offset, ( uint32_t )request->offset, block_number
   )*/
@@ -97,10 +98,12 @@ void rpc_handle_write(
     request->offset,
     request->shm_id
   ) ) {
-    STARTUP_PRINT(
-      "Error while writing block to card: %s\r\n",
-      sd_last_error()
-    )
+    #if defined( SD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT(
+        "Error while writing block to card: %s\r\n",
+        sd_last_error()
+      )
+    #endif
     // detach shared area
     if ( request->shm_id ) {
       _syscall_memory_shared_detach( request->shm_id );

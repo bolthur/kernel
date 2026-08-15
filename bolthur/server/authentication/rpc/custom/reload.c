@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <libgen.h>
 #include "../../rpc.h"
+#include "../../global.h"
 #include "../../pid/node.h"
 #include "../../../libauthentication.h"
 
@@ -40,7 +41,9 @@ void rpc_custom_handle_reload(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "AUTHENTICATION RELOAD IOCTL\r\n" )
+  #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "AUTHENTICATION RELOAD IOCTL\r\n" )
+  #endif
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {

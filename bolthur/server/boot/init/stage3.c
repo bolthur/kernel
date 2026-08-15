@@ -22,9 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/bolthur.h>
-#include <sys/errno.h>
 #include <sys/unistd.h>
-
 #include "../configuration.h"
 #include "../init.h"
 #include "../global.h"
@@ -33,13 +31,17 @@
  * @fn void init_stage1(void)
  * @brief Final init stage starting servers from storage with finally starting shell
  */
-[[noreturn]] void init_stage3( void ) {
+void init_stage3( void ) {
   // start servers by configuration
   if ( ! configuration_handle( "/ramdisk/config/stage3.ini", nullptr ) ) {
-    EARLY_STARTUP_PRINT( "Something went wrong with stage3 startup!\r\n" )
+    #if defined( BOOT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Something went wrong with stage3 startup!\r\n" )
+    #endif
     exit( 1 );
   }
-  EARLY_STARTUP_PRINT( "Starting login process\r\n" )
+  #if defined( BOOT_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Starting login process\r\n" )
+  #endif
 /*  // close device manager since everythig was fired up
   close( fd_dev_manager );
   // fork for starting the login shell
@@ -56,68 +58,4 @@
   if ( 0 > forked ) {
     EARLY_STARTUP_PRINT( "Error while forking: %s\r\n", strerror( -forked ) )
   }*/
-
-  EARLY_STARTUP_PRINT( "Looping till death\r\n" )
-  while ( true ) {
-    sleep( 10 );
-    __asm__ __volatile__( "nop" );
-  }
-  /// FIXME: Kill unnecessary ramdisk server again
-  /// FIXME: Start USB driver with all attached devices
-  /// FIXME: Start login console
-
-  EARLY_STARTUP_PRINT( "size_t max = %zu\r\n", SIZE_MAX )
-  EARLY_STARTUP_PRINT( "unsigned long long max = %llu\r\n", ULLONG_MAX )
-
-  EARLY_STARTUP_PRINT( "Adjust stdout / stderr buffering\r\n" )
-  // adjust buffering of stdout and stderr
-  setvbuf( stdout, nullptr, _IOLBF, 0 );
-  setvbuf( stderr, nullptr, _IONBF, 0 );
-
-  EARLY_STARTUP_PRINT( "äöüÄÖÜ\r\n" )
-  int a = printf( "äöüÄÖÜ\r\n" );
-  EARLY_STARTUP_PRINT( "äöüÄÖÜ\r\n" )
-  //fflush( stdout );
-  int b = printf( "Tab test: \"\t\" should be 4 spaces here!\r\n" );
-  //fflush( stdout );
-  int c = printf( "Testing newline without cr\nFoobar");
-  //fflush( stdout );
-  int d = printf( ", now with cr\r\nasdf\r\näöüÄÖÜ\r\n" );
-  //fflush( stdout );
-/*
-  pid_t forked_process = fork();
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to fork process: %s\r\n", strerror( errno ) );
-    exit( -1 );
-  }
-  // fork only
-  if ( 0 == forked_process ) {
-    while ( true ) {
-      printf( "what the fork?\r\n" );
-      sleep( 2 );
-    }
-  }*/
-  for ( int i = 0; i < 70; i++ ) {
-    printf( "stdout: init - %d\r\n", i );
-  }
-
-  int e = printf( "stdout: init=>console=>terminal=>framebuffer" );
-  fflush( stdout );
-  int f = fprintf(
-    stderr,
-    "stderr: init=>console=>terminal=>framebuffer"
-  );
-  fflush( stderr );
-
-  EARLY_STARTUP_PRINT( "a = %d, b = %d, c = %d, d = %d, e = %d, f = %d\r\n",
-    a, b, c, d, e, f )
-
-  EARLY_STARTUP_PRINT( "Just looping around with nops :O\r\n" )
-  while( true ) {
-    __asm__ __volatile__( "nop" );
-  }
-
-  // exit program!
-  EARLY_STARTUP_PRINT( "Init done!\r\n" );
-  exit( 0 );
 }

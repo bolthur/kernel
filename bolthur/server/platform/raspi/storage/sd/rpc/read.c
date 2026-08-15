@@ -24,6 +24,7 @@
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../sd.h"
+#include "../global.h"
 
 /**
  * @fn void rpc_handle_read(size_t, pid_t, size_t, size_t)
@@ -86,7 +87,7 @@ void rpc_handle_read(
   // calculate block number
   /*const off_t block_number = request->offset / sd_block_size;
   // try to read from card
-  STARTUP_PRINT(
+  EARLY_STARTUP_PRINT(
     "Reading %#zx bytes with offset of %llx / %lx ( block number: %llx ) from sd card\r\n",
     request->len, request->offset, ( uint32_t )request->offset, block_number
   )*/
@@ -97,7 +98,9 @@ void rpc_handle_read(
     request->offset,
     request->shm_id
   ) ) {
-    STARTUP_PRINT( "Error while reading: %s\r\n", sd_last_error())
+    #if defined( SD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Error while reading: %s\r\n", sd_last_error())
+    #endif
     // prepare response
     response->len = -EIO;
     // return response

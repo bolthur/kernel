@@ -62,7 +62,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
 
   // open partition interface
   STARTUP_PRINT( "Opening /dev/partition\r\n" )
-  int fd = open( "/dev/partition", O_RDWR );
+  const int fd = open( "/dev/partition", O_RDWR );
   // handle error
   if ( -1 == fd ) {
     STARTUP_PRINT( "Unable to open /dev/partition\r\n" )
@@ -93,7 +93,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
       reg->process
     )
     // perform ioctl
-    int result = ioctl(
+    const int result = ioctl(
       fd,
       IOCTL_BUILD_REQUEST(
         PARTITION_REGISTER_HANDLER,

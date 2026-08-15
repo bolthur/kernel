@@ -19,6 +19,7 @@
 
 #include <errno.h>
 #include "../rpc.h"
+#include "../global.h"
 
 /**
  * @fn bool rpc_init(void)
@@ -29,12 +30,16 @@
 bool rpc_init( void ) {
   bolthur_rpc_bind( RPC_VFS_READ, rpc_handle_read, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register handler read!\r\n" )
+    #if defined( SD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler read!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    #if defined( SD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    #endif
     return false;
   }
   return true;

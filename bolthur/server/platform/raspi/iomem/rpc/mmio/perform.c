@@ -750,6 +750,13 @@ void rpc_handle_mmio_perform(
             dma_error = true;
             continue;
           }
+          if ( 0 != dma_block_transfer_info_source_increment( false ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
           if ( 0 != dma_block_transfer_info_destination_increment( true ) ) {
             dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
@@ -757,7 +764,7 @@ void rpc_handle_mmio_perform(
             dma_error = true;
             continue;
           }
-          if ( 0 != dma_block_transfer_info_dest_width( true ) ) {
+          if ( 0 != dma_block_transfer_info_dest_width( false ) ) {
             dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
@@ -968,6 +975,13 @@ void rpc_handle_mmio_perform(
             continue;
           }
           if ( 0 != dma_block_transfer_info_source_increment( true ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+          if ( 0 != dma_block_transfer_info_destination_increment( false ) ) {
             dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;

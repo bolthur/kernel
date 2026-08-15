@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <sys/bolthur.h>
 #include "../ramdisk.h"
+#include "../global.h"
 
 /**
  * @fn void ramdisk_extract*(uintptr_t, size_t, size_t, size_t*)
@@ -60,7 +61,9 @@ void* ramdisk_extract(
   // initialize inflate
   int err = inflateInit2(&stream, 15 + 32);
   if ( Z_OK != err ) {
-    EARLY_STARTUP_PRINT( "ERROR ON INIT = %d!\r\n", err )
+    #if defined( BOOT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "ERROR ON INIT = %d!\r\n", err )
+    #endif
     inflateEnd( &stream );
     free( dec );
     return nullptr;
@@ -68,7 +71,9 @@ void* ramdisk_extract(
   // inflate in one step
   err = inflate( &stream, Z_FINISH);
   if ( err != Z_STREAM_END ) {
-    EARLY_STARTUP_PRINT( "ERROR ON INFLATE = %d!\r\n", err )
+    #if defined( BOOT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "ERROR ON INFLATE = %d!\r\n", err )
+    #endif
     inflateEnd( &stream );
     free( dec );
     return nullptr;

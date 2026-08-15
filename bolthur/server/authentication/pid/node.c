@@ -22,6 +22,7 @@
 #include <libgen.h>
 #include <sys/bolthur.h>
 #include "node.h"
+#include "../global.h"
 
 /**
  * @fn int pid_cmp(struct pid_node*, struct pid_node*)
@@ -90,14 +91,18 @@ pid_node_t* pid_node_extract( const pid_t pid ) {
     while ( ( grp = getgrent() ) ) {
       // loop through group members
       for ( size_t idx = 0; grp->gr_mem[ idx ]; idx++ ) {
-        EARLY_STARTUP_PRINT( "grp->gr_mem[ %zu ] = %s\r\n", idx, grp->gr_mem[ idx ] )
+        #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+          EARLY_STARTUP_PRINT( "grp->gr_mem[ %zu ] = %s\r\n", idx, grp->gr_mem[ idx ] )
+        #endif
         // get entry by name
         struct passwd* pass = getpwnam( grp->gr_mem[ idx ] );
         if ( ! pass ) {
           free( group_list );
           return nullptr;
         }
-        EARLY_STARTUP_PRINT( "pass->pw_name = %s\r\n", pass->pw_name )
+        #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+          EARLY_STARTUP_PRINT( "pass->pw_name = %s\r\n", pass->pw_name )
+        #endif
         // handle no match
         if ( pass->pw_uid != n->uid ) {
           continue;
@@ -210,8 +215,10 @@ bool pid_node_add( const pid_t pid, const uid_t user ) {
  * @brief Simple method to dump mount point nodes
  */
 void pid_node_dump( void ) {
-  EARLY_STARTUP_PRINT( "pid node tree dump\r\n" )
-  pid_node_tree_each(&management_tree, pid_node, n, {
-    EARLY_STARTUP_PRINT( "%d | %d\r\n", n->pid, n->uid )
-  });
+  #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "pid node tree dump\r\n" )
+    pid_node_tree_each(&management_tree, pid_node, n, {
+      EARLY_STARTUP_PRINT( "%d | %d\r\n", n->pid, n->uid )
+    });
+  #endif
 }

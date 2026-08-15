@@ -67,20 +67,34 @@ static int dma_block_init( dma_control_block_t** to_save ) {
  * @param channel_cs
  */
 static void dma_reset_channel( uint32_t channel_cs ) {
+  #if defined( DMA_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Resetting channel %"PRIx32"\r\n", channel_cs )
+  #endif
   // set reset and wait for outstanding writes
-  mmio_write(
-    channel_cs,
-    ( uint32_t )( LIBDMA_CS_RESET | LIBDMA_CS_WAIT_FOR_OUTSTANDING_WRITES )
-  );
+  mmio_write( channel_cs, LIBDMA_CS_RESET );
   // wait until reset bit clears
-  while ( mmio_read( channel_cs ) & ( uint32_t )LIBDMA_CS_RESET ) {
+  uint32_t timeout = 10000;
+  while ( mmio_read( channel_cs ) & ( uint32_t )LIBDMA_CS_RESET && timeout > 0 ) {
     __asm__ __volatile__( "nop" );
+    timeout--;
   }
   // read value again
   uint32_t value = mmio_read( channel_cs );
+  #if defined( DMA_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "value = %"PRIx32"\r\n", value )
+  #endif
   if ( value & LIBDMA_CS_INT ) {
     value &= ( uint32_t )~LIBDMA_CS_INT;
   }
+  if ( value & LIBDMA_CS_END ) {
+    value &= ( uint32_t )~LIBDMA_CS_END;
+  }
+  if ( value & LIBDMA_CS_ERROR ) {
+    value &= ( uint32_t )~LIBDMA_CS_ERROR;
+  }
+  #if defined( DMA_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "value = %"PRIx32"\r\n", value )
+  #endif
   // write back masked interrupt
   mmio_write( channel_cs, value );
 }
@@ -92,6 +106,9 @@ static void dma_reset_channel( uint32_t channel_cs ) {
  * @return
  */
 int dma_block_prepare( void ) {
+  #if defined( DMA_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "CLEAR OUT BLOCK\r\n" )
+  #endif
   memset( block, 0, sizeof( *block ) );
   return 0;
 }
@@ -489,12 +506,6 @@ int dma_wait(
   do {
     // fetch value
     value = mmio_read( PERIPHERAL_DMA0_CS );
-    // check for error
-    if ( value & LIBDMA_CS_ERROR ) {
-      //EARLY_STARTUP_PRINT( "DMA ERROR!\r\n" )
-      last_error = -EIO;
-      return -1;
-    }
     // break
     if ( -1 != loop_max_iteration && ! loop_max_iteration-- ) {
       last_error = -ETIMEDOUT;
@@ -502,6 +513,9 @@ int dma_wait(
     }
     // handle possible error
     if ( value & LIBDMA_CS_ERROR ) {
+      #if defined( DMA_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "DMA ERROR!\r\n" )
+      #endif
       // query debug register of dma channel
       const uint32_t debug = mmio_read( PERIPHERAL_DMA0_DEBUG );
       // check for read error
@@ -524,6 +538,7 @@ int dma_wait(
       }
       // dump everything
       dma_dump();
+      dma_block_dump();
       // return error
       return -1;
     }

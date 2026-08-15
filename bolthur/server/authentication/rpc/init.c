@@ -19,6 +19,7 @@
 
 #include <errno.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../../libauthentication.h"
 
 /**
@@ -30,22 +31,30 @@
 bool rpc_init( void ) {
   bolthur_rpc_bind( RPC_VFS_FORK, rpc_handle_fork, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register fork!\r\n" )
+    #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register fork!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( AUTHENTICATE_REQUEST, rpc_custom_handle_request, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler request!\r\n" )
+    #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler request!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( AUTHENTICATE_FETCH, rpc_custom_handle_fetch, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler fetch!\r\n" )
+    #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler fetch!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( AUTHENTICATE_RELOAD, rpc_custom_handle_reload, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register reload!\r\n" )
+    #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register reload!\r\n" )
+    #endif
     return false;
   }
   return true;

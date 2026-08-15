@@ -22,7 +22,7 @@
 
 #include "../../../libusb.h"
 
-//#define HUB_ENABLE_DEBUG 1
+#define HUB_ENABLE_DEBUG 1
 
 /**
  * @brief Hub attach context

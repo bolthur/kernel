@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <sys/bolthur.h>
 #include "../ramdisk.h"
+#include "../global.h"
 
 #define INFLATE_CHUNK 32
 
@@ -35,8 +36,6 @@
  * @return
  */
 size_t ramdisk_size( uintptr_t address, size_t size ) {
-  int err;
-  char out[ INFLATE_CHUNK ] = { '\0' };
   size_t extract_len = 0;
 
   // zlib structure
@@ -50,15 +49,18 @@ size_t ramdisk_size( uintptr_t address, size_t size ) {
   stream.next_in = ( Bytef* )address;
 
   // init inflate for gzip
-  err = inflateInit2( &stream, 15 + 32 );
+  int err = inflateInit2(&stream, 15 + 32);
   if ( Z_OK != err ) {
-    EARLY_STARTUP_PRINT( "error on init zlib ( %d )!\r\n", err )
+    #if defined( BOOT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "error on init zlib ( %d )!\r\n", err )
+    #endif
     inflateEnd( &stream );
     return 0;
   }
 
   // loop until end
   while ( true ) {
+    char out[ INFLATE_CHUNK ] = { '\0' };
     // set out and available out
     stream.next_out = ( Bytef* )out;
     stream.avail_out = INFLATE_CHUNK;
@@ -66,7 +68,9 @@ size_t ramdisk_size( uintptr_t address, size_t size ) {
     // inflate
     err = inflate( &stream, Z_NO_FLUSH );
     if ( Z_OK != err && Z_STREAM_END != err ) {
-      EARLY_STARTUP_PRINT( "error during inflate ( %d )!\r\n", err )
+      #if defined( BOOT_ENABLE_OUTPUT )
+        EARLY_STARTUP_PRINT( "error during inflate ( %d )!\r\n", err )
+      #endif
       inflateEnd( &stream );
       return 0;
     }

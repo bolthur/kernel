@@ -77,26 +77,38 @@ static void check_change_done(
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // register rpc
-  STARTUP_PRINT( "Setup rpc handler\r\n" )
+  #if defined( USBD_ENABLE_DEBUG )
+    STARTUP_PRINT( "Setup rpc handler\r\n" )
+  #endif
   if ( !rpc_init() ) {
-    STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
+    #if defined( USBD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
+    #endif
     return -1;
   }
 
   // initialize usbd handler
-  STARTUP_PRINT( "Setup handler array\r\n" )
+  #if defined( USBD_ENABLE_DEBUG )
+    STARTUP_PRINT( "Setup handler array\r\n" )
+  #endif
   int result = usbd_handler_init();
   if ( 0 != result ) {
-    STARTUP_PRINT( "Unable to setup handler: %s\r\n", strerror( result ) );
+    #if defined( USBD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to setup handler: %s\r\n", strerror( result ) );
+    #endif
     return -1;
   }
 
   // enable rpc
-  STARTUP_PRINT( "Enable rpc\r\n" )
+  #if defined( USBD_ENABLE_DEBUG )
+    STARTUP_PRINT( "Enable rpc\r\n" )
+  #endif
   _syscall_rpc_set_ready( true );
 
   // add device file
-  STARTUP_PRINT( "Sending device to vfs\r\n" )
+  #if defined( USBD_ENABLE_DEBUG )
+    STARTUP_PRINT( "Sending device to vfs\r\n" )
+  #endif
   constexpr uint32_t device_info[] = {
     // generic stuff
     GENERIC_POLL_INTERRUPT,
@@ -119,7 +131,9 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     USBD_GET_STRING,
   };
   if ( ! vfs_dev_add_file( USBD_DEVICE_PATH, device_info, 17, nullptr ) ) {
-    STARTUP_PRINT( "Unable to add dev usbd\r\n" )
+    #if defined( USBD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to add dev usbd\r\n" )
+    #endif
     return -1;
   }
 
@@ -129,25 +143,35 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // query allowed rpc origin
   const pid_t allowed_rpc_origin = vfs_get_file_handler( HCD_DEVICE_PATH );
   if ( -1 == allowed_rpc_origin ) {
-    STARTUP_PRINT( "Unable to get handler id of %s\r\n", HCD_DEVICE_PATH )
+    #if defined( USBD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to get handler id of %s\r\n", HCD_DEVICE_PATH )
+    #endif
     return -1;
   }
   // push to valid origin
   if ( ! bolthur_rpc_origin_push_valid( allowed_rpc_origin ) ) {
-    STARTUP_PRINT( "Unable to push mount pid to valid origin list!\r\n" )
+    #if defined( USBD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to push mount pid to valid origin list!\r\n" )
+    #endif
     return -1;
   }
 
   // setup usbd interface
-  STARTUP_PRINT( "Setup usbd\r\n" )
+  #if defined( USBD_ENABLE_DEBUG )
+    STARTUP_PRINT( "Setup usbd\r\n" )
+  #endif
   result = usbd_init();
   if ( 0 != result ) {
-    STARTUP_PRINT( "Unable to init usbd: %s\r\n", strerror( result ) );
+    #if defined( USBD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to init usbd: %s\r\n", strerror( result ) );
+    #endif
     return -1;
   }
 
   // wait for rpc
-  STARTUP_PRINT( "Wait for rpc\r\n" )
+  #if defined( USBD_ENABLE_DEBUG )
+    STARTUP_PRINT( "Wait for rpc\r\n" )
+  #endif
   while ( true ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
@@ -177,10 +201,6 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     do {
       // try to delay for 5 seconds
       result = nanosleep( &ts, &ts );
-      // debug output
-      #if defined( USBD_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "result = %d\r\n", result )
-      #endif
     } while ( result != 0 );
   }
   return 0;

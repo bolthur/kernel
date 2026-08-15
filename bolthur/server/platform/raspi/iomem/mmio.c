@@ -69,10 +69,10 @@ bool mmio_setup( void ) {
  * @param len
  * @return
  */
-bool mmio_validate_offset( uintptr_t address, size_t len ) {
+bool mmio_validate_offset(const uintptr_t address, const size_t len ) {
   // determine read begin and end address since address contains only an offset
-  void* begin = ( void* )( ( uintptr_t )mmio_start + address );
-  void* end = ( void* )( ( uintptr_t )mmio_start + address + len );
+  auto const begin = ( void* )( ( uintptr_t )mmio_start + address );
+  auto const end = ( void* )( ( uintptr_t )mmio_start + address + len );
   // return whether it's in range or not
   return !( end > mmio_end || begin > mmio_end );
 }
@@ -82,12 +82,11 @@ bool mmio_validate_offset( uintptr_t address, size_t len ) {
  * @brief Perform single mmio read
  *
  * @param address
- * @param len
  * @return
  */
-uint32_t mmio_read( uintptr_t address ) {
+uint32_t mmio_read(const uintptr_t address ) {
   // determine read begin and end address since address contains only an offset
-  void* read_begin = ( void* )( ( uintptr_t )mmio_start + address );
+  auto volatile const read_begin = ( void* )( ( uintptr_t )mmio_start + address );
   // barrier
   barrier_dmb();
   // read word
@@ -101,9 +100,9 @@ uint32_t mmio_read( uintptr_t address ) {
  * @param address
  * @param data
  */
-void mmio_write( uintptr_t address, uint32_t data ) {
+void mmio_write(const uintptr_t address, const uint32_t data ) {
   // determine write begin and end address since address contains only an offset
-  void* write_begin = ( void* )( ( uintptr_t )mmio_start + address );
+  auto volatile const write_begin = ( void* )( ( uintptr_t )mmio_start + address );
   // barrier, write and barrier
   barrier_dmb();
   *( volatile uint32_t* )write_begin  = data;

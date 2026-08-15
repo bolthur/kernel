@@ -44,7 +44,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   mbr_size = sizeof( uint8_t ) * 512;
   mbr_data = malloc( mbr_size );
   if ( ! mbr_data ) {
-    STARTUP_PRINT(
+    EARLY_STARTUP_PRINT(
       "Unable to allocate space for mbr: %s\r\n",
       strerror( errno ) )
     return -1;
@@ -52,14 +52,14 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // clear allocated space
   memset( mbr_data, 0, mbr_size );
   // print something
-  STARTUP_PRINT(
+  EARLY_STARTUP_PRINT(
     "buffer = %p, end = %p\r\n",
     mbr_data, ( void* )( mbr_data + mbr_size )
   )
   // setup emmc
-  STARTUP_PRINT( "Setup sd interface\r\n" )
+  EARLY_STARTUP_PRINT( "Setup sd interface\r\n" )
   if( ! sd_init() ) {
-    STARTUP_PRINT(
+    EARLY_STARTUP_PRINT(
       "Error while initializing sd interface: %s\r\n",
       sd_last_error()
     )
@@ -68,17 +68,17 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   }
 
   // register rpc
-  STARTUP_PRINT( "Setup rpc handler\r\n" )
+  EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
   if ( !rpc_init() ) {
-    STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
+    EARLY_STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
     free( mbr_data );
     return -1;
   }
 
   // try to read mbr from card
-  STARTUP_PRINT( "Parsing mbr with partition information\r\n" )
+  EARLY_STARTUP_PRINT( "Parsing mbr with partition information\r\n" )
   if ( ! sd_transfer_block( ( uint32_t* )mbr_data, mbr_size, 0, SD_OPERATION_READ, 0 ) ) {
-    STARTUP_PRINT(
+    EARLY_STARTUP_PRINT(
       "Error while reading mbr from card: %s\r\n",
       sd_last_error()
     )
@@ -86,23 +86,23 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   }
 
   const uint16_t* signature = ( uint16_t* )( mbr_data + PARTITION_TABLE_SIGNATURE_OFFSET );
-  STARTUP_PRINT( "Signature within mbr: %#"PRIx16"\r\n", *signature )
+  EARLY_STARTUP_PRINT( "Signature within mbr: %#"PRIx16"\r\n", *signature )
   // check signature
-  STARTUP_PRINT( "Check signature\r\n" )
+  EARLY_STARTUP_PRINT( "Check signature\r\n" )
   if ( *signature != PARTITION_TABLE_SIGNATURE ) {
-    STARTUP_PRINT(
+    EARLY_STARTUP_PRINT(
       "Invalid signature within mbr: %#"PRIx16"\r\n", *signature )
     return -1;
   }
   // enable rpc
-  STARTUP_PRINT( "Enable rpc\r\n" )
+  EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
   _syscall_rpc_set_ready( true );
   // loop through partitions and calculate total byte size
   uint64_t total_size = 0;
   for ( uint32_t i = 0; i < PARTITION_TABLE_NUMBER; i++ ) {
     const mbr_table_entry_t* entry = ( mbr_table_entry_t* )(
       mbr_data + PARTITION_TABLE_OFFSET + ( i * sizeof( mbr_table_entry_t ) ) );
-    STARTUP_PRINT( "entry->data.total_sector = %#lx\r\n", entry->data.total_sector )
+    EARLY_STARTUP_PRINT( "entry->data.total_sector = %#lx\r\n", entry->data.total_sector )
     // calculate total
     total_size += ( uint64_t )entry->data.total_sector * 512;
   }
@@ -116,18 +116,18 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
   msg->info.st_size = ( off_t )total_size;
-  STARTUP_PRINT( "%#"PRIx64", %#llx\r\n", total_size, msg->info.st_size )
+  EARLY_STARTUP_PRINT( "%#"PRIx64", %#llx\r\n", total_size, msg->info.st_size )
   msg->info.st_blksize = ( blksize_t )sd_device_block_size();
   msg->info.st_blocks = ( blksize_t )( msg->info.st_size / msg->info.st_blksize );
   strncpy( msg->file_path, "/dev/storage/sd", PATH_MAX - 1 );
-  STARTUP_PRINT( "Sending device \"%s\" to vfs\r\n", msg->file_path )
+  EARLY_STARTUP_PRINT( "Sending device \"%s\" to vfs\r\n", msg->file_path )
   // perform add request
   vfs_add( msg, 0, 0, nullptr );
   // free again
   free( msg );
 
   // wait for rpc
-  STARTUP_PRINT( "Wait for rpc\r\n" )
+  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
   bolthur_rpc_wait_block();
   return 0;
 }

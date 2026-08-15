@@ -25,6 +25,6 @@
 
 void init_stage1( void );
 void init_stage2( const char* );
-[[noreturn]] void init_stage3( void );
+void init_stage3( void );
 
 #endif

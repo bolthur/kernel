@@ -22,6 +22,7 @@
 #include <sys/bolthur.h>
 #include "rpc.h"
 #include "pid/node.h"
+#include "global.h"
 #include "../libauthentication.h"
 #include "../../library/vfs/wait.h"
 #include "../../library/vfs/dev.h"
@@ -36,33 +37,47 @@
  */
 int main( int argc, char* argv[] ) {
   // print something
-  EARLY_STARTUP_PRINT( "authentication manager processing!\r\n" )
-  EARLY_STARTUP_PRINT( "%d / %d\r\n", getpid(), getppid() )
-  // setup tree
-  EARLY_STARTUP_PRINT( "Setup management tree!\r\n" )
+  #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "authentication manager processing!\r\n" )
+    EARLY_STARTUP_PRINT( "%d / %d\r\n", getpid(), getppid() )
+    // setup tree
+    EARLY_STARTUP_PRINT( "Setup management tree!\r\n" )
+  #endif
   if ( ! pid_node_setup() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup management tree!\r\n" )
+    #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to setup management tree!\r\n" )
+    #endif
     return -1;
   }
   // register root
   if ( 2 <= argc ) {
-    EARLY_STARTUP_PRINT( "Registering following pids with root user\r\n" )
+    #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Registering following pids with root user\r\n" )
+    #endif
     for ( int i = 1; i < argc; i++ ) {
       // transform string to pid
       pid_t pid = ( pid_t )strtol( argv[ i ], ( char** )nullptr, 10 );
       // try to add it with user 0
       if ( ! pid_node_add( pid, 0 ) ) {
-        EARLY_STARTUP_PRINT( "Unable to push pid %d to tree\r\n", pid )
+        #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+          EARLY_STARTUP_PRINT( "Unable to push pid %d to tree\r\n", pid )
+        #endif
         return -1;
       }
       // some further printing
-      EARLY_STARTUP_PRINT( "pid: %s | %d\r\n", argv[ i ], pid )
+      #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+        EARLY_STARTUP_PRINT( "pid: %s | %d\r\n", argv[ i ], pid )
+      #endif
     }
   }
   // register rpc handler
-  EARLY_STARTUP_PRINT( "bind rpc handler!\r\n" )
+  #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "bind rpc handler!\r\n" )
+  #endif
   if ( ! rpc_init() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
+    #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
+    #endif
     return -1;
   }
   // enable rpc
@@ -73,14 +88,20 @@ int main( int argc, char* argv[] ) {
   vfs_wait_for_path( "/dev/ramdisk" );
   // add device file
   constexpr uint32_t device_info[] = { AUTHENTICATE_REQUEST, AUTHENTICATE_FETCH, AUTHENTICATE_RELOAD, };
-  EARLY_STARTUP_PRINT( "AUTHENTICATE_REQUEST = %d, AUTHENTICATE_FETCH = %d, AUTHENTICATE_RELOAD = %d\r\n",
-    AUTHENTICATE_REQUEST, AUTHENTICATE_FETCH, AUTHENTICATE_RELOAD )
+  #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "AUTHENTICATE_REQUEST = %d, AUTHENTICATE_FETCH = %d, AUTHENTICATE_RELOAD = %d\r\n",
+      AUTHENTICATE_REQUEST, AUTHENTICATE_FETCH, AUTHENTICATE_RELOAD )
+  #endif
   if ( ! vfs_dev_add_file( AUTHENTICATION_DEVICE, device_info, 3, nullptr ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add dev authenticate\r\n" )
+    #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add dev authenticate\r\n" )
+    #endif
     return -1;
   }
   // wait for rpc
-  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  #endif
   bolthur_rpc_wait_block();
   return 0;
 }

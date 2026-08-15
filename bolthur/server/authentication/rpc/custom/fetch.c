@@ -25,6 +25,7 @@
 #include <sys/bolthur.h>
 #include "../../pid/node.h"
 #include "../../rpc.h"
+#include "../../global.h"
 #include "../../../libauthentication.h"
 
 /**
@@ -42,7 +43,9 @@ void rpc_custom_handle_fetch(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "AUTHENTICATION FETCH IOCTL\r\n" )
+  #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "AUTHENTICATION FETCH IOCTL\r\n" )
+  #endif
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
@@ -102,11 +105,15 @@ void rpc_custom_handle_fetch(
   // copy over groups
   for ( size_t idx = 0; idx < node->group_count; idx++ ) {
     fetch_response->gid[ idx ] = node->gid[ idx ];
-    EARLY_STARTUP_PRINT( "fetch_response->gid[ %zu ]: %d\r\n",
-      idx, fetch_response->gid[ idx ] )
+    #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "fetch_response->gid[ %zu ]: %d\r\n",
+        idx, fetch_response->gid[ idx ] )
+    #endif
   }
   // create temporary response
-  EARLY_STARTUP_PRINT( "uid: %d\r\n", fetch_response->uid )
+  #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "uid: %d\r\n", fetch_response->uid )
+  #endif
   // copy over data
   memcpy( response->container, fetch_response, fetch_size );
   // return from rpc

@@ -26,6 +26,7 @@
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../pid/node.h"
+#include "../global.h"
 
 /**
  * @fn void rpc_handle_fork(size_t, pid_t, size_t, size_t)
@@ -77,7 +78,9 @@ void rpc_handle_fork(
     bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), nullptr, 0 );
     return;
   }
-  EARLY_STARTUP_PRINT( "ADD %d with user %d\r\n", request->process, node->uid )
+  #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "ADD %d with user %d\r\n", request->process, node->uid )
+  #endif
   // try to add it with same user as parent
   if ( ! pid_node_add( request->process, node->uid ) ) {
     response.status = -EIO;
