@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <libgen.h>
 #include "watch.h"
+#include "global.h"
 
 // define tree
 WATCH_TREE_DEFINE(
@@ -247,8 +248,10 @@ int watch_remove( const char* path, pid_t handler ) {
  * @brief Simple method to dump mount point nodes
  */
 void watch_dump( void ) {
-  EARLY_STARTUP_PRINT( "mountpoint node tree dump\r\n" )
-  watch_tree_each(&management_tree, watch_node, n, {
-      EARLY_STARTUP_PRINT("%s\r\n", n->name);
-  });
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "mountpoint node tree dump\r\n" )
+    watch_tree_each(&management_tree, watch_node, n, {
+        EARLY_STARTUP_PRINT("%s\r\n", n->name);
+    });
+  #endif
 }

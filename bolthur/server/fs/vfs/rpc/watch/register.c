@@ -24,6 +24,7 @@
 #include <sys/bolthur.h>
 #include "../../mountpoint/node.h"
 #include "../../rpc.h"
+#include "../../global.h"
 
 /**
  * @fn void rpc_handle_watch_register_async(size_t, pid_t, size_t, size_t)
@@ -92,7 +93,9 @@ void rpc_handle_watch_register(
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
-  EARLY_STARTUP_PRINT( "%d :: %s\r\n", request->handler, request->target )
+  #if defined( VFS_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "%d :: %s\r\n", request->handler, request->target )
+  #endif
   // get mount point
   mountpoint_node_t* mount_point = mountpoint_node_extract( request->target );
   // handle no mount point node found

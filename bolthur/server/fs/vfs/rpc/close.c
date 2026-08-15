@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../mountpoint/node.h"
 #include "../../../../library/handle/process.h"
 #include "../../../../library/handle/handle.h"
@@ -66,7 +67,9 @@ void rpc_handle_close_async(
   }
   memcpy( &response, response_data, data_size );
   free( response_data );
-  EARLY_STARTUP_PRINT( "response.status = %d\r\n", response.status )
+  #if defined( VFS_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "response.status = %d\r\n", response.status )
+  #endif
   // handle error
   if ( 0 > response.status ) {
     bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );

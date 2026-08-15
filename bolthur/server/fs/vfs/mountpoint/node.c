@@ -19,6 +19,7 @@
 
 #include <libgen.h>
 #include "node.h"
+#include "global.h"
 
 /**
  * @fn int mountpoint_cmp(struct mountpoint_node*, struct mountpoint_node*)
@@ -199,10 +200,12 @@ bool mountpoint_node_add( const char* path, pid_t handler, struct stat* st ) {
  * @brief Simple method to dump mount point nodes
  */
 void mountpoint_node_dump( void ) {
-  EARLY_STARTUP_PRINT( "mountpoint node tree dump\r\n" )
-  mountpoint_node_tree_each(&management_tree, mountpoint_node, n, {
-      EARLY_STARTUP_PRINT("%s\r\n", n->name);
-  });
+  #if defined( VFS_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "mountpoint node tree dump\r\n" )
+    mountpoint_node_tree_each(&management_tree, mountpoint_node, n, {
+        EARLY_STARTUP_PRINT("%s\r\n", n->name);
+    });
+  #endif
 }
 
 /**

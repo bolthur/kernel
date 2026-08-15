@@ -27,6 +27,7 @@
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../../../libmbr.h"
 
 // ext library
@@ -157,7 +158,9 @@ void rpc_handle_mount(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  STARTUP_PRINT( "ext mounting\r\n" )
+  #if defined( EXT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "ext mounting\r\n" )
+  #endif
   vfs_mount_response_t response = { .result = -ENOMEM };
   response.result = -EINVAL;
   // handle no data
@@ -214,12 +217,14 @@ void rpc_handle_mount(
     return;
   }
 
-  STARTUP_PRINT( "request->source = %s\r\n", request->source )
-  STARTUP_PRINT( "request->target = %s\r\n", request->target )
-  STARTUP_PRINT( "request->type = %s\r\n", request->type )
-  STARTUP_PRINT( "request->flags = %lx\r\n", request->flags )
-  STARTUP_PRINT( "device = %s\r\n", device )
-  STARTUP_PRINT( "partition_index = %"PRIu32"\r\n", partition_index )
+  #if defined( EXT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "request->source = %s\r\n", request->source )
+    STARTUP_PRINT( "request->target = %s\r\n", request->target )
+    STARTUP_PRINT( "request->type = %s\r\n", request->type )
+    STARTUP_PRINT( "request->flags = %lx\r\n", request->flags )
+    STARTUP_PRINT( "device = %s\r\n", device )
+    STARTUP_PRINT( "partition_index = %"PRIu32"\r\n", partition_index )
+  #endif
 
   // block device and block cache handle
   common_blockdev_t* bd = common_blockdev_get( device );

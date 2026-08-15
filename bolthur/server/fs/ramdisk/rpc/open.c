@@ -26,6 +26,7 @@
 #include <sys/sysmacros.h>
 #include "../ramdisk.h"
 #include "../rpc.h"
+#include "../global.h"
 
 /**
  * @fn void rpc_handle_open(size_t, pid_t, size_t, size_t)
@@ -45,13 +46,11 @@ void rpc_handle_open(
   vfs_open_response_t response = { .handle = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    EARLY_STARTUP_PRINT( "1\r\n" )
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // handle no data
   if ( ! data_info ) {
-    EARLY_STARTUP_PRINT( "1\r\n" )
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
@@ -59,15 +58,15 @@ void rpc_handle_open(
   size_t data_size;
   vfs_open_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
-    EARLY_STARTUP_PRINT( "1\r\n" )
     response.handle = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
-  EARLY_STARTUP_PRINT( "opening %s\r\n", request->path )
+  #if defined( RAMDISK_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "opening %s\r\n", request->path )
+  #endif
   TAR* info = ramdisk_get_info( request->path );
   if( ! info ) {
-    EARLY_STARTUP_PRINT( "1\r\n" )
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;

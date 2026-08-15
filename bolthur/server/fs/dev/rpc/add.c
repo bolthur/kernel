@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../handle.h"
 #include "../watch.h"
 #include "../ioctl/handler.h"
@@ -127,12 +128,14 @@ void rpc_handle_add(
     watch_tree_each(node->pid, watch_pid, n, {
       // notify if process and handler differ
       if ( n->process != request->handler ) {
-        EARLY_STARTUP_PRINT( "try notify %d: %s\r\n", n->process, request->file_path )
+        //EARLY_STARTUP_PRINT( "try notify %d: %s\r\n", n->process, request->file_path )
         watch_path_notify( request->file_path, n->process );
       }
      });
   }
-  EARLY_STARTUP_PRINT( "Added %s\r\n", request->file_path )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Added %s\r\n", request->file_path )
+  #endif
   // return success
   response.status = VFS_ADD_SUCCESS;
   response.handler = request->handler;

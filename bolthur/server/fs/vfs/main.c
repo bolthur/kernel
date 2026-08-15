@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <sys/bolthur.h>
 #include "rpc.h"
+#include "global.h"
 #include "ioctl/handler.h"
 #include "mountpoint/node.h"
 #include "handler/node.h"
@@ -42,43 +43,65 @@ pid_t vfs_pid = 0;
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // print something
-  EARLY_STARTUP_PRINT( "vfs processing!\r\n" )
+  #if defined( VFS_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "vfs processing!\r\n" )
+  #endif
   // cache current pid
-  EARLY_STARTUP_PRINT( "fetching pid!\r\n" )
+  #if defined( VFS_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "fetching pid!\r\n" )
+  #endif
   vfs_pid = getpid();
   // setup mountpoint handling
-  EARLY_STARTUP_PRINT( "Setting up mountpoint handling!\r\n" )
+  #if defined( VFS_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Setting up mountpoint handling!\r\n" )
+  #endif
   if ( ! mountpoint_node_setup() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup mountpoint node handling!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to setup mountpoint node handling!\r\n" )
+    #endif
     return -1;
   }
   // setup handler handling
   if ( ! handler_node_setup() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup handler node handling!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to setup handler node handling!\r\n" )
+    #endif
     return -1;
   }
   // setup handle management
-  EARLY_STARTUP_PRINT( "initializing!\r\n" )
+  #if defined( VFS_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "initializing!\r\n" )
+  #endif
   if ( ! process_setup() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup handle structures!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to setup handle structures!\r\n" )
+    #endif
     return -1;
   }
   // setup ioctl management
   if ( ! ioctl_handler_init() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup ioctl handler structures!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to setup ioctl handler structures!\r\n" )
+    #endif
     return -1;
   }
   // register rpc handler
   if ( ! rpc_init() ) {
-    EARLY_STARTUP_PRINT( "Unable to bind rpc handler!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to bind rpc handler!\r\n" )
+    #endif
     return -1;
   }
   // register vfs itself to /vfs
   if ( ! mountpoint_node_add( ":/vfs", getpid(), nullptr ) ) {
-    EARLY_STARTUP_PRINT( "Unable to register vfs itself!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register vfs itself!\r\n" )
+    #endif
     return -1;
   }
-  EARLY_STARTUP_PRINT( "entering wait for rpc loop!\r\n" )
+  #if defined( VFS_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "entering wait for rpc loop!\r\n" )
+  #endif
   // enable rpc and wait
   _syscall_rpc_set_ready( true );
   bolthur_rpc_wait_block();

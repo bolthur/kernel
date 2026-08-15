@@ -24,6 +24,7 @@
 #include <sys/dirent.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../types.h"
 #include "../../../../library/handle/process.h"
 #include "../../../../library/handle/handle.h"
@@ -54,7 +55,9 @@ void rpc_handle_getdents(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  STARTUP_PRINT( "getdents stuff\r\n" )
+  #if defined( EXT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "getdents stuff\r\n" )
+  #endif
   vfs_getdents_response_t dummy_response = { .result = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {

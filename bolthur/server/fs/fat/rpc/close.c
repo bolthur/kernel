@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../types.h"
 #include "../../../../library/handle/process.h"
 #include "../../../../library/handle/handle.h"
@@ -51,7 +52,9 @@ void rpc_handle_close(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  STARTUP_PRINT( "close\r\n" )
+  #if defined( FAT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "close\r\n" )
+  #endif
   vfs_close_response_t response = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {

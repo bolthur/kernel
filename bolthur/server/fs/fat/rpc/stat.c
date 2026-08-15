@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../stat.h"
 
 // fat library
@@ -64,22 +65,30 @@ void rpc_handle_stat(
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
-  STARTUP_PRINT( "fat stat call \"%s\"\r\n", request->file_path )
+  #if defined( FAT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "fat stat call \"%s\"\r\n", request->file_path )
+  #endif
   struct stat st;
   struct stat* cached = stat_fetch( request->file_path );
   if ( !cached ) {
     // fetch stat information
     const int result = fat_stat( request->file_path, &st );
     if ( EOK != result ) {
-      STARTUP_PRINT( "fat stat call failed: %d => %s\r\n", result, strerror( result ) )
+      #if defined( FAT_ENABLE_OUTPUT )
+        STARTUP_PRINT( "fat stat call failed: %d => %s\r\n", result, strerror( result ) )
+      #endif
       bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( request );
       return;
     }
-    STARTUP_PRINT("%s: %lld\r\n", request->file_path, st.st_size)
+    #if defined( FAT_ENABLE_OUTPUT )
+      STARTUP_PRINT("%s: %lld\r\n", request->file_path, st.st_size)
+    #endif
     // try to push back
     if ( ! stat_push( request->file_path, &st ) ) {
-      STARTUP_PRINT( "Unable to push stat to cache!\r\n" )
+      #if defined( FAT_ENABLE_OUTPUT )
+        STARTUP_PRINT( "Unable to push stat to cache!\r\n" )
+      #endif
       bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( request );
       return;
@@ -87,7 +96,9 @@ void rpc_handle_stat(
     // set cached for copy
     cached = &st;
   } else {
-    STARTUP_PRINT( "CACHE HIT!\r\n" )
+    #if defined( FAT_ENABLE_OUTPUT )
+      STARTUP_PRINT( "CACHE HIT!\r\n" )
+    #endif
   }
   memcpy( &response.info, cached, sizeof( *cached ) );
 

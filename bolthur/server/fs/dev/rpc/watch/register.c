@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../../rpc.h"
+#include "../../global.h"
 #include "../../watch.h"
 
 /**
@@ -63,12 +64,14 @@ void rpc_handle_watch_register(
   // try to register watcher
   response.result = watch_add( request->target , request->handler );
   // debug output
-  EARLY_STARTUP_PRINT(
-    "handler %d is registering a watcher for %s: %d\r\n",
-    request->handler,
-    request->target,
-    response.result
-  )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT(
+      "handler %d is registering a watcher for %s: %d\r\n",
+      request->handler,
+      request->target,
+      response.result
+    )
+  #endif
   // free request data
   free( request );
   // return result

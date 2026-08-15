@@ -24,6 +24,7 @@
 #include <sys/bolthur.h>
 #include "../../handler/node.h"
 #include "../../rpc.h"
+#include "../../global.h"
 
 /**
  * @fn void rpc_handle_watch_register(size_t, pid_t, size_t, size_t)
@@ -69,7 +70,9 @@ void rpc_handle_handler_register(
     free( request );
     return;
   }
-  EARLY_STARTUP_PRINT( "Added %"PRIu32" with pid %d\r\n", request->request, origin )
+  #if defined( VFS_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Added %"PRIu32" with pid %d\r\n", request->request, origin )
+  #endif
   // return success
   response.result = 0;
   bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );

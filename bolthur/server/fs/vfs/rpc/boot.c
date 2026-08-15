@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../mountpoint/node.h"
 #include "../ioctl/handler.h"
 #include "../../../../library/collection/ht/ht.h"
@@ -313,8 +314,6 @@ void rpc_handle_boot_init(
     if ( 0 != strncmp( n->name, "/dev", strlen( "/dev" ) ) ) {
       continue;
     }
-    // debug output
-    EARLY_STARTUP_PRINT( "mountpoint: %s\r\n", n->name )
     // transfer pid to string
     snprintf( str, sizeof( *str ) * 256, "%d", n->pid );
     // push to table
@@ -342,7 +341,9 @@ void rpc_handle_boot_init(
   bool raised = false;
   // loop while hash table has next
   while ( ht_next( &it ) ) {
-    EARLY_STARTUP_PRINT( "it.value = %d\r\n", ( pid_t )it.value );
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "it.value = %d\r\n", ( pid_t )it.value );
+    #endif
     // call rpc
     bolthur_rpc_raise(
       type,

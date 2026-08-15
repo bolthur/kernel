@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 
 /**
  * @fn void rpc_handle_remove(size_t, pid_t, size_t, size_t)
@@ -56,7 +57,9 @@ void rpc_handle_remove(
     return;
   }
   // debug output
-  EARLY_STARTUP_PRINT( "HANDLE REMOVE NOT YET IMPLEMENTED!\r\n" )
+  #if defined( VFS_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "HANDLE REMOVE NOT YET IMPLEMENTED!\r\n" )
+  #endif
   // prepare response
   response.status = -ENOSYS;
   // send response

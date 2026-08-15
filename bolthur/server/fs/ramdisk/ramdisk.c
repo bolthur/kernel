@@ -26,6 +26,7 @@
 #include <libtar.h>
 #include <fcntl.h>
 #include "ramdisk.h"
+#include "global.h"
 
 static void* ramdisk;
 static size_t length;
@@ -111,47 +112,71 @@ static ssize_t ramdisk_tar_write(
  */
 void ramdisk_copy_from_shared( char* id ) {
   // extract shared memory area id
-  EARLY_STARTUP_PRINT( "Extract shared memory id containing tar\r\n" )
+  #if defined( RAMDISK_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Extract shared memory id containing tar\r\n" )
+  #endif
   size_t shm_id;
   if ( 1 != sscanf( id, "%zu", &shm_id ) ) {
-    EARLY_STARTUP_PRINT( "Unable to extract shared memory id!\r\n" )
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to extract shared memory id!\r\n" )
+    #endif
     exit( -1 );
   }
   // attach area
-  EARLY_STARTUP_PRINT( "Attaching shared area\r\n" )
+  #if defined( RAMDISK_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Attaching shared area\r\n" )
+  #endif
   void* shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to attach shared memory area\r\n" )
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to attach shared memory area\r\n" )
+    #endif
     exit( -1 );
   }
   // get size of shared area
-  EARLY_STARTUP_PRINT( "Gathering shared memory size\r\n" )
+  #if defined( RAMDISK_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Gathering shared memory size\r\n" )
+  #endif
   length = _syscall_memory_shared_size( shm_id );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to get shared memory area size\r\n" )
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to get shared memory area size\r\n" )
+    #endif
     exit( -1 );
   }
   // allocate duplicate
-  EARLY_STARTUP_PRINT( "Allocate local duplicate with size %#zx\r\n", length )
+  #if defined( RAMDISK_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Allocate local duplicate with size %#zx\r\n", length )
+  #endif
   ramdisk = malloc( length );
-  EARLY_STARTUP_PRINT( "ramdisk = %p\r\n", ramdisk )
+  #if defined( RAMDISK_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "ramdisk = %p\r\n", ramdisk )
+  #endif
   if ( ! ramdisk ) {
-    EARLY_STARTUP_PRINT( "Unable to allocate memory for ramdisk\r\n" )
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to allocate memory for ramdisk\r\n" )
+    #endif
     exit( -1 );
   }
   // copy over content
-  EARLY_STARTUP_PRINT(
-    "Copy over content from %p to %p with length %zu\r\n",
-    shm_addr,
-    ramdisk,
-    length
-  )
+  #if defined( RAMDISK_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT(
+      "Copy over content from %p to %p with length %zu\r\n",
+      shm_addr,
+      ramdisk,
+      length
+    )
+  #endif
   memcpy( ramdisk, shm_addr, length );
   // unmap shared area again
-  EARLY_STARTUP_PRINT( "Detach shared memory again\r\n" )
+  #if defined( RAMDISK_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Detach shared memory again\r\n" )
+  #endif
   _syscall_memory_shared_detach( shm_id );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to detach shared memory area\r\n" )
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to detach shared memory area\r\n" )
+    #endif
     exit( -1 );
   }
 }
@@ -203,7 +228,9 @@ size_t ramdisk_get_size( const char* path ) {
       }
       // skip to next file
       if ( tar_skip_regfile( disk ) != 0 ) {
-        EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) );
+        #if defined( RAMDISK_ENABLE_OUTPUT )
+          EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) );
+        #endif
         return 0;
       }
     }
@@ -235,7 +262,9 @@ void* ramdisk_get_start( const char* path ) {
       }
       // skip to next file
       if ( tar_skip_regfile( disk ) != 0 ) {
-        EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) );
+        #if defined( RAMDISK_ENABLE_OUTPUT )
+          EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) );
+        #endif
         return nullptr;
       }
     }
@@ -268,7 +297,9 @@ TAR* ramdisk_get_info( const char* path ) {
       }
       // skip to next file
       if ( tar_skip_regfile( disk ) != 0 ) {
-        EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) );
+        #if defined( RAMDISK_ENABLE_OUTPUT )
+          EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) );
+        #endif
         return nullptr;
       }
     }

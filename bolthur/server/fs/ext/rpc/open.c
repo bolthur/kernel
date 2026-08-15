@@ -39,6 +39,7 @@
 #include <bfs/ext/stat.h>
 #include <bfs/ext/fs.h>
 #include "../stat.h"
+#include "../global.h"
 
 /**
  * @fn void rpc_handle_open(size_t, pid_t, size_t, size_t)
@@ -57,7 +58,9 @@ void rpc_handle_open(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  STARTUP_PRINT( "open\r\n" )
+  #if defined( EXT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "open\r\n" )
+  #endif
   vfs_open_response_t response = { .handle = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
@@ -125,7 +128,9 @@ void rpc_handle_open(
     free( request );
     return;
   }
-  STARTUP_PRINT( "performing open depending on stat result\r\n" )
+  #if defined( EXT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "performing open depending on stat result\r\n" )
+  #endif
   // open directory
   if ( S_ISDIR( st.st_mode ) ) {
     // allocate space for directory

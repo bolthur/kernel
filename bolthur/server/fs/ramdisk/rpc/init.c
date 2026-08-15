@@ -19,6 +19,7 @@
 
 #include <errno.h>
 #include "../rpc.h"
+#include "../global.h"
 
 /**
  * @fn bool rpc_init(void)
@@ -29,62 +30,86 @@
 bool rpc_init( void ) {
   bolthur_rpc_bind( RPC_VFS_ADD, rpc_handle_add, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_REMOVE, rpc_handle_remove, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_CLOSE, rpc_handle_close, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler close!\r\n" )
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler close!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_READ, rpc_handle_read, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler read!\r\n" )
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler read!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_SEEK, rpc_handle_seek, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler seek!\r\n" )
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler seek!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_STAT, rpc_handle_stat, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler stat!\r\n" )
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler stat!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_IOCTL, rpc_handle_ioctl, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler ioctl!\r\n" )
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler ioctl!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_OPEN, rpc_handle_open, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler open!\r\n" )
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler open!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_FORK, rpc_handle_fork, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler fork!\r\n" )
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler fork!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_EXIT, rpc_handle_exit, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler exit!\r\n" )
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler exit!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_EXEC, rpc_handle_exec, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler exec!\r\n" )
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler exec!\r\n" )
+    #endif
     return false;
   }
   return true;

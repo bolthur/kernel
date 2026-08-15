@@ -24,6 +24,7 @@
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../mountpoint/node.h"
 #include "../../../../library/handle/process.h"
 #include "../handler/node.h"
@@ -125,7 +126,9 @@ void rpc_handle_umount(
   // extract handler information
   handler_node_t* handler = handler_node_extract( RPC_VFS_MOUNT );
   if ( ! handler ) {
-    EARLY_STARTUP_PRINT( "No handler found for %d\r\n", RPC_VFS_MOUNT )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "No handler found for %d\r\n", RPC_VFS_MOUNT )
+    #endif
     response.result = -ESRCH;
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );

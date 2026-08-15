@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../handle.h"
 #include "../watch.h"
 #include "../ioctl/handler.h"
@@ -62,22 +63,34 @@ void rpc_handle_boot_init(
   }
   // ORDER NECESSARY HERE DUE TO THE DEFINES
   // reroute stdin
-  EARLY_STARTUP_PRINT( "Rerouting stdin to %s\r\n", request->in )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Rerouting stdin to %s\r\n", request->in )
+  #endif
   if ( ! freopen( request->in, "r", stdin ) ) {
-    EARLY_STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) )
-    EARLY_STARTUP_PRINT( "Unable to reroute stdin\r\n" )
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) )
+      EARLY_STARTUP_PRINT( "Unable to reroute stdin\r\n" )
+    #endif
     exit( 1 );
   }
   // reroute stdout
-  EARLY_STARTUP_PRINT( "Rerouting stdout to %s\r\n", request->out )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Rerouting stdout to %s\r\n", request->out )
+  #endif
   if ( ! freopen( request->out, "w", stdout ) ) {
-    EARLY_STARTUP_PRINT( "Unable to reroute stdout\r\n" )
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to reroute stdout\r\n" )
+    #endif
     exit( 1 );
   }
   // reroute stderr
-  EARLY_STARTUP_PRINT( "Rerouting stderr to %s\r\n", request->err )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Rerouting stderr to %s\r\n", request->err )
+  #endif
   if ( ! freopen( request->err, "w", stderr ) ) {
-    EARLY_STARTUP_PRINT( "Unable to reroute stderr\r\n" )
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to reroute stderr\r\n" )
+    #endif
     exit( 1 );
   }
 

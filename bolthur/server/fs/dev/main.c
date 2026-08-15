@@ -25,6 +25,7 @@
 #include <sys/mount.h>
 #include "rpc.h"
 #include "handle.h"
+#include "global.h"
 #include "ioctl/handler.h"
 #include "../../libdev.h"
 #include "../../../library/vfs/wait.h"
@@ -48,7 +49,9 @@ static void on_folder_file_added(
 ) {
   // handle no data
   if ( ! data_info ) {
-    EARLY_STARTUP_PRINT( "No data info found!\r\n" )
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "No data info found!\r\n" )
+    #endif
     exit( -1 );
   }
   // get message and data size
@@ -56,12 +59,16 @@ static void on_folder_file_added(
   vfs_add_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! response ) {
     const int e = errno;
-    EARLY_STARTUP_PRINT( "Unable to fetch response: %s\r\n", strerror( e ) )
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to fetch response: %s\r\n", strerror( e ) )
+    #endif
     exit( -1 );
   }
   // stop on success
   if ( VFS_ADD_SUCCESS != response->status ) {
-    EARLY_STARTUP_PRINT( "Unable to add: %d\r\n", response->status )
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add: %d\r\n", response->status )
+    #endif
     exit( -1 );
   }
   free( response );
@@ -76,34 +83,52 @@ static void on_folder_file_added(
  * @return
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
-  EARLY_STARTUP_PRINT( "dev starting up!\r\n" )
-  EARLY_STARTUP_PRINT( "%d / %d\r\n", getpid(), getppid() )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "dev starting up!\r\n" )
+    EARLY_STARTUP_PRINT( "%d / %d\r\n", getpid(), getppid() )
+    EARLY_STARTUP_PRINT( "setup handling!\r\n" )
+  #endif
   // setup handle tree
-  EARLY_STARTUP_PRINT( "setup handling!\r\n" )
   if ( ! handle_init() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup handle structures!\r\n" )
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to setup handle structures!\r\n" )
+    #endif
     return -1;
   }
   // setup watch stuff
-  EARLY_STARTUP_PRINT( "setup watch handling!\r\n" )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "setup watch handling!\r\n" )
+  #endif
   if ( ! watch_setup() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup watch infrastructure!\r\n" )
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to setup watch infrastructure!\r\n" )
+    #endif
     return -1;
   }
   // register rpc handler
-  EARLY_STARTUP_PRINT( "bind rpc handler!\r\n" )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "bind rpc handler!\r\n" )
+  #endif
   if ( ! rpc_init() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
+    #endif
     return -1;
   }
   // setup ioctl
-  EARLY_STARTUP_PRINT( "setup ioctl!\r\n" )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "setup ioctl!\r\n" )
+  #endif
   if ( ! ioctl_handler_init() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup ioctl!\r\n" )
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to setup ioctl!\r\n" )
+    #endif
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "trying to mount!\r\n" )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "trying to mount!\r\n" )
+  #endif
   // try to mount /dev
   int result = mount(
     "",
@@ -113,18 +138,22 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     ""
   );
   if ( 0 != result ) {
-    EARLY_STARTUP_PRINT(
-      "Mount of special \"%s\" with type \"%s\" failed: \"%s\"\r\n",
-      MOUNT_POINT_DESTINATION,
-      MOUNT_POINT_FILESYSTEM,
-      strerror( errno )
-    )
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT(
+        "Mount of special \"%s\" with type \"%s\" failed: \"%s\"\r\n",
+        MOUNT_POINT_DESTINATION,
+        MOUNT_POINT_FILESYSTEM,
+        strerror( errno )
+      )
+    #endif
     // exit
     return -1;
   }
 
   // enable rpc
-  EARLY_STARTUP_PRINT( "Set rpc ready flag\r\n" )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Set rpc ready flag\r\n" )
+  #endif
   _syscall_rpc_set_ready( true );
 
   // device info data
@@ -132,25 +161,33 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
 
   // add manager subfolder with wait for path
   if ( ! vfs_dev_add_folder( "/dev/manager", nullptr, 0, on_folder_file_added ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add manager subfolder\r\n" )
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add manager subfolder\r\n" )
+    #endif
     return -1;
   }
   vfs_wait_for_path( "/dev/manager" );
   // add storage subfolder with wait for path
   if ( ! vfs_dev_add_folder( "/dev/storage", nullptr, 0, on_folder_file_added ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add storage subfolder\r\n" )
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add storage subfolder\r\n" )
+    #endif
     return -1;
   }
   vfs_wait_for_path( "/dev/storage" );
   // add usb subfolder with wait for path
   if ( ! vfs_dev_add_folder( "/dev/usb", nullptr, 0, on_folder_file_added ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add USB subfolder\r\n" )
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add USB subfolder\r\n" )
+    #endif
     return -1;
   }
   vfs_wait_for_path( "/dev/usb" );
   // add usb subfolder with wait for path
   if ( ! vfs_dev_add_folder( "/dev/usb/server", nullptr, 0, on_folder_file_added ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add USB subfolder\r\n" )
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add USB subfolder\r\n" )
+    #endif
     return -1;
   }
   vfs_wait_for_path( "/dev/usb/server" );
@@ -158,11 +195,15 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // in early stage by /dev/manager/device and a wait for path would result
   // in possible locked up dev daemon
   if ( ! vfs_dev_add_file( "/dev/manager/device", device_info, 2, on_folder_file_added ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add storage subfolder\r\n" )
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add storage subfolder\r\n" )
+    #endif
     return -1;
   }
 
   // wait for rpc
-  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  #endif
   bolthur_rpc_wait_block();
 }

@@ -19,6 +19,7 @@
 
 #include <errno.h>
 #include "../rpc.h"
+#include "../global.h"
 
 /**
  * @fn bool rpc_init(void)
@@ -29,107 +30,149 @@
 bool rpc_init( void ) {
   bolthur_rpc_bind( RPC_VFS_ADD, rpc_handle_add, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_BOOT_INIT, rpc_handle_boot_init, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler boot init!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler boot init!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_CLOSE, rpc_handle_close, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler close!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler close!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_EXEC, rpc_handle_exec, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler exec!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler exec!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_EXIT, rpc_handle_exit, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler exit!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler exit!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_FORK, rpc_handle_fork, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler fork!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler fork!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_GETDENTS, rpc_handle_getdents, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler getdents!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler getdents!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_IOCTL, rpc_handle_ioctl, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler ioctl!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler ioctl!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_MOUNT, rpc_handle_mount, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler acquire!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler acquire!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_OPEN, rpc_handle_open, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler open!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler open!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_READ, rpc_handle_read, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler read!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler read!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_REMOVE, rpc_handle_remove, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_SEEK, rpc_handle_seek, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler seek!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler seek!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_STAT, rpc_handle_stat, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler stat!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler stat!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_UMOUNT, rpc_handle_umount, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler release!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler release!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_WATCH_REGISTER, rpc_handle_watch_register, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_WATCH_RELEASE, rpc_handle_watch_release, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_WATCH_NOTIFY, rpc_handle_watch_notify, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_REGISTER_HANDLER, rpc_handle_handler_register, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_RELEASE_HANDLER, rpc_handle_handler_release, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    #endif
     return false;
   }
   return true;
