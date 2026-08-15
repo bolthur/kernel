@@ -23,7 +23,7 @@
 #include <stdint.h>
 #include <sys/bolthur.h>
 
-//#define RPC_ENABLE_DEBUG 1
+//#define RPC_ENABLE_OUTPUT 1
 
 bool rpc_init( void );
 void rpc_handle_ioctl( size_t, pid_t, size_t, size_t );

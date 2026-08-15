@@ -53,17 +53,17 @@ void rpc_default_timer(
     return;
   }
   // debug output
-  //#if defined( DWHCI_ENABLE_DEBBUG )
+  #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Timeout reached\r\n" )
-  //#endif
+  #endif
   // switch status and cancel channel
   entry->status = DWHCI_QUEUE_CANCEL;
   // start cancellation
   const response_t response = dwhci_channel_async_continue( entry );
   if ( HCD_RESPONSE_OK != response ) {
     // debug output
-    //#if defined ( DWHCI_ENABLE_DEBUG )
+    #if defined ( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to start cancellation process\r\n" )
-    //#endif
+    #endif
   }
 }

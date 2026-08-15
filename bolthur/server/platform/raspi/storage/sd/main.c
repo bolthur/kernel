@@ -25,6 +25,7 @@
 #include <inttypes.h>
 #include "rpc.h"
 #include "sd.h"
+#include "global.h"
 #include "../../../../libmbr.h"
 #include "../../../../../library/vfs/add.h"
 
@@ -44,65 +45,79 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   mbr_size = sizeof( uint8_t ) * 512;
   mbr_data = malloc( mbr_size );
   if ( ! mbr_data ) {
-    EARLY_STARTUP_PRINT(
-      "Unable to allocate space for mbr: %s\r\n",
-      strerror( errno ) )
+    #if defined( SD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to allocate space for mbr: %s\r\n", strerror( errno ) )
+    #endif
     return -1;
   }
   // clear allocated space
   memset( mbr_data, 0, mbr_size );
   // print something
-  EARLY_STARTUP_PRINT(
-    "buffer = %p, end = %p\r\n",
-    mbr_data, ( void* )( mbr_data + mbr_size )
-  )
+  #if defined( SD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "buffer = %p, end = %p\r\n", mbr_data, ( void* )( mbr_data + mbr_size ) )
+  #endif
   // setup emmc
-  EARLY_STARTUP_PRINT( "Setup sd interface\r\n" )
+  #if defined( SD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Setup sd interface\r\n" )
+  #endif
   if( ! sd_init() ) {
-    EARLY_STARTUP_PRINT(
-      "Error while initializing sd interface: %s\r\n",
-      sd_last_error()
-    )
+    #if defined( SD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Error while initializing sd interface: %s\r\n", sd_last_error() )
+    #endif
     free( mbr_data );
     return -1;
   }
 
   // register rpc
-  EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
+  #if defined( SD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
+  #endif
   if ( !rpc_init() ) {
-    EARLY_STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
+    #if defined( SD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
+    #endif
     free( mbr_data );
     return -1;
   }
 
   // try to read mbr from card
-  EARLY_STARTUP_PRINT( "Parsing mbr with partition information\r\n" )
+  #if defined( SD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Parsing mbr with partition information\r\n" )
+  #endif
   if ( ! sd_transfer_block( ( uint32_t* )mbr_data, mbr_size, 0, SD_OPERATION_READ, 0 ) ) {
-    EARLY_STARTUP_PRINT(
-      "Error while reading mbr from card: %s\r\n",
-      sd_last_error()
-    )
+    #if defined( SD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Error while reading mbr from card: %s\r\n", sd_last_error() )
+    #endif
     return -1;
   }
 
   const uint16_t* signature = ( uint16_t* )( mbr_data + PARTITION_TABLE_SIGNATURE_OFFSET );
-  EARLY_STARTUP_PRINT( "Signature within mbr: %#"PRIx16"\r\n", *signature )
+  #if defined( SD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Signature within mbr: %#"PRIx16"\r\n", *signature )
+  #endif
   // check signature
-  EARLY_STARTUP_PRINT( "Check signature\r\n" )
+  #if defined( SD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Check signature\r\n" )
+  #endif
   if ( *signature != PARTITION_TABLE_SIGNATURE ) {
-    EARLY_STARTUP_PRINT(
-      "Invalid signature within mbr: %#"PRIx16"\r\n", *signature )
+    #if defined( SD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Invalid signature within mbr: %#"PRIx16"\r\n", *signature )
+    #endif
     return -1;
   }
   // enable rpc
-  EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
+  #if defined( SD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
+  #endif
   _syscall_rpc_set_ready( true );
   // loop through partitions and calculate total byte size
   uint64_t total_size = 0;
   for ( uint32_t i = 0; i < PARTITION_TABLE_NUMBER; i++ ) {
     const mbr_table_entry_t* entry = ( mbr_table_entry_t* )(
       mbr_data + PARTITION_TABLE_OFFSET + ( i * sizeof( mbr_table_entry_t ) ) );
-    EARLY_STARTUP_PRINT( "entry->data.total_sector = %#lx\r\n", entry->data.total_sector )
+    #if defined( SD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "entry->data.total_sector = %#lx\r\n", entry->data.total_sector )
+    #endif
     // calculate total
     total_size += ( uint64_t )entry->data.total_sector * 512;
   }
@@ -116,18 +131,24 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
   msg->info.st_size = ( off_t )total_size;
-  EARLY_STARTUP_PRINT( "%#"PRIx64", %#llx\r\n", total_size, msg->info.st_size )
+  #if defined( SD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "%#"PRIx64", %#llx\r\n", total_size, msg->info.st_size )
+  #endif
   msg->info.st_blksize = ( blksize_t )sd_device_block_size();
   msg->info.st_blocks = ( blksize_t )( msg->info.st_size / msg->info.st_blksize );
   strncpy( msg->file_path, "/dev/storage/sd", PATH_MAX - 1 );
-  EARLY_STARTUP_PRINT( "Sending device \"%s\" to vfs\r\n", msg->file_path )
+  #if defined( SD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Sending device \"%s\" to vfs\r\n", msg->file_path )
+  #endif
   // perform add request
   vfs_add( msg, 0, 0, nullptr );
   // free again
   free( msg );
 
   // wait for rpc
-  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  #if defined( SD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  #endif
   bolthur_rpc_wait_block();
   return 0;
 }

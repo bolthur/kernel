@@ -74,7 +74,7 @@ void rpc_handle_gpio_set_function(
   // allocate space for function_request
   function_request = ( iomem_gpio_function_t* )request->container;
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "gpio function: pin = %d, function = %x\r\n",
       function_request->pin, function_request->function
@@ -108,7 +108,7 @@ void rpc_handle_gpio_set_function(
     return;
   }
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "gpio function: pin = %d, function = %x\r\n",
       function_request->pin, function_request->function
@@ -117,13 +117,13 @@ void rpc_handle_gpio_set_function(
   // read value
   uint32_t value = mmio_read( address );
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
   #endif
   // mask bits
   value &= ( uint32_t )~( 7 << ( function_request->pin * 3 ) );
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "mask = %#"PRIx32", value = %#"PRIx32"\r\n",
       ( uint32_t )~( 7 << ( function_request->pin * 3 ) ),
@@ -133,7 +133,7 @@ void rpc_handle_gpio_set_function(
   // set value
   value |= ( ( function_request->function & 7 ) << ( function_request->pin * 3 ) );
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "bit = %#"PRIx32", value = %#"PRIx32"\r\n",
       ( uint32_t )( ( function_request->function & 7 ) << ( function_request->pin * 3 ) ),
@@ -141,7 +141,7 @@ void rpc_handle_gpio_set_function(
     )
   #endif
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
   #endif
   // write back changes
@@ -149,7 +149,7 @@ void rpc_handle_gpio_set_function(
   // delay 150 cycles
   delay( 150 );
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "wrote %#"PRIx32" to %#"PRIxPTR"\r\n", value, address )
   #endif
   // set status to 0

@@ -20,7 +20,7 @@
 #ifndef _DMA_H
 #define _DMA_H
 
-// #define DMA_ENABLE_DEBUG 1
+// #define DMA_ENABLE_OUTPUT 1
 
 #include <stdint.h>
 #include "../../../../library/platform/raspi/iomem/libiomem.h"

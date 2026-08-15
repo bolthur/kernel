@@ -87,7 +87,7 @@ void rpc_handle_gpio_event(
   // clear event_request
   memset( response, 0, response_size );
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "gpio event: pin = %d, value = %#"PRIx32"\r\n",
       event_request->pin, event_request->value
@@ -104,7 +104,7 @@ void rpc_handle_gpio_event(
   // read data from event detect status
   uint32_t value = mmio_read( address );
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "mask = %#"PRIx32", value before = %#"PRIx32"\r\n",
       ( uint32_t )( 1 << event_request->pin ),
@@ -113,7 +113,7 @@ void rpc_handle_gpio_event(
   #endif
   value &= ( 1 << event_request->pin );
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "mask = %#"PRIx32", value after = %#"PRIx32"\r\n",
       ( uint32_t )( 1 << event_request->pin ),

@@ -27,6 +27,7 @@
 #include <sys/mman.h>
 #include <sys/bolthur.h>
 #include "framebuffer.h"
+#include "global.h"
 #include "../../../../library/collection/list/list.h"
 #include "../../../../library/platform/raspi/iomem/libiomem.h"
 #include "../../../libframebuffer.h"
@@ -128,7 +129,9 @@ static void memory_cleanup( list_item_t* a ) {
  */
 bool framebuffer_init( const char* bootargs ) {
   // extract possible width and height from args
-  EARLY_STARTUP_PRINT( "bootargs = %s\r\n", bootargs )
+  #if defined( FRAMEBUFFER_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "bootargs = %s\r\n", bootargs )
+  #endif
   char* p = strtok( ( char* )bootargs, " " );
   uint32_t fbwidth = 0;
   uint32_t fbheight = 0;
@@ -136,11 +139,15 @@ bool framebuffer_init( const char* bootargs ) {
     // handle width information
     if ( 0 == fbwidth && -1 != strpos( p, "fbwidth=" ) ) {
       fbwidth = ( uint32_t )strtoul( p + strpos( p, "=" ) + 1, nullptr, 10 );
-      EARLY_STARTUP_PRINT( "fbwidth = %"PRIu32"\r\n", fbwidth )
+      #if defined( FRAMEBUFFER_ENABLE_OUTPUT )
+        EARLY_STARTUP_PRINT( "fbwidth = %"PRIu32"\r\n", fbwidth )
+      #endif
     // handle height information
     } else if ( 0 == fbheight && -1 != strpos( p, "fbheight=" ) ) {
       fbheight = ( uint32_t )strtoul( p + strpos( p, "=" ) + 1, nullptr, 10 );
-      EARLY_STARTUP_PRINT( "fbheight = %"PRIu32"\r\n", fbheight )
+      #if defined( FRAMEBUFFER_ENABLE_OUTPUT )
+        EARLY_STARTUP_PRINT( "fbheight = %"PRIu32"\r\n", fbheight )
+      #endif
     }
     // get next one
     p = strtok(nullptr, " ");
@@ -219,11 +226,10 @@ bool framebuffer_init( const char* bootargs ) {
     physical_height = fbheight;
   }
   // some output
-  EARLY_STARTUP_PRINT(
-    "Using resolution %"PRIu32"x%"PRIu32"\r\n",
-    physical_width,
-    physical_height
-  )
+  #if defined( FRAMEBUFFER_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Using resolution %"PRIu32"x%"PRIu32"\r\n",
+      physical_width, physical_height )
+  #endif
 
   // build request
   request_size = sizeof( int32_t ) * 35;
@@ -314,8 +320,10 @@ bool framebuffer_init( const char* bootargs ) {
   uintptr_t mask = 0xc0000000;
   uintptr_t uscreen = ( uintptr_t )screen;
   uscreen &= ~mask;
-  EARLY_STARTUP_PRINT( "Screen address from mailbox: %p\r\n", ( void* )screen )
-  EARLY_STARTUP_PRINT( "Screen address masked: %p\r\n", ( void* )uscreen )
+  #if defined( FRAMEBUFFER_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Screen address from mailbox: %p\r\n", ( void* )screen )
+    EARLY_STARTUP_PRINT( "Screen address masked: %p\r\n", ( void* )uscreen )
+  #endif
   // write back
   screen = ( uint8_t* )uscreen;
 
@@ -333,7 +341,9 @@ bool framebuffer_init( const char* bootargs ) {
     close( iomem_fd );
     return false;
   }
-  EARLY_STARTUP_PRINT( "Screen address returned by mmap: %p\r\n", tmp )
+  #if defined( FRAMEBUFFER_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Screen address returned by mmap: %p\r\n", tmp )
+  #endif
   // overwrite screen
   screen = ( uint8_t* )tmp;
   // clear everything after init completely

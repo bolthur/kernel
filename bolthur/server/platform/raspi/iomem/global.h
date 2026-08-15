@@ -20,12 +20,6 @@
 #ifndef _GLOBAL_H
 #define _GLOBAL_H
 
-#include <stddef.h>
-#include <stdint.h>
+#define IOMEM_ENABLE_OUTPUT 1
 
-#define SD_ENABLE_OUTPUT 1
-
-extern size_t mbr_size;
-extern uint8_t* mbr_data;
-
-#endif
+#endif //_GLOBAL_H

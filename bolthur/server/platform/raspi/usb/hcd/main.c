@@ -24,6 +24,7 @@
 #include "dwhci.h"
 #include "response.h"
 #include "rpc.h"
+#include "global.h"
 // driver includes
 #include "../../../../libhcd.h"
 #include "../../../../../library/vfs/dev.h"
@@ -38,39 +39,55 @@
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // register rpc
-  STARTUP_PRINT( "Setup rpc handler\r\n" )
+  #if defined( HCD_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Setup rpc handler\r\n" )
+  #endif
   if ( !rpc_init() ) {
-    STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
+    #if defined( HCD_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
+    #endif
     return -1;
   }
 
   // enable rpc ( needs to be done at this point, because of interrupt driven
   // dwhci implementation )
-  STARTUP_PRINT( "Enable rpc\r\n" )
+  #if defined( HCD_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Enable rpc\r\n" )
+  #endif
   _syscall_rpc_set_ready( true );
 
   // setup hcd interface
-  STARTUP_PRINT( "Setup hcd interface!\r\n" )
+  #if defined( HCD_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Setup hcd interface!\r\n" )
+  #endif
   const response_t result = dwhci_init();
   if ( HCD_RESPONSE_OK != result ) {
-    STARTUP_PRINT( "Unable to init dwhci: %s\r\n", response_error( result ) );
+    #if defined( HCD_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to init dwhci: %s\r\n", response_error( result ) );
+    #endif
     return -1;
   }
 
   // add device file
-  STARTUP_PRINT( "Sending device to vfs\r\n" )
+  #if defined( HCD_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Sending device to vfs\r\n" )
+  #endif
   constexpr uint32_t device_info[] = {
     HCD_SUBMIT_CONTROL_MESSAGE,
     HCD_POLL_INTERRUPT,
     HCD_STOP_TRANSMISSION,
   };
   if ( ! vfs_dev_add_file( HCD_DEVICE_PATH, device_info, 3, nullptr ) ) {
-    STARTUP_PRINT( "Unable to add dev hcd\r\n" )
+    #if defined( HCD_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to add dev hcd\r\n" )
+    #endif
     return -1;
   }
 
   // wait for rpc
-  STARTUP_PRINT( "Wait for rpc\r\n" )
+  #if defined( HCD_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Wait for rpc\r\n" )
+  #endif
   bolthur_rpc_wait_block();
   return 0;
 }

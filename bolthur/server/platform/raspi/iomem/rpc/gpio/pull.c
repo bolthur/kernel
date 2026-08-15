@@ -74,7 +74,7 @@ void rpc_handle_gpio_set_pull(
   // allocate space for pull_request
   pull_request = ( iomem_gpio_pull_t* )request->container;
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "gpio pull: pin = %d, pull = %x\r\n",
       pull_request->pin, pull_request->pull

@@ -25,6 +25,7 @@
 #include "../../../libframebuffer.h"
 #include "framebuffer.h"
 #include "rpc.h"
+#include "global.h"
 #include "../../../../library/vfs/dev.h"
 
 /**
@@ -36,14 +37,20 @@
  * @return
  */
 int main( int argc, char* argv[] ) {
-  EARLY_STARTUP_PRINT( "Setup framebuffer\r\n" )
+  #if defined( FRAMEBUFFER_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Setup framebuffer\r\n" )
+  #endif
   // validate argument count
   if ( 2 != argc ) {
-    EARLY_STARTUP_PRINT( "Usage: framebuffer <bootargs>\r\n" )
+    #if defined( FRAMEBUFFER_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Usage: framebuffer <bootargs>\r\n" )
+    #endif
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "argc = %d\r\n", argc )
+  #if defined( FRAMEBUFFER_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "argc = %d\r\n", argc )
+  #endif
 
   // initialize rpc
   if ( ! rpc_init() ) {
@@ -55,7 +62,9 @@ int main( int argc, char* argv[] ) {
   }
 
   // enable rpc
-  EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
+  #if defined( FRAMEBUFFER_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
+  #endif
   _syscall_rpc_set_ready( true );
 
   // device info array
@@ -67,12 +76,16 @@ int main( int argc, char* argv[] ) {
   };
   // add device file
   if ( ! vfs_dev_add_file( "/dev/framebuffer", device_info, 4, nullptr ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    #if defined( FRAMEBUFFER_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    #endif
     return -1;
   }
 
   // wait for rpc
-  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  #if defined( FRAMEBUFFER_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  #endif
   bolthur_rpc_wait_block();
   return 0;
 }

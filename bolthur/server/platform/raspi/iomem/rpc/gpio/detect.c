@@ -74,7 +74,7 @@ void rpc_handle_gpio_set_detect(
   // allocate space for gpio_request
   gpio_request = ( iomem_gpio_detect_t* )request->container;
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "gpio detect: pin = %d, type = %x, value = %#"PRIx32"\r\n",
       gpio_request->pin, gpio_request->type, gpio_request->value
@@ -124,7 +124,7 @@ void rpc_handle_gpio_set_detect(
   // read value
   uint32_t value = mmio_read( address );
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
   #endif
   // unset bit if 0
@@ -135,13 +135,13 @@ void rpc_handle_gpio_set_detect(
     value |= ( 1 << gpio_request->pin );
   }
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
   #endif
   // write back changes
   mmio_write( address, value );
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "wrote %#"PRIx32" to %#"PRIxPTR"\r\n", value, address )
   #endif
   // set status to 0

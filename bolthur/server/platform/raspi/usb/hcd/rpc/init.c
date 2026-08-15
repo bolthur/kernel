@@ -21,6 +21,7 @@
 #include <errno.h>
 // local includes
 #include "../rpc.h"
+#include "../global.h"
 // driver includes
 #include "../../../libhcd.h"
 #include "../../../../../libhcd.h"
@@ -34,31 +35,41 @@ bool rpc_init( void ) {
   // default handler
   bolthur_rpc_bind( RPC_TIMER, rpc_default_timer, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register handler timer!\r\n" )
+    #if defined( HCD_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register handler timer!\r\n" )
+    #endif
     return false;
   }
   // bind interrupt handler
   bolthur_rpc_bind( ARM_IRQ_USB, rpc_interrupt_handle, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register handler read!\r\n" )
+    #if defined( HCD_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register handler read!\r\n" )
+    #endif
     return false;
   }
   // bind rpc handler for communication
   bolthur_rpc_bind( HCD_SUBMIT_CONTROL_MESSAGE, rpc_submit_message, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register handler submit control message!\r\n" )
+    #if defined( HCD_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register handler submit control message!\r\n" )
+    #endif
     return false;
   }
   // bind rpc handler for communication
   bolthur_rpc_bind( HCD_POLL_INTERRUPT, rpc_poll_interrupt, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register handler poll interrupt!\r\n" )
+    #if defined( HCD_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register handler poll interrupt!\r\n" )
+    #endif
     return false;
   }
   // bind rpc handler for communication
   bolthur_rpc_bind( HCD_STOP_TRANSMISSION, rpc_stop_transmission, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register handler stop transmission!\r\n" )
+    #if defined( HCD_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register handler stop transmission!\r\n" )
+    #endif
     return false;
   }
   // return success

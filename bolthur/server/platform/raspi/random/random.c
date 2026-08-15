@@ -17,19 +17,20 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdarg.h>
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "random.h"
+#include "global.h"
 #include "../../../../library/platform/raspi/iomem/libperipheral.h"
 #include "../../../../library/platform/raspi/iomem/libiomem.h"
 #include "../../../../library/platform/raspi/iomem/sequence.h"
 
 int iomem_fd;
 
-#include <stdarg.h>
 /**
  * @fn int ioctl(int, uint64_t, ...)
  * @brief ioctl implementation
@@ -128,8 +129,10 @@ __weak_symbol __attribute__((__optimize__("O0"))) int ioctl( int file, uint64_t 
       memset( data, 0, data_size );
     // handle data size to small
     } else if ( data_size < response_data_size ) {
-      EARLY_STARTUP_PRINT( "data_size = %"PRIu32", response_data_size = %"PRIu32"\r\n",
-        data_size, response_data_size );
+      #if defined( RANDOM_ENABLE_OUTPUT )
+        EARLY_STARTUP_PRINT( "data_size = %"PRIu32", response_data_size = %"PRIu32"\r\n",
+          data_size, response_data_size )
+      #endif
       free( rpc_response );
       errno = ENOMEM;
       return -1;

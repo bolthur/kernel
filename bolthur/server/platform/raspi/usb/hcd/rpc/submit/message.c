@@ -102,7 +102,6 @@ void rpc_submit_message(
     );
     // handle error
     if ( result != 0 ) {
-      EARLY_STARTUP_PRINT( "result = %d\r\n", result )
       // set error
       error.status = -result;
       // detach shared memory
@@ -128,7 +127,6 @@ void rpc_submit_message(
   // send async
   const response_t result = dwhci_channel_send_async( message, sizeof( *message ) + message->buffer_length, submit_control_message, response_info );
   if ( HCD_RESPONSE_OK != result ) {
-    EARLY_STARTUP_PRINT( "result = %d\r\n", result )
     // set error
     error.status = (int)-result;
     // detach shared memory

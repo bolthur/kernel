@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../../../../../library/platform/raspi/iomem/libiomem.h"
 
 /**
@@ -34,57 +35,79 @@
 bool rpc_init( void ) {
   bolthur_rpc_bind( IOMEM_RPC_MAILBOX, rpc_handle_mailbox, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler mailbox!\r\n" )
+    #if defined( IOMEM_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler mailbox!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( IOMEM_RPC_MMIO_PERFORM, rpc_handle_mmio_perform, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler mmio perform!\r\n" )
+    #if defined( IOMEM_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler mmio perform!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( IOMEM_RPC_MMIO_LOCK, rpc_handle_mmio_lock, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler mmio lock!\r\n" )
+    #if defined( IOMEM_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler mmio lock!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( IOMEM_RPC_MMIO_UNLOCK, rpc_handle_mmio_unlock, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler mmio unlock!\r\n" )
+    #if defined( IOMEM_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler mmio unlock!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( IOMEM_RPC_GPIO_SET_FUNCTION, rpc_handle_gpio_set_function, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler gpio set function!\r\n" )
+    #if defined( IOMEM_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler gpio set function!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( IOMEM_RPC_GPIO_SET_PULL, rpc_handle_gpio_set_pull, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler gpio set pull!\r\n" )
+    #if defined( IOMEM_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler gpio set pull!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( IOMEM_RPC_GPIO_SET_DETECT, rpc_handle_gpio_set_detect, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler gpio set detect!\r\n" )
+    #if defined( IOMEM_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler gpio set detect!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( IOMEM_RPC_GPIO_STATUS, rpc_handle_gpio_status, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler gpio status!\r\n" )
+    #if defined( IOMEM_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler gpio status!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( IOMEM_RPC_GPIO_EVENT, rpc_handle_gpio_event, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler gpio event!\r\n" )
+    #if defined( IOMEM_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler gpio event!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( IOMEM_RPC_GPIO_LOCK, rpc_handle_gpio_lock, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler gpio lock!\r\n" )
+    #if defined( IOMEM_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler gpio lock!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( IOMEM_RPC_GPIO_UNLOCK, rpc_handle_gpio_unlock, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler gpio unlock!\r\n" )
+    #if defined( IOMEM_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler gpio unlock!\r\n" )
+    #endif
     return false;
   }
   return true;

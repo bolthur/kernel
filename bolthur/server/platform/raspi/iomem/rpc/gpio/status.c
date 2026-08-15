@@ -87,7 +87,7 @@ void rpc_handle_gpio_status(
   // clear status_request
   memset( response, 0, response_size );
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "gpio status: pin = %d, value = %#"PRIx32"\r\n",
       status_request->pin, status_request->value
@@ -104,7 +104,7 @@ void rpc_handle_gpio_status(
   // read data from GPIO pin level
   uint32_t value = mmio_read( address );
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "mask = %#"PRIx32", value before = %#"PRIx32"\r\n",
       ( uint32_t )( 1 << status_request->pin ),
@@ -113,7 +113,7 @@ void rpc_handle_gpio_status(
   #endif
   value &= ( 1 << status_request->pin );
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "mask = %#"PRIx32", value after = %#"PRIx32"\r\n",
       ( uint32_t )( 1 << status_request->pin ),

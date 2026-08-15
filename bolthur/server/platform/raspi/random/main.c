@@ -24,6 +24,7 @@
 #include <inttypes.h>
 #include "rpc.h"
 #include "random.h"
+#include "global.h"
 #include "../../../../library/vfs/dev.h"
 
 /**
@@ -35,34 +36,50 @@
  * @return
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
-  STARTUP_PRINT( "Setup random\r\n" )
+  #if defined( RANDOM_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Setup random\r\n" )
+  #endif
   if ( ! random_setup() ) {
-    STARTUP_PRINT( "Error while setting up random: %s\r\n", strerror( errno ) )
+    #if defined( RANDOM_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Error while setting up random: %s\r\n", strerror( errno ) )
+    #endif
     return -1;
   }
 
-  STARTUP_PRINT( "Setup rpc handler\r\n" )
+  #if defined( RANDOM_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Setup rpc handler\r\n" )
+  #endif
   // register handlers
   if ( ! rpc_init() ) {
-    STARTUP_PRINT( "Error while binding rpc: %s\r\n", strerror( errno ) )
+    #if defined( RANDOM_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Error while binding rpc: %s\r\n", strerror( errno ) )
+    #endif
     return -1;
   }
 
   // enable rpc
-  STARTUP_PRINT( "Enable rpc\r\n" )
+  #if defined( RANDOM_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Enable rpc\r\n" )
+  #endif
   _syscall_rpc_set_ready( true );
 
   if ( ! vfs_dev_add_file( "/dev/urandom", nullptr, 0, nullptr ) ) {
-    STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    #if defined( RANDOM_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    #endif
     return -1;
   }
   if ( ! vfs_dev_add_file( "/dev/random", nullptr, 0, nullptr ) ) {
-    STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    #if defined( RANDOM_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    #endif
     return -1;
   }
 
   // wait for rpc
-  STARTUP_PRINT( "Wait for rpc\r\n" )
+  #if defined( RANDOM_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Wait for rpc\r\n" )
+  #endif
   bolthur_rpc_wait_block();
   return 0;
 }
