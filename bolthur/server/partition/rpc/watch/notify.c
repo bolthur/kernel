@@ -26,6 +26,7 @@
 #include <inttypes.h>
 #include <sys/bolthur.h>
 #include "../../rpc.h"
+#include "../../global.h"
 #include "../../partition.h"
 #include "../../../libmbr.h"
 #include "../../../../library/vfs/dev.h"
@@ -45,32 +46,48 @@ void rpc_handle_watch_notify(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  STARTUP_PRINT( "NOTIFY!\r\n" )
+  #if defined( PARTITION_ENABLE_OUTPUT )
+    STARTUP_PRINT( "NOTIFY!\r\n" )
+  #endif
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    STARTUP_PRINT( "Invalid origin!\r\n" )
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Invalid origin!\r\n" )
+    #endif
     return;
   }
-  STARTUP_PRINT( "Checking data info!\r\n" )
+  #if defined( PARTITION_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Checking data info!\r\n" )
+  #endif
   // handle no data
   if ( ! data_info ) {
-    STARTUP_PRINT( "No data passed!\r\n" )
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT( "No data passed!\r\n" )
+    #endif
     return;
   }
-  STARTUP_PRINT( "Fetching request\r\n" )
+  #if defined( PARTITION_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Fetching request\r\n" )
+  #endif
   // fetch rpc data
   size_t data_size;
   vfs_watch_notify_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
-    STARTUP_PRINT( "No notify request: %s\r\n", strerror( errno ) )
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT( "No notify request: %s\r\n", strerror( errno ) )
+    #endif
     return;
   }
-  STARTUP_PRINT( "Opening %s\r\n", request->target )
+  #if defined( PARTITION_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Opening %s\r\n", request->target )
+  #endif
   // open path
   const int fd = open( request->target, O_RDONLY );
   // handle error
   if ( -1 == fd ) {
-    STARTUP_PRINT( "Unable to open %s\r\n", request->target )
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to open %s\r\n", request->target )
+    #endif
     free( request );
     return;
   }
@@ -78,25 +95,35 @@ void rpc_handle_watch_notify(
   constexpr size_t mbr_size = sizeof( uint8_t ) * 512;
   uint8_t* mbr = malloc( mbr_size );
   if ( ! mbr ) {
-    STARTUP_PRINT( "Unable to allocate space for mbr\r\n" )
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to allocate space for mbr\r\n" )
+    #endif
     close( fd );
     free( request );
     return;
   }
-  STARTUP_PRINT( "Fetching stat\r\n" )
+  #if defined( PARTITION_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Fetching stat\r\n" )
+  #endif
   // get stat information
   struct stat target_stat;
   if ( 0 != fstat( fd, &target_stat ) ) {
-    STARTUP_PRINT( "Unable to get stat\r\n" )
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to get stat\r\n" )
+    #endif
     close( fd );
     free( mbr );
     free( request );
     return;
   }
-  STARTUP_PRINT( "Reading mbr\r\n" )
+  #if defined( PARTITION_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Reading mbr\r\n" )
+  #endif
   const ssize_t result = pread( fd, mbr, mbr_size, 0 );
   if ( 512 != result ) {
-    STARTUP_PRINT( "Unable to read mbr\r\n" )
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to read mbr\r\n" )
+    #endif
     close( fd );
     free( mbr );
     free( request );
@@ -104,7 +131,9 @@ void rpc_handle_watch_notify(
   }
   char* path = malloc( sizeof( *path ) * PATH_MAX );
   if ( ! path ) {
-    STARTUP_PRINT( "Unable to allocate space for path\r\n" )
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to allocate space for path\r\n" )
+    #endif
     close( fd );
     free( mbr );
     free( request );
@@ -123,10 +152,14 @@ void rpc_handle_watch_notify(
     size_t copied = strlen( request->target );
     strncpy( path, request->target, PATH_MAX );
     snprintf( path + copied, PATH_MAX - copied, "%"PRIu32, i );
-    STARTUP_PRINT( "Adding %s\r\n", path )
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Adding %s\r\n", path )
+    #endif
     // add device to tree
     if ( 0 != partition_add( path, entry ) ) {
-      STARTUP_PRINT( "Unable to push %s to search tree\r\n", path )
+      #if defined( PARTITION_ENABLE_OUTPUT )
+        STARTUP_PRINT( "Unable to push %s to search tree\r\n", path )
+      #endif
     }
     struct stat st = {
       .st_size = ( off_t )entry->data.total_sector * target_stat.st_blksize,
@@ -134,11 +167,15 @@ void rpc_handle_watch_notify(
       .st_blksize = target_stat.st_blksize,
       .st_blocks = ( blkcnt_t )entry->data.total_sector,
     };
-    STARTUP_PRINT("st_size = %#llx\r\n", st.st_size)
-    STARTUP_PRINT("st_blksize = %#lx\r\n", st.st_blksize)
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT("st_size = %#llx\r\n", st.st_size)
+      STARTUP_PRINT("st_blksize = %#lx\r\n", st.st_blksize)
+    #endif
     // add device
     if ( ! vfs_dev_add_folder_file_stat( path, &st, nullptr ) ) {
-      STARTUP_PRINT( "Unable to add device file\r\n" )
+      #if defined( PARTITION_ENABLE_OUTPUT )
+        STARTUP_PRINT( "Unable to add device file\r\n" )
+      #endif
       partition_remove( path );
       close( fd );
       free( path );

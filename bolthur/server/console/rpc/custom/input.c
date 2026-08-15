@@ -25,6 +25,7 @@
 #include <sys/bolthur.h>
 #include "../../../libconsole.h"
 #include "../../rpc.h"
+#include "../../global.h"
 #include "../../console.h"
 #include "../../queue.h"
 #include "../../../libterminal.h"
@@ -221,7 +222,9 @@ void rpc_custom_handle_input(
   memset( &error, 0, sizeof( error ) );
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
   // debug print buffer
-  EARLY_STARTUP_PRINT( "%s\r\n", command->input );
+  #if defined( CONSOLE_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "%s\r\n", command->input );
+  #endif
   // handle input flags
   for ( size_t i = 0; i < CONSOLE_MAX_INPUT_SEQUENCE && command->input[ i ]; i++) {
     // cache character

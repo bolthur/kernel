@@ -24,6 +24,7 @@
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../mount.h"
 #include "../partition.h"
 #include "../handler.h"
@@ -113,7 +114,9 @@ void rpc_handle_mount(
   size_t data_info,
   size_t response_info
 ) {
-  STARTUP_PRINT( "partition mounting\r\n" )
+  #if defined( PARTITION_ENABLE_OUTPUT )
+    STARTUP_PRINT( "partition mounting\r\n" )
+  #endif
   // handle async return in case response info is set
   if ( response_info && bolthur_rpc_has_async( type, response_info ) ) {
     rpc_handle_mount_async( type, origin, data_info, response_info );
@@ -122,7 +125,6 @@ void rpc_handle_mount(
   vfs_mount_response_t response = { .result = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    EARLY_STARTUP_PRINT( "1\r\n" )
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
@@ -158,7 +160,9 @@ void rpc_handle_mount(
     return;
   }
 
-  STARTUP_PRINT( "Routing mount request to %d\r\n", handler->handler )
+  #if defined( PARTITION_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Routing mount request to %d\r\n", handler->handler )
+  #endif
 
   // perform async rpc
   bolthur_rpc_raise(

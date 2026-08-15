@@ -27,6 +27,7 @@
 #include "../../../library/collection/list/list.h"
 #include "../console.h"
 #include "../handler.h"
+#include "../global.h"
 
 /**
  * @fn void rpc_handle_write_cleanup(size_t, pid_t, size_t, size_t)
@@ -216,7 +217,9 @@ void rpc_handle_write(
   // handle error
   if ( errno ) {
     const int e = errno;
-    EARLY_STARTUP_PRINT( "Failed to invoke rpc: %s\r\n", strerror( e ) );
+    #if defined( CONSOLE_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Failed to invoke rpc: %s\r\n", strerror( e ) );
+    #endif
     response.len = -e;
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     _syscall_memory_shared_detach( request->shm_id );

@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <libgen.h>
 #include "partition.h"
+#include "global.h"
 
 // define tree
 PARTITION_TREE_DEFINE(
@@ -190,8 +191,10 @@ int partition_remove( const char* path ) {
  * @brief Simple method to dump mount point nodes
  */
 void partition_dump( void ) {
-  STARTUP_PRINT( "mountpoint node tree dump\r\n" )
-  partition_tree_each(&management_tree, partition_node, n, {
-      STARTUP_PRINT("%s\r\n", n->name);
-  });
+  #if defined( PARTITION_ENABLE_OUTPUT )
+    STARTUP_PRINT( "mountpoint node tree dump\r\n" )
+    partition_tree_each(&management_tree, partition_node, n, {
+        STARTUP_PRINT("%s\r\n", n->name);
+    });
+  #endif
 }

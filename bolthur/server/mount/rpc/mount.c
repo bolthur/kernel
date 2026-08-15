@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 
 static int fstat_handler( int file, struct stat* st, pid_t* handler ) {
   // variables
@@ -98,7 +99,9 @@ void rpc_handle_mount(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "mount mounting\r\n" )
+  #if defined( MOUNT_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "mount mounting\r\n" )
+  #endif
   vfs_mount_response_t response = { .result = -ENOTSUP };
   // handle no data
   if ( ! data_info ) {
@@ -132,7 +135,9 @@ void rpc_handle_mount(
   int fd_auth = open( AUTHENTICATION_DEVICE, O_RDONLY );
   if ( -1 == fd_auth ) {
     response.result = -errno;
-    EARLY_STARTUP_PRINT( "UNABLE TO OPEN AUTHENTICATION DEVICE %s!\r\n", strerror( errno ) )
+    #if defined( MOUNT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "UNABLE TO OPEN AUTHENTICATION DEVICE %s!\r\n", strerror( errno ) )
+    #endif
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
@@ -141,7 +146,9 @@ void rpc_handle_mount(
   struct stat auth;
   if ( 0 != fstat( fd_auth, &auth ) ) {
     response.result = -errno;
-    EARLY_STARTUP_PRINT( "UNABLE TO QUERY STAT OF AUTHENTICATION DEVICE %s!\r\n", strerror( errno ) )
+    #if defined( MOUNT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "UNABLE TO QUERY STAT OF AUTHENTICATION DEVICE %s!\r\n", strerror( errno ) )
+    #endif
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     close( fd_auth );
@@ -154,7 +161,9 @@ void rpc_handle_mount(
   int fd_source = open( request->source, O_RDONLY );
   if ( -1 == fd_source ) {
     response.result = -errno;
-    EARLY_STARTUP_PRINT( "UNABLE TO OPEN SOURCE PATH %s!\r\n", strerror( errno ) )
+    #if defined( MOUNT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "UNABLE TO OPEN SOURCE PATH %s!\r\n", strerror( errno ) )
+    #endif
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
@@ -164,7 +173,9 @@ void rpc_handle_mount(
   pid_t source_handler;
   if ( 0 != fstat_handler( fd_source, &source, &source_handler ) ) {
     response.result = -errno;
-    EARLY_STARTUP_PRINT( "UNABLE TO QUERY STAT OF AUTHENTICATION DEVICE %s!\r\n", strerror( errno ) )
+    #if defined( MOUNT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "UNABLE TO QUERY STAT OF AUTHENTICATION DEVICE %s!\r\n", strerror( errno ) )
+    #endif
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     close( fd_source );
@@ -177,19 +188,25 @@ void rpc_handle_mount(
   DIR* target = opendir( request->target );
   if ( ! target && ENOENT != errno ) {
     response.result = -errno;
-    EARLY_STARTUP_PRINT( "UNABLE TO OPEN TARGET PATH %s!\r\n", strerror( errno ) )
+    #if defined( MOUNT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "UNABLE TO OPEN TARGET PATH %s!\r\n", strerror( errno ) )
+    #endif
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
   // check if folder is empty
   if ( target ) {
-    EARLY_STARTUP_PRINT( "checking %s to be empty\r\n", request->target )
+    #if defined( MOUNT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "checking %s to be empty\r\n", request->target )
+    #endif
     // count directory entries
     size_t count = 0;
     struct dirent* entry;
     while ( ( entry = readdir( target ) ) ) {
-      EARLY_STARTUP_PRINT( "entry->d_name = %s\r\n", entry->d_name )
+      #if defined( MOUNT_ENABLE_OUTPUT )
+        EARLY_STARTUP_PRINT( "entry->d_name = %s\r\n", entry->d_name )
+      #endif
       if ( ++count > 2 ) {
         break;
       }
@@ -197,7 +214,9 @@ void rpc_handle_mount(
     // handle possible error
     if ( errno ) {
       response.result = -errno;
-      EARLY_STARTUP_PRINT( "ERROR WHILE READING DIRECTORY %s!\r\n", strerror( errno ) )
+      #if defined( MOUNT_ENABLE_OUTPUT )
+        EARLY_STARTUP_PRINT( "ERROR WHILE READING DIRECTORY %s!\r\n", strerror( errno ) )
+      #endif
       bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( request );
       return;
@@ -206,7 +225,9 @@ void rpc_handle_mount(
     closedir( target );
     // handle not empty
     if ( count > 2 ) {
-      EARLY_STARTUP_PRINT( "DIRECTORY NOT EMPTY!\r\n" )
+      #if defined( MOUNT_ENABLE_OUTPUT )
+        EARLY_STARTUP_PRINT( "DIRECTORY NOT EMPTY!\r\n" )
+      #endif
       response.result = -ENOTEMPTY;
       bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( request );
@@ -230,7 +251,9 @@ void rpc_handle_mount(
     false
   );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "UNABLE TO ROUTE MOUNT REQUEST %s!\r\n", strerror( errno ) )
+    #if defined( MOUNT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "UNABLE TO ROUTE MOUNT REQUEST %s!\r\n", strerror( errno ) )
+    #endif
     response.result = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );

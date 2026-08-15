@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <libgen.h>
 #include "handler.h"
+#include "global.h"
 
 // define tree
 HANDLER_TREE_DEFINE(
@@ -163,8 +164,10 @@ int handler_remove( const char* filesystem ) {
  * @brief Simple method to dump mount point nodes
  */
 void handler_dump( void ) {
-  STARTUP_PRINT( "mountpoint node tree dump\r\n" )
-  handler_tree_each(&management_tree, handler_node, n, {
-      STARTUP_PRINT("%s\r\n", n->name);
-  });
+  #if defined( PARTITION_ENABLE_OUTPUT )
+    STARTUP_PRINT( "mountpoint node tree dump\r\n" )
+    handler_tree_each(&management_tree, handler_node, n, {
+        STARTUP_PRINT("%s\r\n", n->name);
+    });
+  #endif
 }

@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <libgen.h>
 #include "mount.h"
+#include "global.h"
 
 // define tree
 MOUNT_TREE_DEFINE(
@@ -250,8 +251,10 @@ mount_node_t* mount_extract_by_path_walk( const char* path ) {
  * @brief Simple method to dump mount point nodes
  */
 void mount_dump( void ) {
-  STARTUP_PRINT( "mountpoint node tree dump\r\n" )
-  mount_tree_each(&management_tree, mount_node, n, {
-      STARTUP_PRINT("%s\r\n", n->path);
-  });
+  #if defined( PARTITION_ENABLE_OUTPUT )
+    STARTUP_PRINT( "mountpoint node tree dump\r\n" )
+    mount_tree_each(&management_tree, mount_node, n, {
+        STARTUP_PRINT("%s\r\n", n->path);
+    });
+  #endif
 }

@@ -25,6 +25,7 @@
 #include <libgen.h>
 #include <sys/bolthur.h>
 #include "../../rpc.h"
+#include "../../global.h"
 #include "../../handler.h"
 #include "../../../libpartition.h"
 
@@ -43,7 +44,9 @@ void rpc_custom_handle_register(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  STARTUP_PRINT( "Register\r\n" )
+  #if defined( PARTITION_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Register\r\n" )
+  #endif
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {

@@ -20,16 +20,23 @@
 #include <errno.h>
 #include <sys/bolthur.h>
 #include "rpc.h"
+#include "global.h"
 #include "../../library/vfs/wait.h"
 #include "../../library/vfs/dev.h"
 
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // print something
-  EARLY_STARTUP_PRINT( "mount server processing!\r\n" )
+  #if defined( MOUNT_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "mount server processing!\r\n" )
+  #endif
   // register rpc handler
-  EARLY_STARTUP_PRINT( "bind rpc handler!\r\n" )
+  #if defined( MOUNT_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "bind rpc handler!\r\n" )
+  #endif
   if ( ! rpc_init() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
+    #if defined( MOUNT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
+    #endif
     return -1;
   }
 
@@ -37,16 +44,20 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   vfs_handler_register( RPC_VFS_MOUNT );
   if ( errno ) {
     // print error
-    EARLY_STARTUP_PRINT(
-      "Unable to register handler for mount: %s\r\n", strerror( errno ) )
+    #if defined( MOUNT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT(
+        "Unable to register handler for mount: %s\r\n", strerror( errno ) )
+    #endif
     // exit
     return -1;
   }
   vfs_handler_register( RPC_VFS_UMOUNT );
   if ( errno ) {
     // print error
-    EARLY_STARTUP_PRINT(
-      "Unable to register handler for umount: %s\r\n", strerror( errno ) )
+    #if defined( MOUNT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT(
+        "Unable to register handler for umount: %s\r\n", strerror( errno ) )
+    #endif
     // unregister handler for mount
     do {
       vfs_handler_release( RPC_VFS_MOUNT );
@@ -61,10 +72,14 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   vfs_wait_for_path( "/dev/manager/device" );
   // add device file
   if ( ! vfs_dev_add_file( "/dev/mount", nullptr, 0, nullptr ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add mount device file\r\n" )
+    #if defined( MOUNT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add mount device file\r\n" )
+    #endif
     return -1;
   }
   // wait for rpc
-  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  #if defined( MOUNT_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  #endif
   bolthur_rpc_wait_block();
 }

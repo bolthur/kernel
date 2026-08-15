@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 
 /**
  * @fn void rpc_handle_exec(size_t, pid_t, size_t, size_t)
@@ -36,7 +37,9 @@ void rpc_handle_exec(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "EXEC!\r\n" )
+  #if defined( CONSOLE_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "EXEC!\r\n" )
+  #endif
   // dummy error response
   vfs_exec_response_t response = { .result = -EINVAL };
   // handle no data

@@ -19,6 +19,7 @@
 
 #include <errno.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../../libpartition.h"
 
 /**
@@ -30,22 +31,30 @@
 bool rpc_init( void ) {
   bolthur_rpc_bind( RPC_VFS_MOUNT, rpc_handle_mount, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register handler mount!\r\n" )
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register handler mount!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_WATCH_NOTIFY, rpc_handle_watch_notify, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register handler watch notify!\r\n" )
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register handler watch notify!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( PARTITION_REGISTER_HANDLER, rpc_custom_handle_register, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register handler custom register!\r\n" )
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register handler custom register!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( PARTITION_RELEASE_HANDLER, rpc_custom_handle_release, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register handler custom release!\r\n" )
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register handler custom release!\r\n" )
+    #endif
     return false;
   }
   return true;

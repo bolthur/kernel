@@ -17,30 +17,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <errno.h>
-#include "../rpc.h"
-#include "../global.h"
+#ifndef _GLOBAL_H
+#define _GLOBAL_H
 
-/**
- * @fn bool rpc_init(void)
- * @brief RPC init
- *
- * @return
- */
-bool rpc_init( void ) {
-  bolthur_rpc_bind( RPC_VFS_MOUNT, rpc_handle_mount, true );
-  if ( errno ) {
-    #if defined( MOUNT_ENABLE_OUTPUT )
-      EARLY_STARTUP_PRINT( "Unable to register handler mount!\r\n" )
-    #endif
-    return false;
-  }
-  bolthur_rpc_bind( RPC_VFS_UMOUNT, rpc_handle_umount, true );
-  if ( errno ) {
-    #if defined( MOUNT_ENABLE_OUTPUT )
-      EARLY_STARTUP_PRINT( "Unable to register handler umount!\r\n" )
-    #endif
-    return false;
-  }
-  return true;
-}
+#define MOUNT_ENABLE_OUTPUT 1
+
+#endif //_GLOBAL_H
