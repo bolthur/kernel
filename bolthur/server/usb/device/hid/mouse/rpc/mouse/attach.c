@@ -126,7 +126,7 @@ void rpc_mouse_attach(
       free( request );
       return;
     }
-    #if defined( KEYBOARD_ENABLE_DEBUG )
+    #if defined( MOUSE_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "descriptor.endpoint_address.number = %"PRIu8", descriptor.endpoint_address.direction = %d\r\n",
         descriptor.endpoint_address.number, descriptor.endpoint_address.direction)
     #endif

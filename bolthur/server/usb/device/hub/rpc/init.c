@@ -21,6 +21,7 @@
 #include <errno.h>
 // local includes
 #include "../rpc.h"
+#include "../hub.h"
 #include "../../../../libusbd.h"
 
 /**
@@ -32,86 +33,118 @@ bool rpc_init( void ) {
   // register generic handlers
   bolthur_rpc_bind( RPC_VFS_ADD, rpc_generic_add, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register add handler!\r\n" )
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register add handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_CLOSE, rpc_generic_close, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register close handler!\r\n" )
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register close handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_EXEC, rpc_generic_exec, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register exec handler!\r\n" )
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register exec handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_EXIT, rpc_generic_exit, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register exit handler!\r\n" )
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register exit handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_FORK, rpc_generic_fork, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register fork handler!\r\n" )
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register fork handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_IOCTL, rpc_generic_ioctl, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register ioctl handler!\r\n" )
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register ioctl handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_OPEN, rpc_generic_open, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register open handler!\r\n" )
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register open handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_READ, rpc_generic_read, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register read handler!\r\n" )
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register read handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_REMOVE, rpc_generic_remove, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register remove handler!\r\n" )
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register remove handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_SEEK, rpc_generic_seek, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register seek handler!\r\n" )
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register seek handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_STAT, rpc_generic_stat, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register stat handler!\r\n" )
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register stat handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_WRITE, rpc_generic_write, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register write handler!\r\n" )
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register write handler!\r\n" )
+    #endif
     return false;
   }
   // register attach handler
   bolthur_rpc_bind( GENERIC_ATTACH, rpc_hub_attach, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register attach handler!\r\n" )
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register attach handler!\r\n" )
+    #endif
     return false;
   }
   // register detach handler
   bolthur_rpc_bind( GENERIC_DETACH, rpc_hub_detach, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register detach handler!\r\n" )
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register detach handler!\r\n" )
+    #endif
     return false;
   }
   // register check change handler
   bolthur_rpc_bind( GENERIC_CHECK_FOR_CHANGE, rpc_hub_check_change, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register check change!\r\n" )
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register check change!\r\n" )
+    #endif
     return false;
   }
   // register child detach handler
   bolthur_rpc_bind( GENERIC_CHILD_DETACHED, rpc_hub_child_detach, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register child detach!\r\n" )
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register child detach!\r\n" )
+    #endif
     return false;
   }
   // return success

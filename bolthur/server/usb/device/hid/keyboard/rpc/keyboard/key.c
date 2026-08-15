@@ -137,7 +137,9 @@ void rpc_keyboard_key(
       );
       // handle error
       if ( 0 != result ) {
-        EARLY_STARTUP_PRINT( "Unable to clear feature\r\n" )
+        #if defined( KEYBOARD_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "Unable to clear feature\r\n" )
+        #endif
         free( response );
         _syscall_rpc_cleanup();
         return;
@@ -145,7 +147,9 @@ void rpc_keyboard_key(
       // restart polling
       keyboard_start_polling( dev );
     } else {
-      EARLY_STARTUP_PRINT( "ERROR: %x\r\n", message->error );
+      #if defined( KEYBOARD_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "ERROR: %x\r\n", message->error );
+      #endif
     }
     // cleanup everything and return
     free( response );

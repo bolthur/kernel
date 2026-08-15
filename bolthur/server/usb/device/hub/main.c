@@ -23,6 +23,7 @@
 #include <sys/bolthur.h>
 // local includes
 #include "rpc.h"
+#include "hub.h"
 // library includes
 #include "../../../libusbd.h"
 #include "../../../../library/usb/usb.h"
@@ -39,47 +40,67 @@
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // register rpc
-  STARTUP_PRINT( "Setup rpc handler\r\n" )
+  #if defined( HUB_ENABLE_DEBUG )
+    STARTUP_PRINT( "Setup rpc handler\r\n" )
+  #endif
   if ( !rpc_init() ) {
-    STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
+    #endif
     return -1;
   }
 
   // initialize usb library
-  STARTUP_PRINT( "Setup usb library\r\n" )
+  #if defined( HUB_ENABLE_DEBUG )
+    STARTUP_PRINT( "Setup usb library\r\n" )
+  #endif
   int result = usb_init();
   if ( 0 != result ) {
-    STARTUP_PRINT( "Unable to bind usb library: %s\r\n", strerror( result ) );
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to bind usb library: %s\r\n", strerror( result ) );
+    #endif
     return -1;
   }
 
   // query allowed rpc origin
   const pid_t allowed_rpc_origin = vfs_get_file_handler( USBD_DEVICE_PATH );
   if ( -1 == allowed_rpc_origin ) {
-    STARTUP_PRINT( "Unable to get handler id of %s\r\n", USBD_DEVICE_PATH )
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to get handler id of %s\r\n", USBD_DEVICE_PATH )
+    #endif
     return -1;
   }
 
   // push to valid origin
   if ( ! bolthur_rpc_origin_push_valid( allowed_rpc_origin ) ) {
-    STARTUP_PRINT( "Unable to push mount pid to valid origin list!\r\n" )
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to push mount pid to valid origin list!\r\n" )
+    #endif
     return -1;
   }
 
   // registering handler
-  STARTUP_PRINT( "Registering handler at usbd\r\n" )
+  #if defined( HUB_ENABLE_DEBUG )
+    STARTUP_PRINT( "Registering handler at usbd\r\n" )
+  #endif
   result = usb_register_handler( LIBUSB_INTERFACE_CLASS_HUB );
   if ( 0 != result ) {
-    STARTUP_PRINT( "Unable to register handler at usbd\r\n" )
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register handler at usbd\r\n" )
+    #endif
     return -1;
   }
 
   // enable rpc
-  STARTUP_PRINT( "Enable rpc\r\n" )
+  #if defined( HUB_ENABLE_DEBUG )
+    STARTUP_PRINT( "Enable rpc\r\n" )
+  #endif
   _syscall_rpc_set_ready( true );
 
   // add device file
-  STARTUP_PRINT( "Sending device to vfs\r\n" )
+  #if defined( HUB_ENABLE_DEBUG )
+    STARTUP_PRINT( "Sending device to vfs\r\n" )
+  #endif
   constexpr uint32_t device_info[] = {
     GENERIC_ATTACH,
     GENERIC_DETACH,
@@ -87,12 +108,16 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     GENERIC_CHILD_DETACHED,
   };
   if ( ! vfs_dev_add_file( HUB_DEVICE_PATH, device_info, 4, nullptr ) ) {
-    STARTUP_PRINT( "Unable to add dev usbd\r\n" )
+    #if defined( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to add dev usbd\r\n" )
+    #endif
     return -1;
   }
 
   // wait for rpc
-  STARTUP_PRINT( "Wait for rpc\r\n" )
+  #if defined( HUB_ENABLE_DEBUG )
+    STARTUP_PRINT( "Wait for rpc\r\n" )
+  #endif
   bolthur_rpc_wait_block();
   return 0;
 }

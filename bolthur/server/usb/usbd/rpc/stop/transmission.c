@@ -102,7 +102,9 @@ void rpc_stop_transmission(
   const size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "POLLING\r\n" )
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "POLLING\r\n" )
+  #endif
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {

@@ -36,13 +36,17 @@ static void child_detach_finished(
   size_t data_info,
   size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "Child detach call finished\r\n" )
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Child detach call finished\r\n" )
+  #endif
   // peek matching async data without destroy for call chain
   bolthur_async_data_t* async_data = bolthur_rpc_peek_async(
     RPC_VFS_IOCTL, response_info );
   // handle no async data
   if ( ! async_data ) {
-    EARLY_STARTUP_PRINT( "NO ASYNC DATA\r\n" )
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "NO ASYNC DATA\r\n" )
+    #endif
     // cleanup
     _syscall_rpc_cleanup();
     // skip rest
@@ -55,7 +59,9 @@ static void child_detach_finished(
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // handle no data
   if ( ! data_info ) {
-    EARLY_STARTUP_PRINT( "NO DATA\r\n" )
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "NO DATA\r\n" )
+    #endif
     // return
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_deallocate_destroy( ctx );
@@ -63,7 +69,9 @@ static void child_detach_finished(
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    EARLY_STARTUP_PRINT( "INVALID ORIGIN\r\n" )
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "INVALID ORIGIN\r\n" )
+    #endif
     // return
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_deallocate_destroy( ctx );
@@ -91,13 +99,17 @@ static void detach_finished(
   size_t data_info,
   size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "Detach call finished\r\n" )
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Detach call finished\r\n" )
+  #endif
   // peek matching async data without destroy for call chain
   bolthur_async_data_t* async_data = bolthur_rpc_peek_async(
     RPC_VFS_IOCTL, response_info );
   // handle no async data
   if ( ! async_data ) {
-    EARLY_STARTUP_PRINT( "NO ASYNC DATA\r\n" )
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "NO ASYNC DATA\r\n" )
+    #endif
     // cleanup
     _syscall_rpc_cleanup();
     // skip rest
@@ -110,7 +122,9 @@ static void detach_finished(
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // handle no data
   if ( ! data_info ) {
-    EARLY_STARTUP_PRINT( "NO DATA\r\n" )
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "NO DATA\r\n" )
+    #endif
     // return
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_deallocate_destroy( ctx );
@@ -118,7 +132,9 @@ static void detach_finished(
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    EARLY_STARTUP_PRINT( "INVALID ORIGIN\r\n" )
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "INVALID ORIGIN\r\n" )
+    #endif
     // return
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_deallocate_destroy( ctx );

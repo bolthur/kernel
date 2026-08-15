@@ -216,10 +216,12 @@ int keyboard_start_polling( libusb_keyboard_device_t* device ) {
     device->descriptor.interval
   );
   // handle error
-  if ( 0 != result ) {
-    const int e = errno;
-    EARLY_STARTUP_PRINT( "ERROR: %s\r\n", strerror( e ) );
-  }
+  #if defined( KEYBOARD_ENABLE_DEBUG )
+    if ( 0 != result ) {
+      const int e = errno;
+      EARLY_STARTUP_PRINT( "ERROR: %s\r\n", strerror( e ) );
+    }
+  #endif
   return result;
 }
 

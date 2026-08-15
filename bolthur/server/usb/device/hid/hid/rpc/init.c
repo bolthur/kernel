@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../hid.h"
 #include "../../../../../libusbd.h"
 
 /**
@@ -31,122 +32,166 @@ bool rpc_init( void ) {
   // register generic handlers
   bolthur_rpc_bind( RPC_VFS_ADD, rpc_generic_add, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register add handler!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register add handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_CLOSE, rpc_generic_close, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register close handler!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register close handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_EXEC, rpc_generic_exec, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register exec handler!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register exec handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_EXIT, rpc_generic_exit, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register exit handler!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register exit handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_FORK, rpc_generic_fork, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register fork handler!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register fork handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_IOCTL, rpc_generic_ioctl, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register ioctl handler!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register ioctl handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_OPEN, rpc_generic_open, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register open handler!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register open handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_READ, rpc_generic_read, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register read handler!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register read handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_REMOVE, rpc_generic_remove, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register remove handler!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register remove handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_SEEK, rpc_generic_seek, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register seek handler!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register seek handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_STAT, rpc_generic_stat, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register stat handler!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register stat handler!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_WRITE, rpc_generic_write, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register write handler!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register write handler!\r\n" )
+    #endif
     return false;
   }
   // register handler hid attach
   bolthur_rpc_bind( GENERIC_ATTACH, rpc_hid_attach, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register attach handler!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register attach handler!\r\n" )
+    #endif
     return false;
   }
   // register handler detach
   bolthur_rpc_bind( GENERIC_DETACH, rpc_hid_detach, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register detach handler!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register detach handler!\r\n" )
+    #endif
     return false;
   }
   // register handler register
   bolthur_rpc_bind( HID_REGISTER_HANDLER, rpc_handler_register, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register register device handler!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register register device handler!\r\n" )
+    #endif
     return false;
   }
   // register handler unregister
   bolthur_rpc_bind( HID_UNREGISTER_HANDLER, rpc_handler_unregister, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register unregister device handler!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register unregister device handler!\r\n" )
+    #endif
     return false;
   }
   // register get driver
   bolthur_rpc_bind( HID_GET_DRIVER, rpc_get_driver, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register get driver!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register get driver!\r\n" )
+    #endif
     return false;
   }
   // register get application
   bolthur_rpc_bind( HID_GET_APPLICATION, rpc_get_application, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register get application!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register get application!\r\n" )
+    #endif
     return false;
   }
   // register get report count
   bolthur_rpc_bind( HID_GET_REPORT_COUNT, rpc_get_report_count, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register get report count!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register get report count!\r\n" )
+    #endif
     return false;
   }
   // register get report
   bolthur_rpc_bind(HID_GET_REPORT, rpc_get_report, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register get report!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register get report!\r\n" )
+    #endif
     return false;
   }
   // register set report
   bolthur_rpc_bind(HID_SET_REPORT, rpc_set_report, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register set report!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register set report!\r\n" )
+    #endif
     return false;
   }
   // register set report
   bolthur_rpc_bind(HID_SET_IDLE, rpc_set_idle, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register set idle!\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register set idle!\r\n" )
+    #endif
     return false;
   }
   return true;

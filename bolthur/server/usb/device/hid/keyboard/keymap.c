@@ -21,6 +21,7 @@
 #include <sys/bolthur.h>
 #include <confini.h>
 #include "keymap.h"
+#include "keyboard.h"
 
 /**
  * @brief Flag indicating whether keymap is loaded or not
@@ -106,12 +107,16 @@ static int confini_callback(
   // handle keymap
   if ( 0 == strcmp( name, "KEYMAP" ) ) {
     // debug output
-    STARTUP_PRINT( "Allocate space for path for fopen\r\n" )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Allocate space for path for fopen\r\n" )
+    #endif
     // allocate space for path
     char* path = malloc( sizeof( char ) * PATH_MAX );
     // handle allocation error
     if ( ! path ) {
-      STARTUP_PRINT( "Unable to allocate path\r\n" )
+      #if defined( KEYBOARD_ENABLE_DEBUG )
+        STARTUP_PRINT( "Unable to allocate path\r\n" )
+      #endif
       return 1;
     }
     // clear out
@@ -119,20 +124,26 @@ static int confini_callback(
     // build path to keymap
     snprintf( path, PATH_MAX, "/usr/share/kbd/%s.dat", value );
     // debug output
-    STARTUP_PRINT( "Opening %s\r\n", path )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Opening %s\r\n", path )
+    #endif
     // open keymap
     FILE* f = fopen( path, "rb" );
     // handle error
     if ( ! f ) {
       // debug output
-      STARTUP_PRINT( "Unable to open %s\r\n", path )
+      #if defined( KEYBOARD_ENABLE_DEBUG )
+        STARTUP_PRINT( "Unable to open %s\r\n", path )
+      #endif
       // free path
       free( path );
       // return error
       return 1;
     }
     // debug output
-    STARTUP_PRINT( "Reading binary data into keymap array\r\n" )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Reading binary data into keymap array\r\n" )
+    #endif
     // load binary into array
     for ( size_t i = 0; i < KEYMAP_PHY_MAX_CODE + 1; ++i ) {
       // read into keymap
@@ -145,7 +156,9 @@ static int confini_callback(
       // check read amount
       if ( read != KEYMAP_ALTSHIFTTAB + 1 ) {
         // debug output
-        STARTUP_PRINT( "Unable to read keymap entry %zu\r\n", i )
+        #if defined( KEYBOARD_ENABLE_DEBUG )
+          STARTUP_PRINT( "Unable to read keymap entry %zu\r\n", i )
+        #endif
         // close file
         fclose( f );
         // free path
@@ -185,7 +198,9 @@ int keymap_init( void ) {
     confini_callback,
     nullptr
   ) ) {
-    EARLY_STARTUP_PRINT( "Cannot load or parse console configuration\r\n" );
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Cannot load or parse console configuration\r\n" );
+    #endif
     return EIO;
   }
   // handle not loaded

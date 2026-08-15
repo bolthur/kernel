@@ -44,88 +44,124 @@ int console_fd;
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // register rpc
-  STARTUP_PRINT( "Setup rpc handler\r\n" )
+  #if defined( KEYBOARD_ENABLE_DEBUG )
+    STARTUP_PRINT( "Setup rpc handler\r\n" )
+  #endif
   if ( !rpc_init() ) {
-    STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
+    #endif
     return -1;
   }
 
   // open console
   console_fd = open( _PATH_CONSOLE, O_RDWR );
   if ( -1 == console_fd ) {
-    STARTUP_PRINT( "Unable to open console\r\n" )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to open console\r\n" )
+    #endif
     return -1;
   }
 
   // initialize usb library
-  STARTUP_PRINT( "Setup usb library\r\n" )
+  #if defined( KEYBOARD_ENABLE_DEBUG )
+    STARTUP_PRINT( "Setup usb library\r\n" )
+  #endif
   int result = usb_init();
   if ( 0 != result ) {
-    STARTUP_PRINT( "Unable to bind usb library: %s\r\n", strerror( result ) );
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to bind usb library: %s\r\n", strerror( result ) );
+    #endif
     return -1;
   }
 
   // initialize hid library
-  STARTUP_PRINT( "Setup hid library\r\n" )
+  #if defined( KEYBOARD_ENABLE_DEBUG )
+    STARTUP_PRINT( "Setup hid library\r\n" )
+  #endif
   result = hid_init();
   if ( 0 != result ) {
-    STARTUP_PRINT( "Unable to bind usb library: %s\r\n", strerror( result ) );
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to bind usb library: %s\r\n", strerror( result ) );
+    #endif
     return -1;
   }
 
   // query allowed rpc origin
   pid_t allowed_rpc_origin = vfs_get_file_handler( HID_DEVICE_PATH );
   if ( -1 == allowed_rpc_origin ) {
-    STARTUP_PRINT( "Unable to get handler id of %s\r\n", HID_DEVICE_PATH )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to get handler id of %s\r\n", HID_DEVICE_PATH )
+    #endif
     return -1;
   }
   // push to valid origin
   if ( ! bolthur_rpc_origin_push_valid( allowed_rpc_origin ) ) {
-    STARTUP_PRINT( "Unable to push mount pid to valid origin list!\r\n" )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to push mount pid to valid origin list!\r\n" )
+    #endif
     return -1;
   }
   // query allowed rpc origin
   allowed_rpc_origin = vfs_get_file_handler( USBD_DEVICE_PATH );
   if ( -1 == allowed_rpc_origin ) {
-    STARTUP_PRINT( "Unable to get handler id of %s\r\n", USBD_DEVICE_PATH )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to get handler id of %s\r\n", USBD_DEVICE_PATH )
+    #endif
     return -1;
   }
   // push to valid origin
   if ( ! bolthur_rpc_origin_push_valid( allowed_rpc_origin ) ) {
-    STARTUP_PRINT( "Unable to push mount pid to valid origin list!\r\n" )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to push mount pid to valid origin list!\r\n" )
+    #endif
     return -1;
   }
 
   // registering handler
-  STARTUP_PRINT( "Registering handler at hid\r\n" )
+  #if defined( KEYBOARD_ENABLE_DEBUG )
+    STARTUP_PRINT( "Registering handler at hid\r\n" )
+  #endif
   result = hid_register_handler( LIBUSB_HID_USAGE_PAGE_DESKTOP_KEYBOARD );
   if ( 0 != result ) {
-    STARTUP_PRINT( "Unable to register handler at hid\r\n" )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to register handler at hid\r\n" )
+    #endif
     return -1;
   }
 
   // load keymap
-  STARTUP_PRINT( "Loading configured keymap\r\n" )
+  #if defined( KEYBOARD_ENABLE_DEBUG )
+    STARTUP_PRINT( "Loading configured keymap\r\n" )
+  #endif
   result = keymap_init();
   if ( 0 != result ) {
-    STARTUP_PRINT( "Unable to load keymap\r\n" )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to load keymap\r\n" )
+    #endif
     return -1;
   }
 
   // add device file
-  STARTUP_PRINT( "Sending device to vfs\r\n" )
+  #if defined( KEYBOARD_ENABLE_DEBUG )
+    STARTUP_PRINT( "Sending device to vfs\r\n" )
+  #endif
   constexpr uint32_t device_info[] = {
     GENERIC_ATTACH,
     GENERIC_DETACH,
     GENERIC_POLL_INTERRUPT,
   };
   if ( ! vfs_dev_add_file( KEYBOARD_DEVICE_PATH, device_info, 3, nullptr ) ) {
-    STARTUP_PRINT( "Unable to add dev usbd\r\n" )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to add dev usbd\r\n" )
+    #endif
     return -1;
   }
 
   // enable rpc
-  STARTUP_PRINT( "Enable rpc\r\n" )
+  #if defined( KEYBOARD_ENABLE_DEBUG )
+    STARTUP_PRINT( "Enable rpc\r\n" )
+  #endif
   _syscall_rpc_set_ready( true );
 
   // wait for rpc

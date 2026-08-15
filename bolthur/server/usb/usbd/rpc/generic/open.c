@@ -56,7 +56,6 @@ void rpc_generic_open(
   size_t data_size;
   vfs_open_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
-    EARLY_STARTUP_PRINT( "1\r\n" )
     response.handle = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;

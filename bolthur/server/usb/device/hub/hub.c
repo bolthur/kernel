@@ -48,14 +48,8 @@ static void custom_nanosleep( const struct timespec* rqtp ) {
   timeout += _syscall_timer_tick_count();
   // loop until timeout is reached
   while ( ( tick = _syscall_timer_tick_count() ) < timeout ) {
-    //#if defined( RPC_ENABLE_DEBUG )
-    //  EARLY_STARTUP_PRINT( "sleeping %d / %d\r\n", tick, timeout )
-    //#endif
     __asm__ __volatile__( "nop" );
   }
-  //#if defined( RPC_ENABLE_DEBUG )
-  //  EARLY_STARTUP_PRINT( "sleeping %d / %d\r\n", tick, timeout )
-  //#endif
 }
 
 /**
