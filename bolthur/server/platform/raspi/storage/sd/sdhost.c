@@ -1133,8 +1133,7 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
           : "Perform DMA write\r\n" )
       #endif
       idx++;
-      uint32_t copy_size = device->block_count * device->block_size;
-      uint32_t necessary_word = copy_size / sizeof( uint32_t );
+      const uint32_t copy_size = device->block_count * device->block_size;
       sequence[ idx ].type = ( command & SDHOST_COMMAND_FLAG_READ )
         ? IOMEM_MMIO_ACTION_DMA_READ_DEV
         : IOMEM_MMIO_ACTION_DMA_WRITE_DEV;
@@ -1142,7 +1141,7 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
       sequence[ idx ].offset = PERIPHERAL_SDHOST_DATAPORT;
       sequence[ idx ].dma_copy_size = copy_size;
       sequence[ idx ].dma_permap = LIBDMA_TI_PERMAP_SDHOST;
-      sequence[ idx ].dma_burst_length = necessary_word > SDHOST_DATA_FIFO_PIO_BURST ? SDHOST_DATA_FIFO_PIO_BURST : necessary_word;
+      sequence[ idx ].dma_burst_length = 0; // set burst length to single transfer on DREQ
       #if defined( SDHOST_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "dma_copy_size = %"PRIu32"\r\n", sequence[ idx ].dma_copy_size )
       #endif
@@ -1863,7 +1862,9 @@ static sdhost_response_t reset( void ) {
   // set read / write threshold setting
   sequence[ 10 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
   sequence[ 10 ].offset = PERIPHERAL_SDHOST_DEBUG;
-  sequence[ 10 ].value = sdhost_debug_value;
+  sequence[ 10 ].value =
+    ( SDHOST_DEBUG_THRESHOLD_VALUE << SDHOST_DEBUG_THRESHOLD_READ_SHIFT )
+    | ( SDHOST_DEBUG_THRESHOLD_VALUE << SDHOST_DEBUG_THRESHOLD_WRITE_SHIFT );
   // sleep some time
   sequence[ 11 ].type = IOMEM_MMIO_ACTION_SLEEP;
   sequence[ 11 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;

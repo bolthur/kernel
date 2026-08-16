@@ -23,7 +23,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define SD_ENABLE_OUTPUT 1
+//#define SD_ENABLE_OUTPUT 1
 
 extern size_t mbr_size;
 extern uint8_t* mbr_data;

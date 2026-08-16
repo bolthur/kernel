@@ -24,6 +24,7 @@
 #include <sys/bolthur.h>
 #include "dma.h"
 #include "mmio.h"
+#include "barrier.h"
 #include "../../../../library/platform/raspi/iomem/libdma.h"
 #include "../../../../library/platform/raspi/iomem/libiomem.h"
 #include "../../../../library/platform/raspi/iomem/libperipheral.h"
@@ -34,7 +35,6 @@ static int last_error = 0;
 /**
  * @fn int dma_block_init(dma_control_block_t**)
  * @brief dma block init helper
- *
  * @param to_save
  * @return
  */
@@ -63,7 +63,6 @@ static int dma_block_init( dma_control_block_t** to_save ) {
 /**
  * @fn void dma_reset_channel(uint32_t)
  * @brief Reset channel helper
- *
  * @param channel_cs
  */
 static void dma_reset_channel( uint32_t channel_cs ) {
@@ -102,7 +101,6 @@ static void dma_reset_channel( uint32_t channel_cs ) {
 /**
  * @fn int dma_block_prepare(void)
  * @brief Prepare dma block
- *
  * @return
  */
 int dma_block_prepare( void ) {
@@ -116,7 +114,6 @@ int dma_block_prepare( void ) {
 /**
  * @fn int dma_block_to_phys(uintptr_t*)
  * @brief Translate control block to bus address
- *
  * @param addr
  * @return
  *
@@ -144,12 +141,10 @@ int dma_block_to_phys( uintptr_t* addr ) {
 /**
  * @fn int dma_block_set_address(uint32_t, uint32_t)
  * @brief Set dma block address
- *
  * @param source
  * @param destination
  * @return
  *
- * @todo move magic value 0xc0000000 to constant
  * @todo validate parameter
  */
 int dma_block_set_address(
@@ -168,7 +163,6 @@ int dma_block_set_address(
 /**
  * @fn int dma_block_transfer_info_source_increment(bool)
  * @brief Set source increment information
- *
  * @param value
  * @return
  */
@@ -188,7 +182,6 @@ int dma_block_transfer_info_source_increment( const bool value ) {
 /**
  * @fn int dma_block_transfer_info_destination_increment(bool)
  * @brief Set destination increment information
- *
  * @param value
  * @return
  */
@@ -208,7 +201,6 @@ int dma_block_transfer_info_destination_increment( const bool value ) {
 /**
  * @fn int dma_block_transfer_info_wait_response(dma_control_block_t*, bool)
  * @brief Set or remove wait response
- *
  * @param value
  * @return
  */
@@ -228,7 +220,6 @@ int dma_block_transfer_info_wait_response( const bool value ) {
 /**
  * @fn int dma_block_transfer_info_burst_length(uint32_t)
  * @brief Set transfer burst length
- *
  * @param value
  * @return
  */
@@ -244,7 +235,6 @@ int dma_block_transfer_info_burst_length( const uint32_t value ) {
 /**
  * @fn int dma_block_transfer_info_src_width(bool)
  * @brief Set or reset source width transfer information
- *
  * @param value
  * @return
  */
@@ -264,7 +254,6 @@ int dma_block_transfer_info_src_width( const bool value ) {
 /**
  * @fn int dma_block_transfer_info_dest_width(bool)
  * @brief Set or reset destination width transfer information
- *
  * @param value
  * @return
  */
@@ -284,7 +273,6 @@ int dma_block_transfer_info_dest_width( const bool value ) {
 /**
  * @fn int dma_block_transfer_info_src_dreq(bool)
  * @brief Set or reset source dreq
- *
  * @param value
  * @return
  */
@@ -304,7 +292,6 @@ int dma_block_transfer_info_src_dreq( const bool value ) {
 /**
  * @fn int dma_block_transfer_info_dest_dreq(bool)
  * @brief Set or reset destination dreq
- *
  * @param value
  * @return
  */
@@ -324,7 +311,6 @@ int dma_block_transfer_info_dest_dreq( const bool value ) {
 /**
  * @fn int dma_block_transfer_info_interrupt_enable(bool)
  * @brief Set or reset interrupt enable
- *
  * @param value
  * @return
  */
@@ -344,7 +330,6 @@ int dma_block_transfer_info_interrupt_enable( const bool value ) {
 /**
  * @fn int dma_block_transfer_info_permap(uint32_t)
  * @brief Set or reset permission map
- *
  * @param value
  * @return
  */
@@ -364,7 +349,6 @@ int dma_block_transfer_info_permap( const uint32_t value ) {
 /**
  * @fn int dma_block_set_transfer_length(uint32_t)
  * @brief Set transfer length information
- *
  * @param value
  * @return
  */
@@ -380,7 +364,6 @@ int dma_block_set_transfer_length( const uint32_t value ) {
 /**
  * @fn int dma_block_set_stride(uint32_t)
  * @brief Set stride
- *
  * @param value
  * @return
  */
@@ -396,12 +379,10 @@ int dma_block_set_stride( const uint32_t value ) {
 /**
  * @fn int dma_block_set_next(uint32_t)
  * @brief set next control block
- *
- * @param block
  * @param value
  * @return
  */
-int dma_block_set_next( uint32_t value ) {
+int dma_block_set_next( const uint32_t value ) {
   if ( ! block ) {
     last_error = -EINVAL;
     return -1;
@@ -456,8 +437,9 @@ int dma_init( void ) {
 /**
  * @fn int dma_start(void)
  * @brief Method to start dma copy
- *
  * @return
+ *
+ * @todo pass channel as parameter
  */
 int dma_start( void ) {
   if ( ! block ) {
@@ -482,6 +464,7 @@ int dma_start( void ) {
     PERIPHERAL_DMA0_CS,
     LIBDMA_CS_DISDEBUG | LIBDMA_CS_ACTIVE | LIBDMA_CS_END | LIBDMA_CS_INT
   );
+  barrier_isb();
   // return success
   return 0;
 }
@@ -489,8 +472,9 @@ int dma_start( void ) {
 /**
  * @fn int dma_wait(void)
  * @brief Method to wait until dma finished
- *
  * @return
+ *
+ * @todo pass channel as parameter
  */
 int dma_wait(
   int64_t loop_max_iteration,
@@ -559,8 +543,9 @@ int dma_wait(
 /**
  * @fn int dma_finish(void)
  * @brief Method too finish dma transfer
- *
  * @return
+ *
+ * @todo pass channel as parameter
  */
 int dma_finish( void ) {
   if ( ! block ) {
@@ -582,6 +567,8 @@ int dma_finish( void ) {
 /**
  * @fn void dma_dump(void)
  * @brief Dump dma registers
+ *
+ * @todo pass channel as parameter
  */
 void dma_dump( void ) {
   #if defined( DMA_ENABLE_OUTPUT )
@@ -613,7 +600,6 @@ void dma_dump( void ) {
 /**
  * @fn int dma_last_error(void)
  * @brief Get last error
- *
  * @return
  */
 int dma_last_error( void ) {
@@ -623,11 +609,10 @@ int dma_last_error( void ) {
 /**
  * @fn void dma_allocate_memory*(size_t)
  * @brief Wrapper to allocate dma memory
- *
  * @param size memory size to allocate
  * @return void* allocated memory or nullptr on error
  */
-void* dma_allocate_memory( size_t size ) {
+void* dma_allocate_memory( const size_t size ) {
   // allocate control block
   void* dma_block = mmap( nullptr, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_BUS | MAP_DEVICE , -1, 0 );
   if ( MAP_FAILED == block ) {
@@ -643,10 +628,9 @@ void* dma_allocate_memory( size_t size ) {
 /**
  * @fn void dma_free_memory(void*, size_t)
  * @brief Wrapper to free up memory again
- *
- * @param address address to free
+ * @param dma_block address to free
  * @param size size to unmap
  */
-void dma_free_memory( void* dma_block, size_t size ) {
+void dma_free_memory( void* dma_block, const size_t size ) {
   munmap( dma_block, size );
 }

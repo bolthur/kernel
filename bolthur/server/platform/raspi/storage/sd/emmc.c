@@ -2369,7 +2369,6 @@ const char* emmc_error( const emmc_response_t num ) {
 /**
  * @fn emmc_response_t emmc_init(void)
  * @brief Initialize emmc interface
- *
  * @return
  */
 emmc_response_t emmc_init( void ) {
@@ -2410,7 +2409,9 @@ emmc_response_t emmc_init( void ) {
       )
     #endif
     // open iomem device
-    if ( -1 == ( device->fd_iomem = open( IOMEM_DEVICE_PATH, O_RDWR ) ) ) {
+    device->fd_iomem = open( IOMEM_DEVICE_PATH, O_RDWR );
+    if ( -1 == device->fd_iomem ) {
+      device->fd_iomem = 0;
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Unable to open device\r\n" )

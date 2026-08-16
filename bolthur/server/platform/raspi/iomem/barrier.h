@@ -22,5 +22,6 @@
 
 void barrier_dmb( void );
 void barrier_dsb( void );
+void barrier_isb( void );
 
 #endif

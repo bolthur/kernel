@@ -133,6 +133,17 @@ The files can be specified by using the parameter `-x`.
 
 When starting remote debugging, you need to specify the target, e.g. `target /dev/ttyUSB0` to connect to the running instance. Furthermore, you need to configure the project with option `--enable-debug`.
 
+### Flash image to sd card
+
+To flash the build image to sdcard you first have to find out the device on your linux machine. Afterwards following command needs to be executed.
+
+```bash
+# flash image with dd to sdcard with sda device as example
+sudo dd if=../build-aux/platform/raspi/sdcard.img of=/dev/sda bs=4M status=progress conv=fsync
+# ensure writing to sdcard is done with sync
+sync 
+```
+
 ### Users
 
 Following users are pre generated with image generation:

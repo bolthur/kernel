@@ -25,6 +25,9 @@
 // from iomem
 #include "../../../../../library/platform/raspi/iomem/libiomem.h"
 
+#undef RASPI
+#define RASPI 3
+
 static sd_device_t* device;
 
 /**
@@ -77,7 +80,7 @@ bool sd_init( void ) {
     }
   // raspi 3 use sdhost
   #elif 3 == RASPI
-    sdhost_response_t response = sdhost_init();
+    const sdhost_response_t response = sdhost_init();
     if ( SDHOST_RESPONSE_OK != response ) {
       // debug output
       #if defined( SD_ENABLE_DEBUG )
@@ -139,10 +142,10 @@ const char* sd_last_error( void ) {
  */
 bool sd_transfer_block(
   uint32_t* buffer,
-  size_t buffer_size,
-  uint32_t block_number,
-  sd_operation_t operation,
-  size_t shm_id
+  const size_t buffer_size,
+  const uint32_t block_number,
+  const sd_operation_t operation,
+  const size_t shm_id
 ) {
   // debug output
   #if defined( SD_ENABLE_DEBUG )

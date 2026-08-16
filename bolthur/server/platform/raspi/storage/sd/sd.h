@@ -25,8 +25,6 @@
 #include "emmc.h"
 
 //#define SD_ENABLE_DEBUG 1
-/*#undef RASPI
-#define RASPI 3*/
 
 typedef enum {
   SD_OPERATION_READ = 0,
@@ -37,8 +35,8 @@ typedef struct {
   int last_error;
 } sd_device_t;
 
-#define SD_OPERATION_TO_EMMC( operation ) ( SD_OPERATION_READ == operation ? EMMC_OPERATION_READ : ( SD_OPERATION_WRITE == operation ? EMMC_OPERATION_WRITE : -1 ) )
-#define SD_OPERATION_TO_SDHOST( operation ) ( SD_OPERATION_READ == operation ? SDHOST_OPERATION_READ : ( SD_OPERATION_WRITE == operation ? SDHOST_OPERATION_WRITE : -1 ) )
+#define SD_OPERATION_TO_EMMC( operation ) ( SD_OPERATION_READ == operation ? EMMC_OPERATION_READ : EMMC_OPERATION_WRITE )
+#define SD_OPERATION_TO_SDHOST( operation ) ( SD_OPERATION_READ == operation ? SDHOST_OPERATION_READ : SDHOST_OPERATION_WRITE )
 
 bool sd_init( void );
 const char* sd_last_error( void );

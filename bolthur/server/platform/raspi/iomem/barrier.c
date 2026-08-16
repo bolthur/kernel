@@ -50,3 +50,20 @@ void barrier_dsb( void ) {
     __asm__ __volatile__ ( "dsb" ::: "memory" );
   #endif
 }
+
+
+/**
+ * @fn void barrier_isb(void)
+ * @brief instruction synchronization barrier
+ */
+void barrier_isb( void ) {
+  #if defined( BCM2708 )
+    __asm__ __volatile__ (
+      "mcr p15, #0, %[zero], c7, c5, #4"
+      : : [ zero ] "r" ( 0 )
+      : "memory"
+    );
+  #else
+    __asm__ __volatile__ ( "isb" ::: "memory" );
+  #endif
+}
