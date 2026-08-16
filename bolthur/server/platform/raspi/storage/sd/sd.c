@@ -25,8 +25,8 @@
 // from iomem
 #include "../../../../../library/platform/raspi/iomem/libiomem.h"
 
-#undef RASPI
-#define RASPI 3
+/*#undef RASPI
+#define RASPI 3*/
 
 static sd_device_t* device;
 
