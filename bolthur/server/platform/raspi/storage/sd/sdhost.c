@@ -219,22 +219,12 @@ static sdhost_response_t enable_interrupt( void ) {
     | SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BLOCK
     | SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BUSY
   );
-  #if defined( SDHOST_ENABLE_DMA )
-    sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ_AND;
-    sequence[ 0 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
-    sequence[ 0 ].value = all_interrupts;
-    sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-    sequence[ 1 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
-    sequence[ 1 ].value = SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BUSY;
-  #else
-    sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ_AND;
-    sequence[ 0 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
-    sequence[ 0 ].value = all_interrupts;
-    sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-    sequence[ 1 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
-    sequence[ 1 ].value = SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BUSY
-      | SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_DATA;
-  #endif
+  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ_AND;
+  sequence[ 0 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
+  sequence[ 0 ].value = all_interrupts;
+  sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
+  sequence[ 1 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
+  sequence[ 1 ].value = SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BUSY;
   // perform request
   if ( -1 == iomem_execute_sequence( device->fd_iomem, sequence, sequence_size ) ) {
     // debug output
@@ -718,28 +708,16 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
     EARLY_STARTUP_PRINT( "Finish sd data command\r\n" )
   #endif
   size_t block_size = device->block_size;
-  #if !defined( SDHOST_ENABLE_DMA )
-    size_t block_count = device->block_count;
-  #endif
   size_t offset = sizeof( uint32_t );
   size_t sequence_size;
   iomem_mmio_entry_t* sequence;
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
-    #if defined ( SDHOST_ENABLE_DMA )
-      EARLY_STARTUP_PRINT(
-        "block_size = %zx, buffer = %p\r\n",
-        block_size,
-        ( void* )device->buffer
-      )
-    #else
-      EARLY_STARTUP_PRINT(
-        "block_size = %zx, block_count = %zu, buffer = %p\r\n",
-        block_size,
-        block_count,
-        ( void* )device->buffer
-      )
-    #endif
+    EARLY_STARTUP_PRINT(
+      "block_size = %zx, buffer = %p\r\n",
+      block_size,
+      ( void* )device->buffer
+    )
   #endif
   // check for word size in size
   if ( block_size % offset ) {
@@ -756,120 +734,6 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
   // is read flag
   bool is_read = command & SDHOST_COMMAND_FLAG_READ;
   bool is_write = command & SDHOST_COMMAND_FLAG_WRITE;
-  // debug output
-  #if defined( SDHOST_ENABLE_DEBUG )
-    #if !defined ( SDHOST_ENABLE_DMA )
-      // calculate necessary word count
-      size_t necessary_word = ( block_size * block_count ) / offset;
-      EARLY_STARTUP_PRINT(
-        "is_read = %d, is_write = %d, necessary_word = %zu\r\n",
-        is_read ? 1 : 0,
-        is_write ? 1 : 0,
-        necessary_word
-      )
-    #endif
-  #endif
-  #if !defined( SDHOST_ENABLE_DMA )
-    if ( is_read || is_write ) {
-      // create shared memory
-      size_t shm_id = 0;
-      void* shm_addr = nullptr;
-      // setup dma if enabled
-      if ( device->shm_id ) {
-        // debug output
-        #if defined( SDHOST_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Using shared memory set in device\r\n" )
-        #endif
-        shm_id = device->shm_id;
-      } else {
-        // debug output
-        #if defined( SDHOST_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Creating shared memory\r\n" )
-        #endif
-        shm_id = _syscall_memory_shared_create(
-          device->block_count * device->block_size);
-        if ( errno ) {
-          // debug output
-          #if defined( SDHOST_ENABLE_DEBUG )
-            EARLY_STARTUP_PRINT( "Request shared area failed\r\n" )
-          #endif
-          // return error
-          return SDHOST_RESPONSE_UNKNOWN;
-        }
-        // attach it
-        shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
-        if ( errno ) {
-          // debug output
-          #if defined( SDHOST_ENABLE_DEBUG )
-            EARLY_STARTUP_PRINT( "Request shared area failed\r\n" )
-          #endif
-          // return error
-          return SDHOST_RESPONSE_MEMORY;
-        }
-        // clear out space
-        memset( shm_addr, 0, device->block_count * device->block_size );
-      }
-      // allocate sequence
-      sequence = iomem_prepare_mmio_sequence( 1, &sequence_size );
-      if ( ! sequence ) {
-        // debug output
-        #if defined( SDHOST_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Allocate sequence failed\r\n" )
-        #endif
-        // return error
-        return SDHOST_RESPONSE_MEMORY;
-      }
-      // read interrupt register
-      sequence[ 0 ].type = is_read
-        ? IOMEM_MMIO_SDHOST_DATA_READ
-        : IOMEM_MMIO_SDHOST_DATA_WRITE;
-      sequence[ 0 ].dma_copy_size = block_size * block_count;
-      sequence[ 0 ].value = shm_id;
-      // perform request
-      const int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_size );
-      // handle ioctl error
-      if ( -1 == result ) {
-        // debug output
-        #if defined( SDHOST_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "ioctl for transfer sequence failed\r\n" )
-        #endif
-        // free sequence
-        iomem_release_mmio_sequence( sequence );
-        // return error
-        return SDHOST_RESPONSE_IO;
-      }
-      if ( IOMEM_MMIO_ABORT_TYPE_IO == sequence[ 0 ].abort_type ) {
-        // debug output
-        #if defined( SDHOST_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Perform ioctl transfer failed\r\n" )
-        #endif
-        // free sequence
-        iomem_release_mmio_sequence( sequence );
-        // return error
-        return SDHOST_RESPONSE_IO;
-      }
-      if ( shm_addr && device->buffer ) {
-        // debug output
-        #if defined( SDHOST_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Copying from shared too buffer\r\n" )
-        #endif
-        memcpy( device->buffer, shm_addr, device->block_count * device->block_size );
-        // release shared memory again
-        _syscall_memory_shared_detach( shm_id );
-        if ( errno ) {
-          // debug output
-          #if defined( SDHOST_ENABLE_DEBUG )
-            EARLY_STARTUP_PRINT( "detach shared area failed\r\n" )
-          #endif
-          iomem_release_mmio_sequence( sequence );
-          // return failure
-          return SDHOST_RESPONSE_IO;
-        }
-      }
-      // release sequence again
-      iomem_release_mmio_sequence( sequence );
-    }
-  #endif
   // handle stop command
   if ( device->block_count > 1 && ( is_read || is_write ) ) {
     // debug output
@@ -974,11 +838,9 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
   if ( response_busy ) {
     sequence_entry_count += 2;
   }
-  #if defined( SDHOST_ENABLE_DMA )
-    if ( is_data ) {
-      sequence_entry_count++;
-    }
-  #endif
+  if ( is_data ) {
+    sequence_entry_count++;
+  }
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
@@ -1087,66 +949,64 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
   sequence[ idx ].type = IOMEM_MMIO_ACTION_READ;
   sequence[ idx ].offset = PERIPHERAL_SDHOST_RESPONSE3;
   // wait for transfer complete for data or if it's a busy command
-  #if defined( SDHOST_ENABLE_DMA )
-    // create shared memory
-    size_t shm_id = 0;
-    void* shm_addr = nullptr;
-    // setup dma if enabled
-    if ( is_data && 0 < device->block_count ) {
-      if ( device->shm_id ) {
+  // create shared memory
+  size_t shm_id = 0;
+  void* shm_addr = nullptr;
+  // setup dma if enabled
+  if ( is_data && 0 < device->block_count ) {
+    if ( device->shm_id ) {
+      // debug output
+      #if defined( SDHOST_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Using shared memory set in device\r\n" )
+      #endif
+      shm_id = device->shm_id;
+    } else {
+      // debug output
+      #if defined( SDHOST_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Creating shared memory\r\n" )
+      #endif
+      shm_id = _syscall_memory_shared_create(
+        device->block_count * device->block_size);
+      if ( errno ) {
         // debug output
         #if defined( SDHOST_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Using shared memory set in device\r\n" )
+          EARLY_STARTUP_PRINT( "Request shared area failed\r\n" )
         #endif
-        shm_id = device->shm_id;
-      } else {
-        // debug output
-        #if defined( SDHOST_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Creating shared memory\r\n" )
-        #endif
-        shm_id = _syscall_memory_shared_create(
-          device->block_count * device->block_size);
-        if ( errno ) {
-          // debug output
-          #if defined( SDHOST_ENABLE_DEBUG )
-            EARLY_STARTUP_PRINT( "Request shared area failed\r\n" )
-          #endif
-          // return error
-          return SDHOST_RESPONSE_UNKNOWN;
-        }
-        // attach it
-        shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
-        if ( errno ) {
-          // debug output
-          #if defined( SDHOST_ENABLE_DEBUG )
-            EARLY_STARTUP_PRINT( "Request shared area failed\r\n" )
-          #endif
-          // return error
-          return SDHOST_RESPONSE_MEMORY;
-        }
-        // clear out space
-        memset( shm_addr, 0, device->block_count * device->block_size );
+        // return error
+        return SDHOST_RESPONSE_UNKNOWN;
       }
-      #if defined( SDHOST_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT(command & SDHOST_COMMAND_FLAG_READ
-          ? "Perform DMA read\r\n"
-          : "Perform DMA write\r\n" )
-      #endif
-      idx++;
-      const uint32_t copy_size = device->block_count * device->block_size;
-      sequence[ idx ].type = ( command & SDHOST_COMMAND_FLAG_READ )
-        ? IOMEM_MMIO_ACTION_DMA_READ_DEV
-        : IOMEM_MMIO_ACTION_DMA_WRITE_DEV;
-      sequence[ idx ].value = shm_id;
-      sequence[ idx ].offset = PERIPHERAL_SDHOST_DATAPORT;
-      sequence[ idx ].dma_copy_size = copy_size;
-      sequence[ idx ].dma_permap = LIBDMA_TI_PERMAP_SDHOST;
-      sequence[ idx ].dma_burst_length = 0; // set burst length to single transfer on DREQ
-      #if defined( SDHOST_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "dma_copy_size = %"PRIu32"\r\n", sequence[ idx ].dma_copy_size )
-      #endif
+      // attach it
+      shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
+      if ( errno ) {
+        // debug output
+        #if defined( SDHOST_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "Request shared area failed\r\n" )
+        #endif
+        // return error
+        return SDHOST_RESPONSE_MEMORY;
+      }
+      // clear out space
+      memset( shm_addr, 0, device->block_count * device->block_size );
     }
-  #endif
+    #if defined( SDHOST_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT(command & SDHOST_COMMAND_FLAG_READ
+        ? "Perform DMA read\r\n"
+        : "Perform DMA write\r\n" )
+    #endif
+    idx++;
+    const uint32_t copy_size = device->block_count * device->block_size;
+    sequence[ idx ].type = ( command & SDHOST_COMMAND_FLAG_READ )
+      ? IOMEM_MMIO_ACTION_DMA_READ_DEV
+      : IOMEM_MMIO_ACTION_DMA_WRITE_DEV;
+    sequence[ idx ].value = shm_id;
+    sequence[ idx ].offset = PERIPHERAL_SDHOST_DATAPORT;
+    sequence[ idx ].dma_copy_size = copy_size;
+    sequence[ idx ].dma_permap = LIBDMA_TI_PERMAP_SDHOST;
+    sequence[ idx ].dma_burst_length = 0; // set burst length to single transfer on DREQ
+    #if defined( SDHOST_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "dma_copy_size = %"PRIu32"\r\n", sequence[ idx ].dma_copy_size )
+    #endif
+  }
   // wait for transfer complete for data or if it's a busy command
   if ( response_busy ) {
     // hack for cppcheck
@@ -1263,42 +1123,40 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
     }
   }
 
-  #if defined( SDHOST_ENABLE_DMA )
-    if ( is_data && 0 < device->block_count ) {
-      idx = 12;
-      if ( IOMEM_MMIO_ABORT_TYPE_DMA == sequence[ idx ].abort_type ) {
+  if ( is_data && 0 < device->block_count ) {
+    idx = 12;
+    if ( IOMEM_MMIO_ABORT_TYPE_DMA == sequence[ idx ].abort_type ) {
+      // debug output
+      #if defined( SDHOST_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "dma copy timed out\r\n" )
+      #endif
+      iomem_release_mmio_sequence( sequence );
+      // return failure
+      return SDHOST_RESPONSE_IO;
+    }
+    // debug output
+    #if defined( SDHOST_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Amount of reads: 1 dma read\r\n" )
+    #endif
+    // copy over from shared to block count
+    if ( shm_addr ) {
+      memcpy( device->buffer, shm_addr, device->block_count * device->block_size );
+      // release shared memory again
+      _syscall_memory_shared_detach( shm_id );
+      if ( errno ) {
         // debug output
         #if defined( SDHOST_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "dma copy timed out\r\n" )
+          EARLY_STARTUP_PRINT( "detach shared area failed\r\n" )
         #endif
         iomem_release_mmio_sequence( sequence );
         // return failure
         return SDHOST_RESPONSE_IO;
       }
-      // debug output
-      #if defined( SDHOST_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Amount of reads: 1 dma read\r\n" )
-      #endif
-      // copy over from shared to block count
-      if ( shm_addr ) {
-        memcpy( device->buffer, shm_addr, device->block_count * device->block_size );
-        // release shared memory again
-        _syscall_memory_shared_detach( shm_id );
-        if ( errno ) {
-          // debug output
-          #if defined( SDHOST_ENABLE_DEBUG )
-            EARLY_STARTUP_PRINT( "detach shared area failed\r\n" )
-          #endif
-          iomem_release_mmio_sequence( sequence );
-          // return failure
-          return SDHOST_RESPONSE_IO;
-        }
-      }
-      idx++;
-    } else {
-      idx = 12;
     }
-  #endif
+    idx++;
+  } else {
+    idx = 12;
+  }
   // check for timeout
   if ( response_busy ) {
     if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ idx ].abort_type ) {
