@@ -109,11 +109,19 @@ void rpc_attach_roothub(
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // handle invalid origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    // debug output
+    #if defined( USBD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Invalid origin\r\n" )
+    #endif
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // handle no data
   if ( ! data_info ) {
+    // debug output
+    #if defined( USBD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "no data\r\n" )
+    #endif
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
@@ -121,6 +129,11 @@ void rpc_attach_roothub(
   size_t data_size;
   char* dummy = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! dummy ) {
+    // debug output
+    #if defined( USBD_ENABLE_OUTPUT )
+      const int e = errno;
+      EARLY_STARTUP_PRINT( "Unable to fetch dummy: %s\r\n", strerror( e ) )
+    #endif
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
@@ -128,6 +141,10 @@ void rpc_attach_roothub(
   free( dummy );
   // handle already attached
   if ( usbd_roothub_get() ) {
+    // debug output
+    #if defined( USBD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "roothub already initialized\r\n" )
+    #endif
     error.status = -EADDRINUSE;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;

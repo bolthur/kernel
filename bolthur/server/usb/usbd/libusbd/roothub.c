@@ -275,22 +275,26 @@ static void attach_roothub_finished(
 int usbd_roothub_fire_attach( void ) {
   // get current process id
   const pid_t target = getpid();
-  char dummy;
+  char* dummy = malloc( sizeof( char ) );
+  if ( ! dummy ) {
+    return -1;
+  }
   // raise rpc
   const size_t response_id = bolthur_rpc_raise(
     USBD_ATTACH_ROOTHUB,
     target,
-    &dummy,
-    sizeof( dummy ),
+    dummy,
+    sizeof( char ),
     attach_roothub_finished,
     RPC_VFS_IOCTL,
-    &dummy,
-    sizeof( dummy ),
+    dummy,
+    sizeof( char ),
     0,
     0,
     nullptr,
     false
   );
+  free( dummy );
   // return success depending on response id
   return 0 < response_id ? 0 : -1;
 }

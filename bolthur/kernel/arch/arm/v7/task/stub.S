@@ -38,6 +38,7 @@ task_thread_switch_to:
   pop_fpu_register fp
   // restore registers and switch to process
   ldm fp, { r0 - r14 }^
-  nop
+  // wait for ldm to populate all registers
+  isb
   // return to user mode
   movs pc, lr

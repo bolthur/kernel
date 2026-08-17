@@ -50,6 +50,17 @@ bool rpc_data_queue_ready( task_process_t* proc ) {
 }
 
 /**
+ * @fn uintptr_t align_entry( uintptr_t entry, uintptr_t alignment )
+ * @brief Helper to align entry
+ * @param entry
+ * @param alignment
+ * @return
+ */
+static uintptr_t align_entry( const uintptr_t entry, const uintptr_t alignment ) {
+  return (entry + ( alignment - 1 )) & ~( alignment - 1 );
+}
+
+/**
  * @fn int rpc_data_queue_add(pid_t, const char*, size_t, size_t*)
  * @brief Method to add rpc data queue entry
  *
@@ -75,7 +86,6 @@ int rpc_data_queue_add(
     #endif
     return EINVAL;
   }
-
   // handle invalid length
   if ( 0 == data_length ) {
     // debug output
@@ -84,9 +94,8 @@ int rpc_data_queue_add(
     #endif
     return EINVAL;
   }
-
-  size_t message_id;
   // prepare message_id
+  size_t message_id;
   if ( ! rpc_data_queue_id || 0 == *rpc_data_queue_id ) {
     message_id = rpc_data_queue_generate_id();
     // set message_id
@@ -96,7 +105,6 @@ int rpc_data_queue_add(
   } else {
     message_id = *rpc_data_queue_id;
   }
-
   // handle no mailbox
   if ( !target_process->rpc_mailbox ) {
     // debug output
@@ -105,96 +113,72 @@ int rpc_data_queue_add(
     #endif
     return EINVAL;
   }
+  // determine mailbox address
+  uintptr_t mailbox;
+  bool mapped = false;
+  // handle same thread
+  if ( target_process->id == task_thread_current_thread->process->id ) {
+    mailbox = task_thread_current_thread->process->rpc_mailbox_virt;
   // map mailbox temporarily
-  const uintptr_t mailbox = virt_map_temporary( target_process->rpc_mailbox, PAGE_SIZE );
-  if ( ! mailbox ) {
-    // debug output
-    #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "Unable to map queue temporarily!\r\n" )
-    #endif
-    return EINVAL;
+  } else {
+    mailbox = virt_map_temporary( target_process->rpc_mailbox, PAGE_SIZE );
+    if ( ! mailbox ) {
+      // debug output
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "Unable to map queue temporarily!\r\n" )
+      #endif
+      // return inval
+      return EINVAL;
+    }
+    // set mapped flag
+    mapped = true;
   }
+  const uintptr_t mailbox_end = mailbox + PAGE_SIZE;
   // set pointer to beginning
   auto entry = ( rpc_data_mailbox_entry_t* )mailbox;
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "===================================> %d <================================\r\n", target )
     DEBUG_OUTPUT( "Mailbox temporarily mapped to 0x%"PRIxPTR", looking for free space \r\n", mailbox )
   #endif
-  // cppcheck-suppress-begin duplicateCondition
-  // handle empty
-  if ( entry->id ) {
-    // debug output
-    #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "Mailbox not empty, checking ...\r\n" )
-      DEBUG_OUTPUT( "current id: %zx\r\n", entry->id )
-      DEBUG_OUTPUT( "current size: %zx\r\n", entry->length )
-    #endif
-    // loop while there is an entry
-    while ( entry->id && data_length < PAGE_SIZE - ( ( uintptr_t )entry - mailbox - sizeof( rpc_data_mailbox_entry_t ) ) ) {
-      // debug output
-      #if defined( PRINT_RPC )
-        DEBUG_OUTPUT( "entry: %#"PRIxPTR"\r\n", (uintptr_t)entry )
-      #endif
-      entry = ( rpc_data_mailbox_entry_t* )( ( uintptr_t )entry + sizeof( rpc_data_mailbox_entry_t ) + entry->length );
-      uintptr_t offset = ( uintptr_t )entry % sizeof( rpc_data_mailbox_entry_t );
-      if ( offset ) {
-        // debug output
-        #if defined( PRINT_RPC )
-          DEBUG_OUTPUT(
-            "entry: %#"PRIxPTR", offset = %#"PRIxPTR", "
-            "sizeof( rpc_data_mailbox_entry_t ) - offset = %#zx\r\n",
-            (uintptr_t)entry, offset, sizeof( rpc_data_mailbox_entry_t ) - offset )
-        #endif
-        entry = ( rpc_data_mailbox_entry_t* )( ( uintptr_t )entry + ( sizeof( rpc_data_mailbox_entry_t ) - offset ) );
-        if ( ! ( ( uintptr_t )entry >= mailbox && ( uintptr_t )entry < mailbox + PAGE_SIZE ) ) {
-          #if defined( PRINT_RPC )
-            DEBUG_OUTPUT( "Entry malformed!\r\n" )
-            virt_unmap_temporary( mailbox, PAGE_SIZE );
-          #endif
-          return EFAULT;
-        }
-        #if defined( PRINT_RPC )
-          DEBUG_OUTPUT( "current id: %zx\r\n", entry->id )
-          DEBUG_OUTPUT( "current size: %zx\r\n", entry->length )
-        #endif
-      }
-      // debug output
-      #if defined( PRINT_RPC )
-        DEBUG_OUTPUT(
-          "entry: %#"PRIxPTR", offset = %#"PRIxPTR", "
-          "sizeof( rpc_data_mailbox_entry_t ) = %#zx\r\n",
-          (uintptr_t)entry, offset, sizeof( rpc_data_mailbox_entry_t ) )
-      #endif
+  // loop while entry id is not matching
+  while ( ( uintptr_t )entry + sizeof( rpc_data_mailbox_entry_t ) < mailbox_end ) {
+    // handle end
+    if ( ! entry->id ) {
+      break;
     }
+    // calculate current entry end
+    const uintptr_t current_entry_end = ( uintptr_t )entry + sizeof( rpc_data_mailbox_entry_t ) + entry->length;
+    // check for overflow / underflow
+    if ( current_entry_end > mailbox_end || current_entry_end < ( uintptr_t )entry ) {
+      // unmap mailbox again
+      if ( mapped ) {
+        virt_unmap_temporary( mailbox, PAGE_SIZE );
+      }
+      // return fault
+      return EFAULT;
+    }
+    // align current entry end properly
+    const uintptr_t next_address = align_entry( current_entry_end, alignof( max_align_t ) );
+    // set entry to next address
+    entry = ( rpc_data_mailbox_entry_t* )next_address;
   }
   // debug output
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "Looking for free space finished!\r\n" )
   #endif
-  // handle no free entry found
-  if ( entry->id ) {
-    // unmap temporary again
-    virt_unmap_temporary( mailbox, PAGE_SIZE );
+  const uintptr_t required_space = sizeof( rpc_data_mailbox_entry_t ) + data_length;
+  const uintptr_t entry_end_address = ( uintptr_t )entry + required_space;
+  // handle exceed
+  if ( entry_end_address >= mailbox_end ) {
+    // unmap
+    if ( mapped ) {
+      virt_unmap_temporary( mailbox, PAGE_SIZE );
+    }
     // debug output
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT( "Mailbox full of %d!\r\n", target )
     #endif
-    return ENOMEM;
-  }
-  // cppcheck-suppress-end duplicateCondition
-  // debug output
-  #if defined( PRINT_RPC )
-    DEBUG_OUTPUT( "data_length = %#zx, max = %#zx!\r\n", data_length, PAGE_SIZE - ( ( uintptr_t )entry - mailbox - sizeof( rpc_data_mailbox_entry_t ) ) )
-    DEBUG_OUTPUT( "entry = %#"PRIxPTR", mailbox = %#"PRIxPTR", sizeof( rpc_data_mailbox_entry_t ) = %#zx\r\n", ( uintptr_t )entry, mailbox, sizeof( rpc_data_mailbox_entry_t ) )
-  #endif
-  // handle to big
-  if ( data_length > PAGE_SIZE - ( ( uintptr_t )entry - mailbox - sizeof( rpc_data_mailbox_entry_t ) ) ) {
-    // unmap temporary again
-    virt_unmap_temporary( mailbox, PAGE_SIZE );
-    // debug output
-    #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "Mailbox full of %d!\r\n", target )
-    #endif
+    // return nu memory
     return ENOMEM;
   }
   // set id and length
@@ -211,8 +195,9 @@ int rpc_data_queue_add(
     DEBUG_OUTPUT( "Unmapping temporary again\r\n" )
   #endif
   // unmap temporary again
-  virt_unmap_temporary( mailbox, PAGE_SIZE );
-
+  if ( mapped ) {
+    virt_unmap_temporary( mailbox, PAGE_SIZE );
+  }
   // debug output
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "Everything done!\r\n" )

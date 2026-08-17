@@ -291,9 +291,9 @@ _\name\()_exit_finished:
     // backup fpu registers
     vstmia.64 \register!, { d0 - d15 }
     vstmia.64 \register!, { d16 - d31 }
+    // restore passed register to point to begin
+    sub \register, #STACK_FRAME_SIZE
   #endif
-  // restore passed register to point to begin
-  sub \register, #STACK_FRAME_SIZE
 .endm
 
 .macro pop_fpu_register register:req
@@ -306,7 +306,7 @@ _\name\()_exit_finished:
     // restore fpu registers
     vldmia.64 \register!, { d0 - d15 }
     vldmia.64 \register!, { d16 - d31 }
+    // restore passed register to point to begin
+    sub \register, #STACK_FRAME_SIZE
   #endif
-  // restore passed register to point to begin
-  sub \register, #STACK_FRAME_SIZE
 .endm
