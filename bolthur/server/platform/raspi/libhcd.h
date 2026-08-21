@@ -82,9 +82,9 @@
   | HCD_CHANNEL_INTERRUPT_DATA_TOGGLE_ERROR)
 
 // fifo stuff
-#define HCD_DWHCI_CFG_HOST_RX_FIFO_SIZE 1024 // number of 32 bit words
-#define HCD_DWHCI_CFG_HOST_NPER_TX_FIFO_SIZE 1024 // number of 32 bit words
-#define HCD_DWHCI_CFG_HOST_PER_TX_FIFO_SIZE 1024 // number of 32 bit words
+#define HCD_DWHCI_CFG_HOST_RX_FIFO_SIZE 516 // number of 32 bit words
+#define HCD_DWHCI_CFG_HOST_NPER_TX_FIFO_SIZE 256 // number of 32 bit words
+#define HCD_DWHCI_CFG_HOST_PER_TX_FIFO_SIZE 252 // number of 32 bit words
 
 // dwhci core ahb config values
 #define HCD_DWHCI_CORE_AHB_CFG_GLOBAL_INTERRUPT_MASK ( 1U << 0 )

@@ -246,8 +246,9 @@ void rpc_interrupt_handle(
             continue;
           }
           // set transferred and packet transferred
-          const uint32_t transferred = HCD_DWHCI_CHAN_XFER_SIZE_TRANSFER_SIZE( transfer_size );
-          entry->packet_transferred = HCD_DWHCI_CHAN_XFER_SIZE_PACKET_COUNT( transfer_size );
+          const uint32_t remaining = HCD_DWHCI_CHAN_XFER_SIZE_TRANSFER_SIZE( transfer_size );
+          const uint32_t transferred = entry->buffer_size_to_transfer - remaining;
+          entry->packet_transferred += transferred;
           // handle finished
           if (
             // treat setup as finished where 0 transfers may happen
@@ -256,10 +257,8 @@ void rpc_interrupt_handle(
             || entry->status == DWHCI_QUEUE_POLL_STATUS_DATA
             // treat cancellation as finished
             || entry->status == DWHCI_QUEUE_CANCEL
-            // treat non data actions as finished
-            || entry->buffer_size_to_transfer == 0
-            // handle enough transferred
-            || transferred == entry->buffer_size_to_transfer
+            // treat no remaining as finished
+            || remaining == 0
           ) {
             // debug output
             #if defined( DWHCI_ENABLE_DEBUG )
@@ -284,8 +283,8 @@ void rpc_interrupt_handle(
           } else {
             // debug output
             #if defined( DWHCI_ENABLE_DEBUG )
-              EARLY_STARTUP_PRINT( "Restart current state with offset, %"PRIu32" / %"PRIu32"\r\n",
-                transferred, entry->buffer_size_to_transfer )
+              EARLY_STARTUP_PRINT( "Restart current state with remaining, %"PRIu32" / %"PRIu32", transfer_size: %"PRIx32"\r\n",
+                remaining, entry->buffer_size_to_transfer, transfer_size )
             #endif
             // increase buffer offset
             entry->buffer_offset += transferred;

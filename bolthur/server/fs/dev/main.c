@@ -23,55 +23,88 @@
 #include <unistd.h>
 #include <sys/bolthur.h>
 #include <sys/mount.h>
+#include <libgen.h>
+#include <errno.h>
 #include "rpc.h"
 #include "handle.h"
 #include "global.h"
 #include "ioctl/handler.h"
 #include "../../libdev.h"
-#include "../../../library/vfs/wait.h"
 #include "../../../library/vfs/dev.h"
 #include "dev.h"
 #include "watch.h"
 
 /**
- * @fn void on_folder_file_added(size_t, pid_t, size_t, size_t)
- * @brief On file or folder added callback
- * @param type
- * @param origin
- * @param data_info
- * @param response_info
+ * @fn int add_folder_file(mode_t, const char*, pid_t, struct stat, const size_t*, size_t)
+ * @brief Wrapper to add folder / file to dev
+ * @param mode
+ * @param path
+ * @param handler
+ * @param info
+ * @param device_info
+ * @param device_size
+ * @return
  */
-static void on_folder_file_added(
-  [[maybe_unused]] size_t type,
-  [[maybe_unused]] pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+int add_folder_file(
+  const mode_t mode,
+  const char* path,
+  const pid_t handler,
+  const struct stat info,
+  const size_t* device_info,
+  const size_t device_size
 ) {
-  // handle no data
-  if ( ! data_info ) {
-    #if defined( DEV_ENABLE_OUTPUT )
-      EARLY_STARTUP_PRINT( "No data info found!\r\n" )
-    #endif
-    exit( -1 );
+  // handle invalid type
+  if ( ! S_ISCHR( mode ) ) {
+    return EINVAL;
   }
-  // get message and data size
-  size_t data_size;
-  vfs_add_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
-  if ( ! response ) {
-    const int e = errno;
-    #if defined( DEV_ENABLE_OUTPUT )
-      EARLY_STARTUP_PRINT( "Unable to fetch response: %s\r\n", strerror( e ) )
-    #endif
-    exit( -1 );
+  char* pathdup = strdup( path );
+  if ( ! pathdup ) {
+    return ENOMEM;
   }
-  // stop on success
-  if ( VFS_ADD_SUCCESS != response->status ) {
-    #if defined( DEV_ENABLE_OUTPUT )
-      EARLY_STARTUP_PRINT( "Unable to add: %d\r\n", response->status )
-    #endif
-    exit( -1 );
+  // extract base name
+  const char* dir = dirname( pathdup );
+  // check for notification
+  watch_node_t* node = watch_extract( dir, false );
+  if ( ! node && errno ) {
+    free( pathdup );
+    return errno;
   }
-  free( response );
+  // check if already existing
+  const device_handle_t* handle = handle_get_by_path( path );
+  if ( handle ) {
+    free( pathdup );
+    return EALREADY;
+  }
+  // try to add
+  if ( ! handle_add( path, info, handler ) ) {
+    free( pathdup );
+    return EAGAIN;
+  }
+  // handle device info stuff if is device
+  if ( S_ISCHR( mode ) && device_size ) {
+    for ( size_t idx = 0; idx < device_size; idx++ ) {
+      while ( true ) {
+        if ( ! ioctl_push_command( device_info[ idx ], handler ) ) {
+          continue;
+        }
+        break;
+      }
+    }
+  }
+  // notification
+  if ( node ) {
+    watch_tree_each(node->pid, watch_pid, n, {
+      // notify if process and handler differ
+      if ( n->process != handler ) {
+        watch_path_notify( path, n->process );
+      }
+     });
+  }
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Added %s\r\n", path )
+  #endif
+  free( pathdup );
+  return 0;
 }
 
 /**
@@ -157,48 +190,53 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   _syscall_rpc_set_ready( true );
 
   // device info data
-  constexpr uint32_t device_info[] = { DEV_START, DEV_KILL, };
+  constexpr size_t device_info[] = { DEV_START, DEV_KILL, };
+  const pid_t handler = getpid();
 
-  // add manager subfolder with wait for path
-  if ( ! vfs_dev_add_folder( "/dev/manager", nullptr, 0, on_folder_file_added ) ) {
-    #if defined( DEV_ENABLE_OUTPUT )
-      EARLY_STARTUP_PRINT( "Unable to add manager subfolder\r\n" )
+  // add manager subfolder
+  result = add_folder_file( S_IFCHR, "/dev/manager", handler, (struct stat){
+    .st_mode = S_IFCHR, }, nullptr, 0 );
+  if ( 0 != result ) {
+    #if defined (DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add folder / file: %s\r\n", strerror( result ) )
     #endif
-    return -1;
+    exit( -1 );
   }
-  vfs_wait_for_path( "/dev/manager" );
-  // add storage subfolder with wait for path
-  if ( ! vfs_dev_add_folder( "/dev/storage", nullptr, 0, on_folder_file_added ) ) {
-    #if defined( DEV_ENABLE_OUTPUT )
-      EARLY_STARTUP_PRINT( "Unable to add storage subfolder\r\n" )
+  // add storage subfolder
+  result = add_folder_file( S_IFCHR, "/dev/storage", handler, (struct stat){
+    .st_mode = S_IFCHR, }, nullptr, 0 );
+  if ( 0 != result ) {
+    #if defined (DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add folder / file: %s\r\n", strerror( result ) )
     #endif
-    return -1;
+    exit( -1 );
   }
-  vfs_wait_for_path( "/dev/storage" );
-  // add usb subfolder with wait for path
-  if ( ! vfs_dev_add_folder( "/dev/usb", nullptr, 0, on_folder_file_added ) ) {
-    #if defined( DEV_ENABLE_OUTPUT )
-      EARLY_STARTUP_PRINT( "Unable to add USB subfolder\r\n" )
+  // add usb subfolder
+  result = add_folder_file( S_IFCHR, "/dev/usb", handler, (struct stat){
+    .st_mode = S_IFCHR, }, nullptr, 0 );
+  if ( 0 != result ) {
+    #if defined (DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add folder / file: %s\r\n", strerror( result ) )
     #endif
-    return -1;
+    exit( -1 );
   }
-  vfs_wait_for_path( "/dev/usb" );
-  // add usb subfolder with wait for path
-  if ( ! vfs_dev_add_folder( "/dev/usb/server", nullptr, 0, on_folder_file_added ) ) {
-    #if defined( DEV_ENABLE_OUTPUT )
-      EARLY_STARTUP_PRINT( "Unable to add USB subfolder\r\n" )
+  // add usb server subfolder
+  result = add_folder_file( S_IFCHR, "/dev/usb/server", handler, (struct stat){
+    .st_mode = S_IFCHR, }, nullptr, 0 );
+  if ( 0 != result ) {
+    #if defined (DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add folder / file: %s\r\n", strerror( result ) )
     #endif
-    return -1;
+    exit( -1 );
   }
-  vfs_wait_for_path( "/dev/usb/server" );
-  // add device file without wait for file since everything else is blocked
-  // in early stage by /dev/manager/device and a wait for path would result
-  // in possible locked up dev daemon
-  if ( ! vfs_dev_add_file( "/dev/manager/device", device_info, 2, on_folder_file_added ) ) {
-    #if defined( DEV_ENABLE_OUTPUT )
-      EARLY_STARTUP_PRINT( "Unable to add storage subfolder\r\n" )
+  // add device file
+  result = add_folder_file( S_IFCHR, "/dev/manager/device", handler, (struct stat){
+    .st_mode = S_IFCHR, }, device_info, 2 );
+  if ( 0 != result ) {
+    #if defined (DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add folder / file: %s\r\n", strerror( result ) )
     #endif
-    return -1;
+    exit( -1 );
   }
 
   // wait for rpc

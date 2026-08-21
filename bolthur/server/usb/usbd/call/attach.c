@@ -55,7 +55,7 @@ int call_attach(
       EARLY_STARTUP_PRINT( "No handler found for %d\r\n", dev->interfaces[ 0 ].class )
     #endif
     // return success
-    return 0;
+    return ENOSYS;
   }
   // set handler pids for device
   dev->device_attached_handler = handler;

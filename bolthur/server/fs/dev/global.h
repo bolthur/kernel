@@ -22,4 +22,6 @@
 
 #define DEV_ENABLE_OUTPUT 1
 
+int add_folder_file( mode_t, const char*, pid_t, struct stat, const size_t*, size_t );
+
 #endif //_GLOBAL_H

@@ -422,8 +422,8 @@ int hub_port_reset(
     // initialize timeout
     uint32_t timeout = 0;
     do {
-      // delay 20 milliseconds
-      constexpr long milliseconds = 20;
+      // delay 100 milliseconds
+      constexpr long milliseconds = 100;
       custom_nanosleep( &(struct timespec){
         .tv_sec = milliseconds / 1000,
         .tv_nsec = ( milliseconds % 1000 ) * 1000000,
@@ -484,6 +484,12 @@ int hub_port_reset(
     // return result
     return result;
   }
+  // delay 100 milliseconds
+  constexpr long milliseconds = 100;
+  custom_nanosleep( &(struct timespec){
+    .tv_sec = milliseconds / 1000,
+    .tv_nsec = ( milliseconds % 1000 ) * 1000000,
+  } );
   // return success
   return 0;
 }
@@ -746,6 +752,7 @@ static void hub_attach_finished(
     }
     return;
   }
+  /// FIXME: ADD ERROR HANDLING
   // get attach data
   auto const attach = ( usbd_attach_device_t* )attach_response->container;
   // debug output

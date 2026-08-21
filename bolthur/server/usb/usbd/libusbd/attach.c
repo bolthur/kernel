@@ -134,12 +134,32 @@ static void attach_configure_finished(
     EARLY_STARTUP_PRINT( "dev->interfaces[ 0 ].class = %d\r\n", attach_context->device->interfaces[ 0 ].class )
   #endif
   // call to attach the device
-  const int result = call_attach(
+  int result = call_attach(
     attach_context->device,
     0,
     attach_attach_finished,
     attach_context
   );
+  // handle no handler
+  if ( ENOSYS == result ) {
+    // debug output
+    #if defined( USBD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "continuing, because of no handler\r\n" )
+    #endif
+    // create new async data
+    bolthur_rpc_push_async(
+      async_data->type, async_data->rpc_id, async_data->original_data,
+      async_data->length, async_data->original_origin, async_data->original_rpc_id,
+      async_data->callback, attach_context );
+    // call attach finished
+    attach_attach_finished( type, origin, data_info, response_info );
+    // destroy contexts
+    usbd_context_configuration_destroy( ctx );
+    usbd_context_configure_destroy( configure_context );
+    bolthur_rpc_destroy_async( async_data );
+    // end here
+    return;
+  }
   // handle error
   if ( 0 != result ) {
     // debug output
@@ -214,7 +234,7 @@ static void attach_read_device_finished_2(
   // debug output
   #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Attach Device %s. Address:%"PRIu8" Class:%d Subclass:%"PRIu8
-      " USB:%"PRIx16".%"PRIx16". %"PRIu8" configurations, %"PRIu8" interfaces.\n",
+      " USB:%"PRIx16".%"PRIx16". %"PRIu8" configurations, %"PRIu8" interfaces.\r\n",
       usbd_description_get( attach_context->device ), attach_context->address, attach_context->device->descriptor.class, attach_context->device->descriptor.subclass,
       ( uint16_t )( attach_context->device->descriptor.usb_version >> 8 ), ( uint16_t )( attach_context->device->descriptor.usb_version >> 4 ),
       attach_context->device->descriptor.configuration_count, attach_context->device->configuration.interface_count )

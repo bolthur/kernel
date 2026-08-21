@@ -276,9 +276,9 @@ void rpc_hub_attach(
   }
   // power on in case it's not the root hub
   if ( message->device_number != roothub_device_number ) {
-      #if defined ( HUB_ENABLE_OUTPUT )
-        EARLY_STARTUP_PRINT( "Power on hub!\r\n" )
-      #endif
+    #if defined ( HUB_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Power on hub!\r\n" )
+    #endif
     // power on hub
     result = hub_power_on( message->device_number, hub );
     if ( 0 != result ) {
