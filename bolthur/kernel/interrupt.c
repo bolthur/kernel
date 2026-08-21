@@ -671,6 +671,13 @@ void interrupt_init( void ) {
 
   // debug output
   #if defined( PRINT_INTERRUPT )
+    DEBUG_OUTPUT( "Calling platform interrupt init\r\n" )
+  #endif
+  // possible post init
+  interrupt_platform_init();
+
+  // debug output
+  #if defined( PRINT_INTERRUPT )
     DEBUG_OUTPUT( "Calling post interrupt init\r\n" )
   #endif
   // possible post init
@@ -678,8 +685,9 @@ void interrupt_init( void ) {
 
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Toggle interrupts\r\n" )
+    DEBUG_OUTPUT( "Toggle on interrupts\r\n" )
   #endif
+  // possible post init
   interrupt_toggle( INTERRUPT_TOGGLE_ON );
 }
 

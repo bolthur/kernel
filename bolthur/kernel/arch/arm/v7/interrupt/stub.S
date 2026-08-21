@@ -71,7 +71,7 @@ _vector_undefined_instruction_handler:
   exception_handler 4, vector_undefined_instruction_handler, CPSR_MODE_SUPERVISOR, vector_undefined, "none"
 
 _vector_svc_handler:
-  exception_handler 4, vector_svc_handler, CPSR_MODE_SUPERVISOR, vector_svc, "none"
+  exception_handler_svc 4, vector_svc_handler, CPSR_MODE_SUPERVISOR, vector_svc, "none"
 
 _vector_prefetch_abort_handler:
   exception_handler 4, vector_prefetch_abort_handler, CPSR_MODE_SUPERVISOR, vector_prefetch_abort, "none"

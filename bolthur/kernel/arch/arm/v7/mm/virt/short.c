@@ -22,6 +22,7 @@
 #include "../../../../../lib/stdlib.h"
 #include "../../../../../lib/assert.h"
 #include "../../../../../panic.h"
+#include "../../../../../cache.h"
 #include "../../../../../entry.h"
 #if defined( PRINT_MM_VIRT )
   #include "../../../../../lib/inttypes.h"
@@ -975,6 +976,8 @@ bool v7_short_set_context( virt_context_t* ctx ) {
   ) {
     return false;
   }
+  // invalidate data cache
+  cache_invalidate_save();
   // user context handling
   if ( VIRT_CONTEXT_TYPE_USER == ctx->type ) {
     // debug output
@@ -1015,6 +1018,10 @@ bool v7_short_set_context( virt_context_t* ctx ) {
     #endif
   }
 
+  // ensure ttbr write is finished
+  barrier_data_sync();
+  barrier_instruction_sync();
+
   return true;
 }
 
@@ -1047,11 +1054,11 @@ void v7_short_flush_complete( void ) {
   __asm__ __volatile__( "mcr p15, 0, %0, c8, c6, 0" : : "r" ( 0 ) );
   // invalidate entire instruction tlb
   __asm__ __volatile__( "mcr p15, 0, %0, c8, c5, 0" : : "r" ( 0 ) );
+  // invalidate instruction cache
+  cache_invalidate_instruction_cache();
   // data synchronization barrier
   barrier_data_sync();
   barrier_instruction_sync();
-  // invalidate data cache
-  cache_invalidate_save();
 }
 
 /**
@@ -1543,6 +1550,8 @@ bool v7_short_destroy_context( virt_context_t* ctx, bool unmap_only ) {
   ) {
     return false;
   }
+  // invalidate caches
+  cache_invalidate_save();
   // map temporarily
   sd_context_half_t* ctx_mapped = ( sd_context_half_t* )map_temporary(
     ( uintptr_t )ctx->context, SD_TTBR_SIZE_2G );

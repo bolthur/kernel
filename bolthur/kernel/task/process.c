@@ -28,6 +28,7 @@
 #include "../interrupt.h"
 #include "../elf.h"
 #include "../initrd.h"
+#include "../cache.h"
 #include "../mm/phys.h"
 #include "../mm/virt.h"
 #include "../mm/shared.h"
@@ -40,7 +41,6 @@
 #include "thread.h"
 #include "stack.h"
 #include "../entry.h"
-#include "../rpc/data.h"
 #include "../rpc/queue.h"
 #include "../rpc/generic.h"
 
@@ -864,7 +864,7 @@ static int map_replace_random( const size_t size ) {
  */
 int task_process_replace(
   task_process_t* proc,
-  uintptr_t elf,
+  const uintptr_t elf,
   const char** argv,
   const char** env,
   void* context
@@ -916,6 +916,11 @@ int task_process_replace(
     DEBUG_OUTPUT( "image = %p\r\n", image )
   #endif
   memcpy_unsafe_src( image, ( void* )elf, image_size );
+
+  // invalidate data cache
+  cache_invalidate_save();
+  // invalidate instruction cache
+  cache_invalidate_instruction_cache();
 
   // clear all assigned shared areas
   if ( ! shared_memory_cleanup_process( proc ) ) {
@@ -1024,6 +1029,10 @@ int task_process_replace(
     task_thread_current_thread = new_current;
     // switch thread state to active
     task_thread_set_state( task_thread_current_thread, TASK_THREAD_STATE_ACTIVE );
+    // set context again
+    virt_set_context( task_thread_current_thread->process->virtual_context );
+    // flush everything
+    virt_flush_complete();
   }
   return 0;
 }
@@ -1037,9 +1046,9 @@ int task_process_replace(
  * @param necessary_thread_data
  */
 void task_unblock_threads(
-  task_process_t* proc,
-  task_thread_state_t necessary_thread_state,
-  task_state_data_t necessary_thread_data
+  const task_process_t* proc,
+  const task_thread_state_t necessary_thread_state,
+  const task_state_data_t necessary_thread_data
 ) {
   // get first thread
   avl_node_t* current_thread_node = avl_iterate_first( proc->thread_manager );

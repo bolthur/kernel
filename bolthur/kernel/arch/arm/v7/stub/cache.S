@@ -213,7 +213,7 @@ finished:
   mov r10, #0
   // select current cache level in cssr
   mcr p15, 2, r10, c0, c0, 0
-  dsb st
+  dsb sy
   isb
   ldmfd sp!, { r4-r5, r7, r9-r11, lr }
   bx  lr

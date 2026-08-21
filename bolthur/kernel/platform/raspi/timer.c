@@ -20,6 +20,7 @@
 #include "timer.h"
 #include "gpio.h"
 #include "peripheral.h"
+#include "../../arch/arm/barrier.h"
 #include "mailbox/property.h"
 #if defined( PRINT_TIMER )
   #include "../../lib/inttypes.h"
@@ -30,19 +31,66 @@
 #include "../../timer.h"
 #include "../../interrupt.h"
 
-size_t timer_tick_count;
+static size_t timer_tick_count;
 
 /**
- * @fn bool timer_pending(void)
- * @brief Check for pending timer interrupt
- *
- * @return
+ * @fn void timer_init_clock(void)
+ * @brief Setup timer clock
  */
-static bool timer_pending( void ) {
-  // get peripheral base
-  const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
-  // return whether timer is pending
-  return io_in32( base + SYSTEM_TIMER_CONTROL ) & SYSTEM_TIMER_MATCH_3;
+static void timer_init_clock( void ) {
+  // handle local peripherals
+  #if defined( BCM2709 ) || defined( BCM2710 )
+    // use crystal clock source and increment by one
+    io_out32( peripheral_base_get( PERIPHERAL_LOCAL ), 0 );
+    // set prescaler
+    io_out32( peripheral_base_get( PERIPHERAL_LOCAL ) + 0x08, 0x80000000 );
+  #else
+    #error "timer not implemented"
+  #endif
+}
+
+/**
+ * @fn void timer_routing(void)
+ * @brief Helper to setup timer routing
+ */
+static void timer_routing( void ) {
+  // handle local peripherals
+  #if defined( BCM2709 ) || defined( BCM2710 )
+    io_out32( peripheral_base_get( PERIPHERAL_LOCAL ) + 0x40, ARM_CORE0_TIMER_MATCH );
+    barrier_data_sync();
+  #else
+    #error "timer not implemented"
+  #endif
+}
+
+/**
+ * @fn void timer_set_interval(uint32_t)
+ * @brief Helper to set timer interval
+ * @param interval
+ */
+static void timer_set_interval( uint32_t interval ) {
+  #if defined( BCM2709 ) || defined( BCM2710 )
+    // write new interval
+    __asm__ __volatile__( "mcr p15, 0, %0, c14, c3, 0" : : "r" ( interval ) );
+    // barriers
+    barrier_data_sync();
+    barrier_instruction_sync();
+  #else
+    #error "timer not implemented"
+  #endif
+}
+
+/**
+ * @fn void timer_start(void)
+ * @brief Helper to start the timer
+ */
+static void timer_control( uint32_t control ) {
+  #if defined( BCM2709 ) || defined( BCM2710 )
+    __asm__ __volatile__( "mcr p15, 0, %0, c14, c3, 1" : : "r" ( control ) );
+    barrier_instruction_sync();
+  #else
+    #error "timer not implemented"
+  #endif
 }
 
 /**
@@ -52,34 +100,14 @@ static bool timer_pending( void ) {
  * @param context
  */
 static void timer_clear( void* context ) {
-  // check for pending timer
-  if ( ! timer_pending() ) {
-    return;
-  }
+  timer_control( 3 );
   // debug output
   #if defined( PRINT_TIMER )
     DEBUG_OUTPUT( "timer_clear()\r\n" )
   #endif
-  // get peripheral base
-  const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
-  // enable timer 3
-  io_out32( base + SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
-
-  // set compare for timer 3
-  uint32_t current_count = io_in32( base + SYSTEM_TIMER_COUNTER_LOWER );
-  uint32_t next_count = current_count + timer_get_interval();
-  #if defined( PRINT_TIMER )
-    DEBUG_OUTPUT(
-      "current = %#"PRIx32", next = %#"PRIx32"\r\n",
-      current_count,
-      next_count
-    )
-  #endif
-  io_out32( base + SYSTEM_TIMER_COMPARE_3, next_count );
-
-  // clear handled interrupt
-  interrupt_clear( SYSTEM_TIMER_3_INTERRUPT );
-
+  // set new interval
+  timer_set_interval( timer_get_interval() );
+  timer_control( 1 );
   // increment tick count by interval
   timer_tick_count += timer_get_interval();
   // handle timers
@@ -95,50 +123,25 @@ static void timer_clear( void* context ) {
 void timer_platform_init( void ) {
   // initialize timer ticks
   timer_tick_count = 0;
-
-  // get peripheral base
-  const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
-
-  // get max core clock rate
-  mailbox_property_init();
-  mailbox_property_add_tag( TAG_GET_MAX_CLOCK_RATE, TAG_CLOCK_CORE );
-  mailbox_property_process();
-  raspi_mailbox_property_t* p = mailbox_property_get( TAG_GET_MAX_CLOCK_RATE );
-  uint32_t clock_rate = p->data.buffer_u32[ 1 ];
-  #if defined( PRINT_TIMER )
-    DEBUG_OUTPUT( "clock_rate = %#"PRIx32"\r\n", clock_rate )
-  #endif
-  // overwrite max core clock rate
-  mailbox_property_init();
-  mailbox_property_add_tag( TAG_SET_CLOCK_RATE, TAG_CLOCK_ARM, clock_rate );
-  mailbox_property_process();
-
   // register handler
   interrupt_register_handler(
-    SYSTEM_TIMER_3_INTERRUPT,
+    ARM_CORE0_TIMER_INTERRUPT,
     timer_clear,
     nullptr,
     INTERRUPT_NORMAL,
     false,
     false
   );
-  // reset timer control
-  io_out32( base + SYSTEM_TIMER_CONTROL, 0x00000000 );
-  // set compare for timer 3
-  uint32_t current_count = io_in32( base + SYSTEM_TIMER_COUNTER_LOWER );
-  uint32_t next_count = current_count + TIMER_FREQUENCY_HZ / TIMER_INTERRUPT_PER_SECOND;
-  #if defined( PRINT_TIMER )
-    DEBUG_OUTPUT(
-      "current = %#"PRIx32", next = %#"PRIx32"\r\n",
-      current_count,
-      next_count
-    )
-  #endif
-  io_out32( base + SYSTEM_TIMER_COMPARE_3, next_count );
-  // enable timer 3
-  io_out32( base + SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
-  // enable interrupt
-  interrupt_mask_specific( SYSTEM_TIMER_3_INTERRUPT );
+  // deactivate to clear possible high
+  timer_control( 3 );
+  // init clock
+  timer_init_clock();
+  // set interval trigger
+  timer_set_interval( timer_get_interval() );
+  // setup routing
+  timer_routing();
+  // kick start the timer
+  timer_control( 1 );
 }
 
 /**
@@ -148,7 +151,13 @@ void timer_platform_init( void ) {
  * @return
  */
 size_t timer_get_frequency( void ) {
-  return TIMER_FREQUENCY_HZ;
+  #if defined( BCM2709 ) || defined( BCM2710 )
+    uint32_t frequency;
+    __asm__ __volatile__( "mrc p15, 0, %0, c14, c0, 0" : "=r" ( frequency ) );
+    return frequency;
+  #else
+    #error "Frequency not defined"
+  #endif
 }
 
 /**
@@ -158,7 +167,7 @@ size_t timer_get_frequency( void ) {
  * @return
  */
 size_t timer_get_interval( void ) {
-  return TIMER_FREQUENCY_HZ / TIMER_INTERRUPT_PER_SECOND;
+  return timer_get_frequency() / TIMER_INTERRUPT_PER_FREQUENCY;
 }
 
 /**

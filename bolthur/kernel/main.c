@@ -17,6 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "main.h"
 #include "lib/stdio.h"
 #include "lib/assert.h"
 #include "lib/tar.h"
@@ -39,9 +40,6 @@
 #endif
 #include "initrd.h"
 #include "rpc/generic.h"
-
-// prototype declaration to get rid of a warning
-void kernel_main( void );
 
 /**
  * @fn void kernel_main(void)

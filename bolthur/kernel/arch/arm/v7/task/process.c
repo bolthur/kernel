@@ -17,12 +17,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../../../../../library/collection/avl/avl.h"
-#include "../../../../lib/assert.h"
 #include "../../../../lib/string.h"
 #include "../../../../mm/phys.h"
 #include "../../../../mm/virt.h"
-#include "../../mm/virt.h"
 #include "../../../../arch.h"
 #include "../../../../timer.h"
 #include "../../../../task/queue.h"
@@ -293,7 +290,7 @@ void task_process_schedule( [[maybe_unused]] event_origin_t origin, void* contex
  */
 uintptr_t task_process_prepare_init_arch( task_process_t* proc ) {
   // get possible device tree
-  uintptr_t device_tree = firmware_info.atag_fdt;
+  const uintptr_t device_tree = firmware_info.atag_fdt;
   // return error if device tree is missing
   if ( 0 != fdt_check_header( ( void* )device_tree ) ) {
     return 0;

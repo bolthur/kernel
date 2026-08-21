@@ -22,6 +22,7 @@
 #include "../../../../../lib/stdlib.h"
 #include "../../../../../lib/assert.h"
 #include "../../../../../entry.h"
+#include "../../../../../cache.h"
 #include "../../../../../mm/phys.h"
 #include "../../../../../mm/shared.h"
 #include "../../../../../task/process.h"
@@ -945,6 +946,9 @@ bool v7_long_set_context( virt_context_t* ctx ) {
     return false;
   }
 
+  // invalidate data cache
+  cache_invalidate_save();
+
   // save context
   uint64_t context = ctx->context;
   // add offset for kernel context ( TTBR1 is mapped like when there would be only
@@ -1008,6 +1012,10 @@ bool v7_long_set_context( virt_context_t* ctx ) {
     virt_current_kernel_context = ctx;
   }
 
+  // ensure ttbr write is finished
+  barrier_data_sync();
+  barrier_instruction_sync();
+
   return true;
 }
 
@@ -1048,11 +1056,11 @@ void v7_long_flush_complete( void ) {
   __asm__ __volatile__( "mcr p15, 0, %0, c8, c6, 0" : : "r" ( 0 ) );
   // invalidate entire instruction tlb
   __asm__ __volatile__( "mcr p15, 0, %0, c8, c5, 0" : : "r" ( 0 ) );
+  // invalidate instruction cache
+  cache_invalidate_instruction_cache();
   // data synchronization barrier
   barrier_data_sync();
   barrier_instruction_sync();
-  // invalidate data cache
-  cache_invalidate_save();
 }
 
 /**
@@ -1623,6 +1631,8 @@ bool v7_long_destroy_context( virt_context_t* ctx, bool unmap_only ) {
   ) {
     return false;
   }
+  // invalidate caches
+  cache_invalidate_save();
   // map temporarily
   ld_global_page_directory_t* ctx_mapped = ( ld_global_page_directory_t* )
     map_temporary( ctx->context, PAGE_SIZE );

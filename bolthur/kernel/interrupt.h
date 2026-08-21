@@ -79,6 +79,7 @@ bool interrupt_validate_number_rpc( size_t );
 void interrupt_init( void );
 void interrupt_arch_init( void );
 void interrupt_post_init( void );
+void interrupt_platform_init( void );
 void interrupt_handle( size_t, interrupt_type_t, void*, bool );
 bool interrupt_register_handler( size_t, interrupt_callback_t, task_process_t*, interrupt_type_t, bool, bool );
 bool interrupt_unregister_handler( size_t, interrupt_callback_t, const task_process_t*, interrupt_type_t, bool, bool );

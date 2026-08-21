@@ -32,7 +32,7 @@ void barrier_data_mem( void ) {
  * @brief Data sync barrier invalidation
  */
 void barrier_data_sync( void ) {
-  __asm__( "dsb" ::: "memory" );
+  __asm__( "dsb sy" ::: "memory" );
 }
 
 /**

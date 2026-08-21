@@ -25,6 +25,7 @@
 #include "../task/stack.h"
 #include "../task/thread.h"
 #include "../elf.h"
+#include "../cache.h"
 #if defined( PRINT_SYSCALL )
   #include "../debug/debug.h"
 #endif
@@ -148,7 +149,9 @@ void syscall_process_fork( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "process fork called\r\n" )
   #endif
-  // invalidate cache to ensure everything is within memory
+  // invalidate cache to ensure everything is within memory and flush virtual
+  // memory
+  cache_invalidate_save();
   virt_flush_complete();
   // fork process
   task_process_t* forked = task_process_fork( task_thread_current_thread );
@@ -158,7 +161,7 @@ void syscall_process_fork( void* context ) {
     return;
   }
   // try to get vfs
-  task_process_t* vfs = task_process_get_by_id( VFS_DAEMON_ID );
+  const task_process_t* vfs = task_process_get_by_id( VFS_DAEMON_ID );
   if ( vfs && vfs != forked && vfs->rpc_ready ) {
     /// FIXME: SETUP VFS FORK RPC CALL
   }
@@ -175,8 +178,8 @@ void syscall_process_fork( void* context ) {
 void syscall_process_replace( void* context ) {
   // parameters
   uintptr_t addr = ( uintptr_t )syscall_get_parameter( context, 0 );
-  const char** argv = ( const char** )syscall_get_parameter( context, 1 );
-  const char** env = ( const char** )syscall_get_parameter( context, 2 );
+  auto argv = ( const char** )syscall_get_parameter( context, 1 );
+  auto env = ( const char** )syscall_get_parameter( context, 2 );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
@@ -191,10 +194,10 @@ void syscall_process_replace( void* context ) {
     )
   #endif
   // get min and max by context
-  uintptr_t min = virt_get_context_min_address(
+  const uintptr_t min = virt_get_context_min_address(
     task_thread_current_thread->process->virtual_context
   );
-  uintptr_t max = virt_get_context_max_address(
+  const uintptr_t max = virt_get_context_max_address(
     task_thread_current_thread->process->virtual_context
   );
   // validate memory first step

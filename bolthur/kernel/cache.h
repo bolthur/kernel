@@ -21,5 +21,7 @@
 #define _CACHE_H
 
 void cache_enable( void );
+void cache_invalidate_instruction_cache( void );
+void cache_invalidate_save( void );
 
 #endif
