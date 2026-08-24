@@ -40,7 +40,5 @@ task_thread_switch_to:
   // wait for ldm to populate all registers
   nop
   isb
-  dsb
-  ldm lr, { r0 - r12 }
   // return to user mode
   rfeia sp!

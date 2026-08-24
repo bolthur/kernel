@@ -18,6 +18,7 @@
  */
 
 #include <errno.h>
+#include "../cache.h"
 #include "../syscall.h"
 #if defined( PRINT_SYSCALL )
   #include "../lib/inttypes.h"
@@ -433,7 +434,8 @@ void syscall_memory_shared_detach( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_memory_shared_detach( %zu )\r\n", id )
   #endif
-  // drain possible cached stuff by performing complete flush
+  // drain possible cached stuff by performing complete flush and data cache invalidation
+  cache_invalidate_save();
   virt_flush_complete();
   // try to detach
   if ( ! shared_memory_detach( task_thread_current_thread->process, id ) ) {
