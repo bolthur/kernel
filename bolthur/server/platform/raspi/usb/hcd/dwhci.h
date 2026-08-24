@@ -25,7 +25,7 @@
 #include "../../../../libusbd.h"
 #include "response.h"
 
-// #define DWHCI_ENABLE_DEBUG 1
+//#define DWHCI_ENABLE_DEBUG 1
 
 typedef enum {
   DWHCI_CHANNEL_STATE_DATA0 = 0,
@@ -34,6 +34,12 @@ typedef enum {
   DWHCI_CHANNEL_STATE_MDATA = 3,
   DWHCI_CHANNEL_STATE_SETUP = 3,
 } dwhci_channel_state_t;
+
+typedef enum {
+  DWHCI_SPLIT_PHASE_NONE = 0,
+  DWHCI_SPLIT_PHASE_SSPLIT = 1,
+  DWHCI_SPLIT_PHASE_CSPLIT = 2,
+} dwhci_split_phase_t;
 
 typedef enum {
   DWHCI_QUEUE_CHANNEL_STATUS_PENDING = 0,
@@ -63,6 +69,10 @@ typedef struct channel_queue_entry {
   uint8_t channel;
   /** queue status */
   dwhci_queue_status_t status;
+  /** queue status */
+  dwhci_queue_status_t previous_status;
+  /** split phase */
+  dwhci_split_phase_t split_phase;
   /** data buffer */
   void* buffer;
   /** transfer buffer size */
@@ -71,8 +81,6 @@ typedef struct channel_queue_entry {
   uint32_t buffer_offset;
   /** transferred data */
   uint32_t transferred;
-  /** transferred packet count */
-  uint32_t packet_transferred;
   /** response info */
   size_t response_info;
   /** origin */
@@ -89,6 +97,12 @@ typedef struct channel_queue_entry {
   libusb_transfer_error_t error;
   /** poll channel state */
   dwhci_channel_state_t poll_state;
+  /** channel data state */
+  dwhci_channel_state_t channel_data_state;
+  /** packets to transfer */
+  uint32_t packets_to_transfer;
+  /** packet size */
+  uint32_t packet_size;
   /** pointer to next entry */
   struct channel_queue_entry* next;
   /** pointer to previous entry */
@@ -117,7 +131,7 @@ extern void* databuffer;
 extern dwhci_configuration_t configuration;
 
 response_t dwhci_transmit_channel( uint8_t, void* );
-response_t dwhci_prepare_channel( uint32_t, uint32_t, uint8_t, uint32_t, dwhci_channel_state_t, const libusb_pipe_address_t*, uint32_t, bool );
+response_t dwhci_prepare_channel( uint32_t, uint32_t, uint8_t, uint32_t, dwhci_channel_state_t, const libusb_pipe_address_t*, uint32_t, bool, channel_queue_entry_t* );
 response_t dwhci_allocate_channel( uint8_t* );
 response_t dwhci_free_channel( uint8_t );
 response_t dwhci_queue_add_entry( void*, size_t, dwhci_queue_status_t, channel_queue_entry_t** );

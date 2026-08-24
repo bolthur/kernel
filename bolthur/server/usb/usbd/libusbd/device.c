@@ -136,8 +136,8 @@ static void set_configuration(
  */
 static void get_configuration(
   [[maybe_unused]] size_t type,
-  pid_t origin,
-  size_t data_info,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
   size_t response_info
 ) {
   // debug output
@@ -155,95 +155,12 @@ static void get_configuration(
     return;
   }
   // get contexts
-  usbd_configure_context_t* ctx = async_data->context;
+  const usbd_get_descriptor_context_t* descriptor_context = async_data->context;
+  usbd_configure_context_t* ctx = descriptor_context->context;
   usbd_attach_context_t* attach_context = ctx->context;
   assert( ctx && attach_context );
   // dummy error response
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
-  // handle no data
-  if ( ! data_info ) {
-    // return
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    usbd_context_configure_destroy( ctx );
-    usbd_context_attach_destroy( attach_context, true );
-    return;
-  }
-  // validate origin
-  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    // return
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    usbd_context_configure_destroy( ctx );
-    usbd_context_attach_destroy( attach_context, true );
-    return;
-  }
-  // get message and data size
-  size_t data_size;
-  vfs_ioctl_perform_response_t* submit_response = bolthur_rpc_fetch_from_mailbox(
-    data_info, &data_size, true, nullptr );
-  if ( ! submit_response ) {
-    // return
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    usbd_context_configure_destroy( ctx );
-    usbd_context_attach_destroy( attach_context, true );
-    return;
-  }
-  // get poll response
-  auto const usbd_control_message = ( usbd_control_message_t* )submit_response->container;
-  // attach shared memory from poll command
-  void* shm_addr_hcd_poll = _syscall_memory_shared_attach( usbd_control_message->shm_id, 0 );
-  if ( errno ) {
-    const int e = errno;
-    // free up stuff
-    free( submit_response );
-    // return
-    err_response.status = -e;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    usbd_context_configure_destroy( ctx );
-    usbd_context_attach_destroy( attach_context, true );
-    return;
-  }
-  // get result
-  auto const usb_control_message = ( usb_control_message_t* )shm_addr_hcd_poll;
-  // check transfer
-  if ( usb_control_message->last_transfer != attach_context->device->configuration.total_length ) {
-    // free up stuff
-    _syscall_memory_shared_detach( usbd_control_message->shm_id );
-    free( submit_response );
-    // return
-    err_response.status = -EPROTO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    usbd_context_configure_destroy( ctx );
-    usbd_context_attach_destroy( attach_context, true );
-    return;
-  }
-  // response is equal to input
-  if ( usb_control_message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
-    // debug output
-    #if defined( USBD_ENABLE_OUTPUT )
-      EARLY_STARTUP_PRINT( "error = %#x\r\n", usb_control_message->error )
-    #endif
-    // free up stuff
-    _syscall_memory_shared_detach( usbd_control_message->shm_id );
-    free( submit_response );
-    // return
-    err_response.status = -EPROTO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    usbd_context_configure_destroy( ctx );
-    usbd_context_attach_destroy( attach_context, true );
-    return;
-  }
-  // handle direction in with last transfer equal to buffer length
-  if ( usb_control_message->last_transfer == usb_control_message->buffer_length ) {
-    // copy over from hcd poll buffer into device descriptor
-    memcpy(
-      ctx->full_descriptor,
-      usb_control_message->buffer,
-      usb_control_message->buffer_length
-    );
-  }
-  // populate last transfer and error
-  attach_context->device->last_transfer = usb_control_message->last_transfer;
-  attach_context->device->error = usb_control_message->error;
   // populate configuration
   attach_context->device->configuration_index = ctx->configuration;
   // overwrite configuration with value we read
@@ -331,9 +248,6 @@ static void get_configuration(
       EARLY_STARTUP_PRINT( "Unable to set configuration for device %s: %s\r\n",
         usbd_description_get( attach_context->device ), strerror( result ) )
     #endif
-    // free up stuff
-    _syscall_memory_shared_detach( usbd_control_message->shm_id );
-    free( submit_response );
     // return
     err_response.status = -EPROTO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
@@ -352,8 +266,8 @@ static void get_configuration(
  */
 static void get_configuration_size(
   [[maybe_unused]] size_t type,
-  pid_t origin,
-  size_t data_info,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
   size_t response_info
 ) {
   // debug output
@@ -371,95 +285,12 @@ static void get_configuration_size(
     return;
   }
   // get contexts
-  usbd_configure_context_t* ctx = async_data->context;
+  const usbd_get_descriptor_context_t* descriptor_context = async_data->context;
+  usbd_configure_context_t* ctx = descriptor_context->context;
   usbd_attach_context_t* attach_context = ctx->context;
   assert( ctx && attach_context );
   // dummy error response
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
-  // handle no data
-  if ( ! data_info ) {
-    // return
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    usbd_context_configure_destroy( ctx );
-    usbd_context_attach_destroy( attach_context, true );
-    return;
-  }
-  // validate origin
-  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    // return
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    usbd_context_configure_destroy( ctx );
-    usbd_context_attach_destroy( attach_context, true );
-    return;
-  }
-  // get message and data size
-  size_t data_size;
-  vfs_ioctl_perform_response_t* submit_response = bolthur_rpc_fetch_from_mailbox(
-    data_info, &data_size, true, nullptr );
-  if ( ! submit_response ) {
-    // return
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    usbd_context_configure_destroy( ctx );
-    usbd_context_attach_destroy( attach_context, true );
-    return;
-  }
-  // get poll response
-  auto const usbd_control_message = ( usbd_control_message_t* )submit_response->container;
-  // attach shared memory from poll command
-  void* shm_addr_hcd_poll = _syscall_memory_shared_attach( usbd_control_message->shm_id, 0 );
-  if ( errno ) {
-    const int e = errno;
-    // free up stuff
-    free( submit_response );
-    // return
-    err_response.status = -e;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    usbd_context_configure_destroy( ctx );
-    usbd_context_attach_destroy( attach_context, true );
-    return;
-  }
-  // get result
-  auto const usb_control_message = ( usb_control_message_t* )shm_addr_hcd_poll;
-  // check transfer
-  if ( usb_control_message->last_transfer != sizeof( attach_context->device->configuration ) ) {
-    // free up stuff
-    _syscall_memory_shared_detach( usbd_control_message->shm_id );
-    free( submit_response );
-    // return
-    err_response.status = -EPROTO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    usbd_context_configure_destroy( ctx );
-    usbd_context_attach_destroy( attach_context, true );
-    return;
-  }
-  // response is equal to input
-  if ( usb_control_message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
-    // debug output
-    #if defined( USBD_ENABLE_OUTPUT )
-      EARLY_STARTUP_PRINT( "error = %#x\r\n", usb_control_message->error )
-    #endif
-    // free up stuff
-    _syscall_memory_shared_detach( usbd_control_message->shm_id );
-    free( submit_response );
-    // return
-    err_response.status = -EPROTO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    usbd_context_configure_destroy( ctx );
-    usbd_context_attach_destroy( attach_context, true );
-    return;
-  }
-  // handle direction in with last transfer equal to buffer length
-  if ( usb_control_message->last_transfer == usb_control_message->buffer_length ) {
-    // copy over from hcd poll buffer into device descriptor
-    memcpy(
-      &(attach_context->device->configuration),
-      usb_control_message->buffer,
-      usb_control_message->buffer_length
-    );
-  }
-  // populate last transfer and error
-  attach_context->device->last_transfer = usb_control_message->last_transfer;
-  attach_context->device->error = usb_control_message->error;
   // allocate full descriptor
   void* full_descriptor = malloc( attach_context->device->configuration.total_length );
   if ( ! full_descriptor ) {
@@ -468,9 +299,6 @@ static void get_configuration_size(
       EARLY_STARTUP_PRINT( "Failed to allocate full descriptor for device %s\r\n",
         usbd_description_get( attach_context->device ) )
     #endif
-    // free up stuff
-    _syscall_memory_shared_detach( usbd_control_message->shm_id );
-    free( submit_response );
     // return
     err_response.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
@@ -478,6 +306,21 @@ static void get_configuration_size(
     usbd_context_attach_destroy( attach_context, true );
     return;
   }
+  // debug output
+  #if defined( USBD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT(
+      "CONFIG: %02x %02x %02x %02x %02x %02x %02x %02x %02x\r\n",
+      ((uint8_t *)&attach_context->device->configuration)[0],
+      ((uint8_t *)&attach_context->device->configuration)[1],
+      ((uint8_t *)&attach_context->device->configuration)[2],
+      ((uint8_t *)&attach_context->device->configuration)[3],
+      ((uint8_t *)&attach_context->device->configuration)[4],
+      ((uint8_t *)&attach_context->device->configuration)[5],
+      ((uint8_t *)&attach_context->device->configuration)[6],
+      ((uint8_t *)&attach_context->device->configuration)[7],
+      ((uint8_t *)&attach_context->device->configuration)[8]
+    )
+  #endif
   // cache descriptor in context
   ctx->full_descriptor = full_descriptor;
   // get configuration
@@ -503,9 +346,6 @@ static void get_configuration_size(
       EARLY_STARTUP_PRINT( "Failed to retrieve full configuration descriptor %#"PRIx8" for device %s\r\n",
         ctx->configuration, usbd_description_get( attach_context->device ) )
     #endif
-    // free up stuff
-    _syscall_memory_shared_detach( usbd_control_message->shm_id );
-    free( submit_response );
     // return
     err_response.status = -result;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );

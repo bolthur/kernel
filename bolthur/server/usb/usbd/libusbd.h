@@ -67,6 +67,25 @@ typedef struct {
 } usbd_descriptor_context_t;
 
 /**
+ * @brief usbd descriptor context
+ */
+typedef struct {
+  libusb_device_t* dev;
+  libusb_descriptor_type_t type;
+  uint8_t idx;
+  uint16_t lang_id;
+  void* buffer;
+  size_t buffer_length;
+  uint8_t recipient;
+  rpc_handler_t callback;
+  pid_t origin;
+  size_t data_info;
+  void* original_request;
+  size_t original_request_size;
+  void* context;
+} usbd_get_descriptor_context_t;
+
+/**
  * @brief usbd address context
  */
 typedef struct {
@@ -200,6 +219,8 @@ int usbd_context_attach_create( rpc_handler_t, pid_t, size_t, const void*, size_
 void usbd_context_attach_destroy( usbd_attach_context_t*, bool );
 int usbd_context_descriptor_create( rpc_handler_t, void*, usbd_descriptor_context_t** );
 void usbd_context_descriptor_destroy( usbd_descriptor_context_t* );
+int usbd_context_get_descriptor_create( libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, void*, size_t, uint8_t, rpc_handler_t, pid_t, size_t, void*, size_t, void*, usbd_get_descriptor_context_t** );
+void usbd_context_get_descriptor_destroy( usbd_get_descriptor_context_t* );
 int usbd_context_address_create( rpc_handler_t, void*, uint8_t, usbd_address_context_t** );
 void usbd_context_address_destroy( usbd_address_context_t* );
 int usbd_context_configure_create( rpc_handler_t callback, void*, uint8_t, usbd_configure_context_t** );
@@ -217,14 +238,13 @@ void usbd_context_get_string_destroy( usbd_get_string_context_t* );
 int usbd_context_read_lang_create( void*, size_t, uint8_t, uint16_t, rpc_handler_t, usbd_read_string_context_t*, usbd_read_lang_context_t** );
 void usbd_context_read_lang_destroy( usbd_read_lang_context_t* );
 // control
-int usbd_control_message( libusb_device_t*, libusb_pipe_address_t, void*, size_t, const libusb_device_request_t*, size_t );
 int usbd_control_message_async( const libusb_device_t*, libusb_pipe_address_t, const void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t, pid_t, size_t, void*, size_t, void*, size_t );
 // deallocate
 void usbd_deallocate_device( libusb_device_t*, rpc_handler_t, void*, size_t, pid_t, size_t, void* );
 // description
 const char* usbd_description_get( const libusb_device_t* );
 // descriptor
-int usbd_descriptor_get_async( const libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, const void*, size_t, uint8_t, rpc_handler_t, pid_t, size_t, void*, size_t, void*, size_t );
+int usbd_descriptor_get_async( libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, const void*, size_t, uint8_t, rpc_handler_t, pid_t, size_t, void*, size_t, void*, size_t );
 int usbd_descriptor_read_device( libusb_device_t*, rpc_handler_t, usbd_attach_context_t* );
 // device
 int usbd_device_configure( libusb_device_t*, uint8_t, rpc_handler_t, usbd_attach_context_t* );

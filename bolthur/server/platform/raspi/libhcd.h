@@ -184,13 +184,6 @@
 #define HCD_DWHCI_POWER_REGISTER_PHY_SLEEPING ( 1U << 6 )
 #define HCD_DWHCI_POWER_REGISTER_DEEP_SLEEP ( 1U << 7 )
 
-// channel transfer register
-#define HCD_DWHCI_CHAN_XFER_SIZE_EXTRACT_TRANSFER_SIZE( val ) ( ( val ) & 0x7ffff )
-#define HCD_DWHCI_CHAN_XFER_SIZE_EXTRACT_PACKET_COUNT( val ) ( ( ( val ) >> 19 ) & 0x3ff )
-#define HCD_DWHCI_CHAN_XFER_SIZE_TRANSFER_SIZE_MASK 0x7ffff
-#define HCD_DWHCI_CHAN_XFER_SIZE_PACKETS_SHIFT 19
-#define HCD_DWHCI_CHAN_XFER_SIZE_PACKETS_MASK ( 0x3FF << 19 )
-
 // characteristics
 #define HCD_DWHCI_CHAN_CHARACTER_MAXIMUM_PACKET_SIZE( val ) ( ( ( uint32_t )val ) & 0x7ff )
 #define HCD_DWHCI_CHAN_CHARACTER_END_POINT_NUMBER( val ) ( ( ( ( uint32_t )val ) & 0xf ) << 11 )
@@ -216,6 +209,8 @@
 #define HCD_DWHCI_CHAN_SPLIT_CONTROL_EXTRACT_COMPLETE_SPLIT( val ) ( ( ( ( uint32_t )val ) & 0x1 ) << 16 )
 #define HCD_DWHCI_CHAN_SPLIT_CONTROL_EXTRACT_SPLIT_ENABLE ( 1U << 31 )
 // xfer
+#define HCD_DWHCI_CHAN_XFER_SIZE_TRANSFER_SIZE_MASK 0x7ffffU
+#define HCD_DWHCI_CHAN_XFER_SIZE_PACKET_COUNT_MASK 0x3ffU << 19
 #define HCD_DWHCI_CHAN_XFER_SIZE_TRANSFER_SIZE( val ) ( ( val ) & 0x7ffff )
 #define HCD_DWHCI_CHAN_XFER_SIZE_PACKET_COUNT( val ) ( ( ( val ) & 0x3ff ) << 19 )
 #define HCD_DWHCI_CHAN_XFER_SIZE_PACKET_ID( val ) ( ( ( val ) & 0x3 ) << 29 )

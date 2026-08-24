@@ -56,7 +56,8 @@ static void rpc_get_string_finished(
     return;
   }
   // get contexts
-  const usbd_get_string_context_t* ctx = async_data->context;
+  const usbd_get_descriptor_context_t* descriptor_context = async_data->context;
+  const usbd_get_string_context_t* ctx = descriptor_context->context;
   const usbd_read_lang_context_t* read_lang_context = ctx->context;
   usbd_read_string_context_t* read_string_context = read_lang_context->context;
   // get message

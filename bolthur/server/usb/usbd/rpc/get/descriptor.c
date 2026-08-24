@@ -39,8 +39,8 @@
  */
 static void rpc_get_descriptor_finished(
   [[maybe_unused]] size_t type,
-  const pid_t origin,
-  const size_t data_info,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
   const size_t response_info
 ) {
   // get matching async data
@@ -53,135 +53,37 @@ static void rpc_get_descriptor_finished(
     // skip rest
     return;
   }
+  // get contexts
+  const usbd_get_descriptor_context_t* ctx = async_data->context;
   // dummy error response
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
-  // handle no data
-  if ( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    return;
-  }
-  // validate origin
-  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    return;
-  }
-  // get message and data size
-  size_t data_size;
-  vfs_ioctl_perform_response_t* submit_response = bolthur_rpc_fetch_from_mailbox(
-    data_info, &data_size, true, nullptr );
-  if ( ! submit_response ) {
-    // return from rpc
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // skip rest
-    return;
-  }
-  // get poll response
-  auto const usbd_control_message = ( usbd_control_message_t* )submit_response->container;
-  // attach shared memory from poll command
-  void* shm_addr_hcd_poll = _syscall_memory_shared_attach( usbd_control_message->shm_id, 0 );
-  if ( errno ) {
-    const int e = errno;
-    // free up stuff
-    free( submit_response );
-    // return from rpc
-    err_response.status = -e;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // skip rest
-    return;
-  }
-  auto const usb_control_message = ( usb_control_message_t* )shm_addr_hcd_poll;
   // get original request
   const vfs_ioctl_perform_request_t* original_request = async_data->original_data;
-  // get interrupt message
-  auto const get_descriptor = ( usbd_get_descriptor_t* )original_request->container;
-  // "attach" shared memory again
-  void* shm_addr_message = _syscall_memory_shared_attach( get_descriptor->shm_id, 0 );
-  if ( errno ) {
-    const int e = errno;
-    // detach both since both are attached already
-    _syscall_memory_shared_detach( get_descriptor->shm_id );
-    _syscall_memory_shared_detach( usbd_control_message->shm_id );
-    // free up stuff
-    free( submit_response );
-    // return from rpc
-    err_response.status = -e;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // skip rest
-    return;
-  }
-  auto const usbd_descriptor_message = ( usb_descriptor_message_t* )shm_addr_message;
-  // find device
-  libusb_device_t* device;
-  int result = usbd_device_get_by_number( usbd_descriptor_message->device_number, &device );
-  if ( 0 != result ) {
-    // detach both since both are attached already
-    _syscall_memory_shared_detach( get_descriptor->shm_id );
-    _syscall_memory_shared_detach( usbd_control_message->shm_id );
-    // free up stuff
-    free( submit_response );
-    // return from rpc
-    err_response.status = -result;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // skip rest
-    return;
-  }
-  // handle timeout
-  if ( usb_control_message->error & LIBUSB_TRANSFER_ERROR_TIMEOUT ) {
-    // detach both since both are attached already
-    _syscall_memory_shared_detach( get_descriptor->shm_id );
-    _syscall_memory_shared_detach( usbd_control_message->shm_id );
-    // free up stuff
-    free( submit_response );
-    // return from rpc
-    err_response.status = -ETIMEDOUT;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // skip rest
-    return;
-  }
+  // get device
+  auto const device = ctx->dev;
   // handle not enough transferred
-  if ( usb_control_message->last_transfer < usbd_descriptor_message->minimum_length ) {
-    // detach both since both are attached already
-    _syscall_memory_shared_detach( get_descriptor->shm_id );
-    _syscall_memory_shared_detach( usbd_control_message->shm_id );
-    // free up stuff
-    free( submit_response );
+  if ( device->last_transfer != ctx->buffer_length ) {
     // return from rpc
     err_response.status = -EPROTO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // skip rest
     return;
   }
+  int result = 0;
   // handle error
-  if ( usb_control_message->error & ( uint32_t )~LIBUSB_TRANSFER_ERROR_PROCESSING ) {
+  if ( device->error & ( uint32_t )~LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // set result to error
     result = EIO;
   }
   #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "hcd_submit->last_transfer = %"PRIu32", buffer_length = %zu\r\n",
-      usb_control_message->last_transfer, usbd_descriptor_message->buffer_length );
+      device->last_transfer, ctx->buffer_length );
   #endif
-  // handle direction in with last transfer equal to buffer length
-  if ( usb_control_message->last_transfer == usbd_descriptor_message->buffer_length ) {
-    // copy over from hcd poll buffer into usb interrupt buffer
-    memcpy(
-      usbd_descriptor_message->buffer,
-      usb_control_message->buffer,
-      usbd_descriptor_message->buffer_length
-    );
-  }
-  // copy over error and last transfer into device
-  device->error = usb_control_message->error;
-  device->last_transfer = usb_control_message->last_transfer;
-  // finally detach shared memory
-  _syscall_memory_shared_detach( get_descriptor->shm_id );
-  _syscall_memory_shared_detach( usbd_control_message->shm_id );
   // allocate response structure
   const size_t container_size = async_data->length - sizeof( vfs_ioctl_perform_request_t );
   const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + container_size;
   vfs_ioctl_perform_response_t* real_response = malloc( response_size );
   if ( ! real_response ) {
-    // free up stuff
-    free( submit_response );
     // return from rpc
     err_response.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
@@ -197,8 +99,6 @@ static void rpc_get_descriptor_finished(
   memcpy( real_response->container, original_request->container, container_size );
   // actually return
   bolthur_rpc_return( RPC_VFS_IOCTL, real_response, response_size, async_data, 0 );
-  // free up structures
-  free( submit_response );
   free( real_response );
 }
 

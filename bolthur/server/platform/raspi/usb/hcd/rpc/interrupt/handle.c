@@ -24,6 +24,42 @@
 #include "../../../../../../../library/platform/raspi/iomem/libperipheral.h"
 
 /**
+ * @fn void toggle_split_phase(const uint32_t, channel_queue_entry_t*);
+ * @brief Wrapper to toggle between split phases
+ * @param cipt
+ * @param entry
+ */
+static bool toggle_split_phase( const uint32_t cipt, channel_queue_entry_t* entry ) {
+  if ( DWHCI_SPLIT_PHASE_NONE == entry->split_phase ) {
+    return false;
+  }
+  if ( DWHCI_SPLIT_PHASE_SSPLIT == entry->split_phase ) {
+    if ( cipt & HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT ) {
+      return false;
+    }
+    if ( cipt & HCD_CHANNEL_INTERRUPT_NOT_YET ) {
+      return false;
+    }
+    entry->split_phase = DWHCI_SPLIT_PHASE_CSPLIT;
+    return false;
+  } else if ( DWHCI_SPLIT_PHASE_CSPLIT == entry->split_phase ) {
+    if ( cipt & HCD_CHANNEL_INTERRUPT_NOT_YET ) {
+      return false;
+    }
+    if ( cipt & HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT ) {
+      return false;
+    }
+
+    if (cipt & HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE) {
+      // CSPLIT completed the current USB transaction.
+      entry->split_phase = DWHCI_SPLIT_PHASE_SSPLIT;
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * @fn void rpc_interrupt_handle(size_t, pid_t, size_t, size_t)
  * @brief Interrupt handler
  * @param type message type
@@ -146,11 +182,6 @@ void rpc_interrupt_handle(
           #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "Transfer complete for channel %"PRIu32"\r\n", channel )
           #endif
-          // toggle poll state
-          if ( DWHCI_QUEUE_POLL_STATUS_DATA == entry->status ) {
-            entry->poll_state = DWHCI_CHANNEL_STATE_DATA0 == entry->poll_state
-              ? DWHCI_CHANNEL_STATE_DATA1 : DWHCI_CHANNEL_STATE_DATA0;
-          }
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_HALT ) {
           #if defined( DWHCI_ENABLE_DEBUG )
@@ -228,37 +259,108 @@ void rpc_interrupt_handle(
           #endif
           entry->error |= LIBUSB_TRANSFER_ERROR_LIST_ROLLOVER;
         }
+        // extract transfer size
+        uint32_t transfer_size;
+        result = dwhci_read_port(
+          ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_XFER_SIZE( channel ),
+          &transfer_size
+        );
+        if ( HCD_RESPONSE_OK != result ) {
+          #if defined( DWHCI_ENABLE_DEBUG )
+            EARLY_STARTUP_PRINT( "Unable to read transfer size register!\r\n" )
+          #endif
+          continue;
+        }
+        // extract remaining
+        const uint32_t remaining = HCD_DWHCI_CHAN_XFER_SIZE_TRANSFER_SIZE( transfer_size );
+        // calculate transferred
+        uint32_t transferred = entry->buffer_size_to_transfer - remaining;
+
+        #if defined( DWHCI_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "transfer_size = %"PRIx32"\r\n", transfer_size )
+        #endif
+
+        const uint32_t requested = entry->packet_size < entry->buffer_size_to_transfer
+          ? entry->packet_size : entry->buffer_size_to_transfer;
+        // toggle possible split phase entry
+        const bool split_complete = toggle_split_phase( cipt, entry );
+        // handle short transfer
+        const bool short_response = transferred != 0 && transferred < requested;
+
+        // on short response we've to reset packet to transfer because it marks
+        // the end of usb transaction
+        if ( short_response ) {
+          entry->packets_to_transfer = 0;
+        }
+
+        // handle split complete to overwrite transferred in case it's not a
+        // short response
+        if ( split_complete && ! short_response ) {
+          transferred = requested;
+        }
+        // reduce packet size if something was transferred
+        if (
+          transferred > 0
+          || ( transferred == 0 && split_complete )
+          || (
+            entry->split_phase == DWHCI_SPLIT_PHASE_NONE
+            && entry->buffer_size_to_transfer == 0
+          )
+        ) {
+          #if defined( DWHCI_ENABLE_DEBUG )
+            EARLY_STARTUP_PRINT( "packets to transfer:%"PRIu32", transferred = %"PRIu32", short_response: %d\r\n",
+              entry->packets_to_transfer, transferred, short_response ? 1 : 0 )
+          #endif
+          // overwrite transferred when we've a transfer of 0 with
+          // split complete and no short response
+          if ( transferred == 0 && split_complete && ! short_response ) {
+            transferred = entry->packet_size;
+          }
+          // in case it's not a short response, we've to reduce the packets to
+          // transfer
+          if ( ! short_response ) {
+            // if there is some leftover at the end, we have a modulo result and
+            // have to transfer packets manually
+            if ( transferred % entry->packet_size ) {
+              entry->packets_to_transfer--;
+            } else {
+              entry->packets_to_transfer -= ( transferred / entry->packet_size );
+            }
+          }
+          #if defined( DWHCI_ENABLE_DEBUG )
+            EARLY_STARTUP_PRINT( "packets to transfer:%"PRIu32", transferred = %"PRIu32"\r\n",
+              entry->packets_to_transfer, transferred )
+          #endif
+        }
+
+        // set previous state to current state
+        entry->previous_status = entry->status;
+
         // handle halt without transfer complete by checking for possible complete
         bool switch_to_next_state = false;
+        // handle halt / complete
         if (
           ( cipt & HCD_CHANNEL_INTERRUPT_HALT )
           || ( cipt & HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE )
         ) {
-          uint32_t transfer_size;
-          result = dwhci_read_port(
-            ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_XFER_SIZE( channel ),
-            &transfer_size
-          );
-          if ( HCD_RESPONSE_OK != result ) {
-            #if defined( DWHCI_ENABLE_DEBUG )
-              EARLY_STARTUP_PRINT( "Unable to read transfer size register!\r\n" )
-            #endif
-            continue;
-          }
-          // set transferred and packet transferred
-          const uint32_t remaining = HCD_DWHCI_CHAN_XFER_SIZE_TRANSFER_SIZE( transfer_size );
-          const uint32_t transferred = entry->buffer_size_to_transfer - remaining;
-          entry->packet_transferred += transferred;
+          const bool transfer_complete =
+            cipt & HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE;
           // handle finished
           if (
-            // treat setup as finished where 0 transfers may happen
-            entry->status == DWHCI_QUEUE_CHANNEL_STATUS_SETUP
-            // treat data polling as finished
-            || entry->status == DWHCI_QUEUE_POLL_STATUS_DATA
+            // treat setup status with transfer complete as done
+            (
+              entry->status == DWHCI_QUEUE_CHANNEL_STATUS_SETUP
+              && transfer_complete
+              )
+            // treat ack status with transfer complete as done
+            || (
+              entry->status == DWHCI_QUEUE_CHANNEL_STATUS_ACK
+              && transfer_complete
+            )
             // treat cancellation as finished
             || entry->status == DWHCI_QUEUE_CANCEL
             // treat no remaining as finished
-            || remaining == 0
+            || entry->packets_to_transfer == 0
           ) {
             // debug output
             #if defined( DWHCI_ENABLE_DEBUG )
@@ -290,14 +392,47 @@ void rpc_interrupt_handle(
             entry->buffer_offset += transferred;
           }
         }
+        if (
+          entry->status == DWHCI_QUEUE_CHANNEL_STATUS_DATA
+          && ! switch_to_next_state
+          && (
+            (
+              entry->packets_to_transfer > 0
+              && DWHCI_SPLIT_PHASE_NONE == entry->packets_to_transfer
+            ) || (
+              entry->buffer_size_to_transfer > 0
+              && split_complete
+            )
+          )
+        ) {
+          EARLY_STARTUP_PRINT( "entry->channel_data_state = %x\r\n", entry->channel_data_state )
+          entry->channel_data_state = DWHCI_CHANNEL_STATE_DATA0 == entry->channel_data_state
+            ? DWHCI_CHANNEL_STATE_DATA1 : DWHCI_CHANNEL_STATE_DATA0;
+          EARLY_STARTUP_PRINT( "entry->channel_data_state = %x\r\n", entry->channel_data_state )
+        }
+        // toggle poll state
+        if (
+          DWHCI_QUEUE_POLL_STATUS_DATA == entry->status
+          && (
+            entry->split_phase == DWHCI_SPLIT_PHASE_NONE
+            || split_complete
+          )
+        ) {
+          entry->poll_state = DWHCI_CHANNEL_STATE_DATA0 == entry->poll_state
+            ? DWHCI_CHANNEL_STATE_DATA1 : DWHCI_CHANNEL_STATE_DATA0;
+        }
         // handle switch to next
         if ( switch_to_next_state ) {
           // evaluate next state
           switch ( entry->status ) {
             case DWHCI_QUEUE_CHANNEL_STATUS_SETUP:
+              entry->packets_to_transfer = 0;
+              entry->packet_size = 0;
               entry->status = DWHCI_QUEUE_CHANNEL_STATUS_DATA;
               break;
             case DWHCI_QUEUE_CHANNEL_STATUS_DATA:
+              entry->packets_to_transfer = 0;
+              entry->packet_size = 0;
               entry->status = DWHCI_QUEUE_CHANNEL_STATUS_ACK;
               break;
             case DWHCI_QUEUE_CHANNEL_STATUS_ACK:

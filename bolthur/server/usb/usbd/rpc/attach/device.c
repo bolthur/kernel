@@ -171,7 +171,10 @@ void rpc_attach_device(
   new_device->speed = message->speed;
   // set parent and port number
   new_device->parent = device;
-  new_device->port_number = device->port_number;
+  new_device->port_number = ( uint8_t )message->port_number;
+  #if defined( USBD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "new_device->port_number = %"PRIu8"\r\n", new_device->port_number )
+  #endif
   // allocate new device
   // perform hcd control message
   result = usbd_attach_device(

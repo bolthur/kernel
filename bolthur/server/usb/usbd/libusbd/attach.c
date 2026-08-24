@@ -134,7 +134,7 @@ static void attach_configure_finished(
     EARLY_STARTUP_PRINT( "dev->interfaces[ 0 ].class = %d\r\n", attach_context->device->interfaces[ 0 ].class )
   #endif
   // call to attach the device
-  int result = call_attach(
+  const int result = call_attach(
     attach_context->device,
     0,
     attach_attach_finished,
@@ -210,7 +210,8 @@ static void attach_read_device_finished_2(
     return;
   }
   // get context out of context
-  usbd_descriptor_context_t* descriptor_context = async_data->context;
+  const usbd_get_descriptor_context_t* get_descriptor_context = async_data->context;
+  usbd_descriptor_context_t* descriptor_context = get_descriptor_context->context;
   usbd_attach_context_t* attach_context = descriptor_context->context;
   assert( descriptor_context && attach_context );
   // dummy error response
@@ -266,6 +267,20 @@ static void attach_read_device_finished_2(
 }
 
 /**
+ * @brief Helper to delay
+ * @param us
+ */
+static void delay_us(const uint32_t us) {
+  const uint64_t frequency = _syscall_timer_frequency();
+  const uint64_t ticks =
+      (frequency * (uint64_t)us + 999999ULL) / 1000000ULL;
+  const uint64_t start = _syscall_timer_tick_count();
+  while ((_syscall_timer_tick_count() - start) < ticks) {
+    __asm__ volatile ("nop");
+  }
+}
+
+/**
  * @fn void attach_set_address_finished(size_t, pid_t, size_t, size_t)
  * @brief Callback for set address done
  * @param type
@@ -316,12 +331,21 @@ static void attach_set_address_finished(
   }
   // overwrite number again
   attach_context->device->number = attach_context->address;
+  // debug output
+  #if defined( USBD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "delaying 2 milliseconds according to specs\r\n" )
+  #endif
+  // delay
+  delay_us( 50000 );
   // re-read device descriptor
   const int result = usbd_descriptor_read_device(
     attach_context->device,
     attach_read_device_finished_2,
     attach_context
   );
+  #if defined( USBD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "dev->speed = %d\r\n", attach_context->device->speed )
+  #endif
   // handle error
   if ( 0 != result ) {
     // debug output
@@ -372,11 +396,13 @@ static void attach_read_device_finished_1(
   // dummy error response
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // get context out of context
-  usbd_descriptor_context_t* descriptor_context = async_data->context;
+  const usbd_get_descriptor_context_t* get_descriptor_context = async_data->context;
+  usbd_descriptor_context_t* descriptor_context = get_descriptor_context->context;
   usbd_attach_context_t* attach_context = descriptor_context->context;
   // debug output
   #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "async_data->original_rpc_id = %zu\r\n", async_data->original_rpc_id )
+    EARLY_STARTUP_PRINT( "dev->speed = %d\r\n", attach_context->device->speed )
   #endif
   assert( descriptor_context && attach_context );
   // handle no data
@@ -395,6 +421,9 @@ static void attach_read_device_finished_1(
     usbd_context_attach_destroy( attach_context, true );
     return;
   }
+  #if defined( USBD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "max_packet_size0 = %d\r\n", attach_context->device->descriptor.max_packet_size0 )
+  #endif
   // get device again by address
   // set device status to default
   attach_context->device->status = LIBUSB_DEVICE_STATUS_DEFAULT;

@@ -233,7 +233,7 @@ response_t dwhci_transmit_channel( const uint8_t channel, void* buffer ) {
 }
 
 /**
- * @fn response_t dwhci_prepare_channel(uint32_t, uint32_t, uint8_t, uint32_t, dwhci_channel_state_t, libusb_pipe_address_t*, uint32_t, bool)
+ * @fn response_t dwhci_prepare_channel(uint32_t, uint32_t, uint8_t, uint32_t, dwhci_channel_state_t, libusb_pipe_address_t*, uint32_t, bool, channel_queue_entry_t*)
  * @brief Prepare channel for transfer
  * @param parent_device_number parent device number
  * @param port_number port number
@@ -242,18 +242,20 @@ response_t dwhci_transmit_channel( const uint8_t channel, void* buffer ) {
  * @param packet_id packet id
  * @param usb_pipe pipe to use
  * @param interval interval for interrupt polling
- * @param channel_prepared
+ * @param channel_prepared flag indicating whether channel is already prepared
+ * @param entry queue entry itself
  * @return
  */
 response_t dwhci_prepare_channel(
   const uint32_t parent_device_number,
   const uint32_t port_number,
   const uint8_t channel,
-  const uint32_t buffer_length,
+  uint32_t buffer_length,
   const dwhci_channel_state_t packet_id,
   const libusb_pipe_address_t* usb_pipe,
   const uint32_t interval,
-  const bool channel_prepared
+  const bool channel_prepared,
+  channel_queue_entry_t* entry
 ) {
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "%d / %d / %"PRIu8" / %"PRIu8" / %d / %d\r\n",
@@ -266,15 +268,47 @@ response_t dwhci_prepare_channel(
     | HCD_DWHCI_CHAN_CHARACTER_LOW_SPEED( ( usb_pipe->speed == LIBUSB_SPEED_LOW ? 1 : 0 ) )
     | HCD_DWHCI_CHAN_CHARACTER_TYPE( usb_pipe->type )
     | HCD_DWHCI_CHAN_CHARACTER_MAXIMUM_PACKET_SIZE( usb_number_from_packet_size( usb_pipe->max_size ) )
-    | HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 )
-    | HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 );
+    | HCD_DWHCI_CHAN_CHARACTER_ENABLE( 0 )
+    | HCD_DWHCI_CHAN_CHARACTER_DISABLE( 0 );
   // prepare split control
   uint32_t split_control = 0;
-  if ( LIBUSB_SPEED_HIGH != usb_pipe->speed ) {
-    split_control = ( uint32_t )HCD_DWHCI_CHAN_SPLIT_CONTROL_SPLIT_ENABLE( 1 )
+  if ( DWHCI_SPLIT_PHASE_NONE != entry->split_phase ) {
+    split_control |= HCD_DWHCI_CHAN_SPLIT_CONTROL_SPLIT_ENABLE( 1 )
       | HCD_DWHCI_CHAN_SPLIT_CONTROL_HUB_ADDRESS( parent_device_number )
-      | HCD_DWHCI_CHAN_SPLIT_CONTROL_PORT_ADDRESS( port_number );
+      | HCD_DWHCI_CHAN_SPLIT_CONTROL_PORT_ADDRESS( port_number + 1 )
+      | HCD_DWHCI_CHAN_SPLIT_CONTROL_EXTRACT_TRANSACTION_POSITION( 3 ); /// FIXME: NOT CORRECT IN ALL CASES
+    if ( DWHCI_SPLIT_PHASE_CSPLIT == entry->split_phase ) {
+      split_control |= HCD_DWHCI_CHAN_SPLIT_CONTROL_COMPLETE_SPLIT( 1 );
+    }
   }
+  // evaluate paket count
+  uint32_t packet_count = ( buffer_length + 7 ) / 8;
+  if ( LIBUSB_SPEED_LOW != usb_pipe->speed ) {
+    packet_count = (
+      buffer_length + usb_number_from_packet_size( usb_pipe->max_size ) - 1 ) / usb_number_from_packet_size( usb_pipe->max_size );
+  }
+  if ( 0 == packet_count ) {
+    packet_count = 1;
+  }
+  const uint32_t original_packet_count = packet_count;
+  // reset packet count and buffer_size for data to one packet at the time
+  // debug output
+  #if defined ( DWHCI_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "packet_count = %"PRIu32", buffer_length = %"PRIu32"\r\n",
+      packet_count, buffer_length )
+  #endif
+  if ( DWHCI_QUEUE_CHANNEL_STATUS_DATA == entry->status ) {
+    packet_count = 1;
+    if ( buffer_length > usb_number_from_packet_size( usb_pipe->max_size ) ) {
+      buffer_length = usb_number_from_packet_size( usb_pipe->max_size );
+    }
+    entry->buffer_size_to_transfer = buffer_length;
+  }
+  // debug output
+  #if defined ( DWHCI_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "packet_count = %"PRIu32", buffer_length = %"PRIu32"\r\n",
+      packet_count, buffer_length )
+  #endif
   // prepare transfer data
   uint32_t transfer_data = 0;
   if ( ! channel_prepared ) {
@@ -294,26 +328,21 @@ response_t dwhci_prepare_channel(
       return result;
     }
     // set transfer size
+    transfer_data &= ~HCD_DWHCI_CHAN_XFER_SIZE_TRANSFER_SIZE_MASK;
     transfer_data |= HCD_DWHCI_CHAN_XFER_SIZE_TRANSFER_SIZE( buffer_length );
   }
-
-  uint32_t packet_count = ( buffer_length + 7 ) / 8;
-  #if defined ( DWHCI_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "characteristic = %#"PRIx32", split_control = %#"PRIx32", transfer_data = %#"PRIx32", packet_count = %#"PRIx32"\r\n",
-    characteristic, split_control, transfer_data, packet_count )
-  #endif
-  if ( LIBUSB_SPEED_LOW != usb_pipe->speed ) {
-    packet_count = (
-      buffer_length + usb_number_from_packet_size( usb_pipe->max_size ) - 1 ) / usb_number_from_packet_size( usb_pipe->max_size );
-  }
-  if ( 0 == packet_count ) {
-    packet_count = 1;
-  }
+  // set packet count
   transfer_data |= HCD_DWHCI_CHAN_XFER_SIZE_PACKET_COUNT( packet_count );
-  #if defined ( DWHCI_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "characteristic = %#"PRIx32", split_control = %#"PRIx32", transfer_data = %#"PRIx32", packet_count = %#"PRIx32"\r\n",
-      characteristic, split_control, transfer_data, packet_count )
-  #endif
+  // set packet size and count if not set
+  if ( 0 == entry->packets_to_transfer ) {
+    entry->packets_to_transfer = original_packet_count;
+    entry->packet_size = usb_number_from_packet_size( usb_pipe->max_size );
+    // debug output
+    #if defined ( DWHCI_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "packet_size = %"PRIu32", transfer count = %"PRIu32"\r\n",
+        entry->packet_size, entry->packets_to_transfer )
+    #endif
+  }
   // interrupts are handled differently and block the channel permanently
   if ( LIBUSB_TRANSFER_INTERRUPT == usb_pipe->type ) {
     uint32_t current_frame;
@@ -371,6 +400,10 @@ response_t dwhci_prepare_channel(
     // return io error
     return HCD_RESPONSE_ERROR_IO;
   }
+  #if defined ( DWHCI_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "characteristic = %#"PRIx32", split_control = %#"PRIx32", transfer_data = %#"PRIx32", packet_count = %#"PRIx32"\r\n",
+      characteristic, split_control, transfer_data, packet_count )
+  #endif
   // free sequence
   iomem_release_mmio_sequence( sequence );
   // return success
@@ -891,21 +924,20 @@ response_t dwhci_channel_send_async_stop_channel( const channel_queue_entry_t* e
   // prepare sequence
   // only if channel is freed
   if ( free_channel ) {
-    // reset enable bit with read
-    sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ_AND;
-    sequence[ 0 ].offset = ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel );
-    sequence[ 0 ].value = ( uint32_t )~HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 );
-    // set disable bit with write
-    sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-    sequence[ 1 ].offset = ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel );
-    sequence[ 1 ].value = HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 );
     // read all chan int mask
-    sequence[ 2 ].type = IOMEM_MMIO_ACTION_READ;
-    sequence[ 2 ].offset = PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK;
+    sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
+    sequence[ 0 ].offset = PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK;
     // disable channel with write back
-    sequence[ 3 ].type = IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ;
-    sequence[ 3 ].offset = PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK;
-    sequence[ 3 ].value = ~(1U << entry->channel);
+    sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ;
+    sequence[ 1 ].offset = PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK;
+    sequence[ 1 ].value = ~(1U << entry->channel);
+    // reset enable bit with read
+    sequence[ 2 ].type = IOMEM_MMIO_ACTION_READ;
+    sequence[ 2 ].offset = ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel );
+    // set disable bit with write
+    sequence[ 3 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
+    sequence[ 3 ].offset = ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel );
+    sequence[ 3 ].value = HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 ) | HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 );
   } else {
     // load channel characteristics
     sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
@@ -969,6 +1001,18 @@ response_t dwhci_channel_send_async_setup( channel_queue_entry_t* entry ) {
   };
   // push request into data buffer
   memcpy( entry->buffer, &entry_data->request, sizeof( libusb_device_request_t ) );
+  #if defined( DWHCI_ENABLE_DEBUG )
+    if ( entry->buffer_offset == 0 ) {
+      auto const setup = (uint8_t*)entry->buffer;
+      EARLY_STARTUP_PRINT(
+        "SETUP: %02x %02x %02x %02x %02x %02x %02x %02x\r\n",
+        setup[0], setup[1], setup[2], setup[3],
+        setup[4], setup[5], setup[6], setup[7]
+      )
+    }
+  #endif
+  // set buffer size
+  entry->buffer_size_to_transfer = sizeof( libusb_device_request_t ) - entry->buffer_offset;
   // prepare channel
   const response_t result = dwhci_prepare_channel(
     entry_data->parent_device_number,
@@ -978,10 +1022,9 @@ response_t dwhci_channel_send_async_setup( channel_queue_entry_t* entry ) {
     DWHCI_CHANNEL_STATE_SETUP,
     &setup_pipe,
     0,
-    false
+    false,
+    entry
   );
-  // set buffer size
-  entry->buffer_size_to_transfer = sizeof( libusb_device_request_t ) - entry->buffer_offset;
   // handle error
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
@@ -1031,19 +1074,20 @@ response_t dwhci_channel_send_async_data( channel_queue_entry_t* entry ) {
     .type = LIBUSB_TRANSFER_CONTROL,
     .direction = entry_data->pipe_address.direction,
   };
+  // set buffer size
+  entry->buffer_size_to_transfer = entry_data->buffer_length - entry->buffer_offset;
   // prepare channel
   response_t result = dwhci_prepare_channel(
     entry_data->parent_device_number,
     entry_data->port_number,
     entry->channel,
     entry_data->buffer_length - entry->buffer_offset,
-    DWHCI_CHANNEL_STATE_DATA1,
+    entry->channel_data_state,
     &data_pipe,
     0,
-    false
+    false,
+    entry
   );
-  // set buffer size
-  entry->buffer_size_to_transfer = entry_data->buffer_length - entry->buffer_offset;
   // handle error
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
@@ -1079,22 +1123,30 @@ response_t dwhci_channel_send_async_ack( channel_queue_entry_t* entry ) {
     EARLY_STARTUP_PRINT( "Starting ack request\r\n" )
   #endif
   usb_control_message_t* entry_data = entry->data;
-  // populate last transfer
-  if ( LIBUSB_DIRECTION_IN == entry_data->pipe_address.direction ) {
-    entry_data->last_transfer = entry_data->buffer_length;
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT(
-        "entry->transferred = %"PRIu32", entry_data->buffer_length = %zu\r\n",
-        entry->transferred, entry_data->buffer_length );
-    #endif
-    if ( entry->transferred <= entry_data->buffer_length ) {
-      entry_data->last_transfer -= ( entry_data->buffer_length - entry->transferred );
+  // populate last transfer and data
+  if ( DWHCI_QUEUE_CHANNEL_STATUS_DATA == entry->previous_status ) {
+    if ( LIBUSB_DIRECTION_IN == entry_data->pipe_address.direction ) {
+      entry_data->last_transfer = entry_data->buffer_length;
+      // debug output
+      #if defined( DWHCI_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT(
+          "entry->transferred = %"PRIu32", entry_data->buffer_length = %zu\r\n",
+          entry->transferred, entry_data->buffer_length );
+      #endif
+      if ( entry->transferred <= entry_data->buffer_length ) {
+        entry_data->last_transfer -= ( entry_data->buffer_length - entry->transferred );
+      }
+      // debug output
+      #if defined( DWHCI_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT(
+          "entry->transferred = %"PRIu32", entry_data->buffer_length = %zu\r\n",
+          entry->transferred, entry_data->buffer_length );
+      #endif
+      // copy back data
+      memcpy( entry_data->buffer, entry->buffer, entry_data->last_transfer );
+    } else {
+      entry_data->last_transfer = entry_data->buffer_length;
     }
-    // copy back data
-    memcpy( entry_data->buffer, entry->buffer, entry_data->last_transfer );
-  } else {
-    entry_data->last_transfer = entry_data->buffer_length;
   }
   // create temporary pipe
   const libusb_pipe_address_t ack_pipe = {
@@ -1110,6 +1162,8 @@ response_t dwhci_channel_send_async_ack( channel_queue_entry_t* entry ) {
   };
   // push request into data buffer
   memcpy( entry->buffer, &entry_data->request, sizeof( libusb_device_request_t ) );
+  // set buffer size
+  entry->buffer_size_to_transfer = 0;
   // prepare channel
   response_t result = dwhci_prepare_channel(
     entry_data->parent_device_number,
@@ -1119,10 +1173,9 @@ response_t dwhci_channel_send_async_ack( channel_queue_entry_t* entry ) {
     DWHCI_CHANNEL_STATE_DATA1,
     &ack_pipe,
     0,
-    false
+    false,
+    entry
   );
-  // set buffer size
-  entry->buffer_size_to_transfer = 0;
   // handle error
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
@@ -1422,9 +1475,12 @@ response_t dwhci_channel_send_async(
     return HCD_RESPONSE_ERROR_MEMORY;
   }
   memcpy( dup_message, message, sizeof( *dup_message ) );
-  // populate response info
+  // populate entry
   entry->response_info = response_info;
   entry->message = dup_message;
+  // initialize split phase
+  entry->split_phase = LIBUSB_SPEED_HIGH != data->pipe_address.speed ? DWHCI_SPLIT_PHASE_SSPLIT : DWHCI_SPLIT_PHASE_NONE;
+  entry->channel_data_state = DWHCI_CHANNEL_STATE_DATA1;
   // try to allocate a channel
   uint8_t channel = 0;
   result = dwhci_allocate_channel( &channel );
@@ -1520,7 +1576,8 @@ response_t dwhci_channel_poll_async_data( channel_queue_entry_t* entry ) {
     entry->poll_state,
     &data_pipe,
     entry_data->interval,
-    entry->prepared
+    entry->prepared,
+    entry
   );
   // set buffer size
   entry->buffer_size_to_transfer = entry_data->buffer_length - entry->buffer_offset;
@@ -1748,6 +1805,8 @@ response_t dwhci_channel_poll_async(
   entry->message = dup_message;
   entry->interval = data->interval;
   entry->poll_state = DWHCI_CHANNEL_STATE_DATA0;
+  // initialize split phase
+  entry->split_phase = LIBUSB_SPEED_HIGH != data->pipe_address.speed ? DWHCI_SPLIT_PHASE_SSPLIT : DWHCI_SPLIT_PHASE_NONE;
   // try to allocate a channel
   uint8_t channel = 0;
   result = dwhci_allocate_channel( &channel );

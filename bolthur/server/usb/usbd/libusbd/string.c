@@ -55,114 +55,11 @@ static void string_get_finished(
     return;
   }
   // get contexts
-  usbd_get_string_context_t* ctx = async_data->context;
-  usbd_read_lang_context_t* read_lang_context = ctx->context;
-  usbd_read_string_context_t* read_string_context = read_lang_context->context;
-  // dummy error response
-  vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
-  // handle no data
-  if ( ! data_info ) {
-    // return
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    usbd_context_get_string_destroy( ctx );
-    usbd_context_read_lang_destroy( read_lang_context );
-    usbd_context_read_string_destroy( read_string_context );
-    return;
-  }
-  // validate origin
-  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    // return
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    usbd_context_get_string_destroy( ctx );
-    usbd_context_read_lang_destroy( read_lang_context );
-    usbd_context_read_string_destroy( read_string_context );
-    return;
-  }
-  // get message and data size
-  size_t data_size;
-  vfs_ioctl_perform_response_t* submit_response = bolthur_rpc_fetch_from_mailbox(
-    data_info, &data_size, true, nullptr );
-  if ( ! submit_response ) {
-    // return
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    usbd_context_get_string_destroy( ctx );
-    usbd_context_read_lang_destroy( read_lang_context );
-    usbd_context_read_string_destroy( read_string_context );
-    return;
-  }
-  // get poll response
-  auto const usbd_control_message = ( usbd_control_message_t* )submit_response->container;
-  // attach shared memory from poll command
-  void* shm_addr_hcd_poll = _syscall_memory_shared_attach( usbd_control_message->shm_id, 0 );
-  if ( errno ) {
-    const int e = errno;
-    // free up stuff
-    free( submit_response );
-    // return
-    err_response.status = -e;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    bolthur_rpc_destroy_async( bolthur_rpc_pop_async( RPC_VFS_IOCTL, response_info ) );
-    usbd_context_get_string_destroy( ctx );
-    usbd_context_read_lang_destroy( read_lang_context );
-    usbd_context_read_string_destroy( read_string_context );
-    return;
-  }
-  // get result
-  auto const usb_control_message = ( usb_control_message_t* )shm_addr_hcd_poll;
-  // check transfer
-  if ( usb_control_message->last_transfer != ctx->buffer_length ) {
-    // free up stuff
-    _syscall_memory_shared_detach( usbd_control_message->shm_id );
-    free( submit_response );
-    // debug output
-    #if defined( USBD_ENABLE_OUTPUT )
-      EARLY_STARTUP_PRINT( "Not enough transferred\r\n" )
-    #endif
-    // return
-    err_response.status = -EPROTO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    bolthur_rpc_destroy_async( bolthur_rpc_pop_async( RPC_VFS_IOCTL, response_info ) );
-    usbd_context_get_string_destroy( ctx );
-    usbd_context_read_lang_destroy( read_lang_context );
-    usbd_context_read_string_destroy( read_string_context );
-    return;
-  }
-  // response is equal to input
-  if ( usb_control_message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
-    // debug output
-    #if defined( USBD_ENABLE_OUTPUT )
-      EARLY_STARTUP_PRINT( "error = %#x\r\n", usb_control_message->error )
-    #endif
-    // free up stuff
-    _syscall_memory_shared_detach( usbd_control_message->shm_id );
-    free( submit_response );
-    // return
-    err_response.status = -EPROTO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    bolthur_rpc_destroy_async( bolthur_rpc_pop_async( RPC_VFS_IOCTL, response_info ) );
-    usbd_context_get_string_destroy( ctx );
-    usbd_context_read_lang_destroy( read_lang_context );
-    usbd_context_read_string_destroy( read_string_context );
-    return;
-  }
-  // handle direction in with last transfer equal to buffer length
-  if ( usb_control_message->last_transfer == usb_control_message->buffer_length ) {
-    // copy over from hcd poll buffer into device descriptor
-    memcpy(
-      ctx->buffer,
-      usb_control_message->buffer,
-      usb_control_message->buffer_length
-    );
-  }
-  // populate last transfer and error
-  read_lang_context->context->device->last_transfer = usb_control_message->last_transfer;
-  read_lang_context->context->device->error = usb_control_message->error;
-  // detach hcd submit
-  _syscall_memory_shared_detach( usbd_control_message->shm_id );
+  const usbd_get_descriptor_context_t* descriptor = async_data->context;
+  const usbd_get_string_context_t* ctx = descriptor->context;
   // invoke callback
   ctx->callback( type, origin, data_info, response_info );
   // free request
-  free( submit_response );
   bolthur_rpc_destroy_async( async_data );
 }
 
@@ -201,7 +98,7 @@ int usbd_string_get(
   }
   // call get async
   return usbd_descriptor_get_async(
-    dev,
+    ( libusb_device_t* )dev,
     LIBUSB_DESCRIPTOR_STRING,
     string_index,
     lang_id,
@@ -249,7 +146,8 @@ static void string_read_lang_read_finished(
   // dummy error response
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // get contexts
-  usbd_get_string_context_t* ctx = async_data->context;
+  const usbd_get_descriptor_context_t* descriptor = async_data->context;
+  usbd_get_string_context_t* ctx = descriptor->context;
   usbd_read_lang_context_t* read_lang_context = ctx->context;
   // handle error
   if ( read_lang_context->context->device->error ) {
@@ -303,7 +201,8 @@ static void string_read_lang_length_finished(
   // dummy error response
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // get contexts
-  usbd_get_string_context_t* ctx = async_data->context;
+  const usbd_get_descriptor_context_t* descriptor = async_data->context;
+  usbd_get_string_context_t* ctx = descriptor->context;
   usbd_read_lang_context_t* read_lang_context = ctx->context;
   // handle error
   if ( read_lang_context->context->device->error ) {
@@ -439,7 +338,8 @@ static void string_read_language_data_finished(
     return;
   }
   // get contexts
-  usbd_get_string_context_t* ctx = async_data->context;
+  const usbd_get_descriptor_context_t* descriptor_context = async_data->context;
+  usbd_get_string_context_t* ctx = descriptor_context->context;
   usbd_read_lang_context_t* read_lang_context = ctx->context;
   const usbd_read_string_context_t *read_string_context = read_lang_context->context;
   // transform buffer
@@ -514,7 +414,8 @@ static void string_read_language_id_finished(
   // dummy error response
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // get contexts
-  usbd_get_string_context_t* ctx = async_data->context;
+  const usbd_get_descriptor_context_t* descriptor = async_data->context;
+  usbd_get_string_context_t* ctx = descriptor->context;
   usbd_read_lang_context_t* read_lang_context = ctx->context;
   usbd_read_string_context_t* read_string_context = read_lang_context->context;
   // handle error
