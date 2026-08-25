@@ -34,7 +34,10 @@ static bool toggle_split_phase( const uint32_t cipt, channel_queue_entry_t* entr
     return false;
   }
   if ( DWHCI_SPLIT_PHASE_SSPLIT == entry->split_phase ) {
-    if ( cipt & HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT ) {
+    if (
+      cipt & HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT
+      && DWHCI_QUEUE_POLL_STATUS_DATA != entry->status
+    ) {
       return false;
     }
     if ( cipt & HCD_CHANNEL_INTERRUPT_NOT_YET ) {
@@ -46,15 +49,25 @@ static bool toggle_split_phase( const uint32_t cipt, channel_queue_entry_t* entr
     if ( cipt & HCD_CHANNEL_INTERRUPT_NOT_YET ) {
       return false;
     }
-    if ( cipt & HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT ) {
+    if (
+      cipt & HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT
+      && DWHCI_QUEUE_POLL_STATUS_DATA != entry->status
+    ) {
       return false;
     }
-
+    if (
+      cipt & HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT
+      && DWHCI_QUEUE_POLL_STATUS_DATA == entry->status
+    ) {
+      entry->split_phase = DWHCI_SPLIT_PHASE_SSPLIT;
+      return true;
+    }
     if (cipt & HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE) {
       // CSPLIT completed the current USB transaction.
       entry->split_phase = DWHCI_SPLIT_PHASE_SSPLIT;
       return true;
     }
+
   }
   return false;
 }
@@ -175,9 +188,10 @@ void rpc_interrupt_handle(
           #endif
           continue;
         }
-        #if defined( DWHCI_ENABLE_DEBUG )
+        //#if defined( DWHCI_ENABLE_DEBUG )
+          if ( DWHCI_QUEUE_POLL_STATUS_DATA == entry->status )
           EARLY_STARTUP_PRINT( "cipt = %#"PRIx32"\r\n", cipt )
-        #endif
+        //#endif
         if ( cipt & HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE ) {
           #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "Transfer complete for channel %"PRIu32"\r\n", channel )
@@ -286,6 +300,9 @@ void rpc_interrupt_handle(
         const bool split_complete = toggle_split_phase( cipt, entry );
         // handle short transfer
         const bool short_response = transferred != 0 && transferred < requested;
+        // transfer complete flag
+        const bool transfer_complete =
+          cipt & HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE;
 
         // on short response we've to reset packet to transfer because it marks
         // the end of usb transaction
@@ -343,22 +360,26 @@ void rpc_interrupt_handle(
           ( cipt & HCD_CHANNEL_INTERRUPT_HALT )
           || ( cipt & HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE )
         ) {
-          const bool transfer_complete =
-            cipt & HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE;
           // handle finished
           if (
             // treat setup status with transfer complete as done
             (
               entry->status == DWHCI_QUEUE_CHANNEL_STATUS_SETUP
               && transfer_complete
-              )
+            )
             // treat ack status with transfer complete as done
             || (
               entry->status == DWHCI_QUEUE_CHANNEL_STATUS_ACK
               && transfer_complete
             )
+            || (
+              entry->status == DWHCI_QUEUE_POLL_STATUS_DATA
+              && (
+                transfer_complete
+                || ( cipt & HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT )
+              )
             // treat cancellation as finished
-            || entry->status == DWHCI_QUEUE_CANCEL
+            ) || entry->status == DWHCI_QUEUE_CANCEL
             // treat no remaining as finished
             || entry->packets_to_transfer == 0
           ) {
@@ -384,10 +405,11 @@ void rpc_interrupt_handle(
             entry->buffer_offset = 0;
           } else {
             // debug output
-            #if defined( DWHCI_ENABLE_DEBUG )
+            //#if defined( DWHCI_ENABLE_DEBUG )
+              if (DWHCI_QUEUE_POLL_STATUS_DATA == entry->status)
               EARLY_STARTUP_PRINT( "Restart current state with remaining, %"PRIu32" / %"PRIu32", transfer_size: %"PRIx32"\r\n",
                 remaining, entry->buffer_size_to_transfer, transfer_size )
-            #endif
+            //#endif
             // increase buffer offset
             entry->buffer_offset += transferred;
           }
@@ -404,19 +426,22 @@ void rpc_interrupt_handle(
               && split_complete
             )
           )
-        ) {
-          EARLY_STARTUP_PRINT( "entry->channel_data_state = %x\r\n", entry->channel_data_state )
+          ) {
+          // debug output
+          #if defined( DWHCI_ENABLE_DEBUG )
+            EARLY_STARTUP_PRINT( "entry->channel_data_state = %x\r\n", entry->channel_data_state )
+          #endif
           entry->channel_data_state = DWHCI_CHANNEL_STATE_DATA0 == entry->channel_data_state
             ? DWHCI_CHANNEL_STATE_DATA1 : DWHCI_CHANNEL_STATE_DATA0;
-          EARLY_STARTUP_PRINT( "entry->channel_data_state = %x\r\n", entry->channel_data_state )
+          // debug output
+          #if defined( DWHCI_ENABLE_DEBUG )
+            EARLY_STARTUP_PRINT( "entry->channel_data_state = %x\r\n", entry->channel_data_state )
+          #endif
         }
         // toggle poll state
         if (
           DWHCI_QUEUE_POLL_STATUS_DATA == entry->status
-          && (
-            entry->split_phase == DWHCI_SPLIT_PHASE_NONE
-            || split_complete
-          )
+          && transfer_complete
         ) {
           entry->poll_state = DWHCI_CHANNEL_STATE_DATA0 == entry->poll_state
             ? DWHCI_CHANNEL_STATE_DATA1 : DWHCI_CHANNEL_STATE_DATA0;

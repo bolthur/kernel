@@ -52,9 +52,10 @@ typedef enum {
   DWHCI_QUEUE_POLL_STATUS_DATA = 6,
   DWHCI_QUEUE_POLL_STATUS_ACK = 7,
   DWHCI_QUEUE_POLL_STATUS_DONE = 8,
+  DWHCI_QUEUE_POLL_STATUS_WAIT = 9,
 
-  DWHCI_QUEUE_CANCEL = 9,
-  DWHCI_QUEUE_CANCEL_DONE = 10,
+  DWHCI_QUEUE_CANCEL = 10,
+  DWHCI_QUEUE_CANCEL_DONE = 11,
 } dwhci_queue_status_t;
 
 /**
@@ -97,6 +98,10 @@ typedef struct channel_queue_entry {
   libusb_transfer_error_t error;
   /** poll channel state */
   dwhci_channel_state_t poll_state;
+  /** last poll timer */
+  size_t poll_last_timer;
+  /** poll timer */
+  size_t poll_timer_id;
   /** channel data state */
   dwhci_channel_state_t channel_data_state;
   /** packets to transfer */
@@ -140,7 +145,7 @@ response_t dwhci_queue_remove_entry( channel_queue_entry_t*, bool );
 response_t dwhci_queue_get_active_by_channel( uint8_t, channel_queue_entry_t** );
 response_t dwhci_enable_channel_interrupt( uint8_t );
 response_t dwhci_disable_channel_interrupt( uint8_t );
-response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* );
+response_t dwhci_channel_send_async_start_channel( channel_queue_entry_t* );
 response_t dwhci_channel_send_async_stop_channel( const channel_queue_entry_t*, bool );
 response_t dwhci_channel_send_async_setup( channel_queue_entry_t* );
 response_t dwhci_channel_send_async_data( channel_queue_entry_t* );

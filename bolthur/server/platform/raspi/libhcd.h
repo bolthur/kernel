@@ -192,7 +192,6 @@
 #define HCD_DWHCI_CHAN_CHARACTER_TYPE( val ) ( ( ( ( uint32_t )val ) & 0x3 ) << 18 )
 #define HCD_DWHCI_CHAN_CHARACTER_PACKETS_PER_FRAME( val ) ( ( ( ( uint32_t )val ) & 0x3 ) << 20 )
 #define HCD_DWHCI_CHAN_CHARACTER_DEVICE_ADDRESS( val ) ( ( ( ( uint32_t )val ) & 0x7f ) << 22 )
-#define HCD_DWHCI_CHAN_CHARACTER_INTERVAL( val ) ( ( ( ( uint32_t )val ) & 0x3f ) << 26 )
 #define HCD_DWHCI_CHAN_CHARACTER_ODD_FRAME( val ) ( ( ( ( uint32_t )val ) & 0x1 ) << 29 )
 #define HCD_DWHCI_CHAN_CHARACTER_DISABLE( val ) ( ( ( ( uint32_t )val ) & 0x1 ) << 30 )
 #define HCD_DWHCI_CHAN_CHARACTER_ENABLE( val ) ( ( ( ( uint32_t )val ) & 0x1 ) << 31 )

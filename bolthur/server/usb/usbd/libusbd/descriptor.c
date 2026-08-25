@@ -46,7 +46,6 @@ static void descriptor_get_async_first_finished(
     RPC_VFS_IOCTL, response_info );
   // handle no async data
   if ( ! async_data ) {
-    EARLY_STARTUP_PRINT( "1\r\n" )
     // cleanup
     _syscall_rpc_cleanup();
     // skip rest
@@ -59,7 +58,6 @@ static void descriptor_get_async_first_finished(
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // handle no data
   if ( ! data_info ) {
-    EARLY_STARTUP_PRINT( "1\r\n" )
     // return
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_get_descriptor_destroy( ctx );
@@ -67,7 +65,6 @@ static void descriptor_get_async_first_finished(
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    EARLY_STARTUP_PRINT( "1\r\n" )
     // return
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_get_descriptor_destroy( ctx );
@@ -78,7 +75,6 @@ static void descriptor_get_async_first_finished(
   vfs_ioctl_perform_response_t* submit_response = bolthur_rpc_fetch_from_mailbox(
     data_info, &data_size, true, nullptr );
   if ( ! submit_response ) {
-    EARLY_STARTUP_PRINT( "1\r\n" )
     // return
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_get_descriptor_destroy( ctx );
@@ -89,7 +85,6 @@ static void descriptor_get_async_first_finished(
   // attach shared memory from poll command
   void* shm_addr_hcd_poll = _syscall_memory_shared_attach( usbd_control_message->shm_id, 0 );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "1\r\n" )
     const int e = errno;
     // free up stuff
     free( submit_response );
@@ -103,7 +98,6 @@ static void descriptor_get_async_first_finished(
   auto const usb_control_message = ( usb_control_message_t* )shm_addr_hcd_poll;
   // check transfer
   if ( usb_control_message->last_transfer != usb_control_message->buffer_length ) {
-    EARLY_STARTUP_PRINT( "1\r\n" )
     // free up stuff
     _syscall_memory_shared_detach( usbd_control_message->shm_id );
     free( submit_response );
@@ -129,7 +123,6 @@ static void descriptor_get_async_first_finished(
     return;
   }
   if ( usb_control_message->last_transfer == usb_control_message->buffer_length ) {
-    EARLY_STARTUP_PRINT( "1\r\n" )
     // copy over from hcd poll buffer into device descriptor
     memcpy(
       ctx->buffer,
@@ -140,10 +133,11 @@ static void descriptor_get_async_first_finished(
   // populate last transfer and error
   ctx->dev->last_transfer = usb_control_message->last_transfer;
   ctx->dev->error = usb_control_message->error;
-  EARLY_STARTUP_PRINT( "last_transfer = %"PRIu32", buffer_length = %zu\r\n", usb_control_message->last_transfer, ctx->buffer_length );
+  #if defined( USBD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "last_transfer = %"PRIu32", buffer_length = %zu\r\n", usb_control_message->last_transfer, ctx->buffer_length );
+  #endif
   // handle direction in with last transfer equal to buffer length
   if ( usb_control_message->last_transfer == ctx->buffer_length ) {
-    EARLY_STARTUP_PRINT( "1\r\n" )
     // detach hcd submit
     _syscall_memory_shared_detach( usbd_control_message->shm_id );
     // destroy async data
@@ -158,7 +152,10 @@ static void descriptor_get_async_first_finished(
     usb_control_message->buffer_length == DESCRIPTOR_READ_MIN_LENGTH
     && ctx->buffer_length != DESCRIPTOR_READ_MIN_LENGTH
   ) {
-    EARLY_STARTUP_PRINT( "Calling get descriptor again\r\n" )
+    // debug output
+    #if defined( USBD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Calling get descriptor again\r\n" )
+    #endif
     // for everything else, retry with full length now
     const int result = usbd_descriptor_get_async(
       ctx->dev, ctx->type, ctx->idx, ctx->lang_id, ctx->buffer, ctx->buffer_length,
@@ -166,7 +163,6 @@ static void descriptor_get_async_first_finished(
       ctx->original_request, ctx->original_request_size, ctx->context,
       ctx->buffer_length );
     if ( result != 0 ) {
-      EARLY_STARTUP_PRINT( "1\r\n" )
       /// FIXME: ADD ERROR HANDLING
     }
   }

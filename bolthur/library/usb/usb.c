@@ -1193,7 +1193,7 @@ int usb_stop_transmission( const uint32_t device_number ) {
  * @param direction
  * @param buffer
  * @param buffer_length
- * @param timeout
+ * @param interval
  * @return
  */
 int usb_interrupt_poll_async(
@@ -1203,7 +1203,7 @@ int usb_interrupt_poll_async(
   const libusb_direction_t direction,
   const void* buffer,
   const size_t buffer_length,
-  const size_t timeout
+  const size_t interval
 ) {
   // debug output
   #if defined( LIBUSB_ENABLE_DEBUG )
@@ -1243,7 +1243,7 @@ int usb_interrupt_poll_async(
   message->transfer = transfer;
   message->direction = direction;
   message->buffer_length = buffer_length;
-  message->timeout = timeout;
+  message->interval = interval;
   if ( LIBUSB_DIRECTION_OUT == direction && buffer ) {
     memcpy( &message->buffer[ 0 ], buffer, buffer_length );
   } else {

@@ -42,7 +42,7 @@ void rpc_default_timer(
   auto entry = configuration.list;
   while ( entry ) {
     // handle match
-    if ( entry->timer == response_info ) {
+    if ( entry->timer == response_info || entry->poll_timer_id == response_info ) {
       break;
     }
     // switch to next
@@ -52,18 +52,28 @@ void rpc_default_timer(
   if ( ! entry ) {
     return;
   }
-  // debug output
-  #if defined( DWHCI_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Timeout reached\r\n" )
-  #endif
-  // switch status and cancel channel
-  entry->status = DWHCI_QUEUE_CANCEL;
-  // start cancellation
+  // set status
+  if ( DWHCI_QUEUE_POLL_STATUS_WAIT == entry->status ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Interrval reached, continuing poll\r\n" )
+    #endif
+    // set status back to data
+    entry->status = DWHCI_QUEUE_POLL_STATUS_DATA;
+  } else {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Timeout reached\r\n" )
+    #endif
+    // switch status and cancel channel
+    entry->status = DWHCI_QUEUE_CANCEL;
+  }
+  // start cancellation / continue
   const response_t response = dwhci_channel_async_continue( entry );
   if ( HCD_RESPONSE_OK != response ) {
     // debug output
     #if defined ( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to start cancellation process\r\n" )
+      EARLY_STARTUP_PRINT( "Unable to start cancellation process / continue data\r\n" )
     #endif
   }
 }

@@ -355,12 +355,16 @@ response_t dwhci_prepare_channel(
       // return response
       return result;
     }
+    // determine interval
+    uint32_t calculated_interval = interval;
+    if ( LIBUSB_SPEED_HIGH == usb_pipe->speed ) {
+      const uint32_t micro_frames = 1U << ( interval - 1 );
+      calculated_interval = ( micro_frames + 7U ) / 8U;
+    }
     // get next frame
-    const uint32_t target_frame = (current_frame & 0xffff) + interval;
+    const uint32_t target_frame = (current_frame & 0xffff) + calculated_interval;
     // add odd frame bit depending on target frame
     characteristic |= ( uint32_t )HCD_DWHCI_CHAN_CHARACTER_ODD_FRAME( target_frame & 0x1 ? 1 : 0 );
-    // set correct interval
-    characteristic |= HCD_DWHCI_CHAN_CHARACTER_INTERVAL( interval );
   }
   // allocate mmio sequence
   size_t sequence_size;
@@ -819,7 +823,7 @@ response_t dwhci_disable_channel_interrupt( const uint8_t channel ) {
  * @param entry
  * @return
  */
-response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* entry ) {
+response_t dwhci_channel_send_async_start_channel( channel_queue_entry_t* entry ) {
   // debug output
   #if defined ( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Translate buffer to physical\r\n" )
@@ -895,6 +899,10 @@ response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* 
     EARLY_STARTUP_PRINT( "channel = %"PRIu8"\r\n", entry->channel )
     EARLY_STARTUP_PRINT( "Done\r\n" )
   #endif
+  // set time
+  if ( DWHCI_QUEUE_POLL_STATUS_DATA == entry->status ) {
+    entry->poll_last_timer = _syscall_timer_tick_count();
+  }
   // return success
   return HCD_RESPONSE_OK;
 }
@@ -1292,8 +1300,8 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
     // return result
     return result;
   }
-  // return success
-  return HCD_RESPONSE_OK;
+  // continue with next
+  return dwhci_continue_next( nullptr );
 }
 
 /**
@@ -1426,6 +1434,8 @@ response_t dwhci_channel_async_continue( channel_queue_entry_t* entry ) {
       return dwhci_channel_poll_async_ack( entry );
     case DWHCI_QUEUE_POLL_STATUS_DONE:
       return dwhci_channel_poll_async_done( entry );
+    case DWHCI_QUEUE_POLL_STATUS_WAIT:
+      return HCD_RESPONSE_OK;
     // cancellation
     case DWHCI_QUEUE_CANCEL:
       return dwhci_channel_send_cancel( entry );
@@ -1641,6 +1651,11 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
   #endif
   // set error processing if error occurred
   if ( entry->error ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Error: %#x\r\n", entry->error )
+    #endif
+    // error entry
     entry->error |= LIBUSB_TRANSFER_ERROR_PROCESSING;
   }
   usb_interrupt_poll_t* entry_data = entry->data;
@@ -1648,9 +1663,9 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
   // only send on not nack
   if ( ! ( entry->error & LIBUSB_TRANSFER_ERROR_NO_ACKNOWLEDGE ) ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    //#if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "DATA\r\n" )
-    #endif
+    //#endif
     // allocate response structure
     const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + sizeof( usbd_interrupt_return_t )
       + sizeof( char ) * entry_data->last_transfer;
@@ -1695,12 +1710,50 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
   entry->buffer_offset = 0;
   entry->buffer_size_to_transfer = entry_data->buffer_length;
   memset( entry->buffer, 0, entry_data->buffer_length );
-  entry->error = 0;
-  // next step is poll data
-  entry->status = DWHCI_QUEUE_POLL_STATUS_DATA;
+  // check interval
+  size_t wait_time = 0;
+  if ( entry->poll_last_timer > 0 ) {
+    // get frequency and current tick count
+    const size_t frequency = _syscall_timer_frequency();
+    const size_t current_tick_count = _syscall_timer_tick_count();
+    // calculate difference and finally passed milliseconds
+    const size_t difference = current_tick_count - entry->poll_last_timer;
+    const size_t passed_milliseconds = ( size_t )( ( ( double )difference / ( double )frequency ) * 1000.0 );
+    // handle not enough time in between => wait
+    if ( passed_milliseconds < entry->interval ) {
+      wait_time = entry->interval - passed_milliseconds;
+      entry->status = DWHCI_QUEUE_POLL_STATUS_WAIT;
+    } else {
+      entry->status = DWHCI_QUEUE_POLL_STATUS_DATA;
+    }
+    EARLY_STARTUP_PRINT( "interval: %"PRIu32", passed_milliseconds: %zu\r\n",
+      entry->interval, passed_milliseconds )
+    entry->poll_last_timer = 0;
+  } else {
+    // next step is poll data
+    entry->status = DWHCI_QUEUE_POLL_STATUS_DATA;
+  }
   // handle stall by cancelling
   if ( entry->error & LIBUSB_TRANSFER_ERROR_STALL ) {
+    EARLY_STARTUP_PRINT( "STALL ERROR\r\n" )
     entry->status = DWHCI_QUEUE_CANCEL;
+  } else {
+    entry->error = 0;
+  }
+  EARLY_STARTUP_PRINT( "entry->status = %d\r\n", entry->status )
+  // handle wait
+  if ( wait_time > 0 ) {
+    // acquire timeout
+    entry->poll_timer_id = timer_acquire( wait_time );
+    // handle error
+    if ( errno ) {
+      // debug output
+      #if defined( DWHCI_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Unable to acquire timeout\r\n" )
+      #endif
+      // return error
+      return HCD_RESPONSE_ERROR_IO;
+    }
   }
   // continue with next
   return dwhci_continue_next( entry );
@@ -1860,9 +1913,17 @@ response_t dwhci_continue_next( channel_queue_entry_t* current ) {
   // handle out
   if ( out ) {
     // push current to pending
-    if ( DWHCI_QUEUE_POLL_STATUS_DATA == current->status ) {
-      // set status back to pending and prepared to false
-      current->status = DWHCI_QUEUE_POLL_STATUS_PENDING;
+    if (
+      current
+      && (
+        DWHCI_QUEUE_POLL_STATUS_DATA == current->status
+        || DWHCI_QUEUE_POLL_STATUS_WAIT == current->status
+      )
+    ) {
+      // set status back to pending when not waiting and prepared to false
+      if ( DWHCI_QUEUE_POLL_STATUS_DATA == current->status ) {
+        current->status = DWHCI_QUEUE_POLL_STATUS_PENDING;
+      }
       current->prepared = false;
       // remove entry from queue
       result = dwhci_queue_remove_entry( current, false );
@@ -1928,7 +1989,7 @@ response_t dwhci_continue_next( channel_queue_entry_t* current ) {
     return dwhci_channel_async_continue( out );
   }
   // handle polling => just continue
-  if ( DWHCI_QUEUE_POLL_STATUS_DATA == current->status ) {
+  if ( current && DWHCI_QUEUE_POLL_STATUS_DATA == current->status ) {
     // continue polling
     return dwhci_channel_async_continue( current );
   }

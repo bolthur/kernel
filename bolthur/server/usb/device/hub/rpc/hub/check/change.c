@@ -116,7 +116,9 @@ static bool perform_check( hub_check_change_context_t* ctx ) {
     // handle possible hub
     if ( ctx->hub->children[ port ] && hub_get( ctx->hub->children[ port ] ) ) {
       // debug output
+      #if defined( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "CASCADING\r\n" )
+      #endif
       // allocate request
       constexpr size_t request_size = sizeof( vfs_ioctl_perform_request_t )
         + sizeof( usb_generic_check_for_change_t );
