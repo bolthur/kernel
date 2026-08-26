@@ -25,6 +25,7 @@
 #include "response.h"
 #include "rpc.h"
 #include "global.h"
+#include "mmio.h"
 // driver includes
 #include "../../../../libhcd.h"
 #include "../../../../../library/vfs/dev.h"
@@ -38,24 +39,35 @@
  * @return
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
+  // setup mmio
+  #if defined( HCD_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Setup mmio access\r\n" )
+  #endif
+  if ( ! mmio_init() ) {
+    #if defined( HCD_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to map necessary peripherals\r\n" )
+    #endif
+    return -1;
+  }
+  for (;;) {
+    __asm__ __volatile__ ( "nop" );
+  }
   // register rpc
   #if defined( HCD_ENABLE_OUTPUT )
     STARTUP_PRINT( "Setup rpc handler\r\n" )
   #endif
-  if ( !rpc_init() ) {
+  if ( ! rpc_init() ) {
     #if defined( HCD_ENABLE_OUTPUT )
       STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
     #endif
     return -1;
   }
-
   // enable rpc ( needs to be done at this point, because of interrupt driven
   // dwhci implementation )
   #if defined( HCD_ENABLE_OUTPUT )
     STARTUP_PRINT( "Enable rpc\r\n" )
   #endif
   _syscall_rpc_set_ready( true );
-
   // setup hcd interface
   #if defined( HCD_ENABLE_OUTPUT )
     STARTUP_PRINT( "Setup hcd interface!\r\n" )
@@ -67,7 +79,6 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     #endif
     return -1;
   }
-
   // add device file
   #if defined( HCD_ENABLE_OUTPUT )
     STARTUP_PRINT( "Sending device to vfs\r\n" )
@@ -83,7 +94,6 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     #endif
     return -1;
   }
-
   // wait for rpc
   #if defined( HCD_ENABLE_OUTPUT )
     STARTUP_PRINT( "Wait for rpc\r\n" )

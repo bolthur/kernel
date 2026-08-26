@@ -18,10 +18,12 @@ hcd_SOURCES = \
   rpc/poll/interrupt.c \
   rpc/stop/transmission.c \
   rpc/submit/message.c \
+  barrier.c \
   rpc/init.c \
   dwhci.c \
   dwhciroothub.c \
   main.c \
+  mmio.c \
   response.c \
   timer.c
 hcd_LDFLAGS = -all-static --static

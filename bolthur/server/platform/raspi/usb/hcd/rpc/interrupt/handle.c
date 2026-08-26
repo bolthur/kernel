@@ -19,9 +19,9 @@
 
 #include <inttypes.h>
 #include "../../rpc.h"
+#include "../../constants.h"
 #include "../../dwhci.h"
 #include "../../../../libhcd.h"
-#include "../../../../../../../library/platform/raspi/iomem/libperipheral.h"
 
 /**
  * @fn void toggle_split_phase(const uint32_t, channel_queue_entry_t*);

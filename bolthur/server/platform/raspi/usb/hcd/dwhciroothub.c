@@ -22,12 +22,12 @@
 #include <sys/ioctl.h>
 #include "dwhci.h"
 #include "dwhciroothub.h"
+#include "constants.h"
 // shared includes
 #include "../../libhcd.h"
 // library includes
 #include "../../../../../library/util/min.h"
 #include "../../../../../library/platform/raspi/iomem/libiomem.h"
-#include "../../../../../library/platform/raspi/iomem/libperipheral.h"
 #include "../../../../../library/platform/raspi/iomem/sequence.h"
 
 

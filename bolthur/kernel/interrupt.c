@@ -582,6 +582,7 @@ void interrupt_handle( size_t num, const interrupt_type_t type, void* context, c
     current = current->next;
   }
 
+  bool first_handler = true;
   // get first element of process handlers
   current = block->process->first;
   while ( current ) {
@@ -623,6 +624,15 @@ void interrupt_handle( size_t num, const interrupt_type_t type, void* context, c
       #endif
       current = current->next;
       continue;
+    }
+    // on first perform schedule
+    if ( first_handler ) {
+      // reset first handler
+      first_handler = false;
+      // enqueue scheduler
+      task_thread_try_switch_to = rpc->thread;
+      // enqueue scheduling
+      event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( NULL ) );
     }
     // step to next
     current = current->next;

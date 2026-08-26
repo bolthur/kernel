@@ -126,8 +126,8 @@ void syscall_memory_acquire( void* context ) {
   if ( addr ) {
     start = ( uintptr_t )addr;
     // get min and max address of context
-    uintptr_t min = virt_get_context_min_address( virtual_context );
-    uintptr_t max = virt_get_context_max_address( virtual_context );
+    const uintptr_t min = virt_get_context_min_address( virtual_context );
+    const uintptr_t max = virt_get_context_max_address( virtual_context );
     // ensure that address is in context
     if ( min > start || max <= start || max <= start + len ) {
       syscall_populate_error( context, ( size_t )-ENOMEM );

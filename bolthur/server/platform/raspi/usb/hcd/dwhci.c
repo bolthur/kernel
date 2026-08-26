@@ -26,6 +26,7 @@
 #include "dwhci.h"
 #include "response.h"
 #include "rpc.h"
+#include "constants.h"
 // driver includes
 #include <sys/mman.h>
 // shared includes

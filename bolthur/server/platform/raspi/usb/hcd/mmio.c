@@ -17,33 +17,29 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <sys/bolthur.h>
 #include <sys/mman.h>
 #include "mmio.h"
 #include "barrier.h"
+#include "constants.h"
 
 // initial setup of peripheral base
 #if defined( BCM2709 ) || defined( BCM2710 )
   #define PERIPHERAL_BASE 0x3F000000
-  #define PERIPHERAL_SIZE 0x980000 // map everything except dwhci which starts at the mentioned offset
+  #define PERIPHERAL_SIZE 0xFFFFFF
 #else
   #define PERIPHERAL_BASE 0x20000000
-  #define PERIPHERAL_SIZE 0x980000 // map everything except dwhci which starts at the mentioned offset
+  #define PERIPHERAL_SIZE 0xFFFFFF
 #endif
 
-void* mmio_start = nullptr;
-void* mmio_end = nullptr;
+static void* mmio_start = nullptr;
 
-/**
- * @fn bool mmio_setup(void)
- * @brief Prepare and setup mmio
- *
- * @return
- */
-bool mmio_setup( void ) {
+bool mmio_init( void ) {
+  EARLY_STARTUP_PRINT( "PERIPHERAL_BASE = %#x\r\n", PERIPHERAL_BASE )
   // map whole mmio area
   void* tmp = mmap(
-    ( void* )PERIPHERAL_BASE,
-    PERIPHERAL_SIZE,
+    ( void* )( PERIPHERAL_BASE + PERIPHERAL_USB_OFFSET ),
+    0x1000,
     PROT_READ | PROT_WRITE,
     MAP_ANONYMOUS | MAP_PHYSICAL | MAP_DEVICE,
     -1,
@@ -55,25 +51,8 @@ bool mmio_setup( void ) {
   }
   // set mmio start address
   mmio_start = tmp;
-  mmio_end = ( void* )( ( uintptr_t )tmp + PERIPHERAL_SIZE );
   // return success
   return true;
-}
-
-/**
- * @fn bool mmio_validate_offset(uintptr_t, size_t)
- * @brief Method to validate a read / write
- *
- * @param address
- * @param len
- * @return
- */
-bool mmio_validate_offset(const uintptr_t address, const size_t len ) {
-  // determine read begin and end address since address contains only an offset
-  auto const begin = ( void* )( ( uintptr_t )mmio_start + address );
-  auto const end = ( void* )( ( uintptr_t )mmio_start + address + len );
-  // return whether it's in range or not
-  return !( end > mmio_end || begin > mmio_end );
 }
 
 /**
