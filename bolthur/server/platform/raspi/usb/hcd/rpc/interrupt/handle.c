@@ -143,7 +143,7 @@ void rpc_interrupt_handle(
         #endif
         // get queue entry matching to channel
         channel_queue_entry_t* entry;
-        response_t result = dwhci_queue_get_active_by_channel( ( uint8_t )channel, &entry );
+        const response_t result = dwhci_queue_get_active_by_channel( ( uint8_t )channel, &entry );
         if ( HCD_RESPONSE_OK != result ) {
           #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "No queued entry found for channel %"PRIu32"\r\n", channel )

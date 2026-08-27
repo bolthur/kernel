@@ -18,24 +18,18 @@
  */
 
 #include <sys/bolthur.h>
-#include "timer.h"
+#include "delay.h"
 
 /**
- * @fn size_t timer_acquire(uint32_t)
- * @brief Acquire timer with delay of milliseconds
- * @param milliseconds milliseconds to wait
- * @return timer id
- * @exception EAGAIN in case timer was not possible to acquire
+ * @brief Helper to delay
+ * @param us
  */
-size_t timer_acquire( const uint32_t milliseconds ) {
-  // get clock frequency
-  const size_t frequency = _syscall_timer_frequency();
-  // translate into seconds
-  const double seconds = (double)milliseconds / 1000.0;
-  // calculate second timeout
-  size_t timeout = ( size_t )( seconds * frequency );
-  // add tick count to get an end time
-  timeout += _syscall_timer_tick_count();
-  // register timer
-  return _syscall_timer_acquire( RPC_TIMER, timeout, false );
+void delay_us( const uint32_t us ) {
+  const uint64_t frequency = _syscall_timer_frequency();
+  const uint64_t ticks =
+      (frequency * (uint64_t)us + 999999ULL) / 1000000ULL;
+  const uint64_t start = _syscall_timer_tick_count();
+  while ((_syscall_timer_tick_count() - start) < ticks) {
+    __asm__ volatile ("nop");
+  }
 }

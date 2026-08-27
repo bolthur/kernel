@@ -26,6 +26,7 @@
 // shared includes
 #include "../../libhcd.h"
 // library includes
+#include "delay.h"
 #include "mmio.h"
 #include "../../../../../library/util/min.h"
 #include "../../../../../library/platform/raspi/iomem/libiomem.h"
@@ -173,9 +174,6 @@ int dwhciroothub_process(
   int result = 0;
   uint32_t reply_length = 0;
   uint32_t host_port;
-  int ioctl_result;
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence;
   // handle request
   switch ( request->request ) {
     case LIBUSB_DEVICE_REQUEST_GET_STATUS:
@@ -265,51 +263,23 @@ int dwhciroothub_process(
               #if defined( DWHCI_ENABLE_DEBUG )
                 EARLY_STARTUP_PRINT( "roothub port feature suspend!\r\n" )
               #endif
-              // allocate sequence
-              sequence = iomem_prepare_mmio_sequence( 7, &sequence_size );
-              if ( ! sequence ) {
-                *error = LIBUSB_TRANSFER_ERROR_BUFFER_ERROR;
-                break;
-              }
               // prepare sequence
               // clear power
-              sequence[ 0 ].type = IOMEM_MMIO_ACTION_WRITE;
-              sequence[ 0 ].offset = PERIPHERAL_USB_POWER_OFFSET;
-              sequence[ 0 ].value = 0;
+              mmio_write( PERIPHERAL_USB_POWER_OFFSET, 0 );
               // delay 10 milliseconds
-              sequence[ 1 ].type = IOMEM_MMIO_ACTION_SLEEP;
-              sequence[ 1 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-              sequence[ 1 ].sleep = 10; // 5 according to specs
+              delay_us( 10000 ); // 5 according to specs
               // read host port
-              sequence[ 2 ].type = IOMEM_MMIO_ACTION_READ_OR;
-              sequence[ 2 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
-              sequence[ 2 ].value = HCD_DWHCI_HOST_PORT_RESUME;
+              host_port = mmio_read( PERIPHERAL_DWHCI_HOST_PORT ) | HCD_DWHCI_HOST_PORT_RESUME;
               // write host port with resume enabled
-              sequence[ 3 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-              sequence[ 3 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
-              sequence[ 3 ].value = 0x40;
+              mmio_write( PERIPHERAL_DWHCI_HOST_PORT, host_port | 0x40 );
               // delay 200 milliseconds
-              sequence[ 4 ].type = IOMEM_MMIO_ACTION_SLEEP;
-              sequence[ 4 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-              sequence[ 4 ].sleep = 200; // 100 according to specs
+              delay_us( 200000 ); // 100 according to specs
               // read again host port
-              sequence[ 5 ].type = IOMEM_MMIO_ACTION_READ_AND;
-              sequence[ 5 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
-              sequence[ 5 ].value = ( uint32_t )~( HCD_DWHCI_HOST_PORT_RESUME
-                | HCD_DWHCI_HOST_PORT_SUSPEND );
+              host_port = mmio_read( PERIPHERAL_DWHCI_HOST_PORT ) & ~(
+                HCD_DWHCI_HOST_PORT_RESUME | HCD_DWHCI_HOST_PORT_SUSPEND
+              );
               // write back with suspend false
-              sequence[ 6 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-              sequence[ 6 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
-              sequence[ 6 ].value = 0xc0;
-              // execute sequence
-              ioctl_result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
-              // free sequence
-              iomem_release_mmio_sequence( sequence );
-              // handle ioctl error
-              if ( -1 == ioctl_result ) {
-                *error = LIBUSB_TRANSFER_ERROR_CONNECTION_ERROR;
-                break;
-              }
+              mmio_write( PERIPHERAL_DWHCI_HOST_PORT, host_port | 0xc0 );
               break;
             case LIBUSB_HUB_PORT_FEATURE_POWER:
               #if defined( DWHCI_ENABLE_DEBUG )
@@ -378,65 +348,32 @@ int dwhciroothub_process(
               #if defined( DWHCI_ENABLE_DEBUG )
                 EARLY_STARTUP_PRINT( "roothub port feature reset!\r\n" )
               #endif
-              // allocate sequence
-              sequence = iomem_prepare_mmio_sequence( 9, &sequence_size );
-              if ( ! sequence ) {
-                *error = LIBUSB_TRANSFER_ERROR_BUFFER_ERROR;
-                break;
-              }
               // read power with and
-              sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ_AND;
-              sequence[ 0 ].offset = PERIPHERAL_USB_POWER_OFFSET;
-              sequence[ 0 ].value = ( uint32_t )~HCD_DWHCI_POWER_REGISTER_ENABLE_SLEEP_CLOCK_GATING;
+              const uint32_t power = mmio_read( PERIPHERAL_USB_POWER_OFFSET ) & ~HCD_DWHCI_POWER_REGISTER_ENABLE_SLEEP_CLOCK_GATING;
               // write back power with disabled sleep clock and stop p clock
-              sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ;
-              sequence[ 1 ].offset = PERIPHERAL_USB_POWER_OFFSET;
-              sequence[ 1 ].value = ( uint32_t )~HCD_DWHCI_POWER_REGISTER_STOP_P_CLOCK;
+              mmio_write( PERIPHERAL_USB_POWER_OFFSET, power & ~HCD_DWHCI_POWER_REGISTER_STOP_P_CLOCK );
               // clear power
-              sequence[ 2 ].type = IOMEM_MMIO_ACTION_WRITE;
-              sequence[ 2 ].offset = PERIPHERAL_USB_POWER_OFFSET;
-              sequence[ 2 ].value = 0;
+              mmio_write( PERIPHERAL_USB_POWER_OFFSET, 0 );
               // read port
-              sequence[ 3 ].type = IOMEM_MMIO_ACTION_READ_AND;
-              sequence[ 3 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
-              sequence[ 3 ].value = ~( uint32_t )(
+              host_port = mmio_read( PERIPHERAL_DWHCI_HOST_PORT ) & ~(
                 HCD_DWHCI_HOST_PORT_CONNECT_CHANGED
                 | HCD_DWHCI_HOST_PORT_ENABLE_CHANGED
                 | HCD_DWHCI_HOST_PORT_OVERCURRENT_CHANGED
               );
               // write back power with enabled reset and power flag and disabled suspend flag
-              sequence[ 4 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-              sequence[ 4 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
-              sequence[ 4 ].value = HCD_DWHCI_HOST_PORT_RESET | HCD_DWHCI_HOST_PORT_POWER;
+              mmio_write( PERIPHERAL_DWHCI_HOST_PORT, host_port | HCD_DWHCI_HOST_PORT_RESET | HCD_DWHCI_HOST_PORT_POWER );
               // delay 200 milliseconds
-              sequence[ 5 ].type = IOMEM_MMIO_ACTION_SLEEP;
-              sequence[ 5 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-              sequence[ 5 ].sleep = 120; // 60 according to specs
+              delay_us( 200000 ); // 60 according to specs
               // read port
-              sequence[ 6 ].type = IOMEM_MMIO_ACTION_READ_AND;
-              sequence[ 6 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
-              sequence[ 6 ].value = ~( uint32_t )(
+              host_port = mmio_read( PERIPHERAL_DWHCI_HOST_PORT ) & ~(
                 HCD_DWHCI_HOST_PORT_CONNECT_CHANGED
                 | HCD_DWHCI_HOST_PORT_ENABLE_CHANGED
                 | HCD_DWHCI_HOST_PORT_OVERCURRENT_CHANGED
-              );;
+              );
               // write back previous read
-              sequence[ 7 ].type = IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ;
-              sequence[ 7 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
-              sequence[ 7 ].value = ~HCD_DWHCI_HOST_PORT_RESET;
+              mmio_write( PERIPHERAL_DWHCI_HOST_PORT, host_port & ~HCD_DWHCI_HOST_PORT_RESET );
               // delay 20 milliseconds
-              sequence[ 8 ].type = IOMEM_MMIO_ACTION_SLEEP;
-              sequence[ 8 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-              sequence[ 8 ].sleep = 20;
-              // execute sequence
-              ioctl_result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
-              // free sequence
-              iomem_release_mmio_sequence( sequence );
-              // handle ioctl error
-              if ( -1 == ioctl_result ) {
-                *error = LIBUSB_TRANSFER_ERROR_CONNECTION_ERROR;
-                break;
-              }
+              delay_us( 20000 );
               break;
             case LIBUSB_HUB_PORT_FEATURE_POWER:
               #if defined( DWHCI_ENABLE_DEBUG )

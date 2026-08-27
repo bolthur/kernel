@@ -50,6 +50,10 @@ void rpc_default_timer(
   }
   // handle no match
   if ( ! entry ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "No timer found for %zu\r\n", response_info )
+    #endif
     return;
   }
   // set status

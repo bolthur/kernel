@@ -135,7 +135,6 @@ extern int fd_iomem;
 extern void* databuffer;
 extern dwhci_configuration_t configuration;
 
-response_t dwhci_transmit_channel( uint8_t, void* );
 response_t dwhci_prepare_channel( uint32_t, uint32_t, uint8_t, uint32_t, dwhci_channel_state_t, const libusb_pipe_address_t*, uint32_t, bool, channel_queue_entry_t* );
 response_t dwhci_allocate_channel( uint8_t* );
 response_t dwhci_free_channel( uint8_t );

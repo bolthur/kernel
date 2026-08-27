@@ -49,9 +49,6 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     #endif
     return -1;
   }
-  for (;;) {
-    __asm__ __volatile__ ( "nop" );
-  }
   // register rpc
   #if defined( HCD_ENABLE_OUTPUT )
     STARTUP_PRINT( "Setup rpc handler\r\n" )

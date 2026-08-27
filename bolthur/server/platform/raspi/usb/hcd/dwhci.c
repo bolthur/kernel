@@ -32,9 +32,11 @@
 // shared includes
 #include "../../libhcd.h"
 // library includes
+#include "delay.h"
 #include "mmio.h"
 #include "timer.h"
 #include "../../../../libusbd.h"
+#include "../../../../../kernel/timer.h"
 #include "../../../../../library/platform/raspi/iomem/libiomem.h"
 #include "../../../../../library/platform/raspi/iomem/libperipheral.h"
 #include "../../../../../library/platform/raspi/iomem/libmailbox.h"
@@ -73,7 +75,7 @@ response_t dwhci_prepare_channel(
   uint32_t buffer_length,
   const dwhci_channel_state_t packet_id,
   const libusb_pipe_address_t* usb_pipe,
-  const uint32_t interval,
+  uint32_t interval,
   const bool channel_prepared,
   channel_queue_entry_t* entry
 ) {
@@ -156,6 +158,10 @@ response_t dwhci_prepare_channel(
   // interrupts are handled differently and block the channel permanently
   if ( LIBUSB_TRANSFER_INTERRUPT == usb_pipe->type ) {
     const uint32_t current_frame = mmio_read( PERIPHERAL_DWHCI_HOST_FRM_NUM );
+    // overwrite interval in case of csplit
+    if ( entry->split_phase == DWHCI_SPLIT_PHASE_CSPLIT ) {
+      interval = 1;
+    }
     // determine interval
     uint32_t calculated_interval = interval;
     if ( LIBUSB_SPEED_HIGH == usb_pipe->speed ) {
@@ -167,50 +173,12 @@ response_t dwhci_prepare_channel(
     // add odd frame bit depending on target frame
     characteristic |= ( uint32_t )HCD_DWHCI_CHAN_CHARACTER_ODD_FRAME( target_frame & 0x1 ? 1 : 0 );
   }
-  // allocate mmio sequence
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 3, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined ( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to allocate sequence size\r\n" )
-    #endif
-    // return error
-    return HCD_RESPONSE_ERROR_MEMORY;
-  }
   // write characteristics
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 0 ].offset = ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( channel );
-  sequence[ 0 ].value = characteristic;
-  // write split control
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 1 ].offset = ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_SPLIT_CTRL( channel );
-  sequence[ 1 ].value = split_control;
-  // set transfer data
-  sequence[ 2 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 2 ].offset = ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_XFER_SIZE( channel );
-  sequence[ 2 ].value = transfer_data;
-  // write to io
-  const int result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
-  // handle error
-  if ( -1 == result ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      const int e = errno;
-      EARLY_STARTUP_PRINT( "Prepare channel sequence failed: %s\r\n",
-        strerror( e ) )
-    #endif
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
-    // return io error
-    return HCD_RESPONSE_ERROR_IO;
-  }
-  #if defined ( DWHCI_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "characteristic = %#"PRIx32", split_control = %#"PRIx32", transfer_data = %#"PRIx32", packet_count = %#"PRIx32"\r\n",
-      characteristic, split_control, transfer_data, packet_count )
-  #endif
-  // free sequence
-  iomem_release_mmio_sequence( sequence );
+  mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( channel ), characteristic );
+  // write split ctrl
+  mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_SPLIT_CTRL( channel ), split_control );
+  // write transfer size
+  mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_XFER_SIZE( channel ), transfer_data );
   // return success
   return HCD_RESPONSE_OK;
 }
@@ -541,34 +509,10 @@ response_t dwhci_enable_channel_interrupt( const uint8_t channel ) {
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Enable channel interrupt via mmio sequence\r\n" )
   #endif
-  // allocate sequence
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 2, &sequence_size );
-  if ( ! sequence ) {
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
-    #endif
-    // return memory error
-    return HCD_RESPONSE_ERROR_MEMORY;
-  }
-  // prepare sequence
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 0 ].offset = PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK;
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 1 ].offset = PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK;
-  sequence[ 1 ].value = 1 << channel;
-  // execute sequence
-  if ( 0 != iomem_execute_sequence( fd_iomem, sequence, sequence_size ) ) {
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to enable channel interrupt\r\n" )
-    #endif
-    // release sequence
-    iomem_release_mmio_sequence( sequence );
-    // return io error
-    return HCD_RESPONSE_ERROR_IO;
-  }
-  // release sequence
-  iomem_release_mmio_sequence( sequence );
+  // read, enable channel and write back
+  uint32_t int_mask = mmio_read( PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK );
+  int_mask |= 1 << channel;
+  mmio_write( PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK, int_mask );
   // return success
   return HCD_RESPONSE_OK;
 }
@@ -586,34 +530,10 @@ response_t dwhci_disable_channel_interrupt( const uint8_t channel ) {
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Disable channel interrupt via mmio sequence\r\n" )
   #endif
-  // allocate sequence
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 2, &sequence_size );
-  if ( ! sequence ) {
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
-    #endif
-    // return memory error
-    return HCD_RESPONSE_ERROR_MEMORY;
-  }
-  // prepare sequence
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 0 ].offset = PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK;
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ;
-  sequence[ 1 ].offset = PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK;
-  sequence[ 1 ].value = ~(1U << channel);
-  // execute sequence
-  if ( 0 != iomem_execute_sequence( fd_iomem, sequence, sequence_size ) ) {
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to disable channel interrupt\r\n" )
-    #endif
-    // release sequence
-    iomem_release_mmio_sequence( sequence );
-    // return io error
-    return HCD_RESPONSE_ERROR_IO;
-  }
-  // release sequence
-  iomem_release_mmio_sequence( sequence );
+  // read, disable channel and write back
+  uint32_t int_mask = mmio_read( PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK );
+  int_mask &= ~(1U << channel);
+  mmio_write( PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK, int_mask );
   // return success
   return HCD_RESPONSE_OK;
 }
@@ -640,70 +560,35 @@ response_t dwhci_channel_send_async_start_channel( channel_queue_entry_t* entry 
     // return result
     return HCD_RESPONSE_ERROR_IO;
   }
+  // set time
+  if ( DWHCI_QUEUE_POLL_STATUS_DATA == entry->status ) {
+    entry->poll_last_timer = _syscall_timer_tick_count();
+  }
   // debug output
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Starting async channel via mmio sequence\r\n" )
   #endif
-  // allocate sequence
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 8, &sequence_size );
-  if ( ! sequence ) {
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
-    #endif
-    // return memory error
-    return HCD_RESPONSE_ERROR_MEMORY;
-  }
-  // prepare sequence
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 0 ].offset = ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_INT( entry->channel );
-  sequence[ 0 ].value = ( uint32_t )-1;
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 1 ].offset = ( uint32_t )PERIPHERAL_DWHCI_HOST_HOST_CHAN_DMA_ADDR( entry->channel );
-  sequence[ 1 ].value = phys + entry->buffer_offset;
-  sequence[ 2 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 2 ].offset = ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( entry->channel );
-  sequence[ 3 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 3 ].offset = ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( entry->channel );
-  sequence[ 3 ].value = HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE
+  mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_INT( entry->channel ), -1U );
+  mmio_write( PERIPHERAL_DWHCI_HOST_HOST_CHAN_DMA_ADDR( entry->channel ), phys + entry->buffer_offset );
+  mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( entry->channel ), mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( entry->channel ) ) | (
+    HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE
     | HCD_CHANNEL_INTERRUPT_HALT
     | HCD_CHANNEL_INTERRUPT_ERROR_MASK
     /// FIXME: ONLY FOR SPLIT OR PREIODIC STUFF
     | HCD_CHANNEL_INTERRUPT_ACKNOWLEDGEMENT
     | HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT
-    | HCD_CHANNEL_INTERRUPT_NOT_YET;
-  sequence[ 4 ].type = IOMEM_MMIO_ACTION_READ_OR;
-  sequence[ 4 ].offset = PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK;
-  sequence[ 5 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 5 ].offset = PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK;
-  sequence[ 5 ].value = 1U << entry->channel;
-  sequence[ 6 ].type = IOMEM_MMIO_ACTION_READ_AND;
-  sequence[ 6 ].offset = ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel );
-  sequence[ 6 ].value = ~HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 );
-  sequence[ 7 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 7 ].offset = ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel );
-  sequence[ 7 ].value = HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 );
-  // execute sequence
-  if ( 0 != iomem_execute_sequence( fd_iomem, sequence, sequence_size ) ) {
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to disable channel interrupt\r\n" )
-    #endif
-    // release sequence
-    iomem_release_mmio_sequence( sequence );
-    // return io error
-    return HCD_RESPONSE_ERROR_IO;
-  }
-  // release sequence
-  iomem_release_mmio_sequence( sequence );
+    | HCD_CHANNEL_INTERRUPT_NOT_YET
+  ) );
+  mmio_write( PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK, mmio_read( PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK ) | 1U << entry->channel );
+  mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ), (
+    ( mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ) ) & ~HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 ) ) |
+      HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 )
+  ) );
   // debug output
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "channel = %"PRIu8"\r\n", entry->channel )
     EARLY_STARTUP_PRINT( "Done\r\n" )
   #endif
-  // set time
-  if ( DWHCI_QUEUE_POLL_STATUS_DATA == entry->status ) {
-    entry->poll_last_timer = _syscall_timer_tick_count();
-  }
   // return success
   return HCD_RESPONSE_OK;
 }
@@ -720,55 +605,21 @@ response_t dwhci_channel_send_async_stop_channel( const channel_queue_entry_t* e
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Stopping channel via mmio sequence\r\n" )
   #endif
-  // allocate sequence
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( free_channel ? 4 : 2, &sequence_size );
-  if ( ! sequence ) {
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
-    #endif
-    // return memory error
-    return HCD_RESPONSE_ERROR_MEMORY;
-  }
   // prepare sequence
   // only if channel is freed
   if ( free_channel ) {
-    // read all chan int mask
-    sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
-    sequence[ 0 ].offset = PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK;
-    // disable channel with write back
-    sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ;
-    sequence[ 1 ].offset = PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK;
-    sequence[ 1 ].value = ~(1U << entry->channel);
-    // reset enable bit with read
-    sequence[ 2 ].type = IOMEM_MMIO_ACTION_READ;
-    sequence[ 2 ].offset = ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel );
-    // set disable bit with write
-    sequence[ 3 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-    sequence[ 3 ].offset = ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel );
-    sequence[ 3 ].value = HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 ) | HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 );
-  } else {
-    // load channel characteristics
-    sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
-    sequence[ 0 ].offset = ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel );
-    // set disable and enable bit to 1
-    sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-    sequence[ 1 ].offset = ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel );
-    sequence[ 1 ].value = HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 )
-      | HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 );
+    const response_t result = dwhci_disable_channel_interrupt( entry->channel );
+    if ( HCD_RESPONSE_OK != result ) {
+      #if defined( DWHCI_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Unable to disable channel interrupt\r\n" )
+      #endif
+      return result;
+    }
   }
-  // execute sequence
-  if ( 0 != iomem_execute_sequence( fd_iomem, sequence, sequence_size ) ) {
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to disable channel interrupt\r\n" )
-    #endif
-    // release sequence
-    iomem_release_mmio_sequence( sequence );
-    // return io error
-    return HCD_RESPONSE_ERROR_IO;
-  }
-  // release sequence
-  iomem_release_mmio_sequence( sequence );
+  // start stop channel by setting enable and disable
+  uint32_t characteristics = mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ) );
+  characteristics |= HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 ) | HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 );
+  mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ), characteristics );
   // free channel if set
   if ( free_channel ) {
     // free allocated channel
@@ -1464,9 +1315,9 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
   // only send on not nack
   if ( ! ( entry->error & LIBUSB_TRANSFER_ERROR_NO_ACKNOWLEDGE ) ) {
     // debug output
-    //#if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "DATA\r\n" )
-    //#endif
+    #endif
     // allocate response structure
     const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + sizeof( usbd_interrupt_return_t )
       + sizeof( char ) * entry_data->last_transfer;
@@ -1520,6 +1371,10 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
     // calculate difference and finally passed milliseconds
     const size_t difference = current_tick_count - entry->poll_last_timer;
     const size_t passed_milliseconds = ( size_t )( ( ( double )difference / ( double )frequency ) * 1000.0 );
+    #if defined( DWHCI_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "passed_milliseconds = %zu\r\n", passed_milliseconds )
+      EARLY_STARTUP_PRINT( "difference = %zu\r\n", difference )
+    #endif
     // handle not enough time in between => wait
     if ( passed_milliseconds < entry->interval ) {
       wait_time = entry->interval - passed_milliseconds;
@@ -1527,8 +1382,6 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
     } else {
       entry->status = DWHCI_QUEUE_POLL_STATUS_DATA;
     }
-    EARLY_STARTUP_PRINT( "interval: %"PRIu32", passed_milliseconds: %zu\r\n",
-      entry->interval, passed_milliseconds )
     entry->poll_last_timer = 0;
   } else {
     // next step is poll data
@@ -1541,7 +1394,10 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
   } else {
     entry->error = 0;
   }
-  EARLY_STARTUP_PRINT( "entry->status = %d\r\n", entry->status )
+  #if defined( DWHCI_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "entry->status = %d\r\n", entry->status )
+    EARLY_STARTUP_PRINT( "wait_time = %zu\r\n", wait_time )
+  #endif
   // handle wait
   if ( wait_time > 0 ) {
     // acquire timeout
@@ -1550,11 +1406,15 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
     if ( errno ) {
       // debug output
       #if defined( DWHCI_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Unable to acquire timeout\r\n" )
+        EARLY_STARTUP_PRINT( "Unable to acquire timeout: %s\r\n", strerror( errno ) )
       #endif
       // return error
       return HCD_RESPONSE_ERROR_IO;
     }
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "timer id = %zu\r\n", entry->poll_timer_id )
+    #endif
   }
   // continue with next
   return dwhci_continue_next( entry );
@@ -2013,60 +1873,33 @@ response_t dwhci_core_flush_tx_fifo( const uint32_t num_fifo ) {
   #if defined ( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Flushing tx fifo %#"PRIx32"\r\n", num_fifo )
   #endif
-
   // set initial reset fifo flush
   const uint32_t reset = HCD_DWHCI_CORE_RESET_TX_FIFO_FLUSH
    | ( num_fifo << HCD_DWHCI_CORE_RESET_TX_FIFO_NUM_SHIFT );
-
-  // allocate sequence
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 2, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
-    #endif
-    // return error
-    return HCD_RESPONSE_ERROR_MEMORY;
-  }
-  // write reset config
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 0 ].offset = PERIPHERAL_DWHCI_CORE_RESET;
-  sequence[ 0 ].value = reset;
-  // loop while it's there
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_LOOP_TRUE;
-  sequence[ 1 ].offset = PERIPHERAL_DWHCI_CORE_RESET;
-  sequence[ 1 ].loop_and = ( uint32_t )HCD_DWHCI_CORE_RESET_TX_FIFO_FLUSH;
-  sequence[ 1 ].loop_max_iteration = 10;
-  sequence[ 1 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ 1 ].sleep = 1;
-  // perform request
-  const int ioctl_result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
-  // handle ioctl error
-  if ( -1 == ioctl_result ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      const int e = errno;
-      EARLY_STARTUP_PRINT( "Flush tx fifo failed: %s\r\n", strerror( e ) )
-    #endif
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return HCD_RESPONSE_ERROR_IO;
+  // write rx fifo flush reset
+  mmio_write( PERIPHERAL_DWHCI_CORE_RESET, reset );
+  uint32_t iteration = 0;
+  bool timeout = false;
+  while ( mmio_read( PERIPHERAL_DWHCI_CORE_RESET ) & HCD_DWHCI_CORE_RESET_TX_FIFO_FLUSH ) {
+    // handle max iteration
+    if ( iteration >= 10 ) {
+      timeout = true;
+      break;
+    }
+    // wait 10ms
+    delay_us( 10000 );
+    // increment iteration
+    iteration++;
   }
   // check for timeout
-  if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ 1 ].abort_type ) {
+  if ( timeout ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Flushing tx fifo timed out\r\n" )
     #endif
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
     // return error
     return HCD_RESPONSE_ERROR_TIMEOUT;
   }
-  // free sequence again
-  iomem_release_mmio_sequence( sequence );
   // return success
   return HCD_RESPONSE_OK;
 }
@@ -2081,55 +1914,30 @@ response_t dwhci_core_flush_rx_fifo( void ) {
   #if defined ( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Flushing rx fifo\r\n" )
   #endif
-  // allocate sequence
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 2, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
-    #endif
-    // return error
-    return HCD_RESPONSE_ERROR_MEMORY;
-  }
-  // write reset config
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 0 ].offset = PERIPHERAL_DWHCI_CORE_RESET;
-  sequence[ 0 ].value = HCD_DWHCI_CORE_RESET_RX_FIFO_FLUSH;
-  // loop while it's there
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_LOOP_TRUE;
-  sequence[ 1 ].offset = PERIPHERAL_DWHCI_CORE_RESET;
-  sequence[ 1 ].loop_and = ( uint32_t )HCD_DWHCI_CORE_RESET_RX_FIFO_FLUSH;
-  sequence[ 1 ].loop_max_iteration = 10;
-  sequence[ 1 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ 1 ].sleep = 10;
-  // perform request
-  const int ioctl_result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
-  // handle ioctl error
-  if ( -1 == ioctl_result ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      const int e = errno;
-      EARLY_STARTUP_PRINT( "flush rx fifo failed: %s\r\n", strerror( e ) )
-    #endif
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return HCD_RESPONSE_ERROR_IO;
+  // write rx fifo flush reset
+  mmio_write( PERIPHERAL_DWHCI_CORE_RESET, HCD_DWHCI_CORE_RESET_RX_FIFO_FLUSH );
+  uint32_t iteration = 0;
+  bool timeout = false;
+  while ( mmio_read( PERIPHERAL_DWHCI_CORE_RESET ) & HCD_DWHCI_CORE_RESET_RX_FIFO_FLUSH ) {
+    // handle max iteration
+    if ( iteration >= 10 ) {
+      timeout = true;
+      break;
+    }
+    // wait 10ms
+    delay_us( 10000 );
+    // increment iteration
+    iteration++;
   }
   // check for timeout
-  if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ 1 ].abort_type ) {
+  if ( timeout ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Flushing tx fifo timed out\r\n" )
     #endif
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
     // return error
     return HCD_RESPONSE_ERROR_TIMEOUT;
   }
-  // free sequence again
-  iomem_release_mmio_sequence( sequence );
   // return success
   return HCD_RESPONSE_OK;
 }
@@ -2152,60 +1960,14 @@ response_t dwhci_init( void ) {
   // clear out configuration object
   memset( &configuration, 0, sizeof( configuration ) );
   // query vendor and hardware information
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 7, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to prepare mmio_sequence\r\n" )
-    #endif
-    // close file descriptor
-    close( fd_iomem );
-    // return memory error
-    return HCD_RESPONSE_ERROR_MEMORY;
-  }
-  // prepare mmio sequence
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 0 ].offset = PERIPHERAL_DWHCI_CORE_VENDOR_ID;
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 1 ].offset = PERIPHERAL_DWHCI_CORE_USER_ID;
-  sequence[ 2 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 2 ].offset = PERIPHERAL_DWHCI_CORE_HW_CFG1;
-  sequence[ 3 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 3 ].offset = PERIPHERAL_DWHCI_CORE_HW_CFG2;
-  sequence[ 4 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 4 ].offset = PERIPHERAL_DWHCI_CORE_HW_CFG3;
-  sequence[ 5 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 5 ].offset = PERIPHERAL_DWHCI_CORE_HW_CFG4;
-  sequence[ 6 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 6 ].offset = PERIPHERAL_DWHCI_HOST_CFG;
-  // perform request
-  int result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
-  // handle ioctl error
-  if ( -1 == result ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      const int e = errno;
-      EARLY_STARTUP_PRINT( "Querying vendor information failed: %s\r\n",
-        strerror( e ) )
-    #endif
-    // close file descriptor
-    close( fd_iomem );
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return HCD_RESPONSE_ERROR_IO;
-  }
   // cache everything locally
-  const uint32_t vendor = sequence[ 0 ].value;
-  [[maybe_unused]] const uint32_t user = sequence[ 1 ].value;
-  [[maybe_unused]] const uint32_t hw_cfg1 = sequence[ 2 ].value;
-  uint32_t hw_cfg2 = sequence[ 3 ].value;
-  [[maybe_unused]] const uint32_t hw_cfg3 = sequence[ 4 ].value;
-  [[maybe_unused]] const uint32_t hw_cfg4 = sequence[ 5 ].value;
-  uint32_t host_cfg = sequence[ 6 ].value;
-  // free sequence
-  iomem_release_mmio_sequence( sequence );
+  const uint32_t vendor = mmio_read( PERIPHERAL_DWHCI_CORE_VENDOR_ID );
+  [[maybe_unused]] const uint32_t user = mmio_read( PERIPHERAL_DWHCI_CORE_USER_ID );
+  [[maybe_unused]] const uint32_t hw_cfg1 = mmio_read( PERIPHERAL_DWHCI_CORE_HW_CFG1 );
+  uint32_t hw_cfg2 = mmio_read( PERIPHERAL_DWHCI_CORE_HW_CFG2 );
+  [[maybe_unused]] const uint32_t hw_cfg3 = mmio_read( PERIPHERAL_DWHCI_CORE_HW_CFG3 );
+  [[maybe_unused]] const uint32_t hw_cfg4 = mmio_read( PERIPHERAL_DWHCI_CORE_HW_CFG4 );
+  uint32_t host_cfg = mmio_read( PERIPHERAL_DWHCI_HOST_CFG );
   // check fetched vendor
   if ( ( vendor & 0xfffff000 ) != 0x4F542000 ) {
     // debug output
@@ -2256,46 +2018,10 @@ response_t dwhci_init( void ) {
     return HCD_RESPONSE_ERROR_INCOMPATIBLE;
   }*/
   // disable interrupts
-  sequence = iomem_prepare_mmio_sequence( 3, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to prepare mmio_sequence\r\n" )
-    #endif
-    // close file descriptor
-    close( fd_iomem );
-    // return memory error
-    return HCD_RESPONSE_ERROR_MEMORY;
-  }
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 0 ].offset = PERIPHERAL_DWHCI_CORE_INT_MASK;
-  sequence[ 0 ].value = 0;
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_READ_AND;
-  sequence[ 1 ].offset = PERIPHERAL_DWHCI_CORE_AHB_CFG;
-  sequence[ 1 ].value = ( uint32_t )~HCD_DWHCI_CORE_AHB_CFG_GLOBAL_INTERRUPT_MASK;
-  sequence[ 2 ].type = IOMEM_MMIO_ACTION_WRITE_PREVIOUS_READ;
-  sequence[ 2 ].offset = PERIPHERAL_DWHCI_CORE_AHB_CFG;
-  // perform request
-  result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
-  // handle ioctl error
-  if ( -1 == result ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      const int e = errno;
-      EARLY_STARTUP_PRINT( "Disable of interrupts failed: %s\r\n",
-        strerror( e ) )
-    #endif
-    // close file descriptor
-    close( fd_iomem );
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return HCD_RESPONSE_ERROR_IO;
-  }
-  // free sequence
-  iomem_release_mmio_sequence( sequence );
+  mmio_write( PERIPHERAL_DWHCI_CORE_INT_MASK, 0 );
+  mmio_write( PERIPHERAL_DWHCI_CORE_AHB_CFG, mmio_read( PERIPHERAL_DWHCI_CORE_AHB_CFG ) & ~HCD_DWHCI_CORE_AHB_CFG_GLOBAL_INTERRUPT_MASK );
   // power on usb hub
-  response_t dwhci_result = dwhci_power_on();
+  const response_t dwhci_result = dwhci_power_on();
   // handle error
   if ( HCD_RESPONSE_OK != dwhci_result ) {
     // debug output
@@ -2311,93 +2037,66 @@ response_t dwhci_init( void ) {
   #if defined ( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Disable pulse and vbus and perform initial reset\r\n" )
   #endif
-  // allocate sequence
-  sequence = iomem_prepare_mmio_sequence( 9, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
-    #endif
-    // return error
-    return HCD_RESPONSE_ERROR_MEMORY;
-  }
   // read core usb config
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ_AND;
-  sequence[ 0 ].offset = PERIPHERAL_DWHCI_CORE_USB_CFG;
-  sequence[ 0 ].value = ( uint32_t )~HCD_DWHCI_CORE_USB_CFG_ULPI_EXT_VBUS_DRV;
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ;
-  sequence[ 1 ].offset = PERIPHERAL_DWHCI_CORE_USB_CFG;
-  sequence[ 1 ].value = ( uint32_t )~HCD_DWHCI_CORE_USB_CFG_TERM_SEL_DL_PULSE;
+  uint32_t core_usb_cfg = mmio_read( PERIPHERAL_DWHCI_CORE_USB_CFG ) & ~HCD_DWHCI_CORE_USB_CFG_ULPI_EXT_VBUS_DRV;
+  mmio_write( PERIPHERAL_DWHCI_CORE_USB_CFG, core_usb_cfg & ~HCD_DWHCI_CORE_USB_CFG_TERM_SEL_DL_PULSE );
   // loop while ahb idle
-  sequence[ 2 ].type = IOMEM_MMIO_ACTION_LOOP_FALSE;
-  sequence[ 2 ].offset = PERIPHERAL_DWHCI_CORE_RESET;
-  sequence[ 2 ].loop_and = ( uint32_t )HCD_DWHCI_CORE_RESET_AHB_IDLE;
-  sequence[ 2 ].loop_max_iteration = 10;
-  sequence[ 2 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ 2 ].sleep = 10;
-  // read reset value
-  sequence[ 3 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 3 ].offset = PERIPHERAL_DWHCI_CORE_RESET;
-  // core soft reset
-  sequence[ 4 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 4 ].offset = PERIPHERAL_DWHCI_CORE_RESET;
-  sequence[ 4 ].value = HCD_DWHCI_CORE_RESET_SOFT_RESET;
-  // wait until it's gone
-  sequence[ 5 ].type = IOMEM_MMIO_ACTION_LOOP_TRUE;
-  sequence[ 5 ].offset = PERIPHERAL_DWHCI_CORE_RESET;
-  sequence[ 5 ].loop_and = HCD_DWHCI_CORE_RESET_SOFT_RESET;
-  sequence[ 5 ].loop_max_iteration = 10;
-  sequence[ 5 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ 5 ].sleep = 10;
-  // delay 100 ms
-  sequence[ 6 ].type = IOMEM_MMIO_ACTION_SLEEP;
-  sequence[ 6 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ 6 ].sleep = 100;
-  // select utmi+ and utmi width of 8
-  sequence[ 7 ].type = IOMEM_MMIO_ACTION_READ_AND;
-  sequence[ 7 ].offset = PERIPHERAL_DWHCI_CORE_USB_CFG;
-  sequence[ 7 ].value = ~HCD_DWHCI_CORE_USB_CFG_ULPI_UTMI_SEL;
-  sequence[ 8 ].type = IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ;
-  sequence[ 8 ].offset = PERIPHERAL_DWHCI_CORE_USB_CFG;
-  sequence[ 8 ].value = ~HCD_DWHCI_CORE_USB_CFG_PHYIF;
-  // perform request
-  result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
-  // handle ioctl error
-  if ( -1 == result ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      const int e = errno;
-      EARLY_STARTUP_PRINT( "Reset sequence failed: %s\r\n", strerror( e ) )
-    #endif
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return HCD_RESPONSE_ERROR_IO;
+  uint32_t iteration = 0;
+  bool timeout = false;
+  while ( ! ( mmio_read( PERIPHERAL_DWHCI_CORE_RESET ) & HCD_DWHCI_CORE_RESET_AHB_IDLE ) ) {
+    // handle max iteration
+    if ( iteration >= 10 ) {
+      timeout = true;
+      break;
+    }
+    // wait 10ms
+    delay_us( 10000 );
+    // increment iteration
+    iteration++;
   }
-  // check for first timeout
-  if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ 2 ].abort_type ) {
+  // handle timeout
+  if ( timeout ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Wait for idle timed out\r\n" )
     #endif
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
     // return timeout
     return HCD_RESPONSE_ERROR_TIMEOUT;
   }
-  // check for second timeout
-  if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ 5 ].abort_type ) {
+  // read reset value
+  uint32_t reset = mmio_read( PERIPHERAL_DWHCI_CORE_RESET );
+  // core soft reset
+  reset |= HCD_DWHCI_CORE_RESET_SOFT_RESET;
+  mmio_write( PERIPHERAL_DWHCI_CORE_RESET, reset );
+  // wait until it's gone
+  // loop while ahb idle
+  iteration = 0;
+  timeout = false;
+  while ( mmio_read( PERIPHERAL_DWHCI_CORE_RESET ) & HCD_DWHCI_CORE_RESET_SOFT_RESET ) {
+    // handle max iteration
+    if ( iteration >= 10 ) {
+      timeout = true;
+      break;
+    }
+    // wait 10ms
+    delay_us( 10000 );
+    // increment iteration
+    iteration++;
+  }
+  // handle timeout
+  if ( timeout ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Wait for reset timed out\r\n" )
     #endif
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
     // return timeout
     return HCD_RESPONSE_ERROR_TIMEOUT;
   }
-  // free sequence
-  iomem_release_mmio_sequence( sequence );
+  // delay 100 ms
+  delay_us( 100000 );
+  // select utmi+ and utmi width of 8
+  core_usb_cfg = mmio_read( PERIPHERAL_DWHCI_CORE_USB_CFG ) & ~HCD_DWHCI_CORE_USB_CFG_ULPI_UTMI_SEL;
+  mmio_write( PERIPHERAL_DWHCI_CORE_USB_CFG, core_usb_cfg & ~HCD_DWHCI_CORE_USB_CFG_PHYIF );
 
   // debug output
   #if defined( DWHCI_ENABLE_DEBUG )
@@ -2423,165 +2122,42 @@ response_t dwhci_init( void ) {
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Preparing dma configuration\r\n" )
   #endif
-  // prepare sequence
-  sequence = iomem_prepare_mmio_sequence( 2, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
-    #endif
-    // return error
-    return HCD_RESPONSE_ERROR_MEMORY;
-  }
-  // read core usb config
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ_OR;
-  sequence[ 0 ].offset = PERIPHERAL_DWHCI_CORE_AHB_CFG;
-  sequence[ 0 ].value = HCD_DWHCI_CORE_AHB_CFG_GLOBAL_DMA_ENABLE
+  // read core ahb config
+  uint32_t core_ahb = mmio_read( PERIPHERAL_DWHCI_CORE_AHB_CFG );
+  core_ahb |= HCD_DWHCI_CORE_AHB_CFG_GLOBAL_DMA_ENABLE
     | HCD_DWHCI_CORE_AHB_CFG_GLOBAL_WAIT_AXI_WRITES;
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ;
-  sequence[ 1 ].offset = PERIPHERAL_DWHCI_CORE_AHB_CFG;
-  sequence[ 1 ].value = ~HCD_DWHCI_CORE_AHB_CFG_GLOBAL_MAX_AXI_BURST_MASK;
-  // perform request
-  result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
-  // handle ioctl error
-  if ( -1 == result ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      const int e = errno;
-      EARLY_STARTUP_PRINT( "Reset sequence failed: %s\r\n", strerror( e ) )
-    #endif
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return HCD_RESPONSE_ERROR_IO;
-  }
-  iomem_release_mmio_sequence( sequence );
+  core_ahb &= ~HCD_DWHCI_CORE_AHB_CFG_GLOBAL_MAX_AXI_BURST_MASK;
+  mmio_write( PERIPHERAL_DWHCI_CORE_AHB_CFG, core_ahb );
 
   // debug output
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Preparing further usb configuration and reset interrupts\r\n" )
   #endif
-  // prepare sequence
-  sequence = iomem_prepare_mmio_sequence( 3, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
-    #endif
-    // return error
-    return HCD_RESPONSE_ERROR_MEMORY;
-  }
   // read core usb config
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ_AND;
-  sequence[ 0 ].offset = PERIPHERAL_DWHCI_CORE_USB_CFG;
-  sequence[ 0 ].value = ~HCD_DWHCI_CORE_USB_CFG_HNP_CAPABLE;
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ;
-  sequence[ 1 ].offset = PERIPHERAL_DWHCI_CORE_USB_CFG;
-  sequence[ 1 ].value = ~HCD_DWHCI_CORE_USB_CFG_SRP_CAPABLE;
-  sequence[ 2 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 2 ].offset = PERIPHERAL_DWHCI_CORE_INT_STAT;
-  sequence[ 2 ].value = -1U;
-  // perform request
-  result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
-  // handle ioctl error
-  if ( -1 == result ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      const int e = errno;
-      EARLY_STARTUP_PRINT( "Reset sequence failed: %s\r\n", strerror( e ) )
-    #endif
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return HCD_RESPONSE_ERROR_IO;
-  }
-  iomem_release_mmio_sequence( sequence );
+  uint32_t core_usb = mmio_read( PERIPHERAL_DWHCI_CORE_USB_CFG );
+  core_usb &= ~HCD_DWHCI_CORE_USB_CFG_HNP_CAPABLE;
+  core_usb &= ~HCD_DWHCI_CORE_USB_CFG_SRP_CAPABLE;
+  mmio_write( PERIPHERAL_DWHCI_CORE_USB_CFG, core_usb );
+  mmio_write( PERIPHERAL_DWHCI_CORE_INT_STAT, -1U );
 
   // debug output
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Enabling global interrupts\r\n" )
   #endif
-  // enable all interrupts
-  sequence = iomem_prepare_mmio_sequence( 2, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to prepare mmio_sequence\r\n" )
-    #endif
-    // close file descriptor
-    close( fd_iomem );
-    // return memory error
-    return HCD_RESPONSE_ERROR_MEMORY;
-  }
   // enable core interrupts
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ_OR;
-  sequence[ 0 ].offset = PERIPHERAL_DWHCI_CORE_AHB_CFG;
-  sequence[ 0 ].value = HCD_DWHCI_CORE_AHB_CFG_GLOBAL_INTERRUPT_MASK;
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_PREVIOUS_READ;
-  sequence[ 1 ].offset = PERIPHERAL_DWHCI_CORE_AHB_CFG;
-  // perform request
-  result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
-  // handle ioctl error
-  if ( -1 == result ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      const int e = errno;
-      EARLY_STARTUP_PRINT( "Reset sequence failed: %s\r\n", strerror( e ) )
-    #endif
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return HCD_RESPONSE_ERROR_IO;
-  }
-  iomem_release_mmio_sequence( sequence );
+  core_ahb = mmio_read( PERIPHERAL_DWHCI_CORE_AHB_CFG );
+  core_ahb |= HCD_DWHCI_CORE_AHB_CFG_GLOBAL_INTERRUPT_MASK;
+  mmio_write( PERIPHERAL_DWHCI_CORE_AHB_CFG, core_ahb );
 
   // debug output
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Restart phy clock\r\n" )
   #endif
-  // enable all interrupts
-  sequence = iomem_prepare_mmio_sequence( 4, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to prepare mmio_sequence\r\n" )
-    #endif
-    // close file descriptor
-    close( fd_iomem );
-    // return memory error
-    return HCD_RESPONSE_ERROR_MEMORY;
-  }
-  // enable core interrupts
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 0 ].offset = PERIPHERAL_USB_POWER_OFFSET;
-  sequence[ 0 ].value = 0;
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_READ_AND;
-  sequence[ 1 ].offset = PERIPHERAL_DWHCI_HOST_CFG;
-  sequence[ 1 ].value = ~HCD_DWHCI_HOST_CFG_FSLS_PCLK_SEL_MASK;
-  sequence[ 2 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 2 ].offset = PERIPHERAL_DWHCI_CORE_HW_CFG2;
-  sequence[ 3 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 3 ].offset = PERIPHERAL_DWHCI_CORE_USB_CFG;
-  // perform request
-  result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
-  // handle ioctl error
-  if ( -1 == result ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      const int e = errno;
-      EARLY_STARTUP_PRINT( "Reset sequence failed: %s\r\n", strerror( e ) )
-    #endif
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return HCD_RESPONSE_ERROR_IO;
-  }
-  // store values in variables
-  host_cfg = sequence[ 1 ].value;
-  hw_cfg2 = sequence[ 2 ].value;
-  usb_cfg = sequence[ 3 ].value;
-  // release sequence
-  iomem_release_mmio_sequence( sequence );
+  mmio_write( PERIPHERAL_USB_POWER_OFFSET, 0 );
+  host_cfg = mmio_read( PERIPHERAL_DWHCI_HOST_CFG );
+  host_cfg &= ~HCD_DWHCI_HOST_CFG_FSLS_PCLK_SEL_MASK;
+  hw_cfg2 = mmio_read( PERIPHERAL_DWHCI_CORE_HW_CFG2 );
+  usb_cfg = mmio_read( PERIPHERAL_DWHCI_CORE_USB_CFG );
 
   if (
     HCD_DWHCI_CORE_HW_CFG2_HS_PHY_TYPE( hw_cfg2 ) == HCD_DWHCI_CORE_HW_CFG2_HS_PHY_TYPE_ULPI
@@ -2593,49 +2169,12 @@ response_t dwhci_init( void ) {
     host_cfg |= HCD_DWHCI_HOST_CFG_FSLS_PCLK_SEL_30_60_MHZ;
   }
 
-  // enable all interrupts
-  sequence = iomem_prepare_mmio_sequence( 4, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to prepare mmio_sequence\r\n" )
-    #endif
-    // close file descriptor
-    close( fd_iomem );
-    // return memory error
-    return HCD_RESPONSE_ERROR_MEMORY;
-  }
-  // enable core interrupts
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 0 ].offset = PERIPHERAL_DWHCI_HOST_CFG;
-  sequence[ 0 ].value = host_cfg;
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 1 ].offset = PERIPHERAL_DWHCI_CORE_RX_FIFO_SIZ;
-  sequence[ 1 ].value = HCD_DWHCI_CFG_HOST_RX_FIFO_SIZE;
-  sequence[ 2 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 2 ].offset = PERIPHERAL_DWHCI_CORE_NPER_FIFO_SIZ;
-  sequence[ 2 ].value = HCD_DWHCI_CFG_HOST_RX_FIFO_SIZE
-    | HCD_DWHCI_CFG_HOST_NPER_TX_FIFO_SIZE << 16;
-  sequence[ 3 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 3 ].offset = PERIPHERAL_DWHCI_CORE_HOST_PER_TX_FIFO_SZ;
-  sequence[ 3 ].value = ( HCD_DWHCI_CFG_HOST_RX_FIFO_SIZE + HCD_DWHCI_CFG_HOST_NPER_TX_FIFO_SIZE )
-    | HCD_DWHCI_CFG_HOST_PER_TX_FIFO_SIZE << 16;
-  // perform request
-  result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
-  // handle ioctl error
-  if ( -1 == result ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      const int e = errno;
-      EARLY_STARTUP_PRINT( "Reset sequence failed: %s\r\n", strerror( e ) )
-    #endif
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return HCD_RESPONSE_ERROR_IO;
-  }
-  // release sequence
-  iomem_release_mmio_sequence( sequence );
+  mmio_write( PERIPHERAL_DWHCI_HOST_CFG, host_cfg );
+  mmio_write( PERIPHERAL_DWHCI_CORE_RX_FIFO_SIZ, HCD_DWHCI_CFG_HOST_RX_FIFO_SIZE );
+  mmio_write( PERIPHERAL_DWHCI_CORE_NPER_FIFO_SIZ, HCD_DWHCI_CFG_HOST_RX_FIFO_SIZE
+    | HCD_DWHCI_CFG_HOST_NPER_TX_FIFO_SIZE << 16 );
+  mmio_write( PERIPHERAL_DWHCI_CORE_HOST_PER_TX_FIFO_SZ, ( HCD_DWHCI_CFG_HOST_RX_FIFO_SIZE + HCD_DWHCI_CFG_HOST_NPER_TX_FIFO_SIZE )
+    | HCD_DWHCI_CFG_HOST_PER_TX_FIFO_SIZE << 16 );
 
   dwhci_core_flush_tx_fifo(0x10);
   dwhci_core_flush_rx_fifo();
@@ -2643,16 +2182,6 @@ response_t dwhci_init( void ) {
   // read out host config
   host_cfg = mmio_read( PERIPHERAL_DWHCI_HOST_CFG );
   // put channels into known states
-  // prepare sequence
-  sequence = iomem_prepare_mmio_sequence( 2, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
-    #endif
-    // return error
-    return HCD_RESPONSE_ERROR_MEMORY;
-  }
   // extract channel count
   configuration.channel.count = HCD_DWHCI_CORE_HW_CFG2_NUM_HOST_CHANNELS( hw_cfg2 );
   // debug output
@@ -2661,85 +2190,47 @@ response_t dwhci_init( void ) {
   #endif
   // loop over channels
   for ( uint32_t channel = 0; channel < configuration.channel.count; ++channel ) {
-    sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ_AND;
-    sequence[ 0 ].offset = PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( channel );
-    sequence[ 0 ].value = ( uint32_t )~(
+    uint32_t characteristics = mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( channel ) );
+    characteristics &= ~(
       HCD_DWHCI_CHAN_CHARACTER_END_POINT_DIRECTION( 1 )
       | HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 )
       | HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 )
     );
-    sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-    sequence[ 1 ].offset = PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( channel );
-    sequence[ 1 ].value = HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 )
+    characteristics |= HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 )
       | HCD_DWHCI_CHAN_CHARACTER_END_POINT_DIRECTION( 1 );
-    // perform request
-    result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
-    // handle ioctl error
-    if ( -1 == result ) {
-      // debug output
-      #if defined( DWHCI_ENABLE_DEBUG )
-        const int e = errno;
-        EARLY_STARTUP_PRINT( "host config sequence failed: %s\r\n", strerror( e ) )
-      #endif
-      // free sequence
-      iomem_release_mmio_sequence( sequence );
-      // return error
-      return HCD_RESPONSE_ERROR_IO;
-    }
+    mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( channel ), characteristics );
   }
-  // free sequence again
-  iomem_release_mmio_sequence( sequence );
-  // prepare sequence
-  sequence = iomem_prepare_mmio_sequence( 3, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
-    #endif
-    // return error
-    return HCD_RESPONSE_ERROR_MEMORY;
-  }
+
   // loop through channels again
   for ( uint32_t channel = 0; channel < configuration.channel.count; ++channel ) {
     // read channel
-    sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
-    sequence[ 0 ].offset = PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( channel );
+    uint32_t value = mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( channel ) );
     // set enable disable and end point direction
-    sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-    sequence[ 1 ].offset = PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( channel );
-    sequence[ 1 ].value = HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 )
-      | ( uint32_t )HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 )
+    value |= HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 )
+      | HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 )
       | HCD_DWHCI_CHAN_CHARACTER_END_POINT_DIRECTION( 1 );
+    mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( channel ), value );
     // wait until enable is gone
-    sequence[ 2 ].type = IOMEM_MMIO_ACTION_LOOP_TRUE;
-    sequence[ 2 ].offset = PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( channel );
-    sequence[ 2 ].loop_and = ( uint32_t )HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 );
-    sequence[ 2 ].loop_max_iteration = 10;
-    sequence[ 2 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-    sequence[ 2 ].sleep = 10;
-    // perform request
-    result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
-    // handle ioctl error
-    if ( -1 == result ) {
-      // debug output
-      #if defined( DWHCI_ENABLE_DEBUG )
-        const int e = errno;
-        EARLY_STARTUP_PRINT( "host config sequence failed: %s\r\n", strerror( e ) )
-      #endif
-      // free sequence
-      iomem_release_mmio_sequence( sequence );
-      // return error
-      return HCD_RESPONSE_ERROR_IO;
+    iteration = 0;
+    timeout = false;
+    while ( mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( channel ) ) & HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 ) ) {
+      // handle max iteration
+      if ( iteration >= 10 ) {
+        timeout = true;
+        break;
+      }
+      // wait 10ms
+      delay_us( 10000 );
+      // increment iteration
+      iteration++;
     }
     // check for timeout
-    if ( sequence[ 2 ].abort_type == IOMEM_MMIO_ABORT_TYPE_TIMEOUT ) {
+    if ( timeout ) {
       #if defined( DWHCI_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Unable to clear channel %"PRIu32"\r\n", channel )
       #endif
     }
   }
-  // free sequence
-  iomem_release_mmio_sequence( sequence );
 
   uint32_t host_port = mmio_read( PERIPHERAL_DWHCI_HOST_PORT );
   if ( ! ( host_port & HCD_DWHCI_HOST_PORT_POWER ) ) {
@@ -2751,27 +2242,9 @@ response_t dwhci_init( void ) {
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Enabling interrupts\r\n" )
   #endif
-  // enable all interrupts
-  sequence = iomem_prepare_mmio_sequence( 3, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to prepare mmio_sequence\r\n" )
-    #endif
-    // close file descriptor
-    close( fd_iomem );
-    // return memory error
-    return HCD_RESPONSE_ERROR_MEMORY;
-  }
   // enable host interrupts
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 0 ].offset = PERIPHERAL_DWHCI_CORE_INT_MASK;
-  sequence[ 0 ].value = 0;
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 1 ].offset = PERIPHERAL_DWHCI_CORE_INT_MASK;
-  sequence[ 2 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 2 ].offset = PERIPHERAL_DWHCI_CORE_INT_MASK;
-  sequence[ 2 ].value = (HCD_DWHCI_CORE_INT_MASK_HC_INTR/*
+  mmio_write( PERIPHERAL_DWHCI_CORE_INT_MASK, 0 );
+  mmio_write( PERIPHERAL_DWHCI_CORE_INT_MASK, mmio_read( PERIPHERAL_DWHCI_CORE_INT_MASK ) | ( HCD_DWHCI_CORE_INT_MASK_HC_INTR/*
     | HCD_DWHCI_CORE_INT_MASK_PORT_INTR
     | HCD_DWHCI_CORE_INT_MASK_DISCONNECT
     | HCD_DWHCI_CORE_INT_MASK_USB_SUSPEND
@@ -2780,24 +2253,7 @@ response_t dwhci_init( void ) {
     | HCD_DWHCI_CORE_INT_MASK_RX_STS_Q_LVL
     | HCD_DWHCI_CORE_INT_MASK_CON_ID_STS_CHNG
     | HCD_DWHCI_CORE_INT_MASK_SESS_REQ_INTR
-    | HCD_DWHCI_CORE_INT_MASK_WKUP_INTR*/);
-  // perform request
-  result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
-  // handle ioctl error
-  if ( -1 == result ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      const int e = errno;
-      EARLY_STARTUP_PRINT( "Enable of interrupts failed: %s\r\n", strerror( e ) )
-    #endif
-    // close file descriptor
-    close( fd_iomem );
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return HCD_RESPONSE_ERROR_IO;
-  }
-  iomem_release_mmio_sequence( sequence );
+    | HCD_DWHCI_CORE_INT_MASK_WKUP_INTR*/ ) );
 
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Power on root port\r\n" )
@@ -2825,67 +2281,35 @@ response_t dwhci_init( void ) {
   #if defined ( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Enable root port\r\n" )
   #endif
-  // prepare sequence
-  sequence = iomem_prepare_mmio_sequence( 8, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
-    #endif
-    // return error
-    return HCD_RESPONSE_ERROR_MEMORY;
-  }
   // wait until port connect is gone
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_LOOP_FALSE;
-  sequence[ 0 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
-  sequence[ 0 ].loop_and = ( uint32_t )HCD_DWHCI_HOST_PORT_CONNECT;
-  sequence[ 0 ].loop_max_iteration = 10;
-  sequence[ 0 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ 0 ].sleep = 10;
-  // delay 100ms
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_SLEEP;
-  sequence[ 1 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ 1 ].sleep = 100;
-  // read host port
-  sequence[ 2 ].type = IOMEM_MMIO_ACTION_READ_AND;
-  sequence[ 2 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
-  sequence[ 2 ].value = ~HCD_DWHCI_HOST_PORT_DEFAULT_MASK;
-  // write back "orred" with reset
-  sequence[ 3 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 3 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
-  sequence[ 3 ].value = HCD_DWHCI_HOST_PORT_RESET;
-  // delay 50 to 60ms
-  sequence[ 4 ].type = IOMEM_MMIO_ACTION_SLEEP;
-  sequence[ 4 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ 4 ].sleep = 60;
-  // read host port again
-  sequence[ 5 ].type = IOMEM_MMIO_ACTION_READ_AND;
-  sequence[ 5 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
-  sequence[ 5 ].value = ~HCD_DWHCI_HOST_PORT_DEFAULT_MASK;
-  // write back "orred" with power
-  sequence[ 6 ].type = IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ;
-  sequence[ 6 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
-  sequence[ 6 ].value = ~HCD_DWHCI_HOST_PORT_RESET;
-  // delay again for 20ms
-  sequence[ 7 ].type = IOMEM_MMIO_ACTION_SLEEP;
-  sequence[ 7 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ 7 ].sleep = 20;
-  // perform request
-  result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
-  // handle ioctl error
-  if ( -1 == result ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      const int e = errno;
-      EARLY_STARTUP_PRINT( "host config sequence failed: %s\r\n", strerror( e ) )
-    #endif
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return HCD_RESPONSE_ERROR_IO;
+  iteration = 0;
+  timeout = false;
+  while ( ! ( mmio_read( PERIPHERAL_DWHCI_HOST_PORT ) & HCD_DWHCI_HOST_PORT_CONNECT ) ) {
+    // handle max iteration
+    if ( iteration >= 10 ) {
+      timeout = true;
+      break;
+    }
+    // wait 10ms
+    delay_us( 10000 );
+    // increment iteration
+    iteration++;
   }
-  // free sequence
-  iomem_release_mmio_sequence( sequence );
+  /// FIXME: HANDLE TIMEOUT PROPERLY
+  // delay 100ms
+  delay_us( 100000 );
+  // read host port
+  host_port = mmio_read( PERIPHERAL_DWHCI_HOST_PORT ) & ~HCD_DWHCI_HOST_PORT_DEFAULT_MASK;
+  // write back "orred" with reset
+  mmio_write( PERIPHERAL_DWHCI_HOST_PORT, host_port | HCD_DWHCI_HOST_PORT_RESET );
+  // delay 50 to 60ms
+  delay_us( 60000 );
+  // read host port again
+  host_port = mmio_read( PERIPHERAL_DWHCI_HOST_PORT ) & ~HCD_DWHCI_HOST_PORT_DEFAULT_MASK;
+  // write back with masked reset
+  mmio_write( PERIPHERAL_DWHCI_HOST_PORT, host_port & ~HCD_DWHCI_HOST_PORT_RESET );
+  // delay again for 20ms
+  delay_us( 20000 );
 
   // read interrupt register
   const uint32_t interrupt = mmio_read( PERIPHERAL_DWHCI_CORE_INT_STAT );

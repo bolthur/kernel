@@ -30,7 +30,7 @@
   #include "debug/debug.h"
 #endif
 
-list_manager_t* timer_list;
+static list_manager_t* timer_list;
 
 /**
  * @fn size_t timer_generate_id(void)
@@ -133,17 +133,19 @@ void timer_init( void ) {
 }
 
 /**
- * @fn timer_callback_entry_t* timer_register_callback(task_thread_t*, size_t, size_t)
+ * @fn timer_callback_entry_t* timer_register_callback(task_thread_t*, size_t, size_t, bool)
  * @brief Register timer callback
  * @param thread
  * @param rpc_num
  * @param timeout
+ * @param interruptable
  * @return
  */
 timer_callback_entry_t* timer_register_callback(
   task_thread_t* thread,
   const size_t rpc_num,
-  const size_t timeout
+  const size_t timeout,
+  const bool interruptable
 ) {
   // reserve new entry structure
   timer_callback_entry_t* entry = malloc( sizeof( *entry ) );
@@ -156,6 +158,7 @@ timer_callback_entry_t* timer_register_callback(
   entry->rpc = rpc_num;
   entry->thread = thread;
   entry->expire = timeout;
+  entry->interruptable = interruptable;
   // generate id
   entry->id = timer_generate_id();
   // insert into ordered list
@@ -203,7 +206,8 @@ void timer_handle_callback( void ) {
     auto const entry = ( timer_callback_entry_t* )current->data;
     // debug output
     #if defined( PRINT_TIMER )
-      DEBUG_OUTPUT( "tick = %zu, entry->expire = %zu\r\n", tick, entry->expire )
+      DEBUG_OUTPUT( "id = %zu, tick = %zu, entry->expire = %zu, handled = %d\r\n",
+        entry->id, tick, entry->expire, entry->handled ? 1 : 0 )
     #endif
     // break if tick is smaller than expire
     if ( entry->expire > tick ) {
@@ -234,6 +238,10 @@ void timer_handle_callback( void ) {
         false,
         true
       );
+      // debug output
+      #if defined( PRINT_TIMER )
+        DEBUG_OUTPUT( "entry->id = %zu\r\n", entry->id )
+      #endif
       // handle error by skip
       if ( ! rpc ) {
         // debug output
@@ -277,7 +285,7 @@ timer_callback_entry_t* timer_get_by_process_id( const pid_t pid ) {
     // get entry
     auto const entry = ( timer_callback_entry_t* )current->data;
     // check for match
-    if ( entry->thread->process->id == pid ) {
+    if ( entry->thread->process->id == pid && entry->interruptable ) {
       return entry;
     }
     // switch to next

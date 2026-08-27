@@ -20,6 +20,7 @@ hcd_SOURCES = \
   rpc/submit/message.c \
   barrier.c \
   rpc/init.c \
+  delay.c \
   dwhci.c \
   dwhciroothub.c \
   main.c \

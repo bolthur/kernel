@@ -29,6 +29,7 @@ typedef struct {
   task_thread_t* thread;
   bool handled;
   size_t rpc;
+  bool interruptable;
 } timer_callback_entry_t;
 
 void timer_init( void );
@@ -38,7 +39,7 @@ size_t timer_get_interval( void );
 size_t timer_get_tick( void );
 
 size_t timer_generate_id( void );
-timer_callback_entry_t* timer_register_callback( task_thread_t*, size_t, size_t );
+timer_callback_entry_t* timer_register_callback( task_thread_t*, size_t, size_t, bool );
 bool timer_unregister_callback( size_t );
 void timer_handle_callback( void );
 timer_callback_entry_t* timer_get_by_process_id( pid_t );
