@@ -18,6 +18,7 @@
  */
 
 #include <inttypes.h>
+#include "../../mmio.h"
 #include "../../rpc.h"
 #include "../../constants.h"
 #include "../../dwhci.h"
@@ -90,58 +91,28 @@ void rpc_interrupt_handle(
     EARLY_STARTUP_PRINT( "Interrupt handler called\r\n" )
   #endif
   // read interrupt register
-  uint32_t interrupt;
-  response_t result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_INT_STAT, &interrupt );
-  if ( HCD_RESPONSE_OK != result ) {
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to read interrupt status register!\r\n" )
-    #endif
-    return;
-  }
+  uint32_t interrupt = mmio_read( PERIPHERAL_DWHCI_CORE_INT_STAT );
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "interrupt = %#"PRIx32"\r\n", interrupt )
   #endif
   // mask pending interrupts
-  result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_INT_STAT, interrupt );
-  if ( HCD_RESPONSE_OK != result ) {
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to write interrupt status register!\r\n" )
-    #endif
-    return;
-  }
-  uint32_t channel_interrupt;
+  mmio_write( PERIPHERAL_DWHCI_CORE_INT_STAT, interrupt );
+  uint32_t channel_interrupt = 0;
   uint32_t channel_mask = 1;
   if ( interrupt & HCD_DWHCI_CORE_INT_MASK_HC_INTR ) {
     // read channel interrupts
-    result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_ALLCHAN_INT, &channel_interrupt );
-    if ( HCD_RESPONSE_OK != result ) {
-      #if defined( DWHCI_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Unable to read all channel interrupt status register!\r\n" )
-      #endif
-      return;
-    }
+    channel_interrupt = mmio_read( PERIPHERAL_DWHCI_HOST_ALLCHAN_INT );
     #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "channel_interrupt = %#"PRIx32"\r\n", channel_interrupt )
     #endif
     // mask channel interrupts
-    result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_ALLCHAN_INT, channel_interrupt );
-    if ( HCD_RESPONSE_OK != result ) {
-      #if defined( DWHCI_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Unable to write back all channel interrupt status register!\r\n" )
-      #endif
-      return;
-    }
+    mmio_write( PERIPHERAL_DWHCI_HOST_ALLCHAN_INT, channel_interrupt );
     // iterate over channels
     for ( uint32_t channel = 0; channel < configuration.channel.count; channel++ ) {
       // handle channel interrupt
       if ( channel_interrupt & channel_mask ) {
         // reset channel interrupts
-        result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( channel ), 0 );
-        if ( HCD_RESPONSE_OK != result ) {
-          #if defined( DWHCI_ENABLE_DEBUG )
-            EARLY_STARTUP_PRINT( "Unable to reset channel interrupt\r\n" )
-          #endif
-        }
+        mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( channel ), 0 );
       }
       // assign channel
       channel_mask <<= 1;
@@ -172,7 +143,7 @@ void rpc_interrupt_handle(
         #endif
         // get queue entry matching to channel
         channel_queue_entry_t* entry;
-        result = dwhci_queue_get_active_by_channel( ( uint8_t )channel, &entry );
+        response_t result = dwhci_queue_get_active_by_channel( ( uint8_t )channel, &entry );
         if ( HCD_RESPONSE_OK != result ) {
           #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "No queued entry found for channel %"PRIu32"\r\n", channel )
@@ -180,14 +151,7 @@ void rpc_interrupt_handle(
           continue;
         }
         // get channel interrupt
-        uint32_t cipt;
-        result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_INT( channel ), &cipt );
-        if ( HCD_RESPONSE_OK != result ) {
-          #if defined( DWHCI_ENABLE_DEBUG )
-            EARLY_STARTUP_PRINT( "Unable to read channel interrupt status register!\r\n" )
-          #endif
-          continue;
-        }
+        const uint32_t cipt = mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_INT( channel ) );
         //#if defined( DWHCI_ENABLE_DEBUG )
           if ( DWHCI_QUEUE_POLL_STATUS_DATA == entry->status )
           EARLY_STARTUP_PRINT( "cipt = %#"PRIx32"\r\n", cipt )
@@ -274,17 +238,7 @@ void rpc_interrupt_handle(
           entry->error |= LIBUSB_TRANSFER_ERROR_LIST_ROLLOVER;
         }
         // extract transfer size
-        uint32_t transfer_size;
-        result = dwhci_read_port(
-          ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_XFER_SIZE( channel ),
-          &transfer_size
-        );
-        if ( HCD_RESPONSE_OK != result ) {
-          #if defined( DWHCI_ENABLE_DEBUG )
-            EARLY_STARTUP_PRINT( "Unable to read transfer size register!\r\n" )
-          #endif
-          continue;
-        }
+        const uint32_t transfer_size = mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_XFER_SIZE( channel ) );
         // extract remaining
         const uint32_t remaining = HCD_DWHCI_CHAN_XFER_SIZE_TRANSFER_SIZE( transfer_size );
         // calculate transferred
