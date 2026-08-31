@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -40,7 +40,7 @@ static bool stub_first_entry = true;
 /**
  * @brief GDB debug context
  */
-static void* gdb_execution_context = NULL;
+static void* gdb_execution_context = nullptr;
 
 /**
  * @brief debug command handler
@@ -225,7 +225,7 @@ void debug_gdb_serial_event( [[maybe_unused]] event_origin_t origin, void* conte
     // flush out read buffer
     serial_flush_buffer();
     // fake stepping at next address
-    debug_gdb_handler_stepping( context, NULL );
+    debug_gdb_handler_stepping( context, nullptr );
   }
 }
 

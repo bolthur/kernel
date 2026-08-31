@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,7 +21,6 @@
 #define _PSF_H
 
 #include <stdint.h>
-#include <stdbool.h>
 
 // v1 magic
 #define PSF1_MAGIC0 0x36

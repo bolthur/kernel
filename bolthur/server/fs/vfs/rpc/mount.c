@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../mountpoint/node.h"
 #include "../handler/node.h"
 
@@ -52,13 +53,13 @@ void rpc_handle_mount_async(
     return;
   }
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
     return;
   }
   // extract message from mailbox
   size_t data_size;
-  void* response_data = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  void* response_data = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! response_data ) {
     response.result = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
@@ -135,16 +136,16 @@ void rpc_handle_mount(
     return;
   }
   // handle no data
-  if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  if ( ! data_info ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // extract message from mailbox
   size_t data_size;
-  void* request_data = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  void* request_data = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request_data ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   vfs_mount_request_t* request = request_data;
@@ -157,14 +158,14 @@ void rpc_handle_mount(
     // handle ramdisk already mounted
     if ( ramdisk_mounted ) {
       response.result = -EINVAL;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( request_data );
       return;
     }
     // generate mount point
-    if ( ! mountpoint_node_add( request->target, origin, NULL ) ) {
+    if ( ! mountpoint_node_add( request->target, origin, nullptr ) ) {
       response.result = -EIO;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( request_data );
       return;
     }
@@ -172,7 +173,7 @@ void rpc_handle_mount(
     ramdisk_mounted = true;
     // return success
     response.result = 0;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request_data );
     return;
   }
@@ -184,14 +185,14 @@ void rpc_handle_mount(
     // handle ramdisk already mounted
     if ( dev_mounted ) {
       response.result = -EINVAL;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( request_data );
       return;
     }
     // generate mount point
-    if ( ! mountpoint_node_add( request->target, origin, NULL ) ) {
+    if ( ! mountpoint_node_add( request->target, origin, nullptr ) ) {
       response.result = -EIO;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( request_data );
       return;
     }
@@ -199,16 +200,18 @@ void rpc_handle_mount(
     dev_mounted = true;
     // return success
     response.result = 0;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request_data );
     return;
   }
   // extract handler information
   handler_node_t* handler = handler_node_extract( RPC_VFS_MOUNT );
   if ( ! handler ) {
-    EARLY_STARTUP_PRINT( "No handler found for %d\r\n", RPC_VFS_MOUNT )
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "No handler found for %d\r\n", RPC_VFS_MOUNT )
+    #endif
     response.result = -ESRCH;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request_data );
     return;
   }
@@ -220,7 +223,7 @@ void rpc_handle_mount(
     && 0 == strcmp( destination->name, request->target )
   ) {
     response.result = -EEXIST;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request_data );
     return;
   }
@@ -238,12 +241,12 @@ void rpc_handle_mount(
     sizeof( *request ),
     origin,
     data_info,
-    NULL,
+    nullptr,
     false
   );
   if ( errno ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request_data );
     return;
   }

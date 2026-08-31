@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,7 +22,6 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <stdbool.h>
 #include "../library/collection/avl/avl.h"
 #include "../library/collection/list/list.h"
 #include "task/thread.h"
@@ -76,17 +75,21 @@ void interrupt_disable( void );
 void interrupt_enable( void );
 bool interrupt_enabled( void );
 bool interrupt_validate_number( size_t );
+bool interrupt_validate_number_rpc( size_t );
 void interrupt_init( void );
 void interrupt_arch_init( void );
 void interrupt_post_init( void );
-void interrupt_handle( size_t, interrupt_type_t, void* );
+void interrupt_platform_init( void );
+void interrupt_handle( size_t, interrupt_type_t, void*, bool );
 bool interrupt_register_handler( size_t, interrupt_callback_t, task_process_t*, interrupt_type_t, bool, bool );
-bool interrupt_unregister_handler( size_t, interrupt_callback_t, task_process_t*, interrupt_type_t, bool, bool );
+bool interrupt_unregister_handler( size_t, interrupt_callback_t, const task_process_t*, interrupt_type_t, bool, bool );
 void interrupt_handle_possible( void*, bool );
 void interrupt_unregister_process( task_process_t* );
 void* interrupt_get_context( void* );
 
+void interrupt_clear( int8_t );
 void interrupt_mask_specific( int8_t );
 void interrupt_unmask_specific( int8_t );
+void interrupt_disable_after_handling( int8_t );
 
 #endif

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -38,5 +38,5 @@ atag_t* atag_find( atag_t* head, atag_tag_t tag ) {
     head = atag_next( head );
   }
 
-  return NULL;
+  return nullptr;
 }

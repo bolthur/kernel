@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,6 +22,7 @@
 #include "../../../../../lib/stdlib.h"
 #include "../../../../../lib/assert.h"
 #include "../../../../../entry.h"
+#include "../../../../../cache.h"
 #include "../../../../../mm/phys.h"
 #include "../../../../../mm/shared.h"
 #include "../../../../../task/process.h"
@@ -134,24 +135,20 @@ __bootstrap void v7_long_startup_setup( void ) {
  * @param phys physical address
  * @param virt virtual address
  */
-__bootstrap void v7_long_startup_map( uint64_t phys, uintptr_t virt ) {
+__bootstrap void v7_long_startup_map( const uint64_t phys, const uintptr_t virt ) {
   // determine index for getting middle directory
-  uint32_t pmd_index = LD_VIRTUAL_PMD_INDEX( virt );
+  const uint32_t pmd_index = LD_VIRTUAL_PMD_INDEX( virt );
   // determine index for getting table directory
-  uint32_t tbl_index = LD_VIRTUAL_TABLE_INDEX( virt );
+  const uint32_t tbl_index = LD_VIRTUAL_TABLE_INDEX( virt );
 
   // skip if already set
   if ( 0 != initial_middle_directory[ pmd_index ].raw[ tbl_index ] ) {
     return;
   }
-
-  ld_context_block_level2_t* section = &initial_middle_directory[ pmd_index ]
-    .section[ tbl_index ];
-
   // set section
-  section->raw = LD_PHYSICAL_SECTION_L2_ADDRESS( phys );
-  section->data.type = LD_TYPE_SECTION;
-  section->data.lower_attr_access = 1;
+  initial_middle_directory[ pmd_index ].section[ tbl_index ].raw = LD_PHYSICAL_SECTION_L2_ADDRESS( phys );
+  initial_middle_directory[ pmd_index ].section[ tbl_index ].data.type = LD_TYPE_SECTION;
+  initial_middle_directory[ pmd_index ].section[ tbl_index ].data.lower_attr_access = 1;
 }
 
 /**
@@ -217,6 +214,11 @@ static uintptr_t map_temporary( uint64_t start, size_t size ) {
 
   // stop here if not initialized
   if ( true != virt_init_get() ) {
+    // map initially
+    for ( size_t i = ( size_t )start; i < start + size; i += PAGE_SIZE ) {
+      virt_startup_map( i, i );
+    }
+    // return start address
     return ( uintptr_t )start;
   }
 
@@ -267,7 +269,7 @@ static uintptr_t map_temporary( uint64_t start, size_t size ) {
       if ( 0 == found_amount ) {
           #if defined( PRINT_MM_VIRT )
             DEBUG_OUTPUT(
-              "TEMPORARY_SPACE_START = %#x, current_table * PAGE_SIZE * 512 = %#x, ( PAGE_SIZE * idx ) = %#x\r\n",
+              "TEMPORARY_SPACE_START = %#x, current_table * PAGE_SIZE * 512 = %#"PRIx32", ( PAGE_SIZE * idx ) = %#"PRIx32"\r\n",
               TEMPORARY_SPACE_START, current_table * PAGE_SIZE * 512, PAGE_SIZE * idx )
           #endif
         start_address = TEMPORARY_SPACE_START + (
@@ -484,14 +486,14 @@ static uint64_t get_temporary_mapping( uintptr_t addr ) {
  * @param table set to non zero for destroying a table
  * @return address to new table or 0 if it was used for free up
  */
-static uint64_t get_new_table( uint64_t table ) {
+static uint64_t get_new_table( const uint64_t table ) {
   // handle free only if set
   if ( 0 != table ) {
     phys_free_page( table );
     return 0;
   }
   // get new page
-  uint64_t addr = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
+  const uint64_t addr = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "addr = %#"PRIx64"\r\n", addr )
@@ -545,7 +547,7 @@ uint64_t v7_long_create_table(
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
       "create long descriptor table for address %#"PRIxPTR" for context %#"PRIxPTR"\r\n",
-      addr, ctx
+      addr, ( uintptr_t )ctx
     )
     DEBUG_OUTPUT( "pmd_idx = %"PRIu32", tbl_idx = %"PRIu32"\r\n", pmd_idx, tbl_idx )
   #endif
@@ -944,6 +946,9 @@ bool v7_long_set_context( virt_context_t* ctx ) {
     return false;
   }
 
+  // invalidate data cache
+  cache_invalidate_save();
+
   // save context
   uint64_t context = ctx->context;
   // add offset for kernel context ( TTBR1 is mapped like when there would be only
@@ -1007,6 +1012,10 @@ bool v7_long_set_context( virt_context_t* ctx ) {
     virt_current_kernel_context = ctx;
   }
 
+  // ensure ttbr write is finished
+  barrier_data_sync();
+  barrier_instruction_sync();
+
   return true;
 }
 
@@ -1047,11 +1056,11 @@ void v7_long_flush_complete( void ) {
   __asm__ __volatile__( "mcr p15, 0, %0, c8, c6, 0" : : "r" ( 0 ) );
   // invalidate entire instruction tlb
   __asm__ __volatile__( "mcr p15, 0, %0, c8, c5, 0" : : "r" ( 0 ) );
+  // invalidate instruction cache
+  cache_invalidate_instruction_cache();
   // data synchronization barrier
   barrier_data_sync();
   barrier_instruction_sync();
-  // invalidate data cache
-  cache_invalidate_save();
 }
 
 /**
@@ -1149,17 +1158,19 @@ virt_context_t* v7_long_create_context( virt_context_type_t type ) {
   // reserve space for context
   uint64_t ctx;
   if ( !virt_init_get() ) {
-    ctx = ( uintptr_t )aligned_alloc( PAGE_SIZE, sizeof( ld_global_page_directory_t ) );
+    void* tmp = aligned_alloc( PAGE_SIZE, sizeof( ld_global_page_directory_t ) );
     // handle error
-    if ( ! ctx ) {
-      return NULL;
+    if ( ! tmp ) {
+      return nullptr;
     }
+    memset( tmp, 0, sizeof( ld_global_page_directory_t ) );
+    ctx = ( uintptr_t )tmp;
     ctx = VIRT_2_PHYS( ctx );
   } else {
     ctx = phys_find_free_page_range( PAGE_SIZE, sizeof( ld_global_page_directory_t ), PHYS_MEMORY_TYPE_NORMAL );
     // handle error
     if ( INVALID_ADDRESS == ctx ) {
-      return NULL;
+      return nullptr;
     }
   }
 
@@ -1177,7 +1188,7 @@ virt_context_t* v7_long_create_context( virt_context_type_t type ) {
     } else {
       phys_free_page_range( ctx, PAGE_SIZE );
     }
-    return NULL;
+    return nullptr;
   }
   // initialize with zero
   memset( ( void* )tmp, 0, PAGE_SIZE );
@@ -1194,7 +1205,7 @@ virt_context_t* v7_long_create_context( virt_context_type_t type ) {
     } else {
       phys_free_page_range( ctx, PAGE_SIZE );
     }
-    return NULL;
+    return nullptr;
   }
 
   // debug output
@@ -1449,13 +1460,13 @@ bool v7_long_fork_global_directory(
  *
  * @param ctx context to fork
  * @param proc forked process structure
- * @return forked context or null
+ * @return forked context or nullptr
  */
 virt_context_t* v7_long_fork_context( virt_context_t* ctx, task_process_t* proc ) {
   // create new context
   virt_context_t* forked = virt_create_context( ctx->type );
   if ( ! forked ) {
-    return NULL;
+    return nullptr;
   }
   memcpy( forked->bitmap, ctx->bitmap, ctx->bitmap_length );
   forked->bitmap_length = ctx->bitmap_length;
@@ -1465,7 +1476,7 @@ virt_context_t* v7_long_fork_context( virt_context_t* ctx, task_process_t* proc 
   // handle error
   if ( 0 == ctx_to_fork ) {
     assert( virt_destroy_context( forked, false ) )
-    return NULL;
+    return nullptr;
   }
   // map new context temporarily
   uintptr_t ctx_forked = map_temporary( forked->context, PAGE_SIZE );
@@ -1473,7 +1484,7 @@ virt_context_t* v7_long_fork_context( virt_context_t* ctx, task_process_t* proc 
   if ( 0 == ctx_forked ) {
     unmap_temporary( ctx_to_fork, PAGE_SIZE );
     assert( virt_destroy_context( forked, false ) )
-    return NULL;
+    return nullptr;
   }
   // clear page
   memset( ( void* )ctx_forked, 0, PAGE_SIZE );
@@ -1487,7 +1498,7 @@ virt_context_t* v7_long_fork_context( virt_context_t* ctx, task_process_t* proc 
     unmap_temporary( ctx_to_fork, PAGE_SIZE );
     unmap_temporary( ctx_forked, PAGE_SIZE );
     assert( virt_destroy_context( forked, false ) )
-    return NULL;
+    return nullptr;
   }
 
   // unmap temporary
@@ -1620,6 +1631,8 @@ bool v7_long_destroy_context( virt_context_t* ctx, bool unmap_only ) {
   ) {
     return false;
   }
+  // invalidate caches
+  cache_invalidate_save();
   // map temporarily
   ld_global_page_directory_t* ctx_mapped = ( ld_global_page_directory_t* )
     map_temporary( ctx->context, PAGE_SIZE );

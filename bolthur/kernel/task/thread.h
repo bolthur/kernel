@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -31,18 +31,32 @@ typedef struct task_process task_process_t;
 typedef struct task_priority_queue task_priority_queue_t;
 
 typedef struct  task_thread {
+  /** current context */
   void* current_context;
+  /** avl management node */
   avl_node_t node_id;
+  /** thread id */
   pid_t id;
+  /** thread priority */
   size_t priority;
+  /** virtual stack address */
   uintptr_t stack_virtual;
+  /** physical stack address */
   uint64_t stack_physical;
+  /** stack size */
   size_t stack_size;
+  /** root entry point */
   uintptr_t entry;
+  /** current thread state */
   task_thread_state_t state;
+  /** thread state backup */
   task_thread_state_t state_backup;
+  /** thread state data */
   task_state_data_t state_data;
+  /** pointer to process structure */
   task_process_t* process;
+  /** flag indicating thread is handling an interrupt */
+  bool handling_interrupt;
 } task_thread_t;
 
 extern task_thread_t* task_thread_current_thread;
@@ -60,7 +74,7 @@ task_thread_t* task_thread_create( uintptr_t, task_process_t*, size_t );
 task_thread_t* task_thread_fork( task_process_t*, task_thread_t* );
 task_thread_t* task_thread_next( void );
 [[noreturn]] void task_thread_switch_to( uintptr_t );
-bool task_thread_push_arguments( task_thread_t*, char**, char** );
+bool task_thread_push_arguments( const task_thread_t*, char**, char** );
 void task_thread_cleanup( event_origin_t, void* );
 void task_thread_block( task_thread_t*, task_thread_state_t, task_state_data_t );
 void task_thread_unblock( task_thread_t*, task_thread_state_t, task_state_data_t );
@@ -68,5 +82,6 @@ task_thread_t* task_thread_get_blocked( task_thread_state_t, task_state_data_t )
 void task_thread_kill( task_thread_t*, bool, void* );
 bool task_thread_is_ready( task_thread_t* );
 bool task_thread_is_active( task_thread_t* );
+void task_thread_set_state( task_thread_t*, task_thread_state_t );
 
 #endif

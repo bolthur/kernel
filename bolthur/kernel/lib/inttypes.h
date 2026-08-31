@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,5 +22,6 @@
 
 #include <sys/types.h>
 #include <inttypes.h>
+#include <stdint.h>
 
 #endif

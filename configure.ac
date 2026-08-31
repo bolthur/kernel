@@ -4,7 +4,7 @@ AC_PREREQ([2.71])
 
 AC_INIT([bolthur-kernel], [0.1.0-dev], [https://github.com/bolthur/kernel/issues], [bolthur-kernel], [https://github.com/bolthur/kernel])
 
-AC_COPYRIGHT([Copyright (C) 2018 - 2025 bolthur project])
+AC_COPYRIGHT([Copyright (C) 2018 - 2026 bolthur project])
 
 AC_CONFIG_AUX_DIR([build-aux/config])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
@@ -221,6 +221,24 @@ AC_ARG_WITH(
   [with_debug_debug_symbols=yes]
 )
 
+AC_ARG_WITH(
+  [ubsan],
+  AS_HELP_STRING(
+    [--with-ubsan],
+    [compile with ubsan enabled]
+  ),
+  [with_ubsan_enabled=yes]
+)
+
+AC_ARG_WITH(
+  [asan],
+  AS_HELP_STRING(
+    [--with-asan],
+    [compile with asan enabled]
+  ),
+  [with_asan_enabled=yes]
+)
+
 # enable output and enable remote debugging together is not allowed
 AS_IF([test "x$enable_output" == "xyes" && test "x$enable_remote_debug" == "xyes"], [
   AC_MSG_ERROR([Enabled kernel output and remote debug are not possible at the same time])
@@ -296,7 +314,7 @@ AC_DEFINE_UNQUOTED(
 # Some compiler dependent features.
 AC_DEFINE_UNQUOTED(
   [__allocator],
-  [__attribute__((malloc))],
+  [__attribute__((__malloc__))],
   [Keyword for mark something as allocator.]
 )
 AC_DEFINE_UNQUOTED(

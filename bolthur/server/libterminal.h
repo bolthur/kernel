@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,16 +20,16 @@
 #ifndef _LIBTERMINAL_H
 #define _LIBTERMINAL_H
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <errno.h>
 #include <sys/bolthur.h>
 
+#define TERMINAL_IN_START RPC_CUSTOM_START
+#define TERMINAL_OUT_START TERMINAL_IN_START + 1
+#define TERMINAL_ERR_START TERMINAL_OUT_START + 1
+
 typedef struct {
-  char terminal[ PATH_MAX ];
   size_t len;
   size_t shm_id;
+  char terminal[];
 } terminal_write_request_t;
 
 #endif

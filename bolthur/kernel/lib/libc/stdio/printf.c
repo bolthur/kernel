@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -34,7 +34,7 @@ int printf( const char* restrict format, ... ) {
   // variable arguments
   va_start( parameter, format );
   // write
-  int written = vsprintf( NULL, format, parameter );
+  int written = vsprintf( nullptr, format, parameter );
   // cleanup parameter
   va_end( parameter );
   // return written amount

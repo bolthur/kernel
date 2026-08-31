@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -77,6 +77,6 @@ uintptr_t task_process_prepare_init_arch( task_process_t* );
 task_process_t* task_process_get_by_id( pid_t );
 void task_process_prepare_kill( void*, task_process_t* );
 int task_process_replace( task_process_t*, uintptr_t, const char**, const char**, void* );
-void task_unblock_threads( task_process_t*, task_thread_state_t, task_state_data_t );
+void task_unblock_threads( const task_process_t*, task_thread_state_t, task_state_data_t );
 
 #endif

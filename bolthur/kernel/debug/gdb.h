@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,7 +20,6 @@
 #ifndef _DEBUG_GDB_H
 #define _DEBUG_GDB_H
 
-#include <stdbool.h>
 #include <stdint.h>
 #include "../../library/collection/list/list.h"
 #include "../event.h"

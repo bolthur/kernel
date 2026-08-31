@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -46,7 +46,7 @@ void vector_svc_handler( cpu_register_context_t* cpu ) {
     DEBUG_OUTPUT( "cpu = %p\r\n", cpu )
   #endif
   // get event origin
-  event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
+  const event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "origin = %d\r\n", origin )
@@ -83,7 +83,7 @@ void vector_svc_handler( cpu_register_context_t* cpu ) {
     DEBUG_OUTPUT( "cpsr = %#"PRIx32"\r\n", cpsr )
   #endif
   // handle bound interrupt handlers
-  interrupt_handle( ( uint8_t )svc_num, INTERRUPT_SOFTWARE, cpu );
+  interrupt_handle( ( uint8_t )svc_num, INTERRUPT_SOFTWARE, cpu, false );
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
   // debug output

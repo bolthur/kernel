@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../types.h"
 #include "../../../../library/handle/process.h"
 #include "../../../../library/handle/handle.h"
@@ -50,7 +51,9 @@ void rpc_handle_read(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  STARTUP_PRINT( "read stuff\r\n" )
+  #if defined( FAT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "read stuff\r\n" )
+  #endif
   vfs_read_response_t* response = malloc( sizeof( *response ) );
   if ( ! response ) {
     return;
@@ -59,23 +62,23 @@ void rpc_handle_read(
   response->len = -EINVAL;
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     return;
   }
   // handle no data
-  if( ! data_info ) {
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+  if ( ! data_info ) {
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     return;
   }
   // fetch rpc data
   size_t data_size;
-  vfs_read_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_read_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   // handle error
   if ( ! request ) {
     response->len = -errno;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     return;
   }
@@ -83,7 +86,7 @@ void rpc_handle_read(
   void* shm_addr = _syscall_memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
   if ( errno ) {
     response->len = -errno;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( request );
     free( response );
     return;
@@ -93,9 +96,11 @@ void rpc_handle_read(
   handle_node_t* node;
   int result = handle_get( &node, request->origin, request->handle );
   if ( 0 > result ) {
-    STARTUP_PRINT( "no handle found!\r\n" )
+    #if defined( FAT_ENABLE_OUTPUT )
+      STARTUP_PRINT( "no handle found!\r\n" )
+    #endif
     response->len = result;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     _syscall_memory_shared_detach( request->shm_id );
     free( request );
     free( response );
@@ -103,9 +108,11 @@ void rpc_handle_read(
   }
   handle_container_t* container = node->data;
   if ( container->type != HANDLE_TYPE_FILE ) {
-    STARTUP_PRINT( "invalid type set for found handle!\r\n" )
+    #if defined( FAT_ENABLE_OUTPUT )
+      STARTUP_PRINT( "invalid type set for found handle!\r\n" )
+    #endif
     response->len = -EINVAL;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     _syscall_memory_shared_detach( request->shm_id );
     free( request );
     free( response );
@@ -118,7 +125,7 @@ void rpc_handle_read(
   result = fat_file_seek( fd, request->offset, SEEK_SET );
   if ( EOK != result ) {
     response->len = -result;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     _syscall_memory_shared_detach( request->shm_id );
     free( request );
     free( response );
@@ -129,7 +136,7 @@ void rpc_handle_read(
   result = fat_file_read( fd, shm_addr, request->len, &read_count );
   if ( EOK != result ) {
     response->len = -result;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     _syscall_memory_shared_detach( request->shm_id );
     free( request );
     free( response );
@@ -137,7 +144,7 @@ void rpc_handle_read(
   }
   // set success and return
   response->len = ( ssize_t )read_count;
-  bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+  bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
   _syscall_memory_shared_detach( request->shm_id );
   free( response );
   free( request );

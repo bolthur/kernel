@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2018 - 2025 bolthur project.
+# Copyright (C) 2018 - 2026 bolthur project.
 #
 # This file is part of bolthur/kernel.
 #
@@ -24,6 +24,7 @@ import std/strutils
 from util/scan import scanDirectory
 from util/boot import copyFileToBoot, loadFirmwareToBoot
 from util/image import createPlainImageFile
+from util/keycodes import generateKeycodesForImage
 
 # remove tmp dir again
 removeDir( "tmp" )
@@ -52,9 +53,13 @@ let application: string = joinPath( buildPath, "bolthur", "application" )
 let server: string = joinPath( buildPath, "bolthur", "server" )
 let bosl: string = joinPath( rootPath, "bosl" )
 
+echo "re-generate keycode binaries"
+generateKeycodesForImage( firmwareType )
+
 echo "scanning directories to prepare content of boot, root and ramdisk"
 # scan directories and populate image and ramdisk folders
 scanDirectory( joinPath( sysroot, "lib" ), "LSB shared object", "", sysroot, false )
+scanDirectory( joinPath( sysroot, "bin" ), "ELF", "executable", sysroot, false )
 scanDirectory( font, "PC Screen Font", "", sysroot, false )
 scanDirectory( server, "ELF", "executable", sysroot, false )
 scanDirectory( application, "ELF", "executable", sysroot, false )

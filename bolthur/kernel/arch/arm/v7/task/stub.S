@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -27,17 +27,18 @@ task_thread_switch_to:
   // switch to svc mode
   cpsid iaf, #CPSR_MODE_SUPERVISOR
   // push parameter into fp
-  mov fp, r0
+  mov lr, r0
   // load return from passed context
-  ldr lr, [ fp, #PC_OFFSET ]
+  ldr r0, [ lr, #PC_OFFSET ]
   // load spsr from passed context
-  ldr r0, [ fp, #SPSR_OFFSET ]
-  // set spsr for returning
-  msr SPSR_cxsf, r0
+  ldr r1, [ lr, #SPSR_OFFSET ]
+  stmdb sp!, { r0, r1 }
   // restore floating point registers
-  pop_fpu_register fp
+  pop_fpu_register lr
   // restore registers and switch to process
-  ldm fp, { r0 - r14 }^
+  ldm lr, { r0 - r14 }^
+  // wait for ldm to populate all registers
   nop
+  isb
   // return to user mode
-  movs pc, lr
+  rfeia sp!

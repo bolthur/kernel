@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../../rpc.h"
+#include "../../global.h"
 #include "../../watch.h"
 
 /**
@@ -44,33 +45,35 @@ void rpc_handle_watch_register(
   vfs_watch_register_response_t response = { .result = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     response.result = -ENODATA;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   size_t data_size;
-  vfs_watch_register_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_watch_register_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // try to register watcher
   response.result = watch_add( request->target , request->handler );
   // debug output
-  EARLY_STARTUP_PRINT(
-    "handler %d is registering a watcher for %s: %d\r\n",
-    request->handler,
-    request->target,
-    response.result
-  )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT(
+      "handler %d is registering a watcher for %s: %d\r\n",
+      request->handler,
+      request->target,
+      response.result
+    )
+  #endif
   // free request data
   free( request );
   // return result
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
 }

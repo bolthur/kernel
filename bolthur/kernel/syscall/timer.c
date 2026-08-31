@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -63,17 +63,24 @@ void syscall_timer_frequency( void* context ) {
  * @brief Acquire to pause thread until timer resolved
  *
  * @param context
+ *
+ * @todo rework to expect timeout as nanoseconds
  */
 void syscall_timer_acquire( void* context ) {
   // parameters
-  size_t rpc_num = syscall_get_parameter( context, 0 );
-  size_t timeout = syscall_get_parameter( context, 1 );
+  const size_t rpc_num = syscall_get_parameter( context, 0 );
+  const size_t timeout = syscall_get_parameter( context, 1 );
+  const bool interruptable = syscall_get_parameter( context, 2 );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_timer_acquire( %zu, %zu )\r\n", rpc_num, timeout )
   #endif
   // handle timeout already reached
   if ( timeout <= timer_get_tick() ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "timer already in the past\r\n" )
+    #endif
     // return success without doing anything
     syscall_populate_success( context, 0 );
     return;
@@ -82,10 +89,15 @@ void syscall_timer_acquire( void* context ) {
   timer_callback_entry_t* item = timer_register_callback(
     task_thread_current_thread,
     rpc_num,
-    timeout
+    timeout,
+    interruptable
   );
   // handle error
   if ( ! item ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "Unable to acquire timer\r\n" )
+    #endif
     syscall_populate_error( context, ( size_t )-EAGAIN );
     return;
   }
@@ -105,7 +117,7 @@ void syscall_timer_acquire( void* context ) {
  */
 void syscall_timer_release( void* context ) {
   // parameters
-  size_t id = syscall_get_parameter( context, 0 );
+  const size_t id = syscall_get_parameter( context, 0 );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_timer_release( %zu )\r\n", id )

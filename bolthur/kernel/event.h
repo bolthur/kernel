@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,7 +20,6 @@
 #ifndef _EVENT_H
 #define _EVENT_H
 
-#include <stdbool.h>
 #include "../library/collection/list/list.h"
 #include "../library/collection/avl/avl.h"
 #include "stack.h"
@@ -33,7 +32,7 @@ typedef enum {
   EVENT_PROCESS = 1,
   EVENT_SERIAL,
   EVENT_DEBUG,
-  EVENT_INTERRUPT_CLEANUP
+  EVENT_INTERRUPT_CLEANUP,
 } event_type_t;
 
 typedef enum {

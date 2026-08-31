@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -25,7 +25,6 @@
 #include <sys/bolthur.h>
 #include "../random.h"
 #include "../rpc.h"
-#include "../../libiomem.h"
 
 static vfs_read_response_t read_error_response;
 
@@ -46,7 +45,7 @@ static void read_error_return( const size_t type, const int error ) {
     type,
     &read_error_response,
     sizeof( read_error_response ),
-    NULL,
+    nullptr,
     0
   );
 }
@@ -78,19 +77,19 @@ void rpc_handle_read(
   }
   memset( response, 0, sizeof( *response ) );
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     response->len = -EINVAL;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     return;
   }
   // fetch rpc data
   size_t data_size;
-  vfs_read_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_read_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   // handle error
   if ( ! request ) {
     response->len = -EINVAL;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     return;
   }
@@ -102,13 +101,13 @@ void rpc_handle_read(
     // prepare response
     response->len = -EIO;
     // return response
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     // free stuff
     free( request );
     free( response );
     return;
   }
-  auto uint32_t* buf = ( uint32_t* )shm_addr;
+  auto const buf = ( uint32_t* )shm_addr;
   // loop until max num words
   for ( uint32_t num = 0; num < max_word; num++ ) {
     // extract rng status
@@ -119,7 +118,7 @@ void rpc_handle_read(
       // free shared stuff
       _syscall_memory_shared_detach( request->shm_id );
       // return response
-      bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+      bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
       // free stuff
       free( request );
       free( response );
@@ -133,7 +132,7 @@ void rpc_handle_read(
     // prepare response
     response->len = -EIO;
     // return response
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     // free stuff
     free( request );
     free( response );
@@ -142,7 +141,7 @@ void rpc_handle_read(
   // prepare read amount
   response->len = ( ssize_t )( max_word * sizeof( uint32_t ) );
   // return response
-  bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+  bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
   // free again
   free( request );
   free( response );

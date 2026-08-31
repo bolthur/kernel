@@ -1,2 +1,2 @@
 
-SUBDIRS = keyboard mouse
+SUBDIRS = hid keyboard mouse

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,11 +22,14 @@
 #include <unistd.h>
 #include <inttypes.h>
 #include <libtar.h>
+#include <errno.h>
 #include <sys/bolthur.h>
 #include <sys/mount.h>
 #include "ramdisk.h"
 #include "rpc.h"
-#include "../../libhelper.h"
+#include "global.h"
+#include "../../../library/vfs/wait.h"
+#include "../../../library/vfs/dev.h"
 
 extern TAR* disk;
 
@@ -39,26 +42,40 @@ extern TAR* disk;
  * @return
  */
 int main( int argc, char* argv[] ) {
-  EARLY_STARTUP_PRINT( "ramdisk starting up!\r\n" )
-  EARLY_STARTUP_PRINT( "%d / %d\r\n", getpid(), getppid() )
+  #if defined( RAMDISK_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "ramdisk starting up!\r\n" )
+    EARLY_STARTUP_PRINT( "%d / %d\r\n", getpid(), getppid() )
+  #endif
   // beside the name also the shared memory id is passed per parameter
   if ( 2 != argc ) {
-    EARLY_STARTUP_PRINT( "Expected two arguments, but received %d\r\n", argc )
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Expected two arguments, but received %d\r\n", argc )
+    #endif
     return -1;
   }
   // copy ramdisk from shared to local
-  EARLY_STARTUP_PRINT( "Copy ramdisk from shared to local\r\n" )
+  #if defined( RAMDISK_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Copy ramdisk from shared to local\r\n" )
+  #endif
   ramdisk_copy_from_shared( argv[ 1 ] );
   // prepare ramdisk
-  EARLY_STARTUP_PRINT( "Setup ramdisk\r\n" )
+  #if defined( RAMDISK_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Setup ramdisk\r\n" )
+  #endif
   if ( ! ramdisk_setup() ) {
-    EARLY_STARTUP_PRINT( "Unable to prepare memory ramdisk\r\n" )
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to prepare memory ramdisk\r\n" )
+    #endif
     return -1;
   }
   // register rpc handler
-  EARLY_STARTUP_PRINT( "bind rpc handler!\r\n" )
+  #if defined( RAMDISK_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "bind rpc handler!\r\n" )
+  #endif
   if ( ! rpc_init() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
+    #endif
     return -1;
   }
 
@@ -68,12 +85,16 @@ int main( int argc, char* argv[] ) {
   vfs_wait_for_path( "/dev/manager/device" );
 
   // add device file
-  if ( !dev_add_file( "/dev/ramdisk", NULL, 0 ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+  if ( ! vfs_dev_add_file( "/dev/ramdisk", nullptr, 0, nullptr ) ) {
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    #endif
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "trying to mount!\r\n" )
+  #if defined( RAMDISK_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "trying to mount!\r\n" )
+  #endif
   // try to mount /dev/ramdisk to /ramdisk
   int result = mount(
     MOUNT_POINT_DEVICE,
@@ -83,18 +104,22 @@ int main( int argc, char* argv[] ) {
     ""
   );
   if ( 0 != result ) {
-    EARLY_STARTUP_PRINT(
-      "Mount of \"%s\" with type \"%s\" to \"%s\" failed: \"%s\"\r\n",
-      MOUNT_POINT_DEVICE,
-      MOUNT_POINT_FILESYSTEM,
-      MOUNT_POINT_DESTINATION,
-      strerror( errno )
-    )
+    #if defined( RAMDISK_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT(
+        "Mount of \"%s\" with type \"%s\" to \"%s\" failed: \"%s\"\r\n",
+        MOUNT_POINT_DEVICE,
+        MOUNT_POINT_FILESYSTEM,
+        MOUNT_POINT_DESTINATION,
+        strerror( errno )
+      )
+    #endif
     // exit
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "Enable rpc and wait\r\n" )
+  #if defined( RAMDISK_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Enable rpc and wait\r\n" )
+  #endif
   // wait for rpc
   bolthur_rpc_wait_block();
   return 0;

@@ -4,7 +4,7 @@ AC_PREREQ([2.71])
 
 AC_INIT([bolthur-kernel], [0.1.0-dev], [https://github.com/bolthur/kernel/issues], [bolthur-kernel], [https://github.com/bolthur/kernel])
 
-AC_COPYRIGHT([Copyright (C) 2018 - 2025 bolthur project])
+AC_COPYRIGHT([Copyright (C) 2018 - 2026 bolthur project])
 
 AC_CONFIG_AUX_DIR([_aux/config])
 AC_CONFIG_MACRO_DIR([../../build-aux/m4])
@@ -223,6 +223,24 @@ AC_ARG_WITH(
   [with_debug_debug_symbols=yes]
 )
 
+AC_ARG_WITH(
+  [ubsan],
+  AS_HELP_STRING(
+    [--with-ubsan],
+    [compile with ubsan enabled]
+  ),
+  [with_ubsan_enabled=yes]
+)
+
+AC_ARG_WITH(
+  [asan],
+  AS_HELP_STRING(
+    [--with-asan],
+    [compile with asan enabled]
+  ),
+  [with_asan_enabled=yes]
+)
+
 # enable output and enable remote debugging together is not allowed
 AS_IF([test "x$enable_output" == "xyes" && test "x$enable_remote_debug" == "xyes"], [
   AC_MSG_ERROR([Enabled kernel output and remote debug are not possible at the same time])
@@ -287,7 +305,7 @@ AC_DEFINE_UNQUOTED(
 # Some compiler dependent features.
 AC_DEFINE_UNQUOTED(
   [__allocator],
-  [__attribute__((malloc))],
+  [__attribute__((__malloc__))],
   [Keyword for mark something as allocator.]
 )
 AC_DEFINE_UNQUOTED(
@@ -312,7 +330,7 @@ AC_DEFINE_UNQUOTED(
 )
 AC_DEFINE_UNQUOTED(
   [__no_sanitize],
-  [__attribute__((no_sanitize("undefined")))],
+  [__attribute__((no_sanitize("undefined"), no_sanitize("kernel-address")))],
   [disable undefined behaviour sanitization]
 )
 AC_DEFINE_UNQUOTED(
@@ -322,7 +340,7 @@ AC_DEFINE_UNQUOTED(
 )
 AC_DEFINE_UNQUOTED(
   [__bootstrap],
-  [__attribute__((__section__(".text.boot"),__optimize__("O0","no-stack-protector"), no_sanitize("undefined")))],
+  [__attribute__((__section__(".text.boot"),__optimize__("O0","no-stack-protector"), no_sanitize("undefined"), no_sanitize("kernel-address")))],
   [Bootstrap function]
 )
 AC_DEFINE_UNQUOTED(
@@ -335,6 +353,8 @@ AC_DEFINE_UNQUOTED(
 AM_CONDITIONAL([IS32], [test $executable_format -eq 32])
 AM_CONDITIONAL([IS64], [test $executable_format -eq 64])
 
+AM_CONDITIONAL([HAS_SANITIZER], [test "x$with_debug_symbols" == "xyes"])
+
 AC_CONFIG_FILES([
   Makefile
   arch/Makefile
@@ -345,6 +365,7 @@ AC_CONFIG_FILES([
   lib/Makefile
   lib/atag/Makefile
   lib/libc/Makefile
+  lib/kasan/Makefile
   lib/tar/Makefile
   platform/Makefile
   platform/raspi/Makefile

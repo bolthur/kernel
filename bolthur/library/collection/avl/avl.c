@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -79,11 +79,11 @@ static avl_node_t* find_by_data(
 ) {
   // end point
   if ( ! root || ! tree ) {
-    return NULL;
+    return nullptr;
   }
 
   // check result
-  int32_t result = tree->lookup( root, data );
+  const int32_t result = tree->lookup( root, data );
   // handle match
   if ( 0 == result ) {
     return root;
@@ -114,7 +114,7 @@ static avl_node_t* find_parent_by_data(
 ) {
   // end point
   if ( ! root || ! tree ) {
-    return NULL;
+    return nullptr;
   }
 
   // matching node left?
@@ -133,7 +133,7 @@ static avl_node_t* find_parent_by_data(
     return root;
   }
 
-  int32_t result = tree->lookup( root, data );
+  const int32_t result = tree->lookup( root, data );
 
   // continue left
   if ( -1 == result ) {
@@ -144,7 +144,7 @@ static avl_node_t* find_parent_by_data(
   }
 
   // generic else case: found node is the wanted one
-  return NULL;
+  return nullptr;
 }
 
 /**
@@ -155,7 +155,7 @@ static avl_node_t* find_parent_by_data(
  * @return int32_t
  */
 static int32_t height( avl_node_t* node ) {
-  // handle null value
+  // handle invalid value
   if ( ! node ) {
     return 0;
   }
@@ -240,7 +240,7 @@ static avl_node_t* find_previous_node(
   avl_tree_t* tree
 ) {
   if ( ! root ) {
-    return NULL;
+    return nullptr;
   }
 
   // handle root node
@@ -254,10 +254,10 @@ static avl_node_t* find_previous_node(
       return avl_get_min( root->right );
     }
     // nothing existing
-    return NULL;
+    return nullptr;
   }
 
-  int32_t result = tree->compare( root, current );
+  const int32_t result = tree->compare( root, current );
   if ( -1 == result ) {
     return find_previous_node( current, root->left, tree );
   } else {
@@ -323,11 +323,11 @@ static avl_node_t* remove_by_node(
 ) {
   // recursive breakpoint
   if ( ! root ) {
-    return NULL;
+    return nullptr;
   }
 
   // get result
-  int32_t result = tree->compare( node, root );
+  const int32_t result = tree->compare( node, root );
 
   // equal? => check for root is node and continue on subtrees if not
   if ( 0 == result ) {
@@ -345,7 +345,7 @@ static avl_node_t* remove_by_node(
     } else {
       avl_node_t* tmp;
 
-      // no child or one child, just return child or NULL
+      // no child or one child, just return child or nullptr
       if ( ! root->left || ! root->right ) {
         // get temporary
         tmp = root->left
@@ -354,7 +354,7 @@ static avl_node_t* remove_by_node(
 
         // no child
         if ( ! tmp ) {
-          root = NULL;
+          root = nullptr;
         // one child
         } else {
           // overwrite root
@@ -406,7 +406,7 @@ static avl_node_t* remove_by_data(
 ) {
   // recursive breakpoint
   if ( ! root ) {
-    return NULL;
+    return nullptr;
   }
 
   // continue left
@@ -419,7 +419,7 @@ static avl_node_t* remove_by_data(
   } else {
     avl_node_t* tmp;
 
-    // no child or one child, just return child or NULL
+    // no child or one child, just return child or nullptr
     if ( ! root->left || ! root->right ) {
       // get temporary
       tmp = root->left
@@ -428,7 +428,7 @@ static avl_node_t* remove_by_data(
 
       // no child
       if ( ! tmp ) {
-        root = NULL;
+        root = nullptr;
       // one child
       } else {
         // overwrite root
@@ -563,16 +563,16 @@ avl_tree_t* avl_create_tree(
   avl_cleanup_func_t cleanup
 ) {
   // reserve space for new tree structure
-  avl_tree_t* new_tree = ( avl_tree_t* )malloc( sizeof( avl_tree_t ) );
+  auto const new_tree = ( avl_tree_t* )malloc( sizeof( avl_tree_t ) );
   // check
   if ( !new_tree ) {
-    return NULL;
+    return nullptr;
   }
   // prepare structure
   memset( ( void* )new_tree, 0, sizeof( avl_tree_t ) );
 
   // fill structure itself
-  new_tree->root = NULL;
+  new_tree->root = nullptr;
   new_tree->compare = compare;
   // lookup function
   if( lookup ) {
@@ -600,10 +600,10 @@ avl_tree_t* avl_create_tree(
  */
 avl_node_t* avl_create_node( void* data ) {
   // reserve space for new node
-  avl_node_t* node = ( avl_node_t* )malloc( sizeof( avl_node_t ) );
+  auto const node = ( avl_node_t* )malloc( sizeof( avl_node_t ) );
   // check
   if ( ! node ) {
-    return NULL;
+    return nullptr;
   }
   // prepare data
   memset( ( void* )node, 0, sizeof( avl_node_t ) );
@@ -663,7 +663,7 @@ bool avl_insert_by_node( avl_tree_t* tree, avl_node_t* node ) {
  *
  * @param tree tree to search
  * @param data data to lookup
- * @return avl_node_t* found node or NULL
+ * @return avl_node_t* found node or nullptr
  */
 avl_node_t* avl_find_by_data( const avl_tree_t* tree, void* data ) {
   return find_by_data( data, tree->root, tree );
@@ -725,7 +725,7 @@ avl_node_t* balance( avl_node_t* node ) {
  */
 avl_node_t* avl_iterate_first( avl_tree_t* tree ) {
   if ( ! tree ) {
-    return NULL;
+    return nullptr;
   }
   return avl_get_min( tree->root );
 }
@@ -739,7 +739,7 @@ avl_node_t* avl_iterate_first( avl_tree_t* tree ) {
  */
 avl_node_t* avl_iterate_last( avl_tree_t* tree ) {
   if ( ! tree ) {
-    return NULL;
+    return nullptr;
   }
   return avl_get_max( tree->root );
 }
@@ -754,7 +754,7 @@ avl_node_t* avl_iterate_last( avl_tree_t* tree ) {
  */
 avl_node_t* avl_iterate_next( avl_tree_t* tree, avl_node_t* node ) {
   if ( ! tree || ! node || ! tree->root ) {
-    return NULL;
+    return nullptr;
   }
 
   // handle right element is existing
@@ -763,7 +763,7 @@ avl_node_t* avl_iterate_next( avl_tree_t* tree, avl_node_t* node ) {
     return avl_get_min( node->right );
   }
 
-  avl_node_t* next = NULL;
+  avl_node_t* next = nullptr;
   avl_node_t* root = tree->root;
   // search from root
   while ( root ) {
@@ -796,7 +796,7 @@ avl_node_t* avl_iterate_next( avl_tree_t* tree, avl_node_t* node ) {
  */
 avl_node_t* avl_iterate_previous( avl_tree_t* tree, avl_node_t* node ) {
   if ( ! tree || ! node ) {
-    return NULL;
+    return nullptr;
   }
   return find_previous_node( node, tree->root, tree );
 }
@@ -806,10 +806,10 @@ avl_node_t* avl_iterate_previous( avl_tree_t* tree, avl_node_t* node ) {
  * @brief Get max node of tree
  *
  * @param root root to get max node
- * @return avl_node_t* found node or null if empty
+ * @return avl_node_t* found node or nullptr if empty
  */
 avl_node_t* avl_get_max( avl_node_t* root ) {
-  return get_max( root, NULL );
+  return get_max( root, nullptr );
 }
 
 /**
@@ -817,10 +817,10 @@ avl_node_t* avl_get_max( avl_node_t* root ) {
  * @brief Get min node of tree
  *
  * @param root node to get min value
- * @return avl_node_t* found node or null if empty
+ * @return avl_node_t* found node or nullptr if empty
  */
 avl_node_t* avl_get_min( avl_node_t* root ) {
-  return get_min( root, NULL );
+  return get_min( root, nullptr );
 }
 
 /**
@@ -831,8 +831,8 @@ avl_node_t* avl_get_min( avl_node_t* root ) {
  * @param data initial node data
  */
 void avl_prepare_node( avl_node_t* node, void* data ) {
-  node->left = NULL;
-  node->right = NULL;
+  node->left = nullptr;
+  node->right = nullptr;
   node->data = data;
 }
 

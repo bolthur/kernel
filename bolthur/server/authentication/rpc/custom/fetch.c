@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -25,6 +25,7 @@
 #include <sys/bolthur.h>
 #include "../../pid/node.h"
 #include "../../rpc.h"
+#include "../../global.h"
 #include "../../../libauthentication.h"
 
 /**
@@ -42,32 +43,34 @@ void rpc_custom_handle_fetch(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "AUTHENTICATION FETCH IOCTL\r\n" )
+  #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "AUTHENTICATION FETCH IOCTL\r\n" )
+  #endif
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // handle no data
   if ( ! data_info ) {
     error.status = -ENOMSG;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
-  authentication_fetch_request_t* info = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  authentication_fetch_request_t* info = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! info ) {
     error.status = -errno;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // get process info to extract
   pid_node_t* node = pid_node_extract( info->process );
   if ( ! node ) {
     error.status = -ESRCH;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     free( info );
     return;
   }
@@ -76,7 +79,7 @@ void rpc_custom_handle_fetch(
   authentication_fetch_response_t* fetch_response = malloc( fetch_size );
   if ( ! fetch_response ) {
     error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     free( info );
     return;
   }
@@ -88,7 +91,7 @@ void rpc_custom_handle_fetch(
   // handle error
   if ( ! response ) {
     error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     free( fetch_response );
     free( response );
     free( info );
@@ -102,15 +105,19 @@ void rpc_custom_handle_fetch(
   // copy over groups
   for ( size_t idx = 0; idx < node->group_count; idx++ ) {
     fetch_response->gid[ idx ] = node->gid[ idx ];
-    EARLY_STARTUP_PRINT( "fetch_response->gid[ %zu ]: %d\r\n",
-      idx, fetch_response->gid[ idx ] )
+    #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "fetch_response->gid[ %zu ]: %d\r\n",
+        idx, fetch_response->gid[ idx ] )
+    #endif
   }
   // create temporary response
-  EARLY_STARTUP_PRINT( "uid: %d\r\n", fetch_response->uid )
+  #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "uid: %d\r\n", fetch_response->uid )
+  #endif
   // copy over data
   memcpy( response->container, fetch_response, fetch_size );
   // return from rpc
-  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, 0 );
   // free response and request
   free( fetch_response );
   free( response );

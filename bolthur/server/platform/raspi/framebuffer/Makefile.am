@@ -3,9 +3,11 @@ AM_CFLAGS = -DPROGRAM_NAME=\"framebuffer\"
 
 bin_PROGRAMS = framebuffer
 framebuffer_DEPENDENCIES = \
-  ${abs_top_builddir}/../library/collection/list/liblist.la
+  ${abs_top_builddir}/../library/collection/list/liblist.la \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
 framebuffer_LDADD = \
-  ${abs_top_builddir}/../library/collection/list/liblist.la
+  ${abs_top_builddir}/../library/collection/list/liblist.la \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
 framebuffer_SOURCES = \
   rpc/init.c \
   framebuffer.c \

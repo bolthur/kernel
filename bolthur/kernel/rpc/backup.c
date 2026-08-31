@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -32,7 +32,7 @@
  * @param backup
  */
 void rpc_backup_destroy( rpc_backup_t* backup ) {
-  // handle null
+  // handle invalid
   if ( ! backup ) {
     return;
   }
@@ -45,12 +45,47 @@ void rpc_backup_destroy( rpc_backup_t* backup ) {
 }
 
 /**
+ * @fn rpc_backup_t* rpc_backup_get_next_active(const task_thread_t*)
+ * @brief Get active rpc backup
+ *
+ * @param thread thread to get backup from
+ * @return active backup or nullptr if no rpc is active or not found
+ */
+rpc_backup_t* rpc_backup_get_next_possible_active( const task_thread_t* thread ) {
+  // ensure proper states
+  if (
+    TASK_THREAD_STATE_RPC_ACTIVE != thread->state
+    && TASK_THREAD_STATE_RPC_QUEUED != thread->state
+    && TASK_THREAD_STATE_RPC_HALT_SWITCH != thread->state
+    && TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN != thread->state
+  ) {
+    return nullptr;
+  }
+  // variables
+  const list_item_t* current = thread->process->rpc_queue->first;
+  rpc_backup_t* found = nullptr;
+  // try to get active rpc backup
+  while( current ) {
+    rpc_backup_t* entry = current->data;
+    // handle same thread
+    if ( entry->thread == thread ) {
+      found = entry;
+      break;
+    }
+    // go to next
+    current = current->next;
+  }
+  // return found
+  return found;
+}
+
+/**
  * @fn rpc_backup_t* rpc_backup_get_active(task_thread_t*, size_t)
  * @brief Get active rpc backup
  *
  * @param thread thread to get backup from
  * @param data_id data id to get backup from
- * @return active backup or null if no rpc is active or not found
+ * @return active backup or nullptr if no rpc is active or not found
  */
 rpc_backup_t* rpc_backup_get_active( task_thread_t* thread, size_t data_id ) {
   // ensure proper states
@@ -63,14 +98,14 @@ rpc_backup_t* rpc_backup_get_active( task_thread_t* thread, size_t data_id ) {
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT( "thread->state = %d\r\n", thread->state )
     #endif
-    return NULL;
+    return nullptr;
   }
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "thread->state = %d\r\n", thread->state )
   #endif
   // variables
-  list_item_t* current = thread->process->rpc_queue->first;
-  rpc_backup_t* found = NULL;
+  const list_item_t* current = thread->process->rpc_queue->first;
+  rpc_backup_t* found = nullptr;
   // handle data id set
   if ( data_id ) {
     #if defined( PRINT_RPC )
@@ -83,7 +118,7 @@ rpc_backup_t* rpc_backup_get_active( task_thread_t* thread, size_t data_id ) {
           entry->data_id, entry->origin_data_id )
       #endif
       // handle data id match
-      if ( entry->origin_data_id == data_id ) {
+      if ( entry->origin_data_id == data_id && entry->thread == thread ) {
         #if defined( PRINT_RPC )
           DEBUG_OUTPUT( "Found rpc backup by data id %zu\r\n", data_id )
         #endif
@@ -93,7 +128,7 @@ rpc_backup_t* rpc_backup_get_active( task_thread_t* thread, size_t data_id ) {
       // go to next
       current = current->next;
     }
-    // return null
+    // return found
     return found;
   }
   #if defined( PRINT_RPC )
@@ -103,12 +138,12 @@ rpc_backup_t* rpc_backup_get_active( task_thread_t* thread, size_t data_id ) {
   while( current ) {
     rpc_backup_t* entry = current->data;
     // handle usual return not nested
-    if ( entry->active ) {
+    if ( entry->active && entry->thread == thread ) {
       found = entry;
     }
     // go to next
     current = current->next;
   }
-  // return null
+  // return found
   return found;
 }

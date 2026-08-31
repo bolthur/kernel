@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -39,21 +39,21 @@ void rpc_handle_exec(
 ) {
   vfs_exec_response_t response = { .result = -EINVAL };
   // handle no data
-  if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  if ( ! data_info ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
-  vfs_close_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_exec_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // just return
   response.result = 0;
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
   // free request
   free( request );
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,8 +19,6 @@
 
 #ifndef _ARCH_ARM_V7_DEBUG_DEBUG_H
 #define _ARCH_ARM_V7_DEBUG_DEBUG_H
-
-#include <stdbool.h>
 
 bool debug_check_data_fault_status( void );
 bool debug_check_instruction_fault( void );

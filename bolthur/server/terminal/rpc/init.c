@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 
 /**
  * @fn bool rpc_init(void)
@@ -33,7 +34,9 @@
 bool rpc_init( void ) {
   bolthur_rpc_bind( RPC_VFS_IOCTL, rpc_handle_ioctl, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler for ioctl\r\n" );
+    #if defined( TERMINAL_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler for ioctl\r\n" );
+    #endif
     return false;
   }
   return true;

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -32,7 +32,7 @@
 #include "ramdisk.h"
 #include "util.h"
 #include "init.h"
-#include "../libhelper.h"
+#include "global.h"
 #include "../libdev.h"
 
 uintptr_t ramdisk_compressed;
@@ -42,7 +42,7 @@ size_t ramdisk_decompressed_size;
 size_t ramdisk_shared_id;
 size_t ramdisk_read_offset = 0;
 pid_t own_pid = 0;
-TAR *disk = NULL;
+TAR *disk = nullptr;
 int fd_dev_manager = 0;
 
 /**
@@ -147,42 +147,54 @@ static ssize_t my_tar_write(
 int main( int argc, char* argv[] ) {
   // check parameter count
   if ( argc < 4 ) {
-    EARLY_STARTUP_PRINT(
-      "Not enough parameters, expected 4 but received %d\r\n",
-      argc )
+    #if defined( BOOT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT(
+        "Not enough parameters, expected 4 but received %d\r\n",
+        argc )
+    #endif
     return -1;
   }
 
   // debug print
-  EARLY_STARTUP_PRINT( "boot processing\r\n" );
+  #if defined( BOOT_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "boot processing\r\n" )
+  #endif
   // get current pid
   own_pid = getpid();
   // ensure first process to be started
   if ( 1 != own_pid ) {
-    EARLY_STARTUP_PRINT( "boot needs to have pid 1\r\n" )
+    #if defined( BOOT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "boot needs to have pid 1\r\n" )
+    #endif
     return -1;
   }
   // debug print
-  EARLY_STARTUP_PRINT( "Started with pid %d\r\n", own_pid );
+  #if defined( BOOT_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Started with pid %d\r\n", own_pid )
+  #endif
 
   // allocate message structure
   vfs_add_request_t* msg = malloc( sizeof( *msg ) );
   // ensure first process to be started
   if ( ! msg ) {
-    EARLY_STARTUP_PRINT( "Allocation of message structure failed\r\n" )
+    #if defined( BOOT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Allocation of message structure failed\r\n" )
+    #endif
     return -1;
   }
 
   // transform arguments to hex
-  ramdisk_compressed = strtoul( argv[ 1 ], NULL, 16 );
-  ramdisk_compressed_size = strtoul( argv[ 2 ], NULL, 16 );
-  uintptr_t device_tree = strtoul( argv[ 3 ], NULL, 16 );
+  ramdisk_compressed = strtoul( argv[ 1 ], nullptr, 16 );
+  ramdisk_compressed_size = strtoul( argv[ 2 ], nullptr, 16 );
+  uintptr_t device_tree = strtoul( argv[ 3 ], nullptr, 16 );
   // address size constant
   constexpr int address_size = ( int )( sizeof( uintptr_t ) * 2 );
 
   // check device tree
   if ( 0 != fdt_check_header( ( void* )device_tree ) ) {
-    EARLY_STARTUP_PRINT( "ERROR: Invalid device tree header!\r\n" )
+    #if defined( BOOT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "ERROR: Invalid device tree header!\r\n" )
+    #endif
     free( msg );
     return -1;
   }
@@ -195,11 +207,15 @@ int main( int argc, char* argv[] ) {
     "bootargs",
     &bootargs_length
   );
-  EARLY_STARTUP_PRINT( "bootargs: %.*s\r\n", bootargs_length, bootargs )
+  #if defined( BOOT_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "bootargs: %.*s\r\n", bootargs_length, bootargs )
+  #endif
   // allocate space for bootargs
   char* nbootargs = malloc( ( size_t )( bootargs_length + 1 ) );
   if ( ! nbootargs ) {
-    EARLY_STARTUP_PRINT( "ERROR: Unable to allocate space for null terminated bootargs!\r\n" )
+    #if defined( BOOT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "ERROR: Unable to allocate space for nullptr terminated bootargs!\r\n" )
+    #endif
     free( msg );
     return -1;
   }
@@ -213,28 +229,34 @@ int main( int argc, char* argv[] ) {
   );
   // unmap device tree
   if ( 0 != munmap( ( void* )device_tree, device_tree_size ) ) {
-    EARLY_STARTUP_PRINT( "Unable to unmap device tree!\r\n" )
+    #if defined( BOOT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to unmap device tree!\r\n" )
+    #endif
     free( msg );
     free( nbootargs );
     return -1;
   }
 
-  // debug print
-  EARLY_STARTUP_PRINT(
-    "ramdisk = %#0*"PRIxPTR"\r\n",
-    address_size,
-    ramdisk_compressed
-  )
-  EARLY_STARTUP_PRINT( "ramdisk_size = %zx\r\n", ramdisk_compressed_size )
-  EARLY_STARTUP_PRINT(
-    "device_tree = %#0*"PRIxPTR"\r\n",
-    address_size,
-    device_tree
-  )
+  #if defined( BOOT_ENABLE_OUTPUT )
+    // debug print
+    EARLY_STARTUP_PRINT(
+      "ramdisk = %#0*"PRIxPTR"\r\n",
+      address_size,
+      ramdisk_compressed
+    )
+    EARLY_STARTUP_PRINT( "ramdisk_size = %zx\r\n", ramdisk_compressed_size )
+    EARLY_STARTUP_PRINT(
+      "device_tree = %#0*"PRIxPTR"\r\n",
+      address_size,
+      device_tree
+    )
+  #endif
 
   tartype_t *mytype = malloc( sizeof( *mytype ) );
   if ( !mytype ) {
-    EARLY_STARTUP_PRINT( "ERROR: Cannot allocate necessary memory for tar stuff!\r\n" )
+    #if defined( BOOT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "ERROR: Cannot allocate necessary memory for tar stuff!\r\n" )
+    #endif
     free( msg );
     free( nbootargs );
     return -1;
@@ -244,9 +266,13 @@ int main( int argc, char* argv[] ) {
   mytype->readfunc = my_tar_read;
   mytype->writefunc = my_tar_write;
 
-  EARLY_STARTUP_PRINT( "Starting deflate of init ramdisk\r\n" );
+  #if defined( BOOT_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Starting deflate of init ramdisk\r\n" )
+  #endif
   if ( 0 != tar_open( &disk, "/ramdisk.tar", mytype, O_RDONLY, 0, 0 ) ) {
-    EARLY_STARTUP_PRINT( "ERROR: Cannot open ramdisk!\r\n" );
+    #if defined( BOOT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "ERROR: Cannot open ramdisk!\r\n" )
+    #endif
     free( msg );
     free( nbootargs );
     free( mytype );
@@ -258,17 +284,26 @@ int main( int argc, char* argv[] ) {
   // open /dev
   fd_dev_manager = open( "/dev/manager/device", O_RDWR );
   if ( -1 == fd_dev_manager ) {
-    EARLY_STARTUP_PRINT( "ERROR: Cannot open dev: %s!\r\n", strerror( errno ) );
+    #if defined( BOOT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "ERROR: Cannot open dev: %s!\r\n", strerror( errno ) )
+    #endif
     free( msg );
     free( nbootargs );
     return -1;
   }
-  EARLY_STARTUP_PRINT( "fd_dev_manager = %d\r\n", fd_dev_manager )
+  #if defined( BOOT_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "fd_dev_manager = %d\r\n", fd_dev_manager )
+  #endif
   // stage 2 init
   init_stage2( nbootargs );
   // stage 3 init
   init_stage3();
 
-  while ( true ) {}
+  #if defined( BOOT_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Looping till death\r\n" )
+  #endif
+  while ( true ) {
+    sleep( 10 );
+  }
   return 1;
 }

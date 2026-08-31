@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,11 +21,8 @@
 #define _UTIL_H
 
 #include <stddef.h>
-#include <stdbool.h>
 
 uint32_t util_min( uint32_t, uint32_t );
-void* util_prepare_mmio_sequence( size_t, size_t* );
-void* util_prepare_mailbox( size_t, size_t* );
 bool util_update_card_detect( int, bool*, bool* );
 
 #endif

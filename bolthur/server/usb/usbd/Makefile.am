@@ -2,5 +2,65 @@
 AM_CFLAGS = -DPROGRAM_NAME=\"usb/usbd\"
 
 bin_PROGRAMS = usbd
+usbd_DEPENDENCIES = \
+  ${abs_top_builddir}/../library/util/libutil.la \
+  ${abs_top_builddir}/../library/vfs/libvfs.la \
+  ${abs_top_builddir}/../library/usb/libusb.la
+usbd_LDADD = \
+  ${abs_top_builddir}/../library/util/libutil.la \
+  ${abs_top_builddir}/../library/vfs/libvfs.la \
+  ${abs_top_builddir}/../library/usb/libusb.la
 usbd_SOURCES = \
+  call/attach.c \
+  call/check_for_change.c \
+  call/child_detached.c \
+  call/detached.c \
+  ioctl/wrapper.c \
+  libusbd/address.c \
+  libusbd/allocate.c \
+  libusbd/attach.c \
+  libusbd/configuration.c \
+  libusbd/context.c \
+  libusbd/control.c \
+  libusbd/deallocate.c \
+  libusbd/description.c \
+  libusbd/descriptor.c \
+  libusbd/device.c \
+  libusbd/handler.c \
+  libusbd/init.c \
+  libusbd/interrupt.c \
+  libusbd/roothub.c \
+  libusbd/string.c \
+  libusbd/transmission.c \
+  rpc/attach/device.c \
+  rpc/attach/roothub.c \
+  rpc/control/message.c \
+  rpc/detach/device.c \
+  rpc/generic/add.c \
+  rpc/generic/close.c \
+  rpc/generic/exec.c \
+  rpc/generic/exit.c \
+  rpc/generic/fork.c \
+  rpc/generic/ioctl.c \
+  rpc/generic/open.c \
+  rpc/generic/read.c \
+  rpc/generic/remove.c \
+  rpc/generic/seek.c \
+  rpc/generic/stat.c \
+  rpc/generic/write.c \
+  rpc/get/configuration.c \
+  rpc/get/description.c \
+  rpc/get/descriptor.c \
+  rpc/get/endpoint.c \
+  rpc/get/interface.c \
+  rpc/get/roothub.c \
+  rpc/get/status.c \
+  rpc/get/string.c \
+  rpc/handler/register.c \
+  rpc/handler/unregister.c \
+  rpc/interrupt/generic.c \
+  rpc/interrupt/poll.c \
+  rpc/stop/transmission.c \
+  rpc/init.c \
   main.c
+usbd_LDFLAGS = -all-static --static

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -24,6 +24,7 @@
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../sd.h"
+#include "../global.h"
 
 /**
  * @fn void rpc_handle_write(size_t, pid_t, size_t, size_t)
@@ -51,23 +52,23 @@ void rpc_handle_write(
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     response->len = -EINVAL;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     return;
   }
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     response->len = -EINVAL;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     return;
   }
   size_t data_size;
-  vfs_write_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_write_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   // handle error
   if ( ! request ) {
     response->len = -EIO;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     return;
   }
@@ -78,29 +79,31 @@ void rpc_handle_write(
     || request->offset % sd_block_size
   ) {
     response->len = -EAGAIN;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     free( request );
     return;
   }
   // calculate block number
-  const off_t block_number = request->offset / sd_block_size;
+  /*const off_t block_number = request->offset / sd_block_size;
   // try to read from card
-  STARTUP_PRINT(
+  EARLY_STARTUP_PRINT(
     "Writing %#zx bytes with offset of %llx / %lx ( block number: %llx ) to sd card\r\n",
     request->len, request->offset, ( uint32_t )request->offset, block_number
-  )
+  )*/
   // try to read data
   if ( ! sd_write_block(
-    NULL,
+    nullptr,
     request->len,
     request->offset,
     request->shm_id
   ) ) {
-    STARTUP_PRINT(
-      "Error while writing block to card: %s\r\n",
-      sd_last_error()
-    )
+    #if defined( SD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT(
+        "Error while writing block to card: %s\r\n",
+        sd_last_error()
+      )
+    #endif
     // detach shared area
     if ( request->shm_id ) {
       _syscall_memory_shared_detach( request->shm_id );
@@ -108,7 +111,7 @@ void rpc_handle_write(
     // prepare response
     response->len = -EIO;
     // return response
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     // free stuff
     free( request );
     free( response );
@@ -117,7 +120,7 @@ void rpc_handle_write(
   // prepare read amount
   response->len = ( ssize_t )request->len;
   // return response
-  bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+  bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
   // free stuff
   free( request );
   free( response );

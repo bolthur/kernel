@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -27,8 +27,9 @@
 #include "psf.h"
 #include "utf8.h"
 #include "main.h"
+#include "global.h"
 #include "../libconsole.h"
-#include "../libhelper.h"
+#include "../../library/vfs/dev.h"
 
 list_manager_t* terminal_list;
 
@@ -54,7 +55,7 @@ static int32_t terminal_lookup(
  * @param a
  */
 static void terminal_cleanup( list_item_t* a ) {
-  terminal_t* term = a->data;
+  const terminal_t* term = a->data;
   // detach shared memory
   if ( term->surface_memory_id ) {
     while ( true ) {
@@ -78,7 +79,7 @@ static void terminal_cleanup( list_item_t* a ) {
  */
 bool terminal_init( void ) {
   // construct list
-  terminal_list = list_construct( terminal_lookup, terminal_cleanup, NULL );
+  terminal_list = list_construct( terminal_lookup, terminal_cleanup, nullptr );
   if ( ! terminal_list ) {
     return false;
   }
@@ -94,17 +95,16 @@ bool terminal_init( void ) {
     return false;
   }
   // base path
-  char *tty_path = malloc( sizeof(char) * PATH_MAX);
+  char *tty_path = malloc( sizeof( char ) * PATH_MAX );
   if ( ! tty_path ) {
     free( command_select );
     free( command_add );
     list_destruct( terminal_list );
     return false;
   }
-  size_t in = RPC_CUSTOM_START;
-  size_t out = RPC_CUSTOM_START + 1;
-  size_t err = RPC_CUSTOM_START + 2;
-
+  size_t in = TERMINAL_IN_START;
+  size_t out = TERMINAL_OUT_START;
+  size_t err = TERMINAL_ERR_START;
   framebuffer_surface_allocate_t tmp = {
     .width = resolution_data.width,
     .height = resolution_data.height,
@@ -115,16 +115,13 @@ bool terminal_init( void ) {
   // push terminals
   for ( uint32_t current = 0; current < TERMINAL_MAX_NUM; current++ ) {
     // prepare device path
-    snprintf(
-      tty_path,
-      PATH_MAX,
-      TERMINAL_BASE_PATH"%"PRIu32,
-      current
-    );
+    snprintf( tty_path, PATH_MAX, TERMINAL_BASE_PATH"%"PRIu32, current );
     // add device file
-    uint32_t device_info[] = { in, out, err, };
-    if ( !dev_add_file( tty_path, device_info, 3 ) ) {
-      EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    const uint32_t device_info[] = { in, out, err, };
+    if ( ! vfs_dev_add_file( tty_path, device_info, 3, nullptr ) ) {
+      #if defined( TERMINAL_ENABLE_OUTPUT )
+        EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+      #endif
       list_destruct( terminal_list );
       free( tty_path );
       free( command_add );
@@ -135,11 +132,9 @@ bool terminal_init( void ) {
     // register handler for streams
     bolthur_rpc_bind( out, output_handle_out, false );
     if ( errno ) {
-      EARLY_STARTUP_PRINT(
-        "Unable to bind rpc %zu: %s\r\n",
-        out,
-        strerror( errno )
-      )
+      #if defined( TERMINAL_ENABLE_OUTPUT )
+        EARLY_STARTUP_PRINT( "Unable to bind rpc %zu: %s\r\n", out, strerror( errno ) )
+      #endif
       list_destruct( terminal_list );
       free( tty_path );
       free( command_add );
@@ -149,11 +144,9 @@ bool terminal_init( void ) {
     }
     bolthur_rpc_bind( err, output_handle_err, false );
     if ( errno ) {
-      EARLY_STARTUP_PRINT(
-        "Unable to bind rpc %zu: %s\r\n",
-        err,
-        strerror( errno )
-      )
+      #if defined( TERMINAL_ENABLE_OUTPUT )
+        EARLY_STARTUP_PRINT( "Unable to bind rpc %zu: %s\r\n", err, strerror( errno ) )
+      #endif
       list_destruct( terminal_list );
       free( tty_path );
       free( command_add );
@@ -163,11 +156,9 @@ bool terminal_init( void ) {
     }
     bolthur_rpc_bind( in, output_handle_in, false );
     if ( errno ) {
-      EARLY_STARTUP_PRINT(
-        "Unable to bind rpc %zu: %s\r\n",
-        in,
-        strerror( errno )
-      )
+      #if defined( TERMINAL_ENABLE_OUTPUT )
+        EARLY_STARTUP_PRINT( "Unable to bind rpc %zu: %s\r\n", in, strerror( errno ) )
+      #endif
       list_destruct( terminal_list );
       free( tty_path );
       free( command_add );
@@ -278,7 +269,7 @@ bool terminal_init( void ) {
   // prepare structure
   strncpy( command_select->path, "/dev/tty0", PATH_MAX - 1 );
   // call console select
-  int result = ioctl(
+  const int result = ioctl(
     console_manager_fd,
     IOCTL_BUILD_REQUEST(
       CONSOLE_SELECT,
@@ -294,7 +285,7 @@ bool terminal_init( void ) {
     list_destruct( terminal_list );
     return false;
   }
-  int response = *( ( int* )command_select );
+  const int response = *( ( int* )command_select );
   // free again
   free( tty_path );
   free( command_add );

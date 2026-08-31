@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -66,7 +66,7 @@ static int32_t queue_compare_priority_callback(
  * @return avl_tree_t*
  */
 avl_tree_t* task_queue_init( void ) {
-  return avl_create_tree( queue_compare_priority_callback, NULL, NULL );
+  return avl_create_tree( queue_compare_priority_callback, nullptr, nullptr );
 }
 
 /**
@@ -83,7 +83,7 @@ task_priority_queue_t* task_queue_get_queue(
 ) {
   // check parameter
   if ( ! manager ) {
-    return NULL;
+    return nullptr;
   }
   // debug output
   #if defined( PRINT_PROCESS )
@@ -105,7 +105,7 @@ task_priority_queue_t* task_queue_get_queue(
     queue = malloc( sizeof( *queue ) );
     // check parameter
     if ( ! queue ) {
-      return NULL;
+      return nullptr;
     }
     // prepare memory
     memset( queue, 0, sizeof( *queue ) );
@@ -115,19 +115,19 @@ task_priority_queue_t* task_queue_get_queue(
     #endif
     // populate queue
     queue->priority = priority;
-    queue->thread_list = list_construct( NULL, NULL, NULL );
+    queue->thread_list = list_construct( nullptr, nullptr, nullptr );
     if ( ! queue->thread_list ) {
       free( queue );
-      return NULL;
+      return nullptr;
     }
-    queue->current = NULL;
-    queue->last_handled = NULL;
+    queue->current = nullptr;
+    queue->last_handled = nullptr;
     // prepare and insert node
     avl_prepare_node( &queue->node, ( void* )priority );
     if ( ! avl_insert_by_node( tree, &queue->node ) ) {
       list_destruct( queue->thread_list );
       free( queue );
-      return NULL;
+      return nullptr;
     }
   // existing? => gather block
   } else {

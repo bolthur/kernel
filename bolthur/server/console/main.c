@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,13 +19,16 @@
 
 #include <sys/bolthur.h>
 #include "../libterminal.h"
-#include "../libhelper.h"
 #include "../libconsole.h"
 #include "../../library/collection/list/list.h"
+#include "../../library/vfs/dev.h"
 #include "console.h"
+#include "handler.h"
 #include "rpc.h"
+#include "queue.h"
+#include "global.h"
 
-list_manager_t* console_list = NULL;
+list_manager_t* console_list = nullptr;
 
 /**
  * @fn int32_t console_lookup(const list_item_t*, const void*)
@@ -66,46 +69,83 @@ static void console_cleanup( list_item_t* a ) {
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // create console list
-  console_list = list_construct( console_lookup, console_cleanup, NULL );
+  console_list = list_construct( console_lookup, console_cleanup, nullptr );
   if ( ! console_list ) {
     return -1;
   }
+
+  // setup handler
+  #if defined( CONSOLE_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Setup handler tree\r\n" )
+  #endif
+  if ( ! handler_setup() ) {
+    return -1;
+  }
+
+  // setup queue
+  #if defined( CONSOLE_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Startup queue\r\n" )
+  #endif
+  if ( ! queue_setup() ) {
+    return -1;
+  }
+
   // register rpc handler
-  EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
+  #if defined( CONSOLE_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
+  #endif
   if ( ! rpc_init() ) {
     list_destruct( console_list );
     return -1;
   }
 
   // stdin device
-  if ( !dev_add_file( "/dev/stdin", NULL, 0 ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+  if ( ! vfs_dev_add_file( "/dev/stdin", nullptr, 0, nullptr ) ) {
+    #if defined( CONSOLE_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    #endif
     return -1;
   }
   // stdout device
-  if ( !dev_add_file( "/dev/stdout", NULL, 0 ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+  if ( ! vfs_dev_add_file( "/dev/stdout", nullptr, 0, nullptr ) ) {
+    #if defined( CONSOLE_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    #endif
     return -1;
   }
   // stderr device
-  if ( !dev_add_file( "/dev/stderr", NULL, 0 ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+  if ( ! vfs_dev_add_file( "/dev/stderr", nullptr, 0, nullptr ) ) {
+    #if defined( CONSOLE_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    #endif
     return -1;
   }
 
   // enable rpc
-  EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
+  #if defined( CONSOLE_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
+  #endif
   _syscall_rpc_set_ready( true );
 
   // console device
-  uint32_t device_info[] = { CONSOLE_ADD, CONSOLE_SELECT, };
-  if ( !dev_add_file( "/dev/console", device_info, 2 ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+  constexpr uint32_t device_info[] = {
+    CONSOLE_ADD,
+    CONSOLE_SELECT,
+    CONSOLE_INPUT,
+    RPC_VFS_IOCTL_TERMIOS_GET,
+    RPC_VFS_IOCTL_TERMIOS_SET,
+  };
+  if ( ! vfs_dev_add_file( "/dev/console", device_info, 5, nullptr ) ) {
+    #if defined( CONSOLE_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    #endif
     return -1;
   }
 
   // wait for rpc
-  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  #if defined( CONSOLE_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  #endif
   bolthur_rpc_wait_block();
   // return exit code 0
   return 0;

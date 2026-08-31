@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -29,6 +29,9 @@
 
     #define KERNEL_AREA_START 0x80000000
     #define KERNEL_AREA_END 0xFFFFFFFF
+
+    #define KERNEL_AREA_PROCESS_REPLACE_START 0xF3041000
+    #define KERNEL_AREA_PROCESS_REPLACE_END 0xFFFFFFFF
   #elif defined( ELF64 )
     #define KERNEL_OFFSET 0xffffffff80000000
   #endif

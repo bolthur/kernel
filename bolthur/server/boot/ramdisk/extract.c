@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <sys/bolthur.h>
 #include "../ramdisk.h"
+#include "../global.h"
 
 /**
  * @fn void ramdisk_extract*(uintptr_t, size_t, size_t, size_t*)
@@ -39,16 +40,15 @@ void* ramdisk_extract(
   size_t extract_size,
   size_t* shared_id
 ) {
-  int err;
   // decompress
   z_stream stream = { 0 };
   *shared_id = _syscall_memory_shared_create( extract_size );
   if ( errno ) {
-    return NULL;
+    return nullptr;
   }
   void* dec = _syscall_memory_shared_attach( *shared_id, ( uintptr_t )NULL );
   if ( errno ) {
-    return NULL;
+    return nullptr;
   }
   // prepare stream
   stream.total_in = stream.avail_in = size;
@@ -59,20 +59,24 @@ void* ramdisk_extract(
   stream.zfree  = Z_NULL;
   stream.opaque = Z_NULL;
   // initialize inflate
-  err = inflateInit2( &stream, 15 + 32 );
+  int err = inflateInit2(&stream, 15 + 32);
   if ( Z_OK != err ) {
-    EARLY_STARTUP_PRINT( "ERROR ON INIT = %d!\r\n", err )
+    #if defined( BOOT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "ERROR ON INIT = %d!\r\n", err )
+    #endif
     inflateEnd( &stream );
     free( dec );
-    return NULL;
+    return nullptr;
   }
   // inflate in one step
   err = inflate( &stream, Z_FINISH);
   if ( err != Z_STREAM_END ) {
-    EARLY_STARTUP_PRINT( "ERROR ON INFLATE = %d!\r\n", err )
+    #if defined( BOOT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "ERROR ON INFLATE = %d!\r\n", err )
+    #endif
     inflateEnd( &stream );
     free( dec );
-    return NULL;
+    return nullptr;
   }
   // end inflate
   inflateEnd( &stream );

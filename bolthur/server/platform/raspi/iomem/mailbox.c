@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,7 +18,7 @@
  */
 
 #include <errno.h>
-#include "../libperipheral.h"
+#include "../../../../library/platform/raspi/iomem/libperipheral.h"
 #include "mailbox.h"
 #include "mmio.h"
 

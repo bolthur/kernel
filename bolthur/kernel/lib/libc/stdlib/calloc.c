@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -27,14 +27,14 @@
  *
  * @param num amount of entries
  * @param size size of one entry
- * @return void* allocated address or NULL
+ * @return void* allocated address or nullptr
  */
 __allocator void* calloc( size_t num, size_t size ) {
   // allocate memory
   void* ptr = malloc( num * size );
   // handle error
   if ( ! ptr ) {
-    return NULL;
+    return nullptr;
   }
   // overwrite memory with 0
   memset( ptr, 0, num * size );

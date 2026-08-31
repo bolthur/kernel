@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -75,14 +75,14 @@ list_manager_t* list_construct(
   list_manager_t* list = malloc( sizeof( list_manager_t ) );
   // handle error
   if ( !list ) {
-    return NULL;
+    return nullptr;
   }
   // overwrite with zero
   memset( ( void* )list, 0, sizeof( list_manager_t ) );
 
   // preset elements
-  list->first = NULL;
-  list->last = NULL;
+  list->first = nullptr;
+  list->last = nullptr;
   // lookup function
   if ( lookup ) {
     list->lookup = lookup;
@@ -172,14 +172,13 @@ bool list_empty( list_manager_t* list ) {
  * @return list_item_t*
  */
 list_item_t* list_lookup_data( list_manager_t* list, void* data ) {
-  list_item_t* current;
-
   // check parameter
   if ( !list ) {
-    return NULL;
+    return nullptr;
   }
+
   // populate current
-  current = list->first;
+  list_item_t* current = list->first;
 
   // loop through list until end
   while ( current ) {
@@ -191,7 +190,7 @@ list_item_t* list_lookup_data( list_manager_t* list, void* data ) {
   }
 
   // return not found
-  return NULL;
+  return nullptr;
 }
 
 /**
@@ -203,15 +202,13 @@ list_item_t* list_lookup_data( list_manager_t* list, void* data ) {
  * @return list_item_t*
  */
 list_item_t* list_lookup_item( list_manager_t* list, const list_item_t* item ) {
-  list_item_t* current;
-
   // check parameter
   if ( !list ) {
-    return NULL;
+    return nullptr;
   }
-  // populate current
-  current = list->first;
 
+  // populate current
+  list_item_t* current = list->first;
 
   // loop through list until end
   while ( current ) {
@@ -223,7 +220,7 @@ list_item_t* list_lookup_item( list_manager_t* list, const list_item_t* item ) {
   }
 
   // return not found
-  return NULL;
+  return nullptr;
 }
 
 /**
@@ -238,16 +235,14 @@ list_item_t* list_item_create( void* data ) {
   list_item_t* node = malloc( sizeof( list_item_t ) );
   // check malloc result
   if ( !node ) {
-    return NULL;
+    return nullptr;
   }
   // overwrite allocated memory with 0
   memset( ( void* )node, 0, sizeof( list_item_t ) );
-
   // populate created node
-  node->next = NULL;
-  node->previous = NULL;
+  node->next = nullptr;
+  node->previous = nullptr;
   node->data = data;
-
   // return created node
   return node;
 }
@@ -257,21 +252,18 @@ list_item_t* list_item_create( void* data ) {
  * @brief Method to get element from list like pop without removal
  *
  * @param list list to use
- * @return void* data of first element or NULL if empty
+ * @return void* data of first element or nullptr if empty
  */
 void* list_peek_front_data( list_manager_t* list ) {
-  list_item_t* first;
-
   // check parameter
   if ( !list ) {
-    return NULL;
+    return nullptr;
   }
   // get first element
-  first = list->first;
-
+  list_item_t* first = list->first;
   // handle empty list
   if ( !first ) {
-    return NULL;
+    return nullptr;
   }
   // return data of first element
   return first->data;
@@ -282,21 +274,18 @@ void* list_peek_front_data( list_manager_t* list ) {
  * @brief Method to get element from list like pop without removal
  *
  * @param list list to use
- * @return void* data of first element or NULL if empty
+ * @return void* data of first element or nullptr if empty
  */
 void* list_peek_back_data( list_manager_t* list ) {
-  list_item_t* last;
-
   // check parameter
   if ( !list ) {
-    return NULL;
+    return nullptr;
   }
   // get last element
-  last = list->last;
-
+  list_item_t* last = list->last;
   // handle empty list
   if ( !last ) {
-    return NULL;
+    return nullptr;
   }
   // return data of first element
   return last->data;
@@ -307,30 +296,27 @@ void* list_peek_back_data( list_manager_t* list ) {
  * @brief Method to pop element from list
  *
  * @param list list to use
- * @return void* data of first element or NULL if empty
+ * @return void* data of first element or nullptr if empty
  */
 void* list_pop_front_data( list_manager_t* list ) {
-  void* data;
-  list_item_t* first;
-
   // check parameter
   if ( !list ) {
-    return NULL;
+    return nullptr;
   }
   // get first element
-  first = list->first;
+  list_item_t* first = list->first;
 
   // handle empty list
   if ( !first ) {
-    return NULL;
+    return nullptr;
   }
 
   // cache data of first element
-  data = first->data;
+  void* data = first->data;
   // change previous of next element if existing
   if ( first->next ) {
     // change previous
-    first->next->previous = NULL;
+    first->next->previous = nullptr;
   }
 
   // change list to next to remove first element from list
@@ -351,30 +337,27 @@ void* list_pop_front_data( list_manager_t* list ) {
  * @brief Method to pop element from list
  *
  * @param list list to use
- * @return void* data of first element or NULL if empty
+ * @return void* data of first element or nullptr if empty
  */
 void* list_pop_back_data( list_manager_t* list ) {
-  void* data;
-  list_item_t* last;
-
   // check parameter
   if ( !list ) {
-    return NULL;
+    return nullptr;
   }
   // get last element
-  last = list->last;
+  list_item_t* last = list->last;
 
   // handle empty list
   if ( !last ) {
-    return NULL;
+    return nullptr;
   }
 
   // cache data of first element
-  data = last->data;
+  void* data = last->data;
   // change next of previous element if existing
   if ( last->previous ) {
     // change previous
-    last->previous->next = NULL;
+    last->previous->next = nullptr;
   }
 
   // change list to next to remove first element from list
@@ -450,7 +433,7 @@ bool list_push_front_data( list_manager_t* list, void* data ) {
 
   // overwrite first element within list pointer
   list->first = node;
-  // set last element if NULL
+  // set last element if invalid
   if ( !list->last ) {
     list->last = list->first;
   }
@@ -494,7 +477,7 @@ bool list_push_back_data( list_manager_t* list, void* data ) {
 
   // overwrite last element within list pointer
   list->last = node;
-  // set first element if NULL
+  // set first element if invalid
   if ( !list->first ) {
     list->first = list->last;
   }
@@ -503,15 +486,51 @@ bool list_push_back_data( list_manager_t* list, void* data ) {
 }
 
 /**
- * @fn bool list_remove_item(list_manager_t*, list_item_t*)
+ * @fn bool list_push_after_data(struct list_manager*, void*, void*)
+ * @brief Function to insert data after data element if found
+ * @param list list to manipulate
+ * @param after data where new data shall be added as next
+ * @param data data to be added
+ * @return
+ */
+bool list_push_after_data( struct list_manager* list, void* after, void* data ) {
+  // handle invalid parameter
+  if ( ! list || ! data || ! after ) {
+    return false;
+  }
+  // get item where to insert
+  list_item_t* after_item = list_lookup_data( list, after );
+  // handle not found
+  if ( ! after_item ) {
+    return false;
+  }
+  // create new node
+  list_item_t* node = list_item_create( data );
+  // handle error
+  if ( !node ) {
+    return false;
+  }
+  // insert after found item
+  node->next = after_item->next;
+  if ( after_item->next ) {
+    after_item->next->previous = node;
+  }
+  node->previous = after_item;
+  after_item->next = node;
+  return true;
+}
+
+/**
+ * @fn bool list_remove_item(list_manager_t*, list_item_t*, bool)
  * @brief Remove list item
  *
  * @param list
  * @param item
+ * @param cleanup
  * @return true
  * @return false
  */
-bool list_remove_item( list_manager_t* list, list_item_t* item ) {
+bool list_remove_item( list_manager_t* list, list_item_t* item, const bool cleanup ) {
   // handle invalid parameter
   if ( !list || !item ) {
     return false;
@@ -541,20 +560,25 @@ bool list_remove_item( list_manager_t* list, list_item_t* item ) {
   }
 
   // free list item
-  list->cleanup( item );
+  if ( cleanup ) {
+    list->cleanup( item );
+  } else {
+    free( item );
+  }
   return true;
 }
 
 /**
- * @fn bool list_remove_data(list_manager_t*, void*)
+ * @fn bool list_remove_data(list_manager_t*, void*, bool)
  * @brief Remove list item
  *
  * @param list
  * @param data
+ * @param cleanup
  * @return true
  * @return false
  */
-bool list_remove_data( list_manager_t* list, void* data ) {
+bool list_remove_data( list_manager_t* list, void* data, const bool cleanup ) {
   // handle invalid parameter
   if ( !list || !data ) {
     return false;
@@ -586,7 +610,11 @@ bool list_remove_data( list_manager_t* list, void* data ) {
   }
 
   // free list item
-  list->cleanup( item );
+  if ( cleanup ) {
+    list->cleanup( item );
+  } else {
+    free( item );
+  }
   return true;
 }
 
@@ -673,7 +701,7 @@ list_item_t* list_get_item_at_pos( list_manager_t* list, size_t position ) {
   }
   // handle mismatch / overflow
   if ( to_index != position ) {
-    return NULL;
+    return nullptr;
   }
   // return item
   return current;

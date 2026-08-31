@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,6 +22,7 @@
 #include "../../../../../lib/stdlib.h"
 #include "../../../../../lib/assert.h"
 #include "../../../../../panic.h"
+#include "../../../../../cache.h"
 #include "../../../../../entry.h"
 #if defined( PRINT_MM_VIRT )
   #include "../../../../../lib/inttypes.h"
@@ -124,15 +125,13 @@ __bootstrap void v7_short_startup_setup( void ) {
  * @param phys physical address
  * @param virt virtual address
  */
-__bootstrap void v7_short_startup_map( uintptr_t phys, uintptr_t virt ) {
-  uint32_t x = virt >> 20;
-  uint32_t y = phys >> 20;
-
-  sd_context_section_t* sec = &initial_context.section[ x ];
-  sec->data.type = SD_TTBR_TYPE_SECTION;
-  sec->data.execute_never = 0;
-  sec->data.access_permission_0 = SD_MAC_APX0_PRIVILEGED_RW;
-  sec->data.frame = y & 0xFFF;
+__bootstrap void v7_short_startup_map( const uintptr_t phys, const uintptr_t virt ) {
+  const uint32_t x = virt >> 20;
+  const uint32_t y = phys >> 20;
+  initial_context.section[ x ].data.type = SD_TTBR_TYPE_SECTION;
+  initial_context.section[ x ].data.execute_never = 0;
+  initial_context.section[ x ].data.access_permission_0 = SD_MAC_APX0_PRIVILEGED_RW;
+  initial_context.section[ x ].data.frame = y & 0xFFF;
 }
 
 /**
@@ -191,6 +190,11 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
 
   // stop here if not initialized
   if ( true != virt_init_get() ) {
+    // map initially
+    for ( size_t i = start; i < start + size; i += PAGE_SIZE ) {
+      virt_startup_map( i, i );
+    }
+    // return start address
     return start;
   }
 
@@ -422,7 +426,7 @@ static uint64_t get_temporary_mapping( uintptr_t addr ) {
  */
 static uintptr_t get_new_table( uintptr_t table ) {
   // static address and remaining amount
-  static uintptr_t* addr = NULL;
+  static uintptr_t* addr = nullptr;
   static size_t max_addr;
   static size_t free_addr;
 
@@ -696,7 +700,7 @@ uint64_t v7_short_create_table(
     return tbl;
   }
 
-  // invalid type => NULL
+  // invalid type => nullptr
   return 0;
 }
 
@@ -972,6 +976,8 @@ bool v7_short_set_context( virt_context_t* ctx ) {
   ) {
     return false;
   }
+  // invalidate data cache
+  cache_invalidate_save();
   // user context handling
   if ( VIRT_CONTEXT_TYPE_USER == ctx->type ) {
     // debug output
@@ -1012,6 +1018,10 @@ bool v7_short_set_context( virt_context_t* ctx ) {
     #endif
   }
 
+  // ensure ttbr write is finished
+  barrier_data_sync();
+  barrier_instruction_sync();
+
   return true;
 }
 
@@ -1044,11 +1054,11 @@ void v7_short_flush_complete( void ) {
   __asm__ __volatile__( "mcr p15, 0, %0, c8, c6, 0" : : "r" ( 0 ) );
   // invalidate entire instruction tlb
   __asm__ __volatile__( "mcr p15, 0, %0, c8, c5, 0" : : "r" ( 0 ) );
+  // invalidate instruction cache
+  cache_invalidate_instruction_cache();
   // data synchronization barrier
   barrier_data_sync();
   barrier_instruction_sync();
-  // invalidate data cache
-  cache_invalidate_save();
 }
 
 /**
@@ -1174,17 +1184,19 @@ virt_context_t* v7_short_create_context( virt_context_type_t type ) {
   // reserve space for context
   uint64_t phys;
   if ( !virt_init_get() ) {
-    phys = ( uintptr_t )aligned_alloc( alignment, size );
+    void* tmp = aligned_alloc( alignment, size );
     // handle error
-    if ( ! phys ) {
-      return NULL;
+    if ( ! tmp ) {
+      return nullptr;
     }
+    memset( tmp, 0, size );
+    phys = ( uintptr_t )tmp;
     phys = VIRT_2_PHYS( phys );
   } else {
     phys = phys_find_free_page_range( alignment, size, PHYS_MEMORY_TYPE_NORMAL );
     // handle error
     if ( INVALID_ADDRESS == phys ) {
-      return NULL;
+      return nullptr;
     }
   }
   uintptr_t ctx = ( uintptr_t )phys;
@@ -1204,7 +1216,7 @@ virt_context_t* v7_short_create_context( virt_context_type_t type ) {
     } else {
       phys_free_page_range( ctx, size );
     }
-    return NULL;
+    return nullptr;
   }
   // initialize with zero
   memset( ( void* )tmp, 0, size );
@@ -1223,7 +1235,7 @@ virt_context_t* v7_short_create_context( virt_context_type_t type ) {
     } else {
       phys_free_page_range( ctx, size );
     }
-    return NULL;
+    return nullptr;
   }
 
   // debug output
@@ -1409,13 +1421,13 @@ bool v7_short_fork_global_directory(
  * @brief Fork virtual context without long page address extension
  * @param ctx context to fork
  * @param proc forked process structure
- * @return forked context or NULL
+ * @return forked context or nullptr
  */
 virt_context_t* v7_short_fork_context( virt_context_t* ctx, task_process_t* proc ) {
   // create new context
   virt_context_t* forked = virt_create_context( ctx->type );
   if ( ! forked ) {
-    return NULL;
+    return nullptr;
   }
   memcpy( forked->bitmap, ctx->bitmap, ctx->bitmap_length );
   forked->bitmap_length = ctx->bitmap_length;
@@ -1426,7 +1438,7 @@ virt_context_t* v7_short_fork_context( virt_context_t* ctx, task_process_t* proc
   // handle error
   if ( 0 == ctx_to_fork ) {
     assert( virt_destroy_context( forked, false ) )
-    return NULL;
+    return nullptr;
   }
   // map new context temporarily
   uintptr_t ctx_forked = map_temporary(
@@ -1435,7 +1447,7 @@ virt_context_t* v7_short_fork_context( virt_context_t* ctx, task_process_t* proc
   if ( 0 == ctx_forked ) {
     unmap_temporary( ctx_to_fork, SD_TTBR_SIZE_2G );
     assert( virt_destroy_context( forked, false ) )
-    return NULL;
+    return nullptr;
   }
   // clear page
   memset( ( void* )ctx_forked, 0, SD_TTBR_SIZE_2G );
@@ -1449,7 +1461,7 @@ virt_context_t* v7_short_fork_context( virt_context_t* ctx, task_process_t* proc
     unmap_temporary( ctx_to_fork, SD_TTBR_SIZE_2G );
     unmap_temporary( ctx_forked, SD_TTBR_SIZE_2G );
     assert( virt_destroy_context( forked, false ) )
-    return NULL;
+    return nullptr;
   }
 
   // unmap temporary
@@ -1538,6 +1550,8 @@ bool v7_short_destroy_context( virt_context_t* ctx, bool unmap_only ) {
   ) {
     return false;
   }
+  // invalidate caches
+  cache_invalidate_save();
   // map temporarily
   sd_context_half_t* ctx_mapped = ( sd_context_half_t* )map_temporary(
     ( uintptr_t )ctx->context, SD_TTBR_SIZE_2G );
@@ -1666,7 +1680,7 @@ bool v7_short_is_mapped_in_context( virt_context_t* ctx, uintptr_t addr ) {
   #endif
   // map temporary
   table = ( sd_page_table_t* )map_temporary( ( uintptr_t )table, SD_TBL_SIZE );
-  // not mapped if null
+  // not mapped if nullptr
   if ( ! table ) {
     return false;
   }
@@ -1724,7 +1738,7 @@ uint64_t v7_short_get_mapped_address_in_context(
   #endif
   // map temporary
   table = ( sd_page_table_t* )map_temporary( ( uintptr_t )table, SD_TBL_SIZE );
-  // not mapped if null
+  // not mapped if nullptr
   if ( ! table ) {
     return INVALID_ADDRESS;
   }

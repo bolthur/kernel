@@ -3,7 +3,7 @@ AC_PREREQ([2.71])
 
 AC_INIT([bolthur-application], [0.1.0-dev], [https://github.com/bolthur/kernel/issues], [bolthur-application], [https://github.com/bolthur/kernel])
 
-AC_COPYRIGHT([Copyright (C) 2018 - 2025 bolthur project])
+AC_COPYRIGHT([Copyright (C) 2018 - 2026 bolthur project])
 
 AC_CONFIG_AUX_DIR([_aux/config])
 AC_CONFIG_MACRO_DIR([../../build-aux/m4])
@@ -49,6 +49,24 @@ AC_ARG_WITH(
     [compile with debug symbols]
   ),
   [with_debug_debug_symbols=yes]
+)
+
+AC_ARG_WITH(
+  [ubsan],
+  AS_HELP_STRING(
+    [--with-ubsan],
+    [compile with ubsan enabled]
+  ),
+  [with_ubsan_enabled=yes]
+)
+
+AC_ARG_WITH(
+  [asan],
+  AS_HELP_STRING(
+    [--with-asan],
+    [compile with asan enabled]
+  ),
+  [with_asan_enabled=yes]
 )
 
 # enable output and enable remote debugging together is not allowed
@@ -133,6 +151,8 @@ AM_CONDITIONAL([IS64], [test $executable_format -eq 64])
 
 AC_CONFIG_FILES([
   Makefile
+  bin/Makefile
+  bin/login/Makefile
   usr/Makefile
   usr/lib/Makefile
   usr/lib/ld-bolthur/Makefile

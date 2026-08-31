@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../mountpoint/node.h"
 #include "../ioctl/handler.h"
 #include "../../../../library/collection/ht/ht.h"
@@ -30,8 +31,8 @@
 /**
  * @brief Hash table for boot requests
  */
-ht_t* boot_hash_table = NULL;
-ht_t* finished_table = NULL;
+ht_t* boot_hash_table = nullptr;
+ht_t* finished_table = nullptr;
 
 /**
  * @fn void rpc_handle_boot_init_async(size_t, pid_t, size_t, size_t)
@@ -56,14 +57,14 @@ void rpc_handle_boot_init_async(
     return;
   }
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
   void* response_data = bolthur_rpc_fetch_from_mailbox(
-    data_info, &data_size, true, NULL );
+    data_info, &data_size, true, nullptr );
   if ( ! response_data ) {
     response.result = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
@@ -86,7 +87,7 @@ void rpc_handle_boot_init_async(
     return;
   }
   // transform original origin to string
-  snprintf( str, sizeof( *str ) * 256, "%zu", async_data->original_origin );
+  snprintf( str, sizeof( *str ) * 256, "%d", async_data->original_origin );
   // get table
   ht_t* table = ht_get( boot_hash_table, str );
   if ( ! table ) {
@@ -101,7 +102,7 @@ void rpc_handle_boot_init_async(
     return;
   }
   // transform current origin to string
-  snprintf( str, sizeof( *str ) * 256, "%zu", origin );
+  snprintf( str, sizeof( *str ) * 256, "%d", origin );
   // unset entry
   ht_unset( table, str );
   // destroyed flag
@@ -109,7 +110,7 @@ void rpc_handle_boot_init_async(
   // handle length 0
   if ( ! table->length ) {
     // get original origin
-    snprintf( str, sizeof( *str ) * 256, "%zu", async_data->original_origin );
+    snprintf( str, sizeof( *str ) * 256, "%d", async_data->original_origin );
     // unset table
     ht_unset( boot_hash_table, str );
     // destroy hash table
@@ -118,7 +119,7 @@ void rpc_handle_boot_init_async(
     finished = true;
   }
   // get finished table
-  snprintf( str, sizeof( *str ) * 256, "%zu", async_data->original_origin );
+  snprintf( str, sizeof( *str ) * 256, "%d", async_data->original_origin );
   int* data = ht_get( finished_table, str );
   if ( ! data ) {
     // free string
@@ -152,7 +153,7 @@ void rpc_handle_boot_init_async(
   // handle finished
   if ( finished ) {
     // transform origin
-    snprintf( str, sizeof( *str ) * 256, "%zu", async_data->original_origin );
+    snprintf( str, sizeof( *str ) * 256, "%d", async_data->original_origin );
     // unset finished table entry
     ht_unset( finished_table, str );
     // populate result
@@ -187,18 +188,18 @@ void rpc_handle_boot_init(
   // default response
   vfs_boot_init_response_t response = { .result = -EINVAL };
   // handle no data
-  if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  if ( ! data_info ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
   vfs_boot_init_request_t* request = bolthur_rpc_fetch_from_mailbox(
-    data_info, &data_size, true, NULL );
+    data_info, &data_size, true, nullptr );
   // handle error
   if ( ! request ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // allocate finished table
@@ -212,7 +213,7 @@ void rpc_handle_boot_init(
       // free request
       free( request );
       // return error
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       // return execution
       return;
     }
@@ -228,7 +229,7 @@ void rpc_handle_boot_init(
       // free request
       free( request );
       // return error
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       // return execution
       return;
     }
@@ -241,20 +242,21 @@ void rpc_handle_boot_init(
     // free request
     free( request );
     // return error
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     // return execution
     return;
   }
   // transform origin into string
-  snprintf( str, sizeof( *str ) * 256, "%zu", origin );
+  snprintf( str, sizeof( *str ) * 256, "%d", origin );
   int* data = malloc( sizeof( int ) );
   if ( ! data ) {
     // set result
     response.result = -ENOMEM;
     // free request
     free( request );
+    free( str );
     // return error
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     // return execution
     return;
   }
@@ -266,9 +268,10 @@ void rpc_handle_boot_init(
     response.result = -EIO;
     // free request
     free( request );
+    free( str );
     free( data );
     // return error
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     // return execution
     return;
   }
@@ -281,9 +284,10 @@ void rpc_handle_boot_init(
     free( request );
     // remove entry from finished table
     ht_unset( finished_table, str );
+    free( str );
     free( data );
     // return error
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     // return execution
     return;
   }
@@ -300,7 +304,7 @@ void rpc_handle_boot_init(
     free( request );
     free( str );
     // return error
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     // return execution
     return;
   }
@@ -310,8 +314,6 @@ void rpc_handle_boot_init(
     if ( 0 != strncmp( n->name, "/dev", strlen( "/dev" ) ) ) {
       continue;
     }
-    // debug output
-    EARLY_STARTUP_PRINT( "mountpoint: %s\r\n", n->name )
     // transfer pid to string
     snprintf( str, sizeof( *str ) * 256, "%d", n->pid );
     // push to table
@@ -328,7 +330,7 @@ void rpc_handle_boot_init(
       free( request );
       free( str );
       // return error
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       // return execution
       return;
     }
@@ -339,7 +341,9 @@ void rpc_handle_boot_init(
   bool raised = false;
   // loop while hash table has next
   while ( ht_next( &it ) ) {
-    EARLY_STARTUP_PRINT( "it.value = %d\r\n", ( pid_t )it.value );
+    #if defined( VFS_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "it.value = %d\r\n", ( pid_t )it.value );
+    #endif
     // call rpc
     bolthur_rpc_raise(
       type,
@@ -352,7 +356,7 @@ void rpc_handle_boot_init(
       data_size,
       origin,
       data_info,
-      NULL,
+      nullptr,
       false
     );
     // handle error
@@ -369,7 +373,7 @@ void rpc_handle_boot_init(
       free( request );
       free( str );
       // return error
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       // return execution
       return;
     }
@@ -384,6 +388,6 @@ void rpc_handle_boot_init(
     // set result to success
     response.result = 0;
     // return
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
   }
 }

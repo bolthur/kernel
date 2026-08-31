@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,7 +20,6 @@
 #ifndef _INITRD_H
 #define _INITRD_H
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -31,5 +30,6 @@ size_t initrd_get_size( void );
 void initrd_set_size( size_t );
 bool initrd_exist( void );
 void initrd_startup_init( void );
+void initrd_unmap( void );
 
 #endif

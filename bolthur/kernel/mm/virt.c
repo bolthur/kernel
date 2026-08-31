@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -58,9 +58,9 @@ void virt_init( void ) {
   if ( virt_initialized ) {
     return;
   }
-  // set global context to null
-  virt_current_kernel_context = NULL;
-  virt_current_user_context = NULL;
+  // set global context to nullptr
+  virt_current_kernel_context = nullptr;
+  virt_current_user_context = nullptr;
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "arch init!\r\n" )
@@ -106,10 +106,10 @@ void virt_init( void ) {
   #endif
 
   // map initial heap similar to normal heap non cachable
-  uintptr_t phys_bss_start = VIRT_2_PHYS( &__bss_start );
-  uintptr_t phys_bss_end = VIRT_2_PHYS( &__bss_end );
-  uintptr_t phys_data_start = VIRT_2_PHYS( &__data_start );
-  uintptr_t phys_data_end = VIRT_2_PHYS( &__data_end );
+  const uintptr_t phys_bss_start = VIRT_2_PHYS( &__bss_start );
+  const uintptr_t phys_bss_end = VIRT_2_PHYS( &__bss_end );
+  const uintptr_t phys_data_start = VIRT_2_PHYS( &__data_start );
+  const uintptr_t phys_data_end = VIRT_2_PHYS( &__data_end );
 
   // map from start to end addresses as used
   while ( start < end ) {
@@ -262,11 +262,11 @@ bool virt_init_get( void ) {
  */
 bool virt_is_mapped_in_context_range(
   virt_context_t* ctx,
-  uintptr_t address,
-  size_t size
+  const uintptr_t address,
+  const size_t size
 ) {
   uintptr_t start = address;
-  uintptr_t end = start + size;
+  const uintptr_t end = start + size;
   // loop until end
   while ( start < end ) {
     // return false if not mapped
@@ -289,9 +289,9 @@ bool virt_is_mapped_in_context_range(
  * @return true range is completely mapped
  * @return false range is not or incompletely mapped
  */
-bool virt_is_mapped_range( uintptr_t address, size_t size ) {
+bool virt_is_mapped_range( const uintptr_t address, const size_t size ) {
   uintptr_t start = address;
-  uintptr_t end = start + size;
+  const uintptr_t end = start + size;
   // loop until end
   while ( start < end ) {
     // return false if not mapped
@@ -318,12 +318,12 @@ bool virt_is_mapped_range( uintptr_t address, size_t size ) {
  */
 bool virt_unmap_address_range(
   virt_context_t* ctx,
-  uintptr_t address,
-  size_t size,
-  bool free_phys
+  const uintptr_t address,
+  const size_t size,
+  const bool free_phys
 ) {
   uintptr_t start = address;
-  uintptr_t end = start + size;
+  const uintptr_t end = start + size;
   // loop until end
   while ( start < end ) {
     // unmap virtual
@@ -348,11 +348,11 @@ bool virt_unmap_address_range(
 uintptr_t virt_find_free_page_range(
   virt_context_t* ctx,
   size_t size,
-  uintptr_t start
+  const uintptr_t start
 ) {
   // get min and max by context
   uintptr_t min = virt_get_context_min_address( ctx );
-  uintptr_t max = virt_get_context_max_address( ctx );
+  const uintptr_t max = virt_get_context_max_address( ctx );
 
   // handle start
   if (
@@ -379,8 +379,8 @@ uintptr_t virt_find_free_page_range(
   uintptr_t address = 0;
   bool stop = false;
 
-  uintptr_t min_address = virt_get_context_min_address( ctx );
-  uintptr_t frame = ( min - min_address ) / PAGE_SIZE;
+  const uintptr_t min_address = virt_get_context_min_address( ctx );
+  const uintptr_t frame = ( min - min_address ) / PAGE_SIZE;
   uint32_t index = PAGE_INDEX( frame );
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "index = %#"PRIu32"\r\n", index )
@@ -389,7 +389,7 @@ uintptr_t virt_find_free_page_range(
   #endif
   for ( uint32_t idx = index; idx < ctx->bitmap_length && !stop; idx++ ) {
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "ctx->bitmap[ %d ] = %#"PRIx32"\r\n", idx, ctx->bitmap[ idx ] )
+      DEBUG_OUTPUT( "ctx->bitmap[ %"PRIu32" ] = %#"PRIx32"\r\n", idx, ctx->bitmap[ idx ] )
     #endif
     // skip completely used entries
     if ( PHYS_ALL_PAGES_OF_INDEX_USED == ctx->bitmap[ idx ] ) {
@@ -445,15 +445,15 @@ bool virt_map_address_range(
   virt_context_t* ctx,
   uintptr_t address,
   uint64_t phys,
-  size_t size,
-  virt_memory_type_t type,
-  uint32_t page
+  const size_t size,
+  const virt_memory_type_t type,
+  const uint32_t page
 ) {
   // mark range as used
   phys_use_page_range( phys, size );
   // determine end
   uintptr_t start = address;
-  uintptr_t end = address + size;
+  const uintptr_t end = address + size;
   // loop and map
   while ( start < end ) {
     if ( ! virt_map_address( ctx, start, phys, type, page ) ) {
@@ -486,13 +486,13 @@ bool virt_map_address_range(
 bool virt_map_address_range_random(
   virt_context_t* ctx,
   uintptr_t address,
-  size_t size,
-  virt_memory_type_t type,
-  uint32_t page
+  const size_t size,
+  const virt_memory_type_t type,
+  const uint32_t page
 ) {
   // determine end
   uintptr_t start = address;
-  uintptr_t end = start + size;
+  const uintptr_t end = start + size;
   // loop and map
   while ( start < end ) {
     // get physical page

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -32,7 +32,7 @@ void barrier_data_mem( void ) {
  * @brief Data sync barrier invalidation
  */
 void barrier_data_sync( void ) {
-  __asm__( "dsb" ::: "memory" );
+  __asm__( "dsb sy" ::: "memory" );
 }
 
 /**

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,7 +22,6 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <errno.h>
 #include <sys/bolthur.h>
 
@@ -30,12 +29,22 @@
 #define DEV_KILL DEV_START + 1
 
 typedef struct {
-  char path[ PATH_MAX ];
-  char args[];
+  size_t shm_id;
+  size_t data_size;
 } dev_command_start_t;
 
 typedef struct {
   char path[ PATH_MAX ];
+  char args[];
+} dev_command_start_data_t;
+
+typedef struct {
+  size_t shm_id;
+  size_t data_size;
 } dev_command_kill_t;
+
+typedef struct {
+  char path[ PATH_MAX ];
+} dev_command_kill_data_t;
 
 #endif

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 
 /**
  * @fn void rpc_handle_mount(size_t, pid_t, size_t, size_t)
@@ -44,31 +45,33 @@ void rpc_handle_umount(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "umount\r\n" )
+  #if defined( MOUNT_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "umount\r\n" )
+  #endif
   vfs_mount_response_t response = { .result = -ENOTSUP };
   // handle no data
-  if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  if ( ! data_info ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // fetch rpc data
   size_t data_size;
-  vfs_umount_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_umount_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   // handle error
   if ( ! request ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // validate strings
   if ( 0 == strlen( request->target ) ) {
     response.result = -EINVAL;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -76,8 +79,10 @@ void rpc_handle_umount(
   const int fd_auth = open( AUTHENTICATION_DEVICE, O_RDONLY );
   if ( -1 == fd_auth ) {
     response.result = -errno;
-    EARLY_STARTUP_PRINT( "UNABLE TO OPEN AUTHENTICATION DEVICE %s!\r\n", strerror( errno ) )
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    #if defined( MOUNT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "UNABLE TO OPEN AUTHENTICATION DEVICE %s!\r\n", strerror( errno ) )
+    #endif
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -85,8 +90,10 @@ void rpc_handle_umount(
   struct stat auth;
   if ( 0 != fstat( fd_auth, &auth ) ) {
     response.result = -errno;
-    EARLY_STARTUP_PRINT( "UNABLE TO QUERY STAT OF AUTHENTICATION DEVICE %s!\r\n", strerror( errno ) )
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    #if defined( MOUNT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "UNABLE TO QUERY STAT OF AUTHENTICATION DEVICE %s!\r\n", strerror( errno ) )
+    #endif
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     close( fd_auth );
     return;
@@ -100,34 +107,38 @@ void rpc_handle_umount(
     request->handler,
     request,
     sizeof( *request ),
-    NULL,
+    nullptr,
     type,
     request,
     sizeof( *request ),
     0,
     0,
-    NULL,
+    nullptr,
     false
   );
   if ( ! response_id ) {
-    EARLY_STARTUP_PRINT( "UNABLE TO ROUTE MOUNT REQUEST %s!\r\n", strerror( errno ) )
+    #if defined( MOUNT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "UNABLE TO ROUTE MOUNT REQUEST %s!\r\n", strerror( errno ) )
+    #endif
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
   // get response
-  vfs_umount_response_t* response_data = bolthur_rpc_fetch_from_mailbox( response_id, &data_size, true, NULL );
+  vfs_umount_response_t* response_data = bolthur_rpc_fetch_from_mailbox( response_id, &data_size, true, nullptr );
   // handle error
   if ( ! response_data ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
-  EARLY_STARTUP_PRINT( "response_data->result = %d\r\n", response_data->result )
+  #if defined( MOUNT_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "response_data->result = %d\r\n", response_data->result )
+  #endif
   // return umount response
-  bolthur_rpc_return( type, response_data, sizeof( *response_data ), NULL, 0 );
+  bolthur_rpc_return( type, response_data, sizeof( *response_data ), nullptr, 0 );
   free( request );
   free( response_data );
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,7 +23,7 @@
 #include <string.h>
 #include "handler.h"
 
-static avl_tree_t* ioctl_tree = NULL;
+static avl_tree_t* ioctl_tree = nullptr;
 
 /**
  * @fn int32_t compare_ioctl(const avl_node_t*, const avl_node_t*)
@@ -37,8 +37,8 @@ static int32_t compare_ioctl(
   const avl_node_t* node_a,
   const avl_node_t* node_b
 ) {
-  ioctl_tree_entry_t* container_a = IOCTL_HANDLER_GET_ENTRY( node_a );
-  ioctl_tree_entry_t* container_b = IOCTL_HANDLER_GET_ENTRY( node_b );
+  auto const container_a = IOCTL_HANDLER_GET_ENTRY( node_a );
+  auto const container_b = IOCTL_HANDLER_GET_ENTRY( node_b );
   // return 0 if equal
   if ( container_a->pid == container_b->pid ) {
     return 0;
@@ -59,8 +59,8 @@ static int32_t lookup_ioctl(
   const avl_node_t* node,
   const void* value
 ) {
-  pid_t pid = ( pid_t )value;
-  ioctl_tree_entry_t* container = IOCTL_HANDLER_GET_ENTRY( node );
+  const pid_t pid = ( pid_t )value;
+  auto const container = IOCTL_HANDLER_GET_ENTRY( node );
   // return 0 if equal
   if ( container->pid == pid ) {
     return 0;
@@ -76,7 +76,7 @@ static int32_t lookup_ioctl(
  * @param node
  */
 static void cleanup_ioctl( avl_node_t* node ) {
-  ioctl_tree_entry_t* item = IOCTL_HANDLER_GET_ENTRY( node );
+  auto item = IOCTL_HANDLER_GET_ENTRY( node );
   // destroy tree
   avl_destroy_tree( item->tree );
   // free item
@@ -95,8 +95,8 @@ static int32_t compare_container(
   const avl_node_t* node_a,
   const avl_node_t* node_b
 ) {
-  ioctl_container_t* container_a = IOCTL_HANDLER_GET_CONTAINER( node_a );
-  ioctl_container_t* container_b = IOCTL_HANDLER_GET_CONTAINER( node_b );
+  auto const container_a = IOCTL_HANDLER_GET_CONTAINER( node_a );
+  auto const container_b = IOCTL_HANDLER_GET_CONTAINER( node_b );
   // return 0 if equal
   if ( container_a->command == container_b->command ) {
     return 0;
@@ -117,8 +117,8 @@ static int32_t lookup_container(
   const avl_node_t* node,
   const void* value
 ) {
-  uint32_t command = ( uint32_t )value;
-  ioctl_container_t* container = IOCTL_HANDLER_GET_CONTAINER( node );
+  const uint32_t command = ( uint32_t )value;
+  auto const container = IOCTL_HANDLER_GET_CONTAINER( node );
   // return 0 if equal
   if ( container->command == command ) {
     return 0;
@@ -134,7 +134,7 @@ static int32_t lookup_container(
  * @param node
  */
 static void cleanup_container( avl_node_t* node ) {
-  ioctl_container_t* item = IOCTL_HANDLER_GET_CONTAINER( node );
+  auto const item = IOCTL_HANDLER_GET_CONTAINER( node );
   // free item
   free( item );
 }
@@ -160,12 +160,12 @@ bool ioctl_handler_init( void ) {
  * @brief Helper for command lookup
  *
  * @param command
- * @param handle
+ * @param process
  * @return
  */
 ioctl_container_t* ioctl_lookup_command(
-  uint32_t command,
-  pid_t process
+  const uint32_t command,
+  const pid_t process
 ) {
   // try to find command within tree before querying info
   avl_node_t* found = avl_find_by_data(
@@ -174,10 +174,10 @@ ioctl_container_t* ioctl_lookup_command(
   );
   // handle nothing found
   if ( ! found ) {
-    return NULL;
+    return nullptr;
   }
   // get entry
-  ioctl_tree_entry_t* entry = IOCTL_HANDLER_GET_ENTRY( found );
+  auto const entry = IOCTL_HANDLER_GET_ENTRY( found );
   // lookup command
   found = avl_find_by_data(
     entry->tree,
@@ -185,7 +185,7 @@ ioctl_container_t* ioctl_lookup_command(
   );
   // handle nothing found
   if ( ! found ) {
-    return NULL;
+    return nullptr;
   }
   // return found entry
   return IOCTL_HANDLER_GET_CONTAINER( found );
@@ -196,12 +196,12 @@ ioctl_container_t* ioctl_lookup_command(
  * @brief Push command for process
  *
  * @param command
- * @param handle
+ * @param process
  * @return
  */
 bool ioctl_push_command(
-  uint32_t command,
-  pid_t process
+  const uint32_t command,
+  const pid_t process
 ) {
   // treat existing commands already pushed / success
   if ( ioctl_lookup_command( command, process ) ) {
@@ -212,7 +212,7 @@ bool ioctl_push_command(
     ioctl_tree,
     ( void* )process
   );
-  ioctl_tree_entry_t* entry = NULL;
+  ioctl_tree_entry_t* entry = nullptr;
   // handle existing tree
   if ( found ) {
     // get entry

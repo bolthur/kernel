@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,9 +21,11 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 #include <sys/bolthur.h>
 #include <unistd.h>
 #include "../rpc.h"
+#include "../global.h"
 
 /**
  * @fn void rpc_handle_ioctl(size_t, pid_t, size_t, size_t)
@@ -45,23 +47,41 @@ void rpc_handle_ioctl(
   // dummy error response
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // handle no data
-  if( ! data_info ) {
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL, 0 );
+  if ( ! data_info ) {
+    #if defined( TERMINAL_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "no data info\r\n" )
+    #endif
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
+    return;
+  }
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    #if defined( TERMINAL_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "invalid origin\r\n" )
+    #endif
+    err_response.status = -EINVAL;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, false, nullptr );
   if ( ! request ) {
+    #if defined( TERMINAL_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "no message found\r\n" )
+    #endif
     err_response.status = -errno;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // get local handler
   const rpc_handler_t handler = bolthur_rpc_get( request->command );
   if ( ! handler ) {
+    #if defined( TERMINAL_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "no handler found\r\n" )
+    #endif
     err_response.status = -EIO;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }

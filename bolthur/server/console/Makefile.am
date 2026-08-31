@@ -4,17 +4,28 @@ AM_CFLAGS = -DPROGRAM_NAME=\"console\"
 
 bin_PROGRAMS = console
 console_DEPENDENCIES = \
-  ${abs_top_builddir}/../library/collection/list/liblist.la
+  ${abs_top_builddir}/../library/collection/list/liblist.la \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
 console_LDADD = \
-  ${abs_top_builddir}/../library/collection/list/liblist.la
+  ${abs_top_builddir}/../library/collection/list/liblist.la \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
 console_SOURCES = \
   rpc/custom/add.c \
+  rpc/custom/input.c \
   rpc/custom/select.c \
+  rpc/termios/get.c \
+  rpc/termios/set.c \
+  rpc/close.c \
   rpc/exec.c \
   rpc/exit.c \
   rpc/fork.c \
   rpc/init.c \
+  rpc/open.c \
+  rpc/read.c \
   rpc/write.c \
   console.c \
-  main.c
+  handler.c \
+  main.c \
+  queue.c \
+  terminal.c
 console_LDFLAGS = -all-static --static

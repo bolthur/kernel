@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -299,7 +299,7 @@ static void read_byte_from_string( const uint8_t** src, uint8_t* dest ) {
   uint8_t buf[ 3 ];
   memcpy( buf, *src, 2 );
   buf[ 2 ] = '\0';
-  *dest = ( uint8_t )extract_hex_value( buf, NULL );
+  *dest = ( uint8_t )extract_hex_value( buf, nullptr );
   *src += 2;
 }
 
@@ -402,7 +402,7 @@ void debug_gdb_handler_read_memory(
   const uint8_t* packet
 ) {
   // variables
-  uint8_t* buffer = NULL;
+  uint8_t* buffer = nullptr;
   uint8_t* p;
   uint8_t* next;
   uint32_t addr;
@@ -417,7 +417,7 @@ void debug_gdb_handler_read_memory(
     return;
   }
   // read length to read
-  length = extract_hex_value( next + 1, NULL );
+  length = extract_hex_value( next + 1, nullptr );
   // reserve buffer
   p = malloc( length * 2 + 1 );
   // handle not enough memory
@@ -484,7 +484,7 @@ void debug_gdb_handler_write_memory(
   */
   if ( 2 == length || 4 == length ) {
     // extract value to write
-    value = extract_hex_value( buffer, NULL );
+    value = extract_hex_value( buffer, nullptr );
     // write memory
     if ( ! write_memory_content( &value, address, length ) ) {
       debug_gdb_packet_send( ( uint8_t* )"E02" );
@@ -714,7 +714,7 @@ void debug_gdb_handle_event( [[maybe_unused]] event_origin_t origin, void* conte
   // Remove all breakpoints temporary
   debug_breakpoint_remove_step();
   // handle stop status
-  debug_gdb_handler_stop_status( context, NULL );
+  debug_gdb_handler_stop_status( context, nullptr );
 
   // loop with nop until flag is reset!
   while ( ! end_handler ) {
@@ -730,7 +730,7 @@ void debug_gdb_handle_event( [[maybe_unused]] event_origin_t origin, void* conte
   }
 
   // reset context
-  debug_gdb_set_context( NULL );
+  debug_gdb_set_context( nullptr );
   // set running flag
   handler_running = false;
 }

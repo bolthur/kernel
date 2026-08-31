@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,6 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "main.h"
 #include "lib/stdio.h"
 #include "lib/assert.h"
 #include "lib/tar.h"
@@ -39,9 +40,6 @@
 #endif
 #include "initrd.h"
 #include "rpc/generic.h"
-
-// prototype declaration to get rid of a warning
-void kernel_main( void );
 
 /**
  * @fn void kernel_main(void)
@@ -128,20 +126,24 @@ void kernel_main( void ) {
   tar_header_t* boot = tar_lookup_file( initrd_get_start_address(), "boot" );
   assert( boot )
   // Get file address and size
-  uintptr_t elf_file = ( uintptr_t )tar_file( boot );
+  const uintptr_t elf_file = ( uintptr_t )tar_file( boot );
 
   // Create process
   DEBUG_OUTPUT( "[bolthur/kernel -> process -> init] create ...\r\n" )
   task_process_t* proc = task_process_create( 0, 0 );
   assert( proc )
   // load flat image
-  uintptr_t init_entry = elf_load( elf_file, proc );
+  const uintptr_t init_entry = elf_load( elf_file, proc );
   assert( init_entry )
   // add thread
   assert( task_thread_create( init_entry, proc, 0 ) )
   // further init process preparation
   DEBUG_OUTPUT( "[bolthur/kernel -> process -> init] prepare ...\r\n" )
   assert( task_process_prepare_init( proc ) )
+
+  // unmap initrd in kernel
+  DEBUG_OUTPUT( "[bolthur/kernel -> initrd] unmap in kernel ...\r\n" )
+  initrd_unmap();
 
   // Setup timer
   DEBUG_OUTPUT( "[bolthur/kernel -> timer] initialize ...\r\n" )

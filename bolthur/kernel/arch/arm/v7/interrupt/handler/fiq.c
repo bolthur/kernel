@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -43,7 +43,7 @@ void vector_fast_interrupt_handler( cpu_register_context_t* cpu ) {
   nested_fast_interrupt++;
   assert( nested_fast_interrupt < INTERRUPT_NESTED_MAX )
   // get event origin
-  event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
+  const event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
   cpu = interrupt_get_context( cpu );
   // debug output

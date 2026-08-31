@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -24,8 +24,9 @@
 #include <sys/bolthur.h>
 #include "rpc.h"
 #include "stat.h"
-#include "../../libhelper.h"
+#include "global.h"
 #include "../../libpartition.h"
+#include "../../../library/vfs/dev.h"
 
 /**
  * @fn int main(int, char*[])
@@ -37,32 +38,48 @@
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // print something
-  STARTUP_PRINT( "fat fs server processing!\r\n" )
+  #if defined( FAT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "fat fs server processing!\r\n" )
+  #endif
   // register rpc handler
-  STARTUP_PRINT( "bind rpc handler!\r\n" )
+  #if defined( FAT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "bind rpc handler!\r\n" )
+  #endif
   if ( ! rpc_init() ) {
-    STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
+    #if defined( FAT_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
+    #endif
     return -1;
   }
 
   // setup stat cache
-  STARTUP_PRINT( "Setup stat cache!\r\n" )
+  #if defined( FAT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Setup stat cache!\r\n" )
+  #endif
   if ( ! stat_node_setup() ) {
-    STARTUP_PRINT( "Unable to setup stat cache!\r\n" )
+    #if defined( FAT_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to setup stat cache!\r\n" )
+    #endif
     return -1;
   }
 
   // open partition interface
-  STARTUP_PRINT( "Opening /dev/partition\r\n" )
+  #if defined( FAT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Opening /dev/partition\r\n" )
+  #endif
   int fd = open( "/dev/partition", O_RDWR );
   // handle error
   if ( -1 == fd ) {
-    STARTUP_PRINT( "Unable to open /dev/partition\r\n" )
+    #if defined( FAT_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to open /dev/partition\r\n" )
+    #endif
     return -1;
   }
 
   // enable rpc
-  STARTUP_PRINT( "Set rpc ready flag\r\n" )
+  #if defined( FAT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Set rpc ready flag\r\n" )
+  #endif
   _syscall_rpc_set_ready( true );
 
   // allocate space for ioctl
@@ -79,7 +96,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   reg->process = getpid();
 
   // perform ioctl
-  int result = ioctl(
+  const int result = ioctl(
     fd,
     IOCTL_BUILD_REQUEST(
       PARTITION_REGISTER_HANDLER,
@@ -94,11 +111,15 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     close( fd );
     return -1;
   }
-  STARTUP_PRINT( "register result: %d\r\n", result )
+  #if defined( FAT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "register result: %d\r\n", result )
+  #endif
 
   // add device file
-  if ( !dev_add_file( "/dev/fat", NULL, 0 ) ) {
-    STARTUP_PRINT( "Unable to add dev fs\r\n" )
+  if ( ! vfs_dev_add_file( "/dev/fat", nullptr, 0, nullptr ) ) {
+    #if defined( FAT_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    #endif
     free( reg );
     close( fd );
     return -1;
@@ -107,6 +128,8 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   /// FIXME: REGISTER FAT12, FAT16, ExFAT and VFAT
 
   // wait for rpc
-  STARTUP_PRINT( "Wait for rpc\r\n" )
+  #if defined( FAT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Wait for rpc\r\n" )
+  #endif
   bolthur_rpc_wait_block();
 }

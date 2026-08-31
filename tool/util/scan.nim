@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2018 - 2025 bolthur project.
+# Copyright (C) 2018 - 2026 bolthur project.
 #
 # This file is part of bolthur/kernel.
 #
@@ -142,4 +142,5 @@ proc scanDirectory*( path: string, fileType: string, additionalInfo: string, sys
           createDir( basePath )
           createSymlink( symlinkSrc, joinPath( basePath, executable ) )
         else:
+          createDir( basePath )
           copyFile( file, joinPath( basePath, executable ) )

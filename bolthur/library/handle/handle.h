@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,6 +19,8 @@
 
 #ifndef _HANDLE_H
 #define _HANDLE_H
+
+#define __PERMIT_DEPRECATED_SYS_TREE_H 1
 
 #include <sys/syslimits.h>
 #include <sys/types.h>

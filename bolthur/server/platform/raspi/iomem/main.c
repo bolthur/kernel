@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -28,8 +28,9 @@
 #include "mmio.h"
 #include "rpc.h"
 #include "dma.h"
-#include "../libiomem.h"
-#include "../../../libhelper.h"
+#include "global.h"
+#include "../../../../library/platform/raspi/iomem/libiomem.h"
+#include "../../../../library/vfs/dev.h"
 
 /**
  * @fn int main(int, char*[])
@@ -40,42 +41,62 @@
  * @return
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
-  EARLY_STARTUP_PRINT( "Setup mmio\r\n" )
+  #if defined( IOMEM_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Setup mmio\r\n" )
+  #endif
   // setup mmio stuff
   if ( ! mmio_setup() ) {
-    EARLY_STARTUP_PRINT( "Error while setting up mailbox: %s\r\n", strerror( errno ) )
+    #if defined( IOMEM_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Error while setting up mailbox: %s\r\n", strerror( errno ) )
+    #endif
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "Setup mailboxes\r\n" )
+  #if defined( IOMEM_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Setup mailboxes\r\n" )
+  #endif
   // setup mailbox stuff
   mailbox_setup();
 
-  EARLY_STARTUP_PRINT( "Setup dma stuff\r\n" )
+  #if defined( IOMEM_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Setup dma stuff\r\n" )
+  #endif
   if ( 0 != dma_init() ) {
-    EARLY_STARTUP_PRINT( "Error while setting up dma: %s\r\n", strerror( dma_last_error() ) )
+    #if defined( IOMEM_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Error while setting up dma: %s\r\n", strerror( dma_last_error() ) )
+    #endif
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "Setup property stuff\r\n" )
+  #if defined( IOMEM_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Setup property stuff\r\n" )
+  #endif
   // setup property stuff
   if ( ! property_setup() ) {
-    EARLY_STARTUP_PRINT( "Error while setting up property\r\n" )
+    #if defined( IOMEM_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Error while setting up property\r\n" )
+    #endif
     return -1;
   }
-  EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
+  #if defined( IOMEM_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
+  #endif
   // register handlers
   if ( ! rpc_init() ) {
-    EARLY_STARTUP_PRINT( "Error while binding rpc: %s\r\n", strerror( errno ) )
+    #if defined( IOMEM_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Error while binding rpc: %s\r\n", strerror( errno ) )
+    #endif
     return -1;
   }
 
   // enable rpc
-  EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
+  #if defined( IOMEM_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
+  #endif
   _syscall_rpc_set_ready( true );
 
   // device info data
-  uint32_t device_info[] = {
+  constexpr uint32_t device_info[] = {
     IOMEM_RPC_MAILBOX,
     IOMEM_RPC_MMIO_LOCK,
     IOMEM_RPC_MMIO_PERFORM,
@@ -89,13 +110,17 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     IOMEM_RPC_GPIO_UNLOCK,
   };
   // add device file
-  if ( !dev_add_file( IOMEM_DEVICE_PATH, device_info, 11 ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+  if ( ! vfs_dev_add_file( IOMEM_DEVICE_PATH, device_info, 11, nullptr ) ) {
+    #if defined( IOMEM_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    #endif
     return -1;
   }
 
   // wait for rpc
-  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  #if defined( IOMEM_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  #endif
   bolthur_rpc_wait_block();
   return 0;
 }

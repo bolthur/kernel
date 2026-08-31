@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,7 +21,6 @@
 #define _MM_SHARED_H
 
 #include <stddef.h>
-#include <stdbool.h>
 #include "../../library/collection/list/list.h"
 #include "../../library/collection/avl/avl.h"
 #include "../task/process.h"

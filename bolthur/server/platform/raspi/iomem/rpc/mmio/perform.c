@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,17 +23,17 @@
 #include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include <sys/bolthur.h>
 #include "../../mmio.h"
 #include "../../rpc.h"
 #include "../../delay.h"
-#include "../../../libiomem.h"
-#include "../../../libperipheral.h"
 #include "../../../libsdhost.h"
 #include "../../dma.h"
 #include "../../generic.h"
-#if defined( RPC_ENABLE_DEBUG )
+#include "../../../../../../library/platform/raspi/iomem/libiomem.h"
+#include "../../../../../../library/platform/raspi/iomem/libperipheral.h"
+#include "../../../../../../library/util/min.h"
+#if defined( RPC_ENABLE_OUTPUT )
   #include <inttypes.h>
 #endif
 
@@ -46,6 +46,9 @@
  */
 static void custom_nanosleep( const struct timespec* rqtp ) {
   if ( 0 > rqtp->tv_nsec ) {
+    #if defined( RPC_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Invalid nanosleep\r\n" )
+    #endif
     errno = EINVAL;
     return;
   }
@@ -60,18 +63,12 @@ static void custom_nanosleep( const struct timespec* rqtp ) {
   timeout += _syscall_timer_tick_count();
   // loop until timeout is reached
   while ( ( tick = _syscall_timer_tick_count() ) < timeout ) {
-    //#if defined( RPC_ENABLE_DEBUG )
-    //  EARLY_STARTUP_PRINT( "sleeping %d / %d\r\n", tick, timeout )
-    //#endif
     __asm__ __volatile__( "nop" );
   }
-  //#if defined( RPC_ENABLE_DEBUG )
-  //  EARLY_STARTUP_PRINT( "sleeping %d / %d\r\n", tick, timeout )
-  //#endif
 }
 
 /**
- * @fn uint32_t apply_shift(uint32_t, uint32_t, uint32_t)
+ * @fn uint32_t apply_shift(uint32_t, const uint32_t, const uint32_t)
  * @brief Helper to apply shift operation
  *
  * @param value
@@ -81,8 +78,8 @@ static void custom_nanosleep( const struct timespec* rqtp ) {
  */
 static uint32_t apply_shift(
   uint32_t value,
-  mmio_shift_t shift_type,
-  uint32_t shift_value
+  const mmio_shift_t shift_type,
+  const uint32_t shift_value
 ) {
   // apply possible shift
   if ( 0 < shift_value && IOMEM_MMIO_SHIFT_LEFT == shift_type ) {
@@ -95,7 +92,7 @@ static uint32_t apply_shift(
 }
 
 /**
- * @fn uint32_t read_helper(iomem_mmio_entry_t*, uint32_t*)
+ * @fn uint32_t read_helper(const iomem_mmio_entry_t*, uint32_t*)
  * @brief read helper
  *
  * @param request
@@ -105,7 +102,7 @@ static uint32_t apply_shift(
 static uint32_t read_helper( const iomem_mmio_entry_t* request, uint32_t* val ) {
   // read value
   uint32_t value = mmio_read( request->offset );
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
   #endif
   // save original value
@@ -116,12 +113,12 @@ static uint32_t read_helper( const iomem_mmio_entry_t* request, uint32_t* val ) 
   if ( 0 < request->loop_and ) {
    value &= request->loop_and;
   }
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
   #endif
   // apply shift and return
   value = apply_shift( value, request->shift_type, request->shift_value );
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
   #endif
   return value;
@@ -136,7 +133,7 @@ static uint32_t read_helper( const iomem_mmio_entry_t* request, uint32_t* val ) 
  *
  * @todo replace custom nanosleep with nanosleep when timers are working in activ rpc
  */
-static void apply_sleep( mmio_sleep_t sleep_type, uint32_t sleep_value ) {
+static void apply_sleep(const mmio_sleep_t sleep_type, const uint32_t sleep_value ) {
   // variables
   struct timespec ts;
   //int res;
@@ -164,15 +161,7 @@ static void apply_sleep( mmio_sleep_t sleep_type, uint32_t sleep_value ) {
     ts.tv_sec = sleep_value_time / 1000;
     ts.tv_nsec = ( sleep_value_time % 1000 ) * 1000000;
   }
-  //#if defined( RPC_ENABLE_DEBUG )
-  //  EARLY_STARTUP_PRINT( "tv_sec = %lld\r\n", ts.tv_sec )
-  //  EARLY_STARTUP_PRINT( "tv_nsec = %ld\r\n", ts.tv_nsec )
-  //#endif
   custom_nanosleep( &ts );
-  // sleep as long as given
-  /*do {
-    res = nanosleep( &ts, &ts );
-  } while ( res && errno == EINTR );*/
 }
 
 /**
@@ -193,35 +182,58 @@ void rpc_handle_mmio_perform(
   vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    #if defined( RPC_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Invalid origin\r\n" )
+    #endif
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // handle no data
   error.status = -EINVAL;
-  if( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+  if ( ! data_info ) {
+    #if defined( RPC_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "No data\r\n" )
+    #endif
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
+    #if defined( RPC_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to fetch data\r\n" )
+    #endif
     error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
-  // allocate space for request
-  const uint8_t* request_data = ( const uint8_t* )request->container;
-  // allocate space for response
-  vfs_ioctl_perform_response_t* response;
-  size_t response_size = ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) * sizeof( char ) + sizeof( *response );
-  response = malloc( response_size );
-  if ( ! response ) {
-    error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+  // get perform entry
+  auto perform = ( iomem_mmio_perform_t* )request->container;
+  // attach shared memory
+  void* request_data = _syscall_memory_shared_attach( perform->shm_id, ( uintptr_t )NULL );
+  if ( errno ) {
+    error.status = -errno;
+    #if defined( RPC_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to attach shared memory\r\n" )
+    #endif
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     free( request );
     return;
   }
-  #if defined( RPC_ENABLE_DEBUG )
+  // allocate space for response
+  vfs_ioctl_perform_response_t* response;
+  size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + sizeof( iomem_mmio_perform_t );
+  response = malloc( response_size );
+  if ( ! response ) {
+    #if defined( RPC_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "unable to allocate response\r\n" )
+    #endif
+    error.status = -ENOMEM;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+    free( request );
+    return;
+  }
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "data_size = %#zx, response_size = %#zx\r\n",
       ( data_size - sizeof( vfs_ioctl_perform_request_t ) ),
@@ -230,10 +242,11 @@ void rpc_handle_mmio_perform(
   #endif
   // clear request
   memset( response, 0, response_size );
+  memcpy( response->container, request->container, sizeof( iomem_mmio_perform_t ) );
   // transform data into contiguous array
-  auto iomem_mmio_entry_array_t* mmio_request = ( iomem_mmio_entry_array_t* )request_data;
+  auto mmio_request = ( iomem_mmio_entry_array_t* )request_data;
   // entry count
-  size_t entry_count = ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) / sizeof( iomem_mmio_entry_t );
+  size_t entry_count = perform->length / sizeof( iomem_mmio_entry_t );
   // loop through entries and validate
   for ( size_t i = 0; i < entry_count; i++ ) {
     // ensure that for write with or of previous read the previous is valid
@@ -251,8 +264,12 @@ void rpc_handle_mmio_perform(
         )
       )
     ) {
+      #if defined( RPC_ENABLE_OUTPUT )
+        EARLY_STARTUP_PRINT( "Validation failed\r\n" )
+      #endif
       error.status = -EINVAL;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+      _syscall_memory_shared_detach( perform->shm_id );
       free( request );
       free( response );
       return;
@@ -274,19 +291,25 @@ void rpc_handle_mmio_perform(
       && IOMEM_MMIO_ACTION_SLEEP != ( *mmio_request )[ i ].type
       && IOMEM_MMIO_ACTION_DMA_READ_DEV != ( *mmio_request )[ i ].type
       && IOMEM_MMIO_ACTION_DMA_WRITE_DEV != ( *mmio_request )[ i ].type
-      && IOMEM_MMIO_SDHOST_DATA_READ != ( *mmio_request )[ i ].type
-      && IOMEM_MMIO_SDHOST_DATA_WRITE != ( *mmio_request )[ i ].type
     ) {
+      #if defined( RPC_ENABLE_OUTPUT )
+        EARLY_STARTUP_PRINT( "type not valid\r\n" )
+      #endif
       error.status = -EINVAL;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+      _syscall_memory_shared_detach( perform->shm_id );
       free( request );
       free( response );
       return;
     }
     // validate offsets to be in range
     if ( ! mmio_validate_offset( ( *mmio_request )[ i ].offset, sizeof( uint32_t ) ) ) {
+      #if defined( RPC_ENABLE_OUTPUT )
+        EARLY_STARTUP_PRINT( "Invalid offset\r\n" )
+      #endif
       error.status = -EINVAL;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+      _syscall_memory_shared_detach( perform->shm_id );
       free( request );
       free( response );
       return;
@@ -307,7 +330,7 @@ void rpc_handle_mmio_perform(
       ( *mmio_request )[ i ].skipped = 1;
       continue;
     }
-    #if defined( RPC_ENABLE_DEBUG )
+    #if defined( RPC_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT(
         "( *mmio_request )[ %zu ].type = %d\r\n",
         i,
@@ -332,7 +355,7 @@ void rpc_handle_mmio_perform(
             && ( original_value & ( *mmio_request )[ i ].failure_value )
           ) {
             // debug output
-            #if defined( RPC_ENABLE_DEBUG )
+            #if defined( RPC_ENABLE_OUTPUT )
               EARLY_STARTUP_PRINT(
                 "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
                 original_value,
@@ -357,7 +380,7 @@ void rpc_handle_mmio_perform(
           && ( original_value & ( *mmio_request )[ i ].failure_value )
         ) {
           // debug output
-          #if defined( RPC_ENABLE_DEBUG )
+          #if defined( RPC_ENABLE_OUTPUT )
             EARLY_STARTUP_PRINT(
               "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
               original_value,
@@ -396,7 +419,7 @@ void rpc_handle_mmio_perform(
             && ( original_value & ( *mmio_request )[ i ].failure_value )
           ) {
             // debug output
-            #if defined( RPC_ENABLE_DEBUG )
+            #if defined( RPC_ENABLE_OUTPUT )
               EARLY_STARTUP_PRINT(
                 "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
                 original_value,
@@ -421,7 +444,7 @@ void rpc_handle_mmio_perform(
           && ( original_value & ( *mmio_request )[ i ].failure_value )
         ) {
           // debug output
-          #if defined( RPC_ENABLE_DEBUG )
+          #if defined( RPC_ENABLE_OUTPUT )
             EARLY_STARTUP_PRINT(
               "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
               original_value,
@@ -460,7 +483,7 @@ void rpc_handle_mmio_perform(
             && ( original_value & ( *mmio_request )[ i ].failure_value )
           ) {
             // debug output
-            #if defined( RPC_ENABLE_DEBUG )
+            #if defined( RPC_ENABLE_OUTPUT )
               EARLY_STARTUP_PRINT(
                 "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
                 original_value,
@@ -485,7 +508,7 @@ void rpc_handle_mmio_perform(
           && ( original_value & ( *mmio_request )[ i ].failure_value )
         ) {
           // debug output
-          #if defined( RPC_ENABLE_DEBUG )
+          #if defined( RPC_ENABLE_OUTPUT )
             EARLY_STARTUP_PRINT(
               "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
               original_value,
@@ -524,7 +547,7 @@ void rpc_handle_mmio_perform(
             && ( original_value & ( *mmio_request )[ i ].failure_value )
           ) {
             // debug output
-            #if defined( RPC_ENABLE_DEBUG )
+            #if defined( RPC_ENABLE_OUTPUT )
               EARLY_STARTUP_PRINT(
                 "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
                 original_value,
@@ -549,7 +572,7 @@ void rpc_handle_mmio_perform(
           && ( original_value & ( *mmio_request )[ i ].failure_value )
         ) {
           // debug output
-          #if defined( RPC_ENABLE_DEBUG )
+          #if defined( RPC_ENABLE_OUTPUT )
             EARLY_STARTUP_PRINT(
               "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
               original_value,
@@ -646,7 +669,7 @@ void rpc_handle_mmio_perform(
         }
         void* dma_block = dma_allocate_memory( ( *mmio_request )[ i ].dma_copy_size );
         // debug output
-        #if defined( RPC_ENABLE_DEBUG )
+        #if defined( RPC_ENABLE_OUTPUT )
           EARLY_STARTUP_PRINT( "dma_block = %p / %"PRIx32"\r\n", dma_block, ( *mmio_request )[ i ].dma_copy_size );
         #endif
         if ( ! dma_block ) {
@@ -675,12 +698,12 @@ void rpc_handle_mmio_perform(
             continue;
           }
           // debug output
-          #if defined( RPC_ENABLE_DEBUG )
+          #if defined( RPC_ENABLE_OUTPUT )
             EARLY_STARTUP_PRINT( "physical = %#"PRIxPTR", virtual = %#"PRIxPTR"\r\n",
               physical, ( uintptr_t )( ( uintptr_t )dma_block + size ) )
-            EARLY_STARTUP_PRINT( "reading %#"PRIx32"\r\n", ( uint32_t )fmin(
-              ( double )( *mmio_request )[ i ].dma_copy_size - size,
-              ( double )PAGE_SIZE
+            EARLY_STARTUP_PRINT( "reading %#"PRIx32"\r\n", uint32_min(
+              ( *mmio_request )[ i ].dma_copy_size - size,
+              PAGE_SIZE
             ) )
           #endif
           // set block address
@@ -696,9 +719,9 @@ void rpc_handle_mmio_perform(
           }
           // set transfer length, stride and next
           if ( 0 != dma_block_set_transfer_length(
-            ( uint32_t )fmin(
-              ( double )( *mmio_request )[ i ].dma_copy_size - size,
-              ( double )PAGE_SIZE
+            uint32_min(
+              ( *mmio_request )[ i ].dma_copy_size - size,
+              PAGE_SIZE
             )
           ) ) {
             dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
@@ -729,6 +752,13 @@ void rpc_handle_mmio_perform(
             dma_error = true;
             continue;
           }
+          if ( 0 != dma_block_transfer_info_source_increment( false ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
           if ( 0 != dma_block_transfer_info_destination_increment( true ) ) {
             dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
@@ -736,7 +766,7 @@ void rpc_handle_mmio_perform(
             dma_error = true;
             continue;
           }
-          if ( 0 != dma_block_transfer_info_dest_width( true ) ) {
+          if ( 0 != dma_block_transfer_info_dest_width( false ) ) {
             dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
@@ -861,7 +891,7 @@ void rpc_handle_mmio_perform(
         }
         void* dma_block = dma_allocate_memory( ( *mmio_request )[ i ].dma_copy_size );
         // debug output
-        #if defined( RPC_ENABLE_DEBUG )
+        #if defined( RPC_ENABLE_OUTPUT )
           EARLY_STARTUP_PRINT( "dma_block = %p / %"PRIx32"\r\n", dma_block, ( *mmio_request )[ i ].dma_copy_size );
         #endif
         if ( ! dma_block ) {
@@ -892,12 +922,12 @@ void rpc_handle_mmio_perform(
             continue;
           }
           // debug output
-          #if defined( RPC_ENABLE_DEBUG )
+          #if defined( RPC_ENABLE_OUTPUT )
             EARLY_STARTUP_PRINT( "physical = %#"PRIxPTR", virtual = %#"PRIxPTR"\r\n",
               physical, ( uintptr_t )( ( uintptr_t )dma_block + size ) )
-            EARLY_STARTUP_PRINT( "writing %#"PRIx32"\r\n", ( uint32_t )fmin(
-              ( double )( *mmio_request )[ i ].dma_copy_size - size,
-              ( double )PAGE_SIZE
+            EARLY_STARTUP_PRINT( "writing %#"PRIx32"\r\n", uint32_min(
+              ( *mmio_request )[ i ].dma_copy_size - size,
+              PAGE_SIZE
             ) )
           #endif
           // set block address
@@ -913,9 +943,9 @@ void rpc_handle_mmio_perform(
           }
           // set transfer length, stride and next
           if ( 0 != dma_block_set_transfer_length(
-            ( uint32_t )fmin(
-              ( double )( *mmio_request )[ i ].dma_copy_size - size,
-              ( double )PAGE_SIZE
+            uint32_min(
+              ( *mmio_request )[ i ].dma_copy_size - size,
+              PAGE_SIZE
             )
           ) ) {
             dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
@@ -947,6 +977,13 @@ void rpc_handle_mmio_perform(
             continue;
           }
           if ( 0 != dma_block_transfer_info_source_increment( true ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+          if ( 0 != dma_block_transfer_info_destination_increment( false ) ) {
             dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
@@ -1037,137 +1074,6 @@ void rpc_handle_mmio_perform(
         }
         break;
       }
-      case IOMEM_MMIO_SDHOST_DATA_READ:
-      {
-        // get shared memory id
-        size_t shm_id = ( *mmio_request )[ i ].value;
-        // attach it
-        void* shm_addr = _syscall_memory_shared_attach(
-          shm_id,
-          ( uintptr_t )NULL
-        );
-        if ( errno ) {
-          ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_IO;
-          skip = true;
-          continue;
-        }
-        // calculate necessary word count
-        size_t necessary_word = ( *mmio_request )[ i ].dma_copy_size / sizeof( uint32_t );
-        uint32_t* buffer = ( uint32_t* )shm_addr;
-        while ( necessary_word ) {
-          size_t word_count;
-          // burst word count
-          size_t burst_word_count = necessary_word > SDHOST_DATA_FIFO_PIO_BURST
-            ? SDHOST_DATA_FIFO_PIO_BURST : necessary_word;
-          uint32_t debug_register = mmio_read( PERIPHERAL_SDHOST_DEBUG );
-          // determine word count depending on read
-          word_count = SDHOST_DEBUG_FIFO_FILL( debug_register );
-          if ( word_count < burst_word_count ) {
-            uint32_t fsm_state = debug_register & SDHOST_DEBUG_FIFO_FILL_MASK;
-            // handle possible read / write error
-            if (
-              SDHOST_DEBUG_FSM_READDATA != fsm_state
-              && SDHOST_DEBUG_FSM_READWAIT != fsm_state
-              && SDHOST_DEBUG_FSM_READCRC != fsm_state
-            ) {
-              uint32_t host_status = mmio_read( PERIPHERAL_SDHOST_HOST_STATUS );
-              // handle error
-              if ( host_status & SDHOST_HOST_STATUS_MASK_ERROR_ALL ) {
-                ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_IO;
-                skip = true;
-                break;
-              }
-            }
-            // skip until enough words are there
-            continue;
-          } else if (word_count > necessary_word) {
-            word_count = necessary_word;
-          }
-          // subtract from total
-          necessary_word -= word_count;
-          for ( size_t idx = 0; idx < word_count; idx++ ) {
-            uint32_t val = mmio_read( PERIPHERAL_SDHOST_DATAPORT );
-            memcpy( buffer++, &val, sizeof( uint32_t ) );
-          }
-        }
-        // detach shared memory
-        _syscall_memory_shared_detach( shm_id );
-        if ( errno ) {
-          _syscall_memory_shared_detach( shm_id );
-          ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
-          // set skip
-          skip = true;
-          continue;
-        }
-        break;
-      }
-      case IOMEM_MMIO_SDHOST_DATA_WRITE:
-      {
-        // get shared memory id
-        size_t shm_id = ( *mmio_request )[ i ].value;
-        // attach it
-        void* shm_addr = _syscall_memory_shared_attach(
-          shm_id,
-          ( uintptr_t )NULL
-        );
-        if ( errno ) {
-          ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_IO;
-          skip = true;
-          continue;
-        }
-        // calculate necessary word count
-        size_t necessary_word = ( *mmio_request )[ i ].dma_copy_size / sizeof( uint32_t );
-        uint32_t* buffer = ( uint32_t* )shm_addr;
-        while ( necessary_word ) {
-          size_t word_count;
-          // burst word count
-          size_t burst_word_count = necessary_word > SDHOST_DATA_FIFO_PIO_BURST
-            ? SDHOST_DATA_FIFO_PIO_BURST : necessary_word;
-          uint32_t debug_register = mmio_read( PERIPHERAL_SDHOST_DEBUG );
-          // determine word count depending on read
-          word_count = SDHOST_FIFO_SIZE - SDHOST_DEBUG_FIFO_FILL( debug_register );
-          if ( word_count < burst_word_count ) {
-            uint32_t fsm_state = debug_register & SDHOST_DEBUG_FIFO_FILL_MASK;
-            // handle possible read / write error
-            if (
-              SDHOST_DEBUG_FSM_WRITEDATA != fsm_state
-              && SDHOST_DEBUG_FSM_WRITEWAIT1 != fsm_state
-              && SDHOST_DEBUG_FSM_WRITEWAIT2 != fsm_state
-              && SDHOST_DEBUG_FSM_WRITECRC != fsm_state
-              && SDHOST_DEBUG_FSM_WRITESTART1 != fsm_state
-              && SDHOST_DEBUG_FSM_WRITESTART2 != fsm_state
-            ) {
-              uint32_t host_status = mmio_read( PERIPHERAL_SDHOST_HOST_STATUS );
-              // handle error
-              if ( host_status & SDHOST_HOST_STATUS_MASK_ERROR_ALL ) {
-                ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_IO;
-                skip = true;
-                break;
-              }
-            }
-            // skip until enough words are there
-            continue;
-          } else if (word_count > necessary_word) {
-            word_count = necessary_word;
-          }
-          // subtract from total
-          necessary_word -= word_count;
-          for ( size_t idx = 0; idx < word_count; idx++ ) {
-            mmio_write( PERIPHERAL_SDHOST_DATAPORT, *buffer );
-            buffer++;
-          }
-        }
-        // detach shared memory
-        _syscall_memory_shared_detach( shm_id );
-        if ( errno ) {
-          _syscall_memory_shared_detach( shm_id );
-          ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_IO;
-          // set skip
-          skip = true;
-          continue;
-        }
-        break;
-      }
       // default shouldn't happen due to previous validation
       default:
         // set skip for following commands
@@ -1191,12 +1097,9 @@ void rpc_handle_mmio_perform(
       );
     }
   }
-  //EARLY_STARTUP_PRINT( "copy over data\r\n" )
-  // copy over data
-  memcpy( response->container, request_data, ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) );
-  //EARLY_STARTUP_PRINT( "returning\r\n" )
   // return data and finish with free
-  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, 0 );
+  _syscall_memory_shared_detach( perform->shm_id );
   // free request data
   free( request );
   free( response );

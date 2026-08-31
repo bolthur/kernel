@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,7 +20,6 @@
 #ifndef _RPC_GENERIC_H
 #define _RPC_GENERIC_H
 
-#include <stdbool.h>
 #include "../../library/collection/avl/avl.h"
 #include "../task/process.h"
 #include "../task/thread.h"
@@ -52,7 +51,7 @@ void rpc_generic_destroy( task_process_t* );
 bool rpc_generic_ready( task_process_t* );
 bool rpc_generic_restore( task_thread_t* );
 bool rpc_generic_prepare_invoke( rpc_backup_t* );
-rpc_backup_t* rpc_generic_raise( task_thread_t*, task_process_t*, size_t, void*, size_t, task_thread_t*, bool, size_t, bool );
+rpc_backup_t* rpc_generic_raise( task_thread_t*, task_process_t*, size_t, void*, size_t, task_thread_t*, bool, size_t, bool, bool, bool );
 bool rpc_generic_setup_mailbox( task_process_t* );
 void rpc_generic_destroy_mailbox( task_process_t* );
 

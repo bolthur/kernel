@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,7 +23,10 @@
 #include "../../panic.h"
 #include "gpio.h"
 #include "peripheral.h"
+#include "../../lib/inttypes.h"
 #include "../../debug/debug.h"
+#include "interrupt.h"
+#include "timer.h"
 
 /**
  * @fn bool interrupt_validate_number(size_t)
@@ -35,15 +38,55 @@
  */
 bool interrupt_validate_number( const size_t num ) {
   return ! (
-    num != 1 && num != 8
-    && num != 29 && num != 43
-    && num != 45 && num != 46
-    && num != 48 && num != 49
-    && num != 50 && num != 51
-    && num != 52 && num != 53
-    && num != 54 && num != 55
-    && num != 57
+    num != IRQ_MAILBOX && num != ARM_CORE0_TIMER_INTERRUPT
+    && num != IRQ_USB && num != IRQ_AUX
+    && num != IRQ_I2C_SPI && num != IRQ_PWA0
+    && num != IRQ_PWA1 && num != IRQ_SMI
+    && num != IRQ_GPIO0 && num != IRQ_GPIO1
+    && num != IRQ_GPIO2 && num != IRQ_GPIO3
+    && num != IRQ_I2C && num != IRQ_SPI
+    && num != IRQ_PCM && num != IRQ_UART
   );
+}
+
+/**
+ * @fn bool interrupt_validate_number_rpc(size_t)
+ * @brief Function to validate number for rpc
+ * @param num number to validate
+ * @return
+ */
+bool interrupt_validate_number_rpc( const size_t num ) {
+  return interrupt_validate_number( num ) && !(
+    num != IRQ_USB
+  );
+}
+
+/**
+ * @fn void interrupt_clear(int8_t)
+ * @brief Method to clear interrupt
+ * @param num interrupt number to clear
+ */
+void interrupt_clear( const int8_t num ) {
+  uint32_t interrupt = ( uint32_t )num;
+  // get peripheral base
+  const uintptr_t base = peripheral_base_get( PERIPHERAL_GPIO );
+  // get interrupt enable and pending
+  uintptr_t interrupt_pending = base;
+  if ( 32 > interrupt ) {
+    interrupt_pending += INTERRUPT_IRQ_PENDING_1;
+  } else if ( 64 > interrupt ) {
+    interrupt_pending += INTERRUPT_IRQ_PENDING_2;
+    interrupt -= 32;
+  } else {
+    PANIC( "Unsupported interrupt number!" )
+  }
+  // transform to bit
+  interrupt = 1 << interrupt;
+  // get and clear pending interrupt from memory
+  uint32_t interrupt_line = io_in32( interrupt_pending );
+  interrupt_line &= ~interrupt;
+  // write changes
+  io_out32( interrupt_pending, interrupt_line );
 }
 
 /**
@@ -53,7 +96,7 @@ bool interrupt_validate_number( const size_t num ) {
  * @param num interrupt number to enable
  */
 void interrupt_mask_specific( const int8_t num ) {
-  const uint32_t interrupt = ( uint32_t )num;
+  uint32_t interrupt = ( uint32_t )num;
   // get peripheral base
   const uintptr_t base = peripheral_base_get( PERIPHERAL_GPIO );
   // get interrupt enable and pending
@@ -65,18 +108,30 @@ void interrupt_mask_specific( const int8_t num ) {
   } else if ( 64 > interrupt ) {
     interrupt_to_enable += INTERRUPT_ENABLE_IRQ_2;
     interrupt_pending += INTERRUPT_IRQ_PENDING_2;
+    interrupt -= 32;
   } else {
     PANIC( "Unsupported interrupt number!" )
   }
+  // transform to bit
+  interrupt = 1 << interrupt;
   // get and set interrupt enable
   uint32_t interrupt_line = io_in32( interrupt_to_enable );
+  #if defined( PRINT_INTERRUPT )
+    DEBUG_OUTPUT( "Interrupt line %#"PRIx32"\r\n", interrupt_line )
+  #endif
   // stop if already set
-  if ( interrupt_line & interrupt ) {
-    return;
+  if ( ! ( interrupt_line & interrupt ) ) {
+    #if defined( PRINT_INTERRUPT )
+      DEBUG_OUTPUT( "Interrupt %"PRId8" not yet enabled\r\n", num )
+    #endif
+    interrupt_line |= interrupt;
+    // write changes
+    io_out32( interrupt_to_enable, interrupt_line );
   }
-  interrupt_line |= interrupt;
-  // write changes
-  io_out32( interrupt_to_enable, interrupt_line );
+  #if defined( PRINT_INTERRUPT )
+    DEBUG_OUTPUT( "Clearing interrupt %"PRId8"\r\n", num )
+    DEBUG_OUTPUT( "Interrupt line %#"PRIx32"\r\n", interrupt_line )
+  #endif
   // get and clear pending interrupt from memory
   interrupt_line = io_in32( interrupt_pending );
   interrupt_line &= ~interrupt;
@@ -91,34 +146,42 @@ void interrupt_mask_specific( const int8_t num ) {
  * @param num interrupt number to disable
  */
 void interrupt_unmask_specific( const int8_t num ) {
-  const uint32_t interrupt = ( uint32_t )num;
+  uint32_t interrupt = (uint32_t)num;
   // get peripheral base
   const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
   // get interrupt enable and pending
-  uint32_t interrupt_to_disable = base;
+  uint32_t interrupt_enable = base;
   uint32_t interrupt_pending = base;
+  uint32_t interrupt_disable = base;
   if ( 32 > interrupt ) {
-    interrupt_to_disable += INTERRUPT_ENABLE_IRQ_1;
+    interrupt_enable += INTERRUPT_ENABLE_IRQ_1;
+    interrupt_disable += INTERRUPT_DISABLE_IRQ_1;
     interrupt_pending += INTERRUPT_IRQ_PENDING_1;
   } else if ( 64 > interrupt ) {
-    interrupt_to_disable += INTERRUPT_ENABLE_IRQ_2;
+    interrupt_enable += INTERRUPT_ENABLE_IRQ_2;
     interrupt_pending += INTERRUPT_IRQ_PENDING_2;
+    interrupt_disable += INTERRUPT_DISABLE_IRQ_2;
+    interrupt -= 32;
   } else {
     PANIC( "Unsupported interrupt number!" )
   }
+  // transform to bit
+  interrupt = 1 << interrupt;
   // get and clear interrupt enable
-  uint32_t interrupt_line = io_in32( interrupt_to_disable );
-  // stop if already set
-  if ( interrupt_line & ~interrupt ) {
-    return;
-  }
-  interrupt_line &= ~interrupt;
-  // write changes
-  io_out32( interrupt_to_disable, interrupt_line );
+  #if defined( PRINT_INTERRUPT )
+    DEBUG_OUTPUT( "Disabling interrupt %"PRId8"\r\n", num )
+  #endif
+  // read enable, remove it and write back
+  uint32_t enable = io_in32( interrupt_enable );
+  enable &= ~interrupt;
+  io_out32( interrupt_enable, enable );
+  // read enable, remove it and write back
+  uint32_t disable = io_in32( interrupt_disable );
+  disable |= interrupt;
+  io_out32( interrupt_disable, disable );
   // get and clear pending interrupt from memory
-  interrupt_line = io_in32( interrupt_pending );
+  uint32_t interrupt_line = io_in32( interrupt_pending );
   interrupt_line &= ~interrupt;
-  // write changes
   io_out32( interrupt_pending, interrupt_line );
 }
 
@@ -130,35 +193,124 @@ void interrupt_unmask_specific( const int8_t num ) {
  * @return int8_t pending interrupt number
  */
 int8_t interrupt_get_pending( const bool fast ) {
-  const uintptr_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+  // local cpu interrupt handling
+  #if defined( BCM2709 ) || defined( BCM2710 )
+    // get source
+    const uint32_t source = io_in32( peripheral_base_get( PERIPHERAL_LOCAL ) + 0x60 );
+    // handle not fast and timer match
+    if ( ! fast && source & ARM_CORE0_TIMER_MATCH ) {
+        return ARM_CORE0_TIMER_INTERRUPT;
+    }
+    // handle gpu interrupt
+    if ( source & 1 << 8 ) {
+      const uintptr_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+      // normal interrupt
+      if ( ! fast ) {
+        const uint32_t pending1 = io_in32( base + INTERRUPT_IRQ_PENDING_1 ) &
+          io_in32( base + INTERRUPT_ENABLE_IRQ_1 );
+        const uint32_t pending2 = io_in32( base + INTERRUPT_IRQ_PENDING_2 ) &
+          io_in32( base + INTERRUPT_ENABLE_IRQ_2 );
 
-  // normal interrupt
-  if ( ! fast ) {
-    const uint32_t pending1 = io_in32( base + INTERRUPT_IRQ_PENDING_1 );
-    const uint32_t pending2 = io_in32( base + INTERRUPT_IRQ_PENDING_2 );
+        for ( int8_t i = 0; i < 32; ++i ) {
+          const uint32_t check_bit = ( 1U << i );
 
-    for ( int8_t i = 0; i < 32; ++i ) {
-      const uint32_t check_bit = ( 1U << i );
+          // check first pending register
+          if ( pending1 & check_bit ) {
+            return i;
+          }
 
-      // check first pending register
-      if ( pending1 & check_bit ) {
-        return i;
-      }
-
-      // check second pending register
-      if ( pending2 & check_bit ) {
-        return ( int8_t )( i + 32 );
+          // check second pending register
+          if ( pending2 & check_bit ) {
+            return ( int8_t )( i + 32 );
+          }
+        }
+        // fast interrupt handling
+      } else {
+        // get set interrupt
+        uint32_t interrupt = io_in32( base + INTERRUPT_FIQ_CONTROL );
+        // get only number
+        interrupt &= 0x7f;
+        // return interrupt
+        return ( int8_t )interrupt;
       }
     }
-  // fast interrupt handling
-  } else {
-    // get set interrupt
-    uint32_t interrupt = io_in32( base + INTERRUPT_FIQ_CONTROL );
-    // get only number
-    interrupt &= 0x7f;
-    // return interrupt
-    return ( int8_t )interrupt;
-  }
+  #else
+    const uintptr_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+    // normal interrupt
+    if ( ! fast ) {
+      const uint32_t pending1 = io_in32( base + INTERRUPT_IRQ_PENDING_1 ) &
+        io_in32( base + INTERRUPT_ENABLE_IRQ_1 );
+      const uint32_t pending2 = io_in32( base + INTERRUPT_IRQ_PENDING_2 ) &
+        io_in32( base + INTERRUPT_ENABLE_IRQ_2 );
 
+      for ( int8_t i = 0; i < 32; ++i ) {
+        const uint32_t check_bit = ( 1U << i );
+
+        // check first pending register
+        if ( pending1 & check_bit ) {
+          return i;
+        }
+
+        // check second pending register
+        if ( pending2 & check_bit ) {
+          return ( int8_t )( i + 32 );
+        }
+      }
+      // fast interrupt handling
+    } else {
+      // get set interrupt
+      uint32_t interrupt = io_in32( base + INTERRUPT_FIQ_CONTROL );
+      // get only number
+      interrupt &= 0x7f;
+      // return interrupt
+      return ( int8_t )interrupt;
+    }
+  #endif
+
+  // return no interrupt
   return -1;
+}
+
+/**
+ * @fn void interrupt_disable_after_handling(int8_t)
+ * @brief Method to disable interrupt after successful handling
+ * @param num interrupt number to disable
+ */
+void interrupt_disable_after_handling( const int8_t num ) {
+  // skip timer or invalid interrupt
+  if (
+    ARM_CORE0_TIMER_INTERRUPT == num
+    || ! interrupt_validate_number( ( size_t )num )
+  ) {
+    return;
+  }
+  // unmask interrupt
+  interrupt_unmask_specific( num );
+}
+
+/**
+ * @fn void interrupt_platform_init(void)
+ * @brief Platform related interrupt init
+ */
+void interrupt_platform_init( void ) {
+  // handle local peripherals
+  #if defined( BCM2709 ) || defined( BCM2710 )
+    // get all interrupt disable banks
+    const uintptr_t base = peripheral_base_get( PERIPHERAL_GPIO );
+    const uintptr_t interrupt_1_enable = base + INTERRUPT_ENABLE_IRQ_1;
+    const uintptr_t interrupt_2_enable = base + INTERRUPT_ENABLE_IRQ_2;
+    const uintptr_t interrupt_basic_enable = base + INTERRUPT_ENABLE_IRQ_BASIC;
+    const uintptr_t interrupt_1_disable = base + INTERRUPT_DISABLE_IRQ_1;
+    const uintptr_t interrupt_2_disable = base + INTERRUPT_DISABLE_IRQ_2;
+    const uintptr_t interrupt_basic_disable = base + INTERRUPT_DISABLE_IRQ_BASIC;
+    // disable all interrupts
+    io_out32( interrupt_1_enable, 0 );
+    io_out32( interrupt_2_enable, 0 );
+    io_out32( interrupt_basic_enable, 0 );
+    io_out32( interrupt_1_disable, 0xFFFFFFFF );
+    io_out32( interrupt_2_disable, 0xFFFFFFFF );
+    io_out32( interrupt_basic_disable, 0xFFFFFFFF );
+    // adjust gpu routing to route to core 0
+    io_out32( peripheral_base_get( PERIPHERAL_LOCAL ) + 0x0C, 0 );
+  #endif
 }

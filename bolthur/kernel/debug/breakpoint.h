@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,7 +21,6 @@
 #define _DEBUG_BREAKPOINT_H
 
 #include <stdint.h>
-#include <stdbool.h>
 #include "../../library/collection/list/list.h"
 
 typedef struct {

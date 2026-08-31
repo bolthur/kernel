@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,7 +21,6 @@
 #define _MAILBOX_H
 
 #include <stdint.h>
-#include <stdbool.h>
 
 #define MAILBOX_FULL 0x80000000
 #define MAILBOX_EMPTY 0x40000000

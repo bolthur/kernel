@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -137,6 +137,12 @@ static uint32_t terminal_push( terminal_t* term, char* s ) {
         s++;
       }
     }
+    // handle delete by reducing column if greater 0
+    if ( '\b' == *s || 0x7f == *s ) {
+      if ( term->col > 0 ) {
+        term->col--;
+      }
+    }
     // handle end of row reached
     if ( term->max_col <= term->col ) {
       term->col = 0;
@@ -156,17 +162,28 @@ static uint32_t terminal_push( terminal_t* term, char* s ) {
     s += --len;
     // check character for actions
     switch ( c ) {
-      // newline just increase row
+      // newline, increase row and reset column
       case '\n':
+        term->col = 0;
         term->row++;
         break;
       // carriage return reset column
       case '\r':
         term->col = 0;
         break;
+      // handle tab
       case '\t':
         // insert 4 spaces
         terminal_push( term, "    " );
+        ++rendered;
+        break;
+      // handle backspace by overwriting character with space
+      case '\b':
+      case 0x7f:
+        terminal_push( term, " " );
+        if ( term->col > 0 ) {
+          term->col--;
+        }
         ++rendered;
         break;
       default:
@@ -259,7 +276,7 @@ ssize_t render_terminal( terminal_t* term, const char* s ) {
   if ( 32 != term->bpp ) {
     return -ENOSYS;
   }
-  auto char* p = ( char* )s;
+  auto const p = ( char* )s;
   // push to terminal
   const uint32_t character_rendered = terminal_push( term, p );
 
@@ -284,9 +301,9 @@ ssize_t render_terminal( terminal_t* term, const char* s ) {
     ),
     action
   );
+  free( action );
   // handle error
   if ( -1 == result ) {
-    free( action );
     return -EIO;
   }
   // return rendered character

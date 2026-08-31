@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,7 +20,8 @@
 #ifndef _PROCESS_H
 #define _PROCESS_H
 
-#include <stdbool.h>
+#define __PERMIT_DEPRECATED_SYS_TREE_H 1
+
 #include <sys/syslimits.h>
 #include <sys/types.h>
 #include <sys/stat.h>

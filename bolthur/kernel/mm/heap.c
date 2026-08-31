@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -29,6 +29,9 @@
 #include "../mm/heap.h"
 #include "../panic.h"
 #include "../debug/debug.h"
+#if defined( HAS_SANITIZER )
+  #include "../lib/kasan/kasan.h"
+#endif
 
 void* dlmemalign( size_t, size_t );
 void dlfree( void* );
@@ -36,7 +39,7 @@ void dlfree( void* );
 /**
  * @brief Kernel heap
  */
-heap_manager_t* kernel_heap = NULL;
+heap_manager_t* kernel_heap = nullptr;
 
 /**
  * @fn bool heap_init_get(void)
@@ -46,6 +49,15 @@ heap_manager_t* kernel_heap = NULL;
  */
 bool heap_init_get( void ) {
   return ( bool )kernel_heap;
+}
+
+/**
+ * @fn heap_init_state_t heap_get_state(void)
+ * @brief Wrapper to get init state
+ * @return
+ */
+heap_init_state_t heap_get_state( void ) {
+  return kernel_heap->state;
 }
 
 /**
@@ -91,6 +103,13 @@ void heap_init( heap_init_state_t state ) {
         VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
       ) )
     }
+    // init kasan
+    #if defined( HAS_SANITIZER )
+      #if defined( PRINT_MM_HEAP )
+        DEBUG_OUTPUT( "Initializing kasan\r\n" )
+      #endif
+      kasan_init();
+    #endif
     // set state
     kernel_heap->state = state;
     // skip rest
@@ -120,14 +139,14 @@ void heap_init( heap_init_state_t state ) {
   kernel_heap->start = start;
   kernel_heap->end = end;
   kernel_heap->free = block;
-  kernel_heap->used = NULL;
+  kernel_heap->used = nullptr;
   kernel_heap->state = state;
 
   // prepare block
   block->size = end - start;
   block->address = start;
-  block->next = NULL;
-  block->previous = NULL;
+  block->next = nullptr;
+  block->previous = nullptr;
 }
 
 /**
@@ -140,7 +159,7 @@ void heap_init( heap_init_state_t state ) {
 void* heap_allocate( size_t alignment, size_t size ) {
   // ensure that heap is initialized and size is valid
   if ( ! kernel_heap || 0 == size) {
-    return NULL;
+    return nullptr;
   }
   // handle normal state
   if ( HEAP_INIT_NORMAL == kernel_heap->state ) {
@@ -224,7 +243,7 @@ void* heap_allocate( size_t alignment, size_t size ) {
   }
   // handle not enough free space
   if ( ! current ) {
-    return NULL;
+    return nullptr;
   }
   // change possible previous of next
   if ( current->next ) {
@@ -237,7 +256,7 @@ void* heap_allocate( size_t alignment, size_t size ) {
     kernel_heap->free = current->next;
   }
   // reset next and previous
-  current->next = current->previous = NULL;
+  current->next = current->previous = nullptr;
 
   // handle alignment
   uintptr_t alignment_result = current->address % alignment;
@@ -274,8 +293,8 @@ void* heap_allocate( size_t alignment, size_t size ) {
     // prepare new block
     new_block->address = ( uintptr_t )new_block + sizeof( *new_block );
     new_block->size = current->size - alignment_offset;
-    new_block->next = NULL;
-    new_block->previous = NULL;
+    new_block->next = nullptr;
+    new_block->previous = nullptr;
     // debug output
     #if defined( PRINT_MM_HEAP )
       DEBUG_OUTPUT( "new_block = %#"PRIxPTR"!\r\n", (uintptr_t)new_block )
@@ -406,9 +425,9 @@ void heap_free( void* addr ) {
  * @todo add check for some max heap which needs to be defined
  */
 void* heap_sbrk( intptr_t increment ) {
-  static uint8_t* heap_end = NULL;
-  static uint8_t* max_heap = NULL;
-  static uint8_t* min_heap = NULL;
+  static uint8_t* heap_end = nullptr;
+  static uint8_t* max_heap = nullptr;
+  static uint8_t* min_heap = nullptr;
   // handle no virtual memory manager
   if (
     ! virt_init_get()
@@ -469,8 +488,11 @@ void* heap_sbrk( intptr_t increment ) {
         #endif
         return ( void* )-1;
       }
-      // clear area
-      memset( ( void* )addr, 0, PAGE_SIZE );
+      // sanitizer stuff
+      #if defined( HAS_SANITIZER )
+        // poison area
+        kasan_poison_shadow( addr, PAGE_SIZE, ASAN_SHADOW_RESERVED_MAGIC, true );
+      #endif
       // update max heap address
       min_heap += PAGE_SIZE;
     }

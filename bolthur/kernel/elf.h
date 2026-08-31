@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,8 +20,7 @@
 #ifndef _ELF_H
 #define _ELF_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include "lib/inttypes.h"
 #include "task/process.h"
 
 typedef uint16_t Elf32_Half;

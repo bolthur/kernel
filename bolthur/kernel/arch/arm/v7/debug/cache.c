@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -25,6 +25,8 @@
  */
 void debug_cache_invalidate_instruction_cache( void ) {
   __asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 0" : : "r" ( 0 ) : "memory" );
+  __asm__( "dsb sy" ::: "memory" );
+  __asm__( "isb" ::: "memory" );
 }
 
 /**

@@ -32,8 +32,8 @@ AC_DEFUN([BOLTHUR_LIBRARY_SET_FLAG], [
   #AC_DEFINE_UNQUOTED([_FORTIFY_SOURCE], [2], [Necessary newlib define])
 
   # linker flags
-  AX_APPEND_LINK_FLAGS([-Wl,--dynamic-linker=/ramdisk/usr/lib/ld-bolthur.so])
-  AX_APPEND_LINK_FLAGS([-Wl,-rpath=/ramdisk/lib,--enable-new-dtags])
+  AX_APPEND_LINK_FLAGS([-Wl,--dynamic-linker=/usr/lib/ld-bolthur.so])
+  AX_APPEND_LINK_FLAGS([-Wl,-rpath=/usr/lib,--enable-new-dtags])
 
   # custom optimization level
   AS_IF([test "x$enable_release" != "xyes"], [
@@ -102,6 +102,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-Wsuggest-attribute=noreturn])
   AX_APPEND_COMPILE_FLAGS([-Wsuggest-attribute=malloc])
   AX_APPEND_COMPILE_FLAGS([-Wsuggest-attribute=format -Wsuggest-attribute=cold])
+  AX_APPEND_COMPILE_FLAGS([-Wno-builtin-declaration-mismatch])
   # generic
   AX_APPEND_COMPILE_FLAGS([-fno-exceptions -nodefaultlibs -std=c23])
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer -fno-builtin])
@@ -114,7 +115,13 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
     # debug parameter
     AS_IF([test "x$with_debug_symbols" == "xyes"], [
       # debug symbols and sanitizer
-      AX_APPEND_COMPILE_FLAGS([-g -Og -fsanitize=undefined])
+      AX_APPEND_COMPILE_FLAGS([-g -Og])
+    ])
+    AS_IF([test "x$with_ubsan_enabled" == "xyes"], [
+      AX_APPEND_COMPILE_FLAGS([-fsanitize=undefined])
+    ])
+    AS_IF([test "x$with_asan_enabled" == "xyes"], [
+      AX_APPEND_COMPILE_FLAGS([-fsanitize=kernel-address])
     ])
     # optimization level
     case "${with_optimization_level}" in
@@ -189,8 +196,8 @@ AC_DEFUN([BOLTHUR_SERVER_SET_FLAG], [
   #AC_DEFINE_UNQUOTED([_FORTIFY_SOURCE], [2], [Necessary newlib define])
 
   # linker flags
-  AX_APPEND_LINK_FLAGS([-Wl,--dynamic-linker=/ramdisk/usr/lib/ld-bolthur.so])
-  AX_APPEND_LINK_FLAGS([-Wl,-rpath=/ramdisk/lib,--enable-new-dtags])
+  AX_APPEND_LINK_FLAGS([-Wl,--dynamic-linker=/usr/lib/ld-bolthur.so])
+  AX_APPEND_LINK_FLAGS([-Wl,-rpath=/usr/lib,--enable-new-dtags])
 
   # custom optimization level
   AS_IF([test "x$enable_release" != "xyes"], [
@@ -200,6 +207,12 @@ AC_DEFUN([BOLTHUR_SERVER_SET_FLAG], [
       # -fsanitize=undefined
       AX_APPEND_COMPILE_FLAGS([-g -Og])
     ])
+    #AS_IF([test "x$with_ubsan_enabled" == "xyes"], [
+    #  AX_APPEND_COMPILE_FLAGS([-fsanitize=undefined])
+    #])
+    #AS_IF([test "x$with_asan_enabled" == "xyes"], [
+    #  AX_APPEND_COMPILE_FLAGS([-fsanitize=address])
+    #])
     # optimization level
     case "${with_optimization_level}" in
       no | 0)
@@ -260,8 +273,8 @@ AC_DEFUN([BOLTHUR_APPLICATION_SET_FLAG], [
   #AC_DEFINE_UNQUOTED([_FORTIFY_SOURCE], [2], [Necessary newlib define])
 
   # linker flags
-  AX_APPEND_LINK_FLAGS([-Wl,--dynamic-linker=/ramdisk/usr/lib/ld-bolthur.so])
-  AX_APPEND_LINK_FLAGS([-Wl,-rpath=/ramdisk/lib,--enable-new-dtags])
+  AX_APPEND_LINK_FLAGS([-Wl,--dynamic-linker=/usr/lib/ld-bolthur.so])
+  AX_APPEND_LINK_FLAGS([-Wl,-rpath=/usr/lib,--enable-new-dtags])
 
   # custom optimization level
   AS_IF([test "x$enable_release" != "xyes"], [

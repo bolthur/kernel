@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,6 +21,9 @@
 #include <stdint.h>
 #include "../../string.h"
 #include "../../../mm/virt.h"
+#if defined( HAS_SANITIZER )
+  #include "../../kasan/kasan.h"
+#endif
 
 #define U64_BLOCK_SIZE sizeof( uint64_t )
 #define UNALIGNED(a, b) ((( uintptr_t )a & ( U64_BLOCK_SIZE - 1 )) | (( uintptr_t )b & ( U64_BLOCK_SIZE - 1 )))
@@ -35,6 +38,11 @@
  * @param size
  */
 void* memcpy( void* restrict dst, const void* restrict src, size_t size ) {
+  #if defined( HAS_SANITIZER )
+    kasan_check_memory( ( uintptr_t )dst, size, 1, KASAN_CALLER_PC );
+    kasan_check_memory( ( uintptr_t )src, size, 1, KASAN_CALLER_PC );
+  #endif
+
   uint8_t* u8_dst = ( uint8_t * )dst;
   const uint8_t* u8_src = ( const uint8_t * )src;
   // copy in 4 byte chunks
@@ -80,7 +88,7 @@ void* memcpy_unsafe( void* restrict dst, const void* restrict src, size_t size )
     ! virt_is_mapped_range( ( uintptr_t )dst, size )
     || ! virt_is_mapped_range( ( uintptr_t )src, size )
   ) {
-    return NULL;
+    return nullptr;
   }
   // copy with normal memcpy
   return memcpy( dst, src, size );
@@ -98,7 +106,7 @@ void* memcpy_unsafe( void* restrict dst, const void* restrict src, size_t size )
 void* memcpy_unsafe_dst( void* restrict dst, const void* restrict src, size_t size ) {
   // check if ranges are mapped
   if ( ! virt_is_mapped_range( ( uintptr_t )dst, size ) ) {
-    return NULL;
+    return nullptr;
   }
   // copy with normal memcpy
   return memcpy( dst, src, size );
@@ -116,7 +124,7 @@ void* memcpy_unsafe_dst( void* restrict dst, const void* restrict src, size_t si
 void* memcpy_unsafe_src( void* restrict dst, const void* restrict src, size_t size ) {
   // check if ranges are mapped
   if ( ! virt_is_mapped_range( ( uintptr_t )dst, size ) ) {
-    return NULL;
+    return nullptr;
   }
   // copy with normal memcpy
   return memcpy( dst, src, size );

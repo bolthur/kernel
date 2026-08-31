@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -24,6 +24,7 @@
 #include <tar.h>
 #include <sys/bolthur.h>
 #include "../ramdisk.h"
+#include "../global.h"
 
 /**
  * @fn void ramdisk_lookup*(TAR*, const char*, size_t*)
@@ -36,7 +37,7 @@
 void* ramdisk_lookup( TAR* t, const char* name, size_t* size ) {
   // variables
   ramdisk_read_offset = 0;
-  void* file = NULL;
+  void* file = nullptr;
 
   // loop through ramdisk and lookup file
   while ( th_read( t ) == 0 ) {
@@ -52,12 +53,16 @@ void* ramdisk_lookup( TAR* t, const char* name, size_t* size ) {
         if ( size ) {
           *size = th_get_size( t );
         }
-        EARLY_STARTUP_PRINT( "%s size = %#zx\r\n", filename, th_get_size( t ) )
+        #if defined( BOOT_ENABLE_OUTPUT )
+          EARLY_STARTUP_PRINT( "%s size = %#zx\r\n", filename, th_get_size( t ) )
+        #endif
         break;
       }
       // skip to next file
       if ( tar_skip_regfile( t ) != 0 ) {
-        EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) )
+        #if defined( BOOT_ENABLE_OUTPUT )
+          EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) )
+        #endif
         break;
       }
     }

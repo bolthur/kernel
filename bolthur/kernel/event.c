@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -31,7 +31,7 @@
 /**
  * @brief event manager structure
  */
-event_manager_t* event = NULL;
+static event_manager_t* event = nullptr;
 
 /**
  * @brief Compare event callback necessary for avl tree
@@ -45,8 +45,8 @@ static int32_t compare_event_callback(
   const avl_node_t* b
 ) {
   // get blocks
-  event_block_t* block_a = EVENT_GET_BLOCK( a );
-  event_block_t* block_b = EVENT_GET_BLOCK( b );
+  const event_block_t* block_a = EVENT_GET_BLOCK( a );
+  const event_block_t* block_b = EVENT_GET_BLOCK( b );
 
   // -1 if address of a->type is greater than address of b->type
   if ( block_a->type > block_b->type ) {
@@ -80,7 +80,7 @@ bool event_init( void ) {
   #endif
 
   // create tree
-  event->tree = avl_create_tree( compare_event_callback, NULL, NULL );
+  event->tree = avl_create_tree( compare_event_callback, nullptr, nullptr );
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Created event tree at: %p\r\n", event->tree )
@@ -92,7 +92,7 @@ bool event_init( void ) {
   }
 
   // create queue
-  event->queue_kernel = list_construct( NULL, NULL, NULL );
+  event->queue_kernel = list_construct( nullptr, nullptr, nullptr );
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Created kernel queue at: %p\r\n", event->queue_kernel )
@@ -104,7 +104,7 @@ bool event_init( void ) {
     return false;
   }
 
-  event->queue_user = list_construct( NULL, NULL, NULL );
+  event->queue_user = list_construct( nullptr, nullptr, nullptr );
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Created user queue at: %p\r\n", event->queue_user )
@@ -169,12 +169,12 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
     #endif
     // populate block
     block->type = type;
-    block->handler = list_construct( NULL, NULL, NULL );
+    block->handler = list_construct( nullptr, nullptr, nullptr );
     if ( ! block->handler ) {
       free( block );
       return false;
     }
-    block->post = list_construct( NULL, NULL, NULL );
+    block->post = list_construct( nullptr, nullptr, nullptr );
     if ( ! block->post ) {
       free( block->handler );
       free( block );
@@ -280,7 +280,7 @@ void event_unbind(
  * @return true
  * @return false
  */
-bool event_enqueue( event_type_t type, event_origin_t origin ) {
+bool event_enqueue( const event_type_t type, const event_origin_t origin ) {
   // do nothing if not initialized
   if ( ! event ) {
     return true;

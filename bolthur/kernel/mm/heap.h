@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,7 +21,6 @@
 #define _MM_HEAP_H
 
 #include <stddef.h>
-#include <stdbool.h>
 #include "../entry.h"
 
 #if defined( ELF32 )
@@ -32,6 +31,9 @@
 #elif defined( ELF64 )
   #error "Heap not ready for x64"
 #endif
+
+extern uintptr_t __initial_heap_start;
+extern uintptr_t __initial_heap_end;
 
 typedef enum {
   HEAP_INIT_EARLY = 0,
@@ -58,10 +60,8 @@ typedef struct {
   heap_block_t* free;
 } heap_manager_t;
 
-extern uintptr_t __initial_heap_start;
-extern uintptr_t __initial_heap_end;
-
 bool heap_init_get( void );
+heap_init_state_t heap_get_state( void );
 void heap_init( heap_init_state_t );
 void* heap_allocate( size_t, size_t );
 void heap_free( void* );

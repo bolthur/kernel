@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,7 +23,6 @@
 #include <limits.h>
 #include <stdint.h>
 #include <stddef.h>
-#include <stdbool.h>
 
 #define PAGE_PER_ENTRY ( sizeof( phys_bitmap_length ) * CHAR_BIT )
 #define PAGE_INDEX( address ) ( address / PAGE_PER_ENTRY )

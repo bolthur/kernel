@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -32,7 +32,7 @@
 
 #include "../debug/debug.h"
 #include "../lib/inttypes.h"
-static avl_tree_t* origin_tree = NULL;
+static avl_tree_t* origin_tree = nullptr;
 
 /**
  * @fn int32_t compare_callback(const avl_node_t*, const avl_node_t*)
@@ -44,8 +44,8 @@ static avl_tree_t* origin_tree = NULL;
  */
 static int32_t compare_callback( const avl_node_t* a, const avl_node_t* b ) {
   // get blocks
-  auto const rpc_origin_source_t* block_a = RPC_GET_ORIGIN_SOURCE( a );
-  auto const rpc_origin_source_t* block_b = RPC_GET_ORIGIN_SOURCE( b );
+  auto const block_a = RPC_GET_ORIGIN_SOURCE( a );
+  auto const block_b = RPC_GET_ORIGIN_SOURCE( b );
   // -1 if address of a->type is greater than address of b->type
   if ( block_a->rpc_id > block_b->rpc_id ) {
     return -1;
@@ -102,7 +102,7 @@ static int32_t lookup_callback(
  */
 static void cleanup_callback( avl_node_t* a ) {
   // get block from node
-  auto rpc_origin_source_t* block = RPC_GET_ORIGIN_SOURCE( a );
+  auto block = RPC_GET_ORIGIN_SOURCE( a );
   // debug output
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "removing block %p!\r\n", block )
@@ -118,7 +118,7 @@ static void cleanup_callback( avl_node_t* a ) {
  * @param id
  * @return
  */
-rpc_origin_source_t* rpc_generic_source_info( size_t id ) {
+rpc_origin_source_t* rpc_generic_source_info( const size_t id ) {
   // try to find node by data
   avl_node_t* node = avl_find_by_data( origin_tree, ( void* )id );
   if ( ! node ) {
@@ -126,8 +126,8 @@ rpc_origin_source_t* rpc_generic_source_info( size_t id ) {
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT( "origin information for id %zu not found!\r\n", id )
     #endif
-    // return null
-    return NULL;
+    // return nullptr
+    return nullptr;
   }
   // return block
   return RPC_GET_ORIGIN_SOURCE( node );
@@ -150,8 +150,8 @@ void rpc_generic_destroy_source_info( rpc_origin_source_t* info ) {
   }
   // debug output
   #if defined( PRINT_RPC )
-    DEBUG_OUTPUT( "Trying to remove source info %d!\r\n", info->rpc_id )
-    avl_print( origin_tree, NULL );
+    DEBUG_OUTPUT( "Trying to remove source info %zu!\r\n", info->rpc_id )
+    avl_print( origin_tree, nullptr );
   #endif
   // remove from tree
   avl_remove_by_node( origin_tree, &info->node );
@@ -190,7 +190,7 @@ bool rpc_generic_setup_mailbox( task_process_t* proc ) {
       return false;
     }
     // map page temporarily
-    uintptr_t tmp_map = virt_map_temporary( proc->rpc_mailbox, PAGE_SIZE );
+    const uintptr_t tmp_map = virt_map_temporary( proc->rpc_mailbox, PAGE_SIZE );
     if ( 0 == tmp_map ) {
       // free mailbox again
       phys_free_page( proc->rpc_mailbox );
@@ -208,7 +208,7 @@ bool rpc_generic_setup_mailbox( task_process_t* proc ) {
     // unmap again
     virt_unmap_temporary( tmp_map, PAGE_SIZE );
     // set address
-    uintptr_t tmp_addr = ROUND_UP_TO_FULL_PAGE( task_thread_current_thread->entry );
+    const uintptr_t tmp_addr = ROUND_UP_TO_FULL_PAGE( task_thread_current_thread->entry );
     // find free space
     proc->rpc_mailbox_virt = virt_find_free_page_range( proc->virtual_context, PAGE_SIZE, tmp_addr );
     // handle no address found
@@ -230,7 +230,7 @@ bool rpc_generic_setup_mailbox( task_process_t* proc ) {
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT(
         "mapping %#"PRIx64" to address %#"PRIxPTR
-        " with type %d, flag %"PRIu32" and len %zx for process %d\r\n",
+        " with type %d, flag %"PRIu32" and len %x for process %d\r\n",
         proc->rpc_mailbox,
         proc->rpc_mailbox_virt,
         map_type,
@@ -288,9 +288,8 @@ void rpc_generic_destroy_mailbox( task_process_t* proc ) {
 }
 
 /**
- * @fn rpc_backup_t* rpc_generic_raise(task_thread_t*, task_process_t*, const size_t, void*, size_t, task_thread_t*, const bool, const size_t, const bool)
+ * @fn rpc_backup_t* rpc_generic_raise(task_thread_t*, task_process_t*, const size_t, void*, size_t, task_thread_t*, const bool, const size_t, const bool, const bool, const bool)
  * @brief Raise a rpc in target from source
- *
  * @param source
  * @param target
  * @param type
@@ -300,6 +299,8 @@ void rpc_generic_destroy_mailbox( task_process_t* proc ) {
  * @param sync
  * @param origin_data_id
  * @param disable_data
+ * @param is_interrupt
+ * @param is_timer
  * @return
  */
 rpc_backup_t* rpc_generic_raise(
@@ -307,11 +308,13 @@ rpc_backup_t* rpc_generic_raise(
   task_process_t* target,
   const size_t type,
   void* data,
-  size_t length,
+  const size_t length,
   task_thread_t* target_thread,
   const bool sync,
   const size_t origin_data_id,
-  const bool disable_data
+  const bool disable_data,
+  const bool is_interrupt,
+  const bool is_timer
 ) {
   // debug output
   #if defined( PRINT_RPC )
@@ -330,7 +333,9 @@ rpc_backup_t* rpc_generic_raise(
     target_thread,
     sync,
     origin_data_id,
-    disable_data
+    disable_data,
+    is_interrupt,
+    is_timer
   );
   if ( ! backup ) {
     // debug output
@@ -338,17 +343,7 @@ rpc_backup_t* rpc_generic_raise(
       DEBUG_OUTPUT( "Error while creating backup for target %d\r\n", target->id )
     #endif
     // skip if backup could not be created
-    return NULL;
-  }
-  // prepare thread
-  if ( ! rpc_generic_prepare_invoke( backup ) ) {
-    // debug output
-    #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "Error while preparing target %d\r\n", target->id )
-    #endif
-    rpc_backup_destroy( backup );
-    // skip if error occurred during rpc invoke
-    return NULL;
+    return nullptr;
   }
   // allocate new structure for tree
   if ( backup->data_id ) {
@@ -359,7 +354,7 @@ rpc_backup_t* rpc_generic_raise(
         DEBUG_OUTPUT( "Error while allocating rpc info object\r\n" )
       #endif
       rpc_backup_destroy( backup );
-      return NULL;
+      return nullptr;
     }
     // clear out
     memset( rpc_info, 0, sizeof( *rpc_info ) );
@@ -379,10 +374,20 @@ rpc_backup_t* rpc_generic_raise(
       #endif
       free( rpc_info );
       rpc_backup_destroy( backup );
-      return NULL;
+      return nullptr;
     }
     // cache rpc info structure
     backup->rpc_info = rpc_info;
+  }
+  // prepare thread
+  if ( ! rpc_generic_prepare_invoke( backup ) ) {
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "Error while preparing target %d\r\n", target->id )
+    #endif
+    rpc_backup_destroy( backup );
+    // skip if error occurred during rpc invoke
+    return nullptr;
   }
   // return created backup
   return backup;

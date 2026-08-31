@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -32,11 +32,11 @@ tar_header_t* tar_next( tar_header_t* current ) {
   // variables
   uintptr_t address = ( uintptr_t )current;
   uint64_t size;
-  tar_header_t* next = NULL;
+  tar_header_t* next = nullptr;
 
   // check for invalid
   if ( tar_end_reached( current ) ) {
-    return NULL;
+    return nullptr;
   }
 
   // get size
@@ -48,7 +48,7 @@ tar_header_t* tar_next( tar_header_t* current ) {
 
   // check for end reached
   if ( '\0' == next->file_name[ 0 ] ) {
-    return NULL;
+    return nullptr;
   }
 
   // return next element

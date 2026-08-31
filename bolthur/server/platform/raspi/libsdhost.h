@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _LIBSDHOST_H
-#define _LIBSDHOST_H
+#ifndef _PLATFORM_RASPI_LIBSDHOST_H
+#define _PLATFORM_RASPI_LIBSDHOST_H
 
 // command register
 #define SDHOST_COMMAND_FLAG_ENABLE ( 1 << 15 )
@@ -71,6 +71,7 @@
 #define SDHOST_DEBUG_THRESHOLD_WRITE_SHIFT 9
 #define SDHOST_DEBUG_THRESHOLD_READ_SHIFT 14
 #define SDHOST_DEBUG_THRESHOLD_MASK 0x1F
+#define SDHOST_DEBUG_THRESHOLD_VALUE 0xD
 
 #define SDHOST_DEBUG_FSM_MASK 0xF
 #define SDHOST_DEBUG_FSM_IDENTMODE 0x0

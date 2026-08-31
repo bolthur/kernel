@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,6 +22,7 @@
 #include <libgen.h>
 #include <sys/bolthur.h>
 #include "node.h"
+#include "../global.h"
 
 /**
  * @fn int pid_cmp(struct pid_node*, struct pid_node*)
@@ -82,7 +83,7 @@ pid_node_t* pid_node_extract( const pid_t pid ) {
   if ( 0 == n->group_count ) {
     // allocate group list
     size_t old_size = 0;
-    gid_t* group_list = NULL;
+    gid_t* group_list = nullptr;
     // open group
     setgrent();
     // loop through groups
@@ -90,14 +91,18 @@ pid_node_t* pid_node_extract( const pid_t pid ) {
     while ( ( grp = getgrent() ) ) {
       // loop through group members
       for ( size_t idx = 0; grp->gr_mem[ idx ]; idx++ ) {
-        EARLY_STARTUP_PRINT( "grp->gr_mem[ %zu ] = %s\r\n", idx, grp->gr_mem[ idx ] )
+        #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+          EARLY_STARTUP_PRINT( "grp->gr_mem[ %zu ] = %s\r\n", idx, grp->gr_mem[ idx ] )
+        #endif
         // get entry by name
         struct passwd* pass = getpwnam( grp->gr_mem[ idx ] );
         if ( ! pass ) {
           free( group_list );
-          return NULL;
+          return nullptr;
         }
-        EARLY_STARTUP_PRINT( "pass->pw_name = %s\r\n", pass->pw_name )
+        #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+          EARLY_STARTUP_PRINT( "pass->pw_name = %s\r\n", pass->pw_name )
+        #endif
         // handle no match
         if ( pass->pw_uid != n->uid ) {
           continue;
@@ -112,7 +117,7 @@ pid_node_t* pid_node_extract( const pid_t pid ) {
         }
         if ( ! temp ) {
           free( group_list );
-          return NULL;
+          return nullptr;
         }
         group_list = temp;
         group_list[ old_size ] = grp->gr_gid;
@@ -128,7 +133,7 @@ pid_node_t* pid_node_extract( const pid_t pid ) {
         sizeof( *new_node ) + sizeof( gid_t ) * old_size );
       if ( ! new_node ) {
         free( group_list );
-        return NULL;
+        return nullptr;
       }
       memset( new_node, 0, sizeof( *new_node ) + sizeof( gid_t ) * old_size );
       // copy over stuff
@@ -144,7 +149,7 @@ pid_node_t* pid_node_extract( const pid_t pid ) {
       if ( pid_node_tree_insert( &management_tree, new_node ) ) {
         free( new_node );
         free( group_list );
-        return NULL;
+        return nullptr;
       }
       // overwrite found node
       n = new_node;
@@ -210,8 +215,10 @@ bool pid_node_add( const pid_t pid, const uid_t user ) {
  * @brief Simple method to dump mount point nodes
  */
 void pid_node_dump( void ) {
-  EARLY_STARTUP_PRINT( "pid node tree dump\r\n" )
-  pid_node_tree_each(&management_tree, pid_node, n, {
-    EARLY_STARTUP_PRINT( "%d | %d\r\n", n->pid, n->uid )
-  });
+  #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "pid node tree dump\r\n" )
+    pid_node_tree_each(&management_tree, pid_node, n, {
+      EARLY_STARTUP_PRINT( "%d | %d\r\n", n->pid, n->uid )
+    });
+  #endif
 }

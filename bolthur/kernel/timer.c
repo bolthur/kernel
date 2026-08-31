@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -30,12 +30,11 @@
   #include "debug/debug.h"
 #endif
 
-list_manager_t* timer_list;
+static list_manager_t* timer_list;
 
 /**
  * @fn size_t timer_generate_id(void)
  * @brief generate new callback id
- *
  * @return
  */
 size_t timer_generate_id( void ) {
@@ -48,7 +47,6 @@ size_t timer_generate_id( void ) {
 /**
  * @fn bool timer_insert(list_manager_t*, void*)
  * @brief Timer insert callback
- *
  * @param list
  * @param data
  * @return
@@ -62,11 +60,11 @@ static bool timer_insert(
     return list_push_back_data( list, data );
   }
   // get entry to add
-  timer_callback_entry_t* entry_to_add = ( timer_callback_entry_t* )data;
+  auto const entry_to_add = ( timer_callback_entry_t* )data;
   list_item_t* item = list->first;
   while ( item ) {
     // get pointer to current entry
-    timer_callback_entry_t* entry = ( timer_callback_entry_t* )item->data;
+    auto const entry = ( timer_callback_entry_t* )item->data;
     // debug output
     #if defined( PRINT_TIMER )
       DEBUG_OUTPUT(
@@ -96,7 +94,6 @@ static bool timer_insert(
 /**
  * @fn void timer_cleanup(list_item_t*)
  * @brief timer cleanup callback
- *
  * @param item
  */
 static void timer_cleanup( list_item_t* item ) {
@@ -110,8 +107,7 @@ static void timer_cleanup( list_item_t* item ) {
 
 /**
  * @fn int32_t timer_lookup(const list_item_t*, const void*)
- * @brief
- *
+ * @brief lookup a timer
  * @param a
  * @param data
  * @return
@@ -120,7 +116,7 @@ static int32_t timer_lookup(
   const list_item_t* a,
   const void* data
 ) {
-  timer_callback_entry_t* entry = a->data;
+  const timer_callback_entry_t* entry = a->data;
   return entry->id == ( size_t )data ? 0 : 1;
 }
 
@@ -137,23 +133,24 @@ void timer_init( void ) {
 }
 
 /**
- * @fn timer_callback_entry_t* timer_register_callback(task_thread_t*, size_t, size_t)
+ * @fn timer_callback_entry_t* timer_register_callback(task_thread_t*, size_t, size_t, bool)
  * @brief Register timer callback
- *
  * @param thread
  * @param rpc_num
  * @param timeout
+ * @param interruptable
  * @return
  */
 timer_callback_entry_t* timer_register_callback(
   task_thread_t* thread,
-  size_t rpc_num,
-  size_t timeout
+  const size_t rpc_num,
+  const size_t timeout,
+  const bool interruptable
 ) {
   // reserve new entry structure
   timer_callback_entry_t* entry = malloc( sizeof( *entry ) );
   if ( ! entry ) {
-    return NULL;
+    return nullptr;
   }
   // clear out
   memset( entry, 0, sizeof( *entry ) );
@@ -161,6 +158,7 @@ timer_callback_entry_t* timer_register_callback(
   entry->rpc = rpc_num;
   entry->thread = thread;
   entry->expire = timeout;
+  entry->interruptable = interruptable;
   // generate id
   entry->id = timer_generate_id();
   // insert into ordered list
@@ -169,7 +167,7 @@ timer_callback_entry_t* timer_register_callback(
       DEBUG_OUTPUT( "Timer insert failed!\r\n" )
     #endif
     free( entry );
-    return NULL;
+    return nullptr;
   }
   // return structure
   return entry;
@@ -178,18 +176,17 @@ timer_callback_entry_t* timer_register_callback(
 /**
  * @fn bool timer_unregister_callback(size_t)
  * @brief Unregister timer callback by id
- *
  * @param id
  * @return
  */
-bool timer_unregister_callback( size_t id ) {
+bool timer_unregister_callback( const size_t id ) {
   // try to find item
   list_item_t* item = list_lookup_data( timer_list, ( void* ) id );
   if ( ! item ) {
     return true;
   }
   // remove item
-  return list_remove_item( timer_list, item );
+  return list_remove_item( timer_list, item, true );
 }
 
 /**
@@ -202,15 +199,15 @@ void timer_handle_callback( void ) {
     return;
   }
   // get current tick
-  size_t tick = timer_get_tick();
+  const size_t tick = timer_get_tick();
   list_item_t* current = timer_list->first;
   // loop through handles
   while( current ) {
-    timer_callback_entry_t* entry =
-      ( timer_callback_entry_t* )current->data;
+    auto const entry = ( timer_callback_entry_t* )current->data;
     // debug output
     #if defined( PRINT_TIMER )
-      DEBUG_OUTPUT( "tick = %zu, entry->expire = %zu\r\n", tick, entry->expire )
+      DEBUG_OUTPUT( "id = %zu, tick = %zu, entry->expire = %zu, handled = %d\r\n",
+        entry->id, tick, entry->expire, entry->handled ? 1 : 0 )
     #endif
     // break if tick is smaller than expire
     if ( entry->expire > tick ) {
@@ -225,33 +222,42 @@ void timer_handle_callback( void ) {
         entry->thread->process
       )
     #endif
-    // raise rpc without data
-    rpc_backup_t* rpc = rpc_generic_raise(
-      entry->thread,
-      entry->thread->process,
-      entry->rpc,
-      NULL,
-      0,
-      entry->thread,
-      false,
-      entry->id,
-      true
-    );
-    // handle error by skip
-    if ( ! rpc ) {
+    // raise rpc without data if not handled
+    if ( ! entry->handled ) {
+      // raise rpc
+      rpc_backup_t* rpc = rpc_generic_raise(
+        entry->thread,
+        entry->thread->process,
+        entry->rpc,
+        nullptr,
+        0,
+        entry->thread,
+        false,
+        entry->id,
+        true,
+        false,
+        true
+      );
       // debug output
       #if defined( PRINT_TIMER )
-        DEBUG_OUTPUT( "Unable to raise rpc\r\n" )
+        DEBUG_OUTPUT( "entry->id = %zu\r\n", entry->id )
       #endif
-      current = current->next;
-      continue;
+      // handle error by skip
+      if ( ! rpc ) {
+        // debug output
+        #if defined( PRINT_TIMER )
+          DEBUG_OUTPUT( "Unable to raise rpc\r\n" )
+        #endif
+        current = current->next;
+        continue;
+      }
     }
     // cache current and set to next
     list_item_t* to_remove = current;
     // switch to next
     current = current->next;
     // remove from list
-    if ( ! list_remove_item( timer_list, to_remove ) ) {
+    if ( ! list_remove_item( timer_list, to_remove, true ) ) {
       // debug output
       #if defined( PRINT_TIMER )
         DEBUG_OUTPUT( "Error while removing timer from list\r\n" )
@@ -259,4 +265,33 @@ void timer_handle_callback( void ) {
       // FIXME: remove 'rpc'
     }
   }
+}
+
+/**
+ * @fn timer_callback_entry_t* timer_get_by_process_id(pid_t)
+ * @brief Method to get possible timer by process id
+ * @param pid process id to lookup
+ * @return
+ *
+ * @todo change to get by thread
+ */
+timer_callback_entry_t* timer_get_by_process_id( const pid_t pid ) {
+  // skip if list is empty
+  if ( list_empty( timer_list ) ) {
+    return nullptr;
+  }
+  // get current tick
+  auto current = timer_list->first;
+  // loop through handles
+  while( current ) {
+    // get entry
+    auto const entry = ( timer_callback_entry_t* )current->data;
+    // check for match
+    if ( entry->thread->process->id == pid && entry->interruptable ) {
+      return entry;
+    }
+    // switch to next
+    current = current->next;
+  }
+  return nullptr;
 }

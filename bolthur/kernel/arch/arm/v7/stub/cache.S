@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -213,7 +213,7 @@ finished:
   mov r10, #0
   // select current cache level in cssr
   mcr p15, 2, r10, c0, c0, 0
-  dsb st
+  dsb sy
   isb
   ldmfd sp!, { r4-r5, r7, r9-r11, lr }
   bx  lr

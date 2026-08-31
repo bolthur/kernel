@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -25,7 +25,7 @@
 #include "../mailbox.h"
 #include "../property.h"
 #include "../rpc.h"
-#include "../../libiomem.h"
+#include "../../../../../library/platform/raspi/iomem/libmailbox.h"
 #include "../do_string.h"
 
 /**
@@ -46,20 +46,20 @@ void rpc_handle_mailbox(
   vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // handle no data
   error.status = -EINVAL;
-  if( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+  if ( ! data_info ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // allocate space for request
@@ -68,7 +68,7 @@ void rpc_handle_mailbox(
   // handle more than allowed
   if ( copy_size > PAGE_SIZE ) {
     error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     free( request );
     return;
   }
@@ -78,7 +78,7 @@ void rpc_handle_mailbox(
   response = malloc( response_size );
   if ( ! response ) {
     error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     free( request );
     return;
   }
@@ -94,7 +94,7 @@ void rpc_handle_mailbox(
   // handle error
   if ( MAILBOX_ERROR == result ) {
     error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     free( request );
     free( response );
     return;
@@ -106,7 +106,7 @@ void rpc_handle_mailbox(
     RPC_VFS_IOCTL,
     response,
     response_size,
-    NULL,
+    nullptr,
     0
   );
   free( request );

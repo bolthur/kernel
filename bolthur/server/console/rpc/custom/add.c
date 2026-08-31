@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -43,26 +43,26 @@ void rpc_custom_handle_console_add(
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // handle no data
-  if( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+  if ( ! data_info ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     error.status = -errno;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // allocate for data fetching
-  console_command_add_t* command = ( console_command_add_t* )request->container;
+  auto const command = ( console_command_add_t* )request->container;
   // try to lookup by name
-  list_item_t* container_item = list_lookup_data(
+  const list_item_t* container_item = list_lookup_data(
     console_list,
     command->terminal
   );
@@ -70,7 +70,7 @@ void rpc_custom_handle_console_add(
   if ( container_item ) {
     free( request );
     error.status = -EEXIST;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // allocate new management structure
@@ -78,7 +78,7 @@ void rpc_custom_handle_console_add(
   if ( ! console ) {
     free( request );
     error.status = -ENODEV;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // copy over content
@@ -90,23 +90,46 @@ void rpc_custom_handle_console_add(
     console_destroy( console );
     free( request );
     error.status = -EINVAL;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   console->in = command->in;
   console->out = command->out;
   console->err = command->err;
+  // fill termios default
+  // cr to nl and flow control
+  console->ios.c_iflag = ICRNL | IXON;
+  // enable post-processing and extend nl to cr nl
+  console->ios.c_oflag = OPOST | ONLCR;
+  // hardware: 8 bits with enabled recipient
+  console->ios.c_cflag = CS8 | CREAD | HUPCL;
+  console->ios.c_ispeed = B38400;
+  console->ios.c_ospeed = B38400;
+  // line buffering, echo on and enable signal keys
+  console->ios.c_lflag = ICANON | ECHO | ECHOE | ECHOK | ISIG;
+  // control characters
+  memset( console->ios.c_cc, 0, NCCS );
+  console->ios.c_cc[ VINTR ] = 0x03; // ctrl+c
+  console->ios.c_cc[ VQUIT ] = 0x1C; // ctrl+backslash
+  console->ios.c_cc[ VERASE ] = 0x7F; // backspace
+  console->ios.c_cc[ VKILL ] = 0x15; // ctrl+u
+  console->ios.c_cc[ VEOF ] = 0x04; // ctrl+d
+  console->ios.c_cc[ VSTART ] = 0x11; // ctrl+q
+  console->ios.c_cc[ VSTOP ] = 0x13; // ctrl+s
+  // fill for switch to raw mode
+  console->ios.c_cc[ VMIN ] = 1; // minimum one character block
+  console->ios.c_cc[ VTIME ] = 0; // no timeout
   // push to list
   if ( ! list_push_back_data( console_list, console ) ) {
     console_destroy( console );
     free( request );
     error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // free all used temporary structures
   free( request );
   // set success flag and return
-  error.status = 0;
-  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+  memset( &error, 0, sizeof( error ) );
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
 }

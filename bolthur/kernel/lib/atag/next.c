@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -28,8 +28,7 @@
  */
 atag_t* atag_next( atag_t* atag ) {
   if ( atag->header.tag == ATAG_TAG_NONE ) {
-    return NULL;
+    return nullptr;
   }
-
   return ( atag_t* )( ( uint32_t* )atag + atag->header.size );
 }

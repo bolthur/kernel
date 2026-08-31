@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,8 +19,10 @@
 
 #include <unistd.h>
 #include <libgen.h>
+#include <pwd.h>
 #include "../../rpc.h"
 #include "../../../libauthentication.h"
+#include "../../pid/node.h"
 
 /**
  * @fn void rpc_custom_handle_request(size_t, pid_t, size_t, size_t)
@@ -33,32 +35,85 @@
  */
 void rpc_custom_handle_request(
   [[maybe_unused]] size_t type,
-  [[maybe_unused]] pid_t origin,
+  pid_t origin,
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "AUTHENTICATION REQUEST IOCTL\r\n" )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // handle no data
   if ( ! data_info ) {
     error.status = -ENOMSG;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
-  // get message and data size
+  // get data from mailbox
   size_t data_size;
-  authentication_request_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
-    error.status = -errno;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    error.status = -EIO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
-  error.status = -ENOSYS;
-  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+  // get authentication request from command
+  auto const authentication_request = ( authentication_request_request_t* )request->container;
+  // allocate shared memory
+  authentication_request_request_data_t* data = _syscall_memory_shared_attach(
+    authentication_request->shm_id, (uintptr_t)NULL );
+  if ( errno ) {
+    error.status = -errno;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+    free( request );
+    return;
+  }
+  // get pwent entry
+  struct passwd* pw = getpwnam( data->user );
+  // handle error
+  if ( ! pw ) {
+    error.status = -EIO;
+    _syscall_memory_shared_detach( authentication_request->shm_id );
+    free( request );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+    return;
+  }
+  // verify password
+  char* hash = crypt( data->password, pw->pw_passwd );
+  if ( ! hash ) {
+    error.status = -EIO;
+    _syscall_memory_shared_detach( authentication_request->shm_id );
+    free( request );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+    return;
+  }
+  if ( 0 != strcmp( hash, pw->pw_passwd ) ) {
+    error.status = -EIO;
+    _syscall_memory_shared_detach( authentication_request->shm_id );
+    free( request );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+    return;
+  }
+  // remove existing node
+  pid_node_remove( authentication_request->process );
+  // try to add it again with changed user id
+  if ( ! pid_node_add( authentication_request->process, pw->pw_uid ) ) {
+    error.status = -EIO;
+    _syscall_memory_shared_detach( authentication_request->shm_id );
+    free( request );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+    return;
+  }
+  // populate data with user, home and shell
+  strcpy( data->pw_user, pw->pw_name );
+  strcpy( data->pw_home, pw->pw_dir );
+  strcpy( data->pw_shell, pw->pw_shell );
+  // return success
+  memset( &error, 0, sizeof( error ) );
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+  // free allocated memory again
+  _syscall_memory_shared_detach( authentication_request->shm_id );
   free( request );
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,4 +23,4 @@
 void boot_serial_init( void );
 void boot_serial_putc();
 
-#endif //_PLATFORM_RASPI_BOOT_H
+#endif

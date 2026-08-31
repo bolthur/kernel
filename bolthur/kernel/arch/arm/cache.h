@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,11 +21,9 @@
 #define _ARCH_ARM_CACHE_H
 
 void cache_enable_stub( bool* );
-void cache_invalidate_instruction_cache( void );
 void cache_flush_prefetch( void );
 void cache_flush_branch_target( void );
 void cache_invalidate_data( void );
 void cache_clean_data( void );
-void cache_invalidate_save( void );
 
 #endif

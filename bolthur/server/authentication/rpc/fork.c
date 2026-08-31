@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -26,6 +26,7 @@
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../pid/node.h"
+#include "../global.h"
 
 /**
  * @fn void rpc_handle_fork(size_t, pid_t, size_t, size_t)
@@ -46,27 +47,27 @@ void rpc_handle_fork(
   vfs_fork_response_t response = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // handle no data
-  if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  if ( ! data_info ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
-  vfs_fork_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_fork_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     response.status = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // check origin parent against parent from request ( must match )
   const pid_t origin_process = _syscall_process_parent_by_id( request->process );
   if ( origin_process != request->parent ) {
     response.status = -EINVAL;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -74,19 +75,21 @@ void rpc_handle_fork(
   pid_node_t* node = pid_node_extract( request->parent );
   if ( ! node ) {
     response.status = -ESRCH;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), nullptr, 0 );
     return;
   }
-  EARLY_STARTUP_PRINT( "ADD %d with user %d\r\n", request->process, node->uid )
+  #if defined( AUTHENTICATION_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "ADD %d with user %d\r\n", request->process, node->uid )
+  #endif
   // try to add it with same user as parent
   if ( ! pid_node_add( request->process, node->uid ) ) {
     response.status = -EIO;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
-  // fill response structure
-  response.status = 0;
+  // clear response structure
+  memset( &response, 0, sizeof( response ) );
   // return response and free
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
   free( request );
 }

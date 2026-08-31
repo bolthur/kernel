@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <libgen.h>
 #include "watch.h"
+#include "global.h"
 
 // define tree
 WATCH_TREE_DEFINE(
@@ -128,7 +129,7 @@ watch_node_t* watch_extract( const char* path, bool create ) {
   watch_node_t* node = malloc( sizeof( *node ) );
   // handle error
   if ( ! node ) {
-    return NULL;
+    return nullptr;
   }
   // clear out node
   memset( node, 0, sizeof( *node ) );
@@ -136,13 +137,13 @@ watch_node_t* watch_extract( const char* path, bool create ) {
   node->name = strdup( path );
   if ( ! node->name ) {
     free( node );
-    return NULL;
+    return nullptr;
   }
   // populate tree
   if ( 0 != watch_pid_setup( node ) ) {
     free( node->name );
     free( node );
-    return NULL;
+    return nullptr;
   }
   // lookup for node
   watch_node_t* found = watch_node_tree_find( &management_tree, node );
@@ -152,13 +153,13 @@ watch_node_t* watch_extract( const char* path, bool create ) {
       watch_pid_tree_destroy( node->pid, watch_pid_destroy );
       free( node->name );
       free( node );
-      return NULL;
+      return nullptr;
     }
     if ( watch_node_tree_insert( &management_tree, node ) ) {
       watch_pid_tree_destroy( node->pid, watch_pid_destroy );
       free( node->name );
       free( node );
-      return NULL;
+      return nullptr;
     }
     return watch_node_tree_find( &management_tree, node );
   }
@@ -247,8 +248,10 @@ int watch_remove( const char* path, pid_t handler ) {
  * @brief Simple method to dump mount point nodes
  */
 void watch_dump( void ) {
-  EARLY_STARTUP_PRINT( "mountpoint node tree dump\r\n" )
-  watch_tree_each(&management_tree, watch_node, n, {
-      EARLY_STARTUP_PRINT("%s\r\n", n->name);
-  });
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "mountpoint node tree dump\r\n" )
+    watch_tree_each(&management_tree, watch_node, n, {
+        EARLY_STARTUP_PRINT("%s\r\n", n->name);
+    });
+  #endif
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../handle.h"
 #include "../watch.h"
 #include "../ioctl/handler.h"
@@ -45,52 +46,58 @@ void rpc_handle_boot_init(
   vfs_boot_init_response_t response = { .result = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // handle no data
-  if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  if ( ! data_info ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   size_t data_size;
-  vfs_boot_init_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_boot_init_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // ORDER NECESSARY HERE DUE TO THE DEFINES
   // reroute stdin
-  EARLY_STARTUP_PRINT( "Rerouting stdin to %s\r\n", request->in )
-  FILE* fpin = freopen( request->in, "r", stdin );
-  if ( ! fpin ) {
-    EARLY_STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) )
-    EARLY_STARTUP_PRINT( "Unable to reroute stdin\r\n" )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Rerouting stdin to %s\r\n", request->in )
+  #endif
+  if ( ! freopen( request->in, "r", stdin ) ) {
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) )
+      EARLY_STARTUP_PRINT( "Unable to reroute stdin\r\n" )
+    #endif
     exit( 1 );
   }
   // reroute stdout
-  EARLY_STARTUP_PRINT( "stdin fileno = %d\r\n", fpin->_file )
-  EARLY_STARTUP_PRINT( "Rerouting stdout to %s\r\n", request->out )
-  FILE* fpout = freopen( request->out, "w", stdout );
-  if ( ! fpout ) {
-    EARLY_STARTUP_PRINT( "Unable to reroute stdout\r\n" )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Rerouting stdout to %s\r\n", request->out )
+  #endif
+  if ( ! freopen( request->out, "w", stdout ) ) {
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to reroute stdout\r\n" )
+    #endif
     exit( 1 );
   }
   // reroute stderr
-  EARLY_STARTUP_PRINT( "stdout fileno = %d\r\n", fpout->_file )
-  EARLY_STARTUP_PRINT( "Rerouting stderr to %s\r\n", request->err )
-  FILE* fperr = freopen( request->err, "w", stderr );
-  if ( ! fperr ) {
-    EARLY_STARTUP_PRINT( "Unable to reroute stderr\r\n" )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Rerouting stderr to %s\r\n", request->err )
+  #endif
+  if ( ! freopen( request->err, "w", stderr ) ) {
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to reroute stderr\r\n" )
+    #endif
     exit( 1 );
   }
-  EARLY_STARTUP_PRINT( "stderr fileno = %d\r\n", fperr->_file )
 
   // FIXME: ROUTE THROUGH TO CHILD PROCESSES
 
   // return success
   response.result = 0;
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
   free( request );
 }

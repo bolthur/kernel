@@ -5,6 +5,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AH_TEMPLATE([ELF64], [Define to 1 for 64 bit ELF targets])
   AH_TEMPLATE([IS_HIGHER_HALF], [Define to 1 when kernel is higher half])
   AH_TEMPLATE([REMOTE_DEBUG], [Define to 1 to enable remote debugging])
+  AH_TEMPLATE([HAS_SANITIZER], [Define to 1 to enable compile in of sanitizer stuff])
   # Output related define templates
   AH_TEMPLATE([OUTPUT_ENABLE], [Define to 1 to enable kernel print])
   AH_TEMPLATE([PRINT_MM_PHYS], [Define to 1 to enable output of physical memory manager])
@@ -118,6 +119,10 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   # Test for rpc output
   AS_IF([test "x$enable_output_ssp" == "xyes"], [
     AC_DEFINE([PRINT_SSP],[1])
+  ])
+
+  AS_IF([test "x$with_asan_enabled" == "xyes"], [
+    AC_DEFINE([HAS_SANITIZER],[1])
   ])
 
   case "${host_cpu}" in

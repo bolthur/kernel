@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -24,7 +24,7 @@
 #include <libtar.h>
 
 void init_stage1( void );
-[[noreturn]] void init_stage2( const char* );
-[[noreturn]] void init_stage3( void );
+void init_stage2( const char* );
+void init_stage3( void );
 
 #endif

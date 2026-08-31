@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,7 +18,6 @@
  */
 
 #include "../rpc.h"
-#include "../../libiomem.h"
 
 /**
  * @fn bool rpc_init(void)
