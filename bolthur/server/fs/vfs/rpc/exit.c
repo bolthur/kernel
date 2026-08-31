@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../../../../library/handle/process.h"
 #include "../../../../library/handle/handle.h"
 
@@ -148,6 +149,9 @@ void rpc_handle_exit(
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
+  #if defined( VFS_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Exit called from pid %d\r\n", origin )
+  #endif
   // fetch data
   size_t data_size;
   vfs_exit_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );

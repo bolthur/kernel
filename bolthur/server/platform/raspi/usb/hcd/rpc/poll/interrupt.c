@@ -20,10 +20,10 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <sys/bolthur.h>
+#include <sys/mman.h>
 #include "../../rpc.h"
 #include "../../dwhci.h"
 #include "../../dwhciroothub.h"
-#include "../../../../../../libhcd.h"
 #include "../../../../../../libusbd.h"
 
 /**
@@ -51,11 +51,19 @@ void rpc_poll_interrupt(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
+  constexpr size_t request_size = sizeof( vfs_ioctl_perform_request_t ) + sizeof( usb_interrupt_poll_t );
+  vfs_ioctl_perform_request_t* request = mmap( nullptr, request_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0 );
+  if ( MAP_FAILED == request ) {
+    error.status = -ENOMEM;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+    return;
+  }
   // get data from mailbox
   size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
-  if ( ! request ) {
+  vfs_ioctl_perform_request_t* ret = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, request );
+  if ( ! ret ) {
     error.status = -EIO;
+    munmap( request, request_size );
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
@@ -68,7 +76,7 @@ void rpc_poll_interrupt(
     // set error
     error.status = -errno;
     // free request
-    free( request );
+    munmap( request, request_size );
     // return from rpc
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
@@ -83,7 +91,7 @@ void rpc_poll_interrupt(
     // detach shared memory
     _syscall_memory_shared_detach( poll_message->shm_id );
     // free request
-    free( request );
+    munmap( request, request_size );
     // return from rpc
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
@@ -91,7 +99,7 @@ void rpc_poll_interrupt(
   // detach shared memory
   _syscall_memory_shared_detach( poll_message->shm_id );
   // we're waiting for an interrupt starting here
-  free( request );
+  munmap( request, request_size );
   // return from rpc
   memset( &error, 0, sizeof( error ) );
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );

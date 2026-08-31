@@ -185,16 +185,16 @@
 #define HCD_DWHCI_POWER_REGISTER_DEEP_SLEEP ( 1U << 7 )
 
 // characteristics
-#define HCD_DWHCI_CHAN_CHARACTER_MAXIMUM_PACKET_SIZE( val ) ( ( ( uint32_t )val ) & 0x7ff )
-#define HCD_DWHCI_CHAN_CHARACTER_END_POINT_NUMBER( val ) ( ( ( ( uint32_t )val ) & 0xf ) << 11 )
-#define HCD_DWHCI_CHAN_CHARACTER_END_POINT_DIRECTION( val ) ( ( ( ( uint32_t )val ) & 0x1 ) << 15 )
-#define HCD_DWHCI_CHAN_CHARACTER_LOW_SPEED( val ) ( ( ( ( uint32_t )val ) & 0x1 ) << 17 )
-#define HCD_DWHCI_CHAN_CHARACTER_TYPE( val ) ( ( ( ( uint32_t )val ) & 0x3 ) << 18 )
-#define HCD_DWHCI_CHAN_CHARACTER_PACKETS_PER_FRAME( val ) ( ( ( ( uint32_t )val ) & 0x3 ) << 20 )
-#define HCD_DWHCI_CHAN_CHARACTER_DEVICE_ADDRESS( val ) ( ( ( ( uint32_t )val ) & 0x7f ) << 22 )
-#define HCD_DWHCI_CHAN_CHARACTER_ODD_FRAME( val ) ( ( ( ( uint32_t )val ) & 0x1 ) << 29 )
-#define HCD_DWHCI_CHAN_CHARACTER_DISABLE( val ) ( ( ( ( uint32_t )val ) & 0x1 ) << 30 )
-#define HCD_DWHCI_CHAN_CHARACTER_ENABLE( val ) ( ( ( ( uint32_t )val ) & 0x1 ) << 31 )
+#define HCD_DWHCI_CHAN_CHARACTER_MAXIMUM_PACKET_SIZE( val ) ( uint32_t )( ( val ) & 0x7ff )
+#define HCD_DWHCI_CHAN_CHARACTER_END_POINT_NUMBER( val ) ( ( uint32_t )( ( val ) & 0xf ) << 11 )
+#define HCD_DWHCI_CHAN_CHARACTER_END_POINT_DIRECTION( val ) ( ( uint32_t )( ( val ) & 0x1 ) << 15 )
+#define HCD_DWHCI_CHAN_CHARACTER_LOW_SPEED( val ) ( ( uint32_t )( ( val ) & 0x1 ) << 17 )
+#define HCD_DWHCI_CHAN_CHARACTER_TYPE( val ) ( ( uint32_t )( ( val ) & 0x3 ) << 18 )
+#define HCD_DWHCI_CHAN_CHARACTER_PACKETS_PER_FRAME( val ) ( ( uint32_t )( ( val ) & 0x3 ) << 20 )
+#define HCD_DWHCI_CHAN_CHARACTER_DEVICE_ADDRESS( val ) ( ( uint32_t )( ( val ) & 0x7f ) << 22 )
+#define HCD_DWHCI_CHAN_CHARACTER_ODD_FRAME( val ) ( ( uint32_t )( ( val & 0x1 ) << 29 ) )
+#define HCD_DWHCI_CHAN_CHARACTER_DISABLE( val ) ( ( uint32_t )( ( val ) & 0x1 ) << 30 )
+#define HCD_DWHCI_CHAN_CHARACTER_ENABLE( val ) ( ( uint32_t )( ( val ) & 0x1 ) << 31 )
 #define HCD_DWHCI_CHAN_CHARACTER_MAXIMUM_PACKET_SIZE_MASK 0x7ff
 // split control
 #define HCD_DWHCI_CHAN_SPLIT_CONTROL_PORT_ADDRESS( val ) ( ( ( uint32_t )val ) & 0x7f )

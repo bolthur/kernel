@@ -270,7 +270,9 @@ void syscall_rpc_raise( void* context ) {
   // switch it
   if ( task_thread_current_thread != rpc->thread && synchronous ) {
     // enqueue scheduler
-    task_thread_try_switch_to = rpc->thread;
+    if ( ! task_thread_try_switch_to ) {
+      task_thread_try_switch_to = rpc->thread;
+    }
     // enqueue process event
     event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
   }
@@ -668,7 +670,7 @@ void syscall_rpc_set_ready( void* context ) {
     )
   #endif
   // unblock parent which might wait for process to be rpc ready!
-  task_process_t* parent = task_process_get_by_id( process->parent );
+  const task_process_t* parent = task_process_get_by_id( process->parent );
   if ( parent ) {
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Unblocking process %d\r\n", parent->id )

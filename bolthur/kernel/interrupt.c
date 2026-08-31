@@ -632,7 +632,7 @@ void interrupt_handle( size_t num, const interrupt_type_t type, void* context, c
       // enqueue scheduler
       task_thread_try_switch_to = rpc->thread;
       // enqueue scheduling
-      event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( NULL ) );
+      event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
     }
     // step to next
     current = current->next;

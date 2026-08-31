@@ -20,10 +20,10 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <sys/bolthur.h>
+#include <sys/mman.h>
 #include "../../rpc.h"
 #include "../../dwhci.h"
 #include "../../dwhciroothub.h"
-#include "../../../../../../libhcd.h"
 
 /**
  * @fn void rpc_submit_message(size_t, pid_t, size_t, size_t)
@@ -50,26 +50,32 @@ void rpc_submit_message(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
-  // get data from mailbox
-  size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
-  if ( ! request ) {
-    error.status = -EIO;
+  constexpr size_t request_size = sizeof( vfs_ioctl_perform_request_t ) + sizeof( usbd_control_message_t );
+  vfs_ioctl_perform_request_t* request = mmap( nullptr, request_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0 );
+  if ( MAP_FAILED == request ) {
+    error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
-  const size_t container_size = data_size - sizeof( vfs_ioctl_perform_request_t );
+  // get data from mailbox
+  size_t data_size;
+  vfs_ioctl_perform_request_t* ret = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, request );
+  if ( ! ret ) {
+    error.status = -EIO;
+    munmap( request, request_size );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+    return;
+  }
   // allocate space for pull_request
   auto const submit_control_message = ( usbd_control_message_t* )request->container;
   // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach(
-    submit_control_message->shm_id, 0 );
+  void* shm_addr = _syscall_memory_shared_attach( submit_control_message->shm_id, 0 );
   // handle error
   if ( errno ) {
     // set error
     error.status = -errno;
     // free request
-    free( request );
+    munmap( request, request_size );
     // return from rpc
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
@@ -77,12 +83,12 @@ void rpc_submit_message(
   // transform shared memory into message
   auto const message = ( usb_control_message_t* )shm_addr;
   // allocate response structure
-  const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + container_size;
-  vfs_ioctl_perform_response_t* response = malloc( response_size );
-  if ( ! response ) {
+  constexpr size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + sizeof( usbd_control_message_t );
+  vfs_ioctl_perform_response_t* response = mmap( nullptr, response_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0 );
+  if ( MAP_FAILED == response ) {
     error.status = -ENOMEM;
     // free request
-    free( request );
+    munmap( request, request_size );
     // return from rpc
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
@@ -107,8 +113,8 @@ void rpc_submit_message(
       // detach shared memory
       _syscall_memory_shared_detach( submit_control_message->shm_id );
       // free request
-      free( request );
-      free( response );
+      munmap( request, request_size );
+      munmap( response, response_size );
       // return from rpc
       bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
       return;
@@ -116,12 +122,12 @@ void rpc_submit_message(
     // detach shared memory
     _syscall_memory_shared_detach( submit_control_message->shm_id );
     // populate response
-    memcpy( response->container, request->container, container_size );
+    memcpy( response->container, request->container, sizeof( usb_control_message_t ) );
     // return from rpc
     bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, 0 );
     // free up memory
-    free( request );
-    free( response );
+    munmap( request, request_size );
+    munmap( response, response_size );
     return;
   }
   // send async
@@ -132,14 +138,14 @@ void rpc_submit_message(
     // detach shared memory
     _syscall_memory_shared_detach( submit_control_message->shm_id );
     // free request
-    free( request );
-    free( response );
+    munmap( request, request_size );
+    munmap( response, response_size );
     // return from rpc
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // free response since we've to wait for an interrupt transfer
-  free( response );
-  free( request );
+  munmap( request, request_size );
+  munmap( response, response_size );
   _syscall_rpc_cleanup();
 }

@@ -22,7 +22,7 @@
 
 #include "../../libusbd.h"
 
-#define USBD_ENABLE_OUTPUT 1
+//#define USBD_ENABLE_OUTPUT 1
 
 // if debug is enabled include inttypes for printing stuff
 #if defined( USBD_ENABLE_OUTPUT )

@@ -272,6 +272,8 @@ void timer_handle_callback( void ) {
  * @brief Method to get possible timer by process id
  * @param pid process id to lookup
  * @return
+ *
+ * @todo change to get by thread
  */
 timer_callback_entry_t* timer_get_by_process_id( const pid_t pid ) {
   // skip if list is empty

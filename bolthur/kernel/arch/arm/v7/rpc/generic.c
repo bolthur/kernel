@@ -21,6 +21,9 @@
 #include "../cpu.h"
 #include "../../../../mm/virt.h"
 #include "../../../../rpc/generic.h"
+#include "../../cache.h"
+#include "../../../../cache.h"
+#include "../../../../panic.h"
 #include "../../../../syscall.h"
 #include "../../../../timer.h"
 #include "../../../../rpc/backup.h"
@@ -69,7 +72,7 @@ bool rpc_generic_restore( task_thread_t* thread ) {
     } else {
       // debug output
       #if defined( PRINT_RPC )
-        DEBUG_OUTPUT( "backup = %p / %d\r\n", backup, backup->thread->process->id )
+        DEBUG_OUTPUT( "further enqueued\r\n" )
       #endif
       further_rpc_enqueued = true;
     }
@@ -144,6 +147,7 @@ bool rpc_generic_restore( task_thread_t* thread ) {
     )
   #endif
   // finally remove found entry
+  const bool was_interrupt = backup->is_interrupt;
   list_remove_data( thread->process->rpc_queue, backup, true );
   // handle enqueued stuff
   if ( further_rpc_enqueued ) {
@@ -176,22 +180,27 @@ bool rpc_generic_restore( task_thread_t* thread ) {
         DUMP_REGISTER( next->context )
         DEBUG_OUTPUT( "backup->thread_state = %d, next->thread_state = %d\r\n", backup->thread_state, next->thread_state )
       #endif
-      // overwrite context, state and state_data after restore ( possibly wrong )
-      memcpy(
-        next->context,
-        thread->current_context,
-        sizeof( cpu_register_context_t )
-      );
-      // set thread state
-      next->thread_state = thread->state;
-      // copy over thread state data
-      memcpy(
-        &next->thread->state_data,
-        &thread->state_data,
-        sizeof( task_state_data_t )
-      );
+      // handle no interrupt with correction of context, state and state data
+      if ( ! was_interrupt ) {
+        // overwrite context, state and state_data after restore ( possibly wrong )
+        memcpy(
+          next->context,
+          thread->current_context,
+          sizeof( cpu_register_context_t )
+        );
+        // set thread state
+        next->thread_state = thread->state;
+        // copy over thread state data
+        memcpy(
+          &next->thread->state_data,
+          &thread->state_data,
+          sizeof( task_state_data_t )
+        );
+      }
       // debug output
       #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "next->thread_state = %d\r\n", next->thread_state )
+        DEBUG_OUTPUT( "SPSR: %#"PRIx32"\r\n", (( cpu_register_context_t* )next->context)->reg.spsr)
         DUMP_REGISTER( next->context )
         DEBUG_OUTPUT( "Preparing another queued rpc entry\r\n" )
       #endif
@@ -221,6 +230,10 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT( "everything already prepared!\r\n" )
     #endif
+    // set to active since it might got deactivated
+    if ( ! backup->active ) {
+      backup->active = true;
+    }
     // return success
     return true;
   }
@@ -239,10 +252,9 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
   }
   // evaluate wait for return block
   bool wait_for_return_block = false;
-  [[maybe_unused]] bool deactivate_current_active_rpc = false;
   if ( TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN == backup->thread->state ) {
     const rpc_origin_source_t* rpc_backup = nullptr;
-    if ( backup->origin_data_id && ! backup->is_timer ) {
+    if ( backup->origin_data_id && ! backup->is_timer && ! backup->is_interrupt ) {
       rpc_backup = rpc_generic_source_info( backup->origin_data_id );
       while ( rpc_backup && rpc_backup->origin_rpc_id ) {
         rpc_backup = rpc_generic_source_info( rpc_backup->origin_rpc_id );
@@ -259,8 +271,6 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
     if ( backup->thread->handling_interrupt && ! wait_for_return_block ) {
       wait_for_return_block = true;
     }
-    // deactivation of current active rpc is bound to wait for return block
-    deactivate_current_active_rpc = ! wait_for_return_block;
     #if defined( PRINT_RPC )
       if ( wait_for_return_block ) {
         DEBUG_OUTPUT( "%d is blocked\r\n", backup->thread->process->id )
@@ -269,10 +279,12 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
   }
   // enqueue only when state is set
   if (
-    TASK_THREAD_STATE_RPC_QUEUED == backup->thread->state
-    || TASK_THREAD_STATE_RPC_ACTIVE == backup->thread->state
-    || TASK_THREAD_STATE_RPC_HALT_SWITCH == backup->thread->state
-    || wait_for_return_block
+    (
+      TASK_THREAD_STATE_RPC_QUEUED == backup->thread->state
+      || TASK_THREAD_STATE_RPC_ACTIVE == backup->thread->state
+      || TASK_THREAD_STATE_RPC_HALT_SWITCH == backup->thread->state
+      || wait_for_return_block
+    ) && ! backup->is_interrupt
   ) {
     // debug output
     #if defined( PRINT_RPC )
@@ -293,6 +305,71 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
     // return success
     return true;
   }
+  // in case we're handling an interrupt and an rpc is running we've to squeeze in interrupt rpc
+  if (
+    (
+      TASK_THREAD_STATE_RPC_QUEUED == backup->thread->state
+      || TASK_THREAD_STATE_RPC_ACTIVE == backup->thread->state
+      || TASK_THREAD_STATE_RPC_HALT_SWITCH == backup->thread->state
+      || wait_for_return_block
+    ) && backup->is_interrupt
+  ) {
+    // get current active rpc
+    rpc_backup_t* active = rpc_backup_get_active( backup->thread, 0 );
+    // when there is no active thread return
+    if ( ! active ) {
+      active = rpc_backup_get_next_possible_active( backup->thread );
+      // debug output
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "active = %#p\r\n", active )
+        DEBUG_OUTPUT( "backup->thread->state = %d\r\n", backup->thread->state )
+      #endif
+      if ( active == backup ) {
+        PANIC( "active equals backup" )
+      }
+    }
+    // get current active item
+    list_item_t* active_item = list_lookup_data( backup->thread->process->rpc_queue, active );
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "active = %#p, active_item = %#p\r\n", active, active_item )
+    #endif
+    // get backup item
+    list_item_t* backup_item = list_lookup_data( backup->thread->process->rpc_queue, backup );
+    // remove current backup from list without cleanup
+    if ( ! list_remove_item( backup->thread->process->rpc_queue, backup_item, false ) ) {
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "Unable to remove active from list without cleanup\r\n" )
+      #endif
+      return true;
+    }
+    // insert before active item
+    if ( ! list_insert_data_before( backup->thread->process->rpc_queue, active_item, backup ) ) {
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "Unable to insert backup before active\r\n" )
+      #endif
+      return true;
+    }
+    // set active to inactive
+    active->active = false;
+    // manipulate states and stuff of backup
+    backup->thread_state = TASK_THREAD_STATE_RPC_HALT_SWITCH == backup->thread->state
+      ? TASK_THREAD_STATE_RPC_QUEUED : backup->thread->state;
+    backup->state_to_use = backup->thread->state;
+    memcpy( &backup->thread_state_data, &backup->thread->state_data, sizeof( backup->thread_state_data ) );
+    memcpy( backup->context, backup->thread->current_context, sizeof( cpu_register_context_t ) );
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "enqueue rpc before current active one for %d\r\n", backup->thread->process->id )
+      DEBUG_OUTPUT( "cpu->reg.pc = %"PRIx32"\r\n", ( ( cpu_register_context_t* )backup->thread->current_context )->reg.pc )
+      DEBUG_OUTPUT( "cpu->reg.spsr = %"PRIx32"\r\n", ( ( cpu_register_context_t* )backup->thread->current_context )->reg.spsr )
+      DEBUG_OUTPUT( "cpu->reg.pc = %"PRIx32"\r\n", ( ( cpu_register_context_t* )backup->context )->reg.pc )
+      DEBUG_OUTPUT( "cpu->reg.spsr = %"PRIx32"\r\n", ( ( cpu_register_context_t* )backup->context )->reg.spsr )
+      DUMP_REGISTER( backup->context )
+    #endif
+    cache_clean_data();
+    cache_invalidate_instruction_cache();
+  }
   // get possible sleep timer
   timer_callback_entry_t* timer = timer_get_by_process_id(
     backup->thread->process->id );
@@ -304,80 +381,40 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
     backup->thread_state = TASK_THREAD_STATE_ACTIVE;
   }
 
-  /*// handle deactivation of current rpc
-  if ( deactivate_current_active_rpc ) {
-    // Get entry marked as active, which might be waiting for rpc
-    rpc_backup_t* active = nullptr;
-    auto active_entry = backup->thread->process->rpc_queue->first;
-    while ( active_entry ) {
-      // handle active set
-      if ( ((rpc_backup_t*)active_entry->data)->active ) {
-        active = active_entry->data;
-        break;
-      }
-      // get to next
-      active_entry = active_entry->next;
-    }
-    // debug output
-    //#if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "active = %p\r\n", (void*)active )
-    //#endif
-    // handle active existing
-    if ( active ) {
-      // debug output
-      //#if defined( PRINT_RPC )
-        DEBUG_OUTPUT( "Active rpc to push back to inactive\r\n" )
-      //#endif
-      // adjust thread state to use so that on next invoke the correct thread
-      // state is used
-      active->state_to_use = task_thread_current_thread->state;
-      // overwrite context of backup to activate
-      memcpy(
-        backup->context,
-        active->thread->current_context,
-        sizeof( cpu_register_context_t )
-      );
-      // mark state as inactive
-      active->active = false;
-      // remove current backup from list without cleanup
-      if ( ! list_remove_data( active->thread->process->rpc_queue, active, false ) ) {
-        #if defined( PRINT_RPC )
-          DEBUG_OUTPUT( "Unable to remove active from list without cleanup\r\n" )
-        #endif
-        return false;
-      }
-      // insert after current rpc
-      if ( ! list_push_after_data( active->thread->process->rpc_queue, backup, active ) ) {
-        #if defined( PRINT_RPC )
-          DEBUG_OUTPUT( "Unable to push active after backup in list\r\n" )
-        #endif
-        return false;
-      }
-    }
-  }*/
   cpu_register_context_t* cpu = backup->thread->current_context;
   // debug output
   #if defined( PRINT_RPC )
     DUMP_REGISTER( cpu )
     DEBUG_OUTPUT( "Set parameters!\r\n" )
   #endif
+  const uintptr_t sp = cpu->reg.sp;
+  const uint32_t fpscr = cpu->reg.fpscr;
+  memset( cpu, 0, sizeof( cpu_register_context_t ) );
   // populate parameters
   cpu->reg.r0 = backup->type;
   cpu->reg.r1 = ( size_t )backup->source->process->id;
   cpu->reg.r2 = backup->data_id;
   cpu->reg.r3 = backup->origin_data_id;
-  // set lr to pc and overwrite pc with handler
-  cpu->reg.lr = cpu->reg.pc;
-  cpu->reg.pc = proc->rpc_handler;
+  // set pc with handler
+  cpu->reg.pc = proc->rpc_handler & ~1U;
+  cpu->reg.sp = sp;
+  cpu->reg.fpscr = fpscr;
   // align stack to max align
   const size_t alignment = cpu->reg.sp % alignof( max_align_t );
   if ( alignment ) {
     cpu->reg.sp -= alignment;
   }
+  // reset spsr
+  cpu->reg.spsr = /*0x60000000 |*/ CPSR_MODE_USER;
   // thumb mode stuff
   if ( ( uint32_t )proc->rpc_handler & 0x1 ) {
     // add thumb mode to spsr
     cpu->reg.spsr |= CPSR_THUMB;
+  }
+  // handle interrupt by masking irq, fiq and async aborts to ensure that
+  // handler doesn't get interrupted
+  if ( backup->is_interrupt ) {
+    cpu->reg.spsr |= CPSR_IRQ_INHIBIT | CPSR_FIQ_INHIBIT | CPSR_ASYNC_ABORT_INHIBIT;
   }
   // set correct state ( set directly to active if it's the current thread
   // and state is rpc queued )

@@ -20,10 +20,10 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <sys/bolthur.h>
+#include <sys/mman.h>
 #include "../../rpc.h"
 #include "../../dwhci.h"
 #include "../../dwhciroothub.h"
-#include "../../../../../../libhcd.h"
 #include "../../../../../../libusbd.h"
 
 /**
@@ -51,39 +51,46 @@ void rpc_stop_transmission(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
+  constexpr size_t request_size = sizeof( vfs_ioctl_perform_request_t ) + sizeof( usbd_stop_transmission_t );
+  vfs_ioctl_perform_request_t* request = mmap( nullptr, request_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0 );
+  if ( MAP_FAILED == request ) {
+    error.status = -ENOMEM;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+    return;
+  }
   // get data from mailbox
   size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
-  if ( ! request ) {
+  vfs_ioctl_perform_request_t* ret = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, request );
+  if ( ! ret ) {
     error.status = -EIO;
+    munmap( request, request_size );
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // allocate space for pull_request
   auto const stop_message = ( usbd_stop_transmission_t* )request->container;
   // allocate response
-  const size_t container_size = data_size - sizeof( vfs_ioctl_perform_request_t );
-  const size_t response_size = container_size + sizeof( vfs_ioctl_perform_response_t );
-  auto const response = ( vfs_ioctl_perform_response_t* )malloc( response_size );
-  // handle error
-  if ( ! response ) {
+  constexpr size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + sizeof( usbd_stop_transmission_t );
+  vfs_ioctl_perform_response_t* response = mmap( nullptr, response_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0 );
+  if ( MAP_FAILED == response ) {
     error.status = -ENOMEM;
+    munmap( request, request_size );
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
-    free( request );
     return;
   }
   memset( response, 0, response_size );
-  memcpy( response->container, request->container, container_size );
+  memcpy( response->container, request->container, sizeof( usbd_stop_transmission_t ) );
   // cancel by device
   if ( HCD_RESPONSE_OK != dwhci_cancel_by_device( stop_message->device_number ) ) {
     error.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
-    free( response );
+    munmap( request, request_size );
+    munmap( response, response_size );
     return;
   }
   // return from rpc
   bolthur_rpc_return( RPC_VFS_IOCTL, response, sizeof( response_size ), nullptr, 0 );
   // free response and request
-  free( request );
-  free( response );
+  munmap( request, request_size );
+  munmap( response, response_size );
 }

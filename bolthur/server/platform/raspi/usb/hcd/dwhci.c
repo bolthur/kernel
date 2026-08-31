@@ -138,9 +138,12 @@ response_t dwhci_prepare_channel(
     transfer_data = HCD_DWHCI_CHAN_XFER_SIZE_TRANSFER_SIZE( buffer_length )
       | HCD_DWHCI_CHAN_XFER_SIZE_PACKET_ID( packet_id );
   } else {
+    // read transfer data
     transfer_data = mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_XFER_SIZE( channel ) );
-    // set transfer size
+    // reset transfer size and packet count mask
     transfer_data &= ~HCD_DWHCI_CHAN_XFER_SIZE_TRANSFER_SIZE_MASK;
+    transfer_data &= ~HCD_DWHCI_CHAN_XFER_SIZE_PACKET_COUNT_MASK;
+    // set transfer size
     transfer_data |= HCD_DWHCI_CHAN_XFER_SIZE_TRANSFER_SIZE( buffer_length );
   }
   // set packet count
@@ -157,21 +160,24 @@ response_t dwhci_prepare_channel(
   }
   // interrupts are handled differently and block the channel permanently
   if ( LIBUSB_TRANSFER_INTERRUPT == usb_pipe->type ) {
-    const uint32_t current_frame = mmio_read( PERIPHERAL_DWHCI_HOST_FRM_NUM );
-    // overwrite interval in case of csplit
-    if ( entry->split_phase == DWHCI_SPLIT_PHASE_CSPLIT ) {
-      interval = 1;
+    const uint32_t frame_number = mmio_read( PERIPHERAL_DWHCI_HOST_FRM_NUM );
+    const uint32_t current_frame = ( frame_number >> 3 ) & 0x7FF;
+    const uint32_t current_uframe = frame_number & 0x7;
+    const uint32_t current_linear_uframe = ( current_frame * 8 ) + current_uframe;
+
+    uint32_t uframe_interval = 8;
+    if ( LIBUSB_SPEED_HIGH != usb_pipe->speed ) {
+      uframe_interval = interval * 8;
+    } else {
+      uframe_interval = 1U << ( interval - 1 );
     }
-    // determine interval
-    uint32_t calculated_interval = interval;
-    if ( LIBUSB_SPEED_HIGH == usb_pipe->speed ) {
-      const uint32_t micro_frames = 1U << ( interval - 1 );
-      calculated_interval = ( micro_frames + 7U ) / 8U;
-    }
-    // get next frame
-    const uint32_t target_frame = (current_frame & 0xffff) + calculated_interval;
-    // add odd frame bit depending on target frame
-    characteristic |= ( uint32_t )HCD_DWHCI_CHAN_CHARACTER_ODD_FRAME( target_frame & 0x1 ? 1 : 0 );
+
+    const uint32_t target_linear_uframe = current_linear_uframe + uframe_interval;
+
+    const uint32_t target_frame_number = target_linear_uframe / 8;
+
+    characteristic &= ~HCD_DWHCI_CHAN_CHARACTER_ODD_FRAME( 1 );
+    characteristic |= HCD_DWHCI_CHAN_CHARACTER_ODD_FRAME( target_frame_number & 0x1 ? 1 : 0 );
   }
   // write characteristics
   mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( channel ), characteristic );
@@ -262,8 +268,8 @@ response_t dwhci_free_channel( const uint8_t channel ) {
  */
 response_t dwhci_queue_add_entry( void* data, const size_t size, const dwhci_queue_status_t status, channel_queue_entry_t** out ) {
   // allocate entry
-  channel_queue_entry_t* entry = malloc( sizeof( *entry ) );
-  if ( ! entry ) {
+  channel_queue_entry_t* entry = mmap( nullptr, sizeof( *entry ), PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0 );
+  if ( MAP_FAILED == entry ) {
     // some debug output
     #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to allocate entry for queue\r\n" )
@@ -274,14 +280,14 @@ response_t dwhci_queue_add_entry( void* data, const size_t size, const dwhci_que
   // clear out everything
   memset( entry, 0, sizeof( *entry ) );
   // duplicate data
-  void* dup_data = malloc( size );
-  if ( ! dup_data ) {
+  void* dup_data = mmap( nullptr, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0 );
+  if ( MAP_FAILED == dup_data ) {
     // some debug output
     #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to duplicate data\r\n" )
     #endif
     // free entry
-    free( entry );
+    munmap( entry, sizeof( *entry ) );
     // return memory error
     return HCD_RESPONSE_ERROR_MEMORY;
   }
@@ -303,8 +309,8 @@ response_t dwhci_queue_add_entry( void* data, const size_t size, const dwhci_que
       EARLY_STARTUP_PRINT( "Unable to allocate buffer\r\n" )
     #endif
     // free entry again
-    free( entry );
-    free( dup_data );
+    munmap( entry, sizeof( *entry ) );
+    munmap( dup_data, sizeof( size ) );
     // return memory error
     return HCD_RESPONSE_ERROR_MEMORY;
   }
@@ -360,18 +366,18 @@ response_t dwhci_queue_remove_entry( channel_queue_entry_t* entry, const bool fr
     // return einval
     return HCD_RESPONSE_ERROR_EINVAL;
   }
-  // handle free of memo
+  // handle free of memory
   if ( free_up ) {
     // handle buffer
     if ( entry->buffer ) {
       munmap( entry->buffer, entry->data_size );
     }
     if ( entry->message ) {
-      free( entry->message );
+      munmap( entry->message, entry->message_size );
     }
     // handle data
     if ( entry->data ) {
-      free( entry->data );
+      munmap( entry->data, entry->data_size );
     }
   }
   // handle first element
@@ -394,6 +400,10 @@ response_t dwhci_queue_remove_entry( channel_queue_entry_t* entry, const bool fr
       // adjust next pointer of prev to next
       entry->prev->next = entry->next;
     }
+  }
+  // handle free of memory
+  if ( free_up ) {
+    munmap( entry, sizeof( *entry ) );
   }
   // return success
   return HCD_RESPONSE_OK;
@@ -539,12 +549,12 @@ response_t dwhci_disable_channel_interrupt( const uint8_t channel ) {
 }
 
 /**
- * @fn response_t dwhci_channel_send_async_start_channel(channel_queue_entry_t*)
- * @brief Function to start prepared channel
+ * @fn response_t dwhci_channel_prepare_channel( channel_queue_entry_t* )
+ * @brief Prepare channel dma and mask interrupts
  * @param entry
  * @return
  */
-response_t dwhci_channel_send_async_start_channel( channel_queue_entry_t* entry ) {
+response_t dwhci_channel_prepare_dma( channel_queue_entry_t* entry ) {
   // debug output
   #if defined ( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Translate buffer to physical\r\n" )
@@ -564,22 +574,37 @@ response_t dwhci_channel_send_async_start_channel( channel_queue_entry_t* entry 
   if ( DWHCI_QUEUE_POLL_STATUS_DATA == entry->status ) {
     entry->poll_last_timer = _syscall_timer_tick_count();
   }
+  // disable all interrupts in mask
+  mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( entry->channel ), 0 );
+  // mask all interrupts
+  mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_INT( entry->channel ), -1U );
+  // set channel dma address
+  mmio_write( PERIPHERAL_DWHCI_HOST_HOST_CHAN_DMA_ADDR( entry->channel ), phys + entry->buffer_offset );
+  // return success
+  return HCD_RESPONSE_OK;
+}
+
+/**
+ * @fn response_t dwhci_channel_send_async_start_channel(channel_queue_entry_t*)
+ * @brief Function to start prepared channel
+ * @param entry
+ * @return
+ */
+response_t dwhci_channel_send_async_start_channel( channel_queue_entry_t* entry ) {
   // debug output
   #if defined( DWHCI_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Starting async channel via mmio sequence\r\n" )
+    EARLY_STARTUP_PRINT( "Starting async channel\r\n" )
   #endif
-  mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_INT( entry->channel ), -1U );
-  mmio_write( PERIPHERAL_DWHCI_HOST_HOST_CHAN_DMA_ADDR( entry->channel ), phys + entry->buffer_offset );
   mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( entry->channel ), mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( entry->channel ) ) | (
     HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE
     | HCD_CHANNEL_INTERRUPT_HALT
     | HCD_CHANNEL_INTERRUPT_ERROR_MASK
-    /// FIXME: ONLY FOR SPLIT OR PREIODIC STUFF
     | HCD_CHANNEL_INTERRUPT_ACKNOWLEDGEMENT
     | HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT
     | HCD_CHANNEL_INTERRUPT_NOT_YET
   ) );
   mmio_write( PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK, mmio_read( PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK ) | 1U << entry->channel );
+  entry->poll_ssplit_frame_num = mmio_read( PERIPHERAL_DWHCI_HOST_FRM_NUM );
   mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ), (
     ( mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ) ) & ~HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 ) ) |
       HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 )
@@ -673,8 +698,19 @@ response_t dwhci_channel_send_async_setup( channel_queue_entry_t* entry ) {
   #endif
   // set buffer size
   entry->buffer_size_to_transfer = sizeof( libusb_device_request_t ) - entry->buffer_offset;
+  // prepare dma
+  response_t result = dwhci_channel_prepare_dma( entry );
+  // handle error
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Unable to prepare dma for channel\r\n" )
+    #endif
+    // return result
+    return result;
+  }
   // prepare channel
-  const response_t result = dwhci_prepare_channel(
+  result = dwhci_prepare_channel(
     entry_data->parent_device_number,
     entry_data->port_number,
     entry->channel,
@@ -736,8 +772,19 @@ response_t dwhci_channel_send_async_data( channel_queue_entry_t* entry ) {
   };
   // set buffer size
   entry->buffer_size_to_transfer = entry_data->buffer_length - entry->buffer_offset;
+  // prepare dma
+  response_t result = dwhci_channel_prepare_dma( entry );
+  // handle error
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Unable to prepare dma for channel\r\n" )
+    #endif
+    // return result
+    return result;
+  }
   // prepare channel
-  response_t result = dwhci_prepare_channel(
+  result = dwhci_prepare_channel(
     entry_data->parent_device_number,
     entry_data->port_number,
     entry->channel,
@@ -824,8 +871,19 @@ response_t dwhci_channel_send_async_ack( channel_queue_entry_t* entry ) {
   memcpy( entry->buffer, &entry_data->request, sizeof( libusb_device_request_t ) );
   // set buffer size
   entry->buffer_size_to_transfer = 0;
+  // prepare dma
+  response_t result = dwhci_channel_prepare_dma( entry );
+  // handle error
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Unable to prepare dma for channel\r\n" )
+    #endif
+    // return result
+    return result;
+  }
   // prepare channel
-  response_t result = dwhci_prepare_channel(
+  result = dwhci_prepare_channel(
     entry_data->parent_device_number,
     entry_data->port_number,
     entry->channel,
@@ -906,18 +964,26 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
     // return result
     return result;
   }
+  // debug output
+  #if defined( DWHCI_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "entry->error = %#x\r\n", entry->error )
+  #endif
   // finally set no error
   if ( entry->error ) {
     entry->error |= LIBUSB_TRANSFER_ERROR_PROCESSING;
   }
+  // debug output
+  #if defined( DWHCI_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "entry->error = %#x\r\n", entry->error )
+  #endif
   // populate error
   entry_data->error = entry->error;
   // copy over to shared memory
   memcpy( shm, entry->data, entry->data_size );
   // allocate response structure
   constexpr size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + sizeof( usbd_control_message_t );
-  vfs_ioctl_perform_response_t* response = malloc( response_size );
-  if ( ! response ) {
+  vfs_ioctl_perform_response_t* response = mmap( nullptr, response_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0 );
+  if ( MAP_FAILED == response ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to allocate memory for response\r\n" )
@@ -934,14 +1000,7 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
   // return from rpc
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, entry->response_info );
   // free entry
-  free( response );
-  // return with next entry
-  result = dwhci_continue_next( entry );
-  if ( HCD_RESPONSE_OK != result ) {
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to continue with next request\r\n" )
-    #endif
-  }
+  munmap( response, response_size );
   // destroy queue entry
   result = dwhci_queue_remove_entry( entry, true );
   if ( HCD_RESPONSE_OK != result ) {
@@ -952,6 +1011,10 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
     // return result
     return result;
   }
+  // debug output
+  #if defined( DWHCI_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "DONE\r\n" )
+  #endif
   // continue with next
   return dwhci_continue_next( nullptr );
 }
@@ -1015,8 +1078,8 @@ response_t dwhci_channel_send_cancel_done( channel_queue_entry_t* entry ) {
   entry_data->error = entry->error;
   // allocate response structure
   constexpr size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + sizeof( usbd_control_message_t );
-  vfs_ioctl_perform_response_t* response = malloc( response_size );
-  if ( ! response ) {
+  vfs_ioctl_perform_response_t* response = mmap( nullptr, response_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0 );
+  if ( MAP_FAILED == response ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to allocate memory for response\r\n" )
@@ -1033,23 +1096,23 @@ response_t dwhci_channel_send_cancel_done( channel_queue_entry_t* entry ) {
   // return from rpc
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, entry->response_info );
   // free entry
-  free( response );
-  // continue with next one
-  result = dwhci_continue_next( entry );
-  if ( HCD_RESPONSE_OK != result ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to continue with next request\r\n" )
-    #endif
-    // return result
-    return result;
-  }
+  munmap( response, response_size );
   // destroy queue entry
   result = dwhci_queue_remove_entry( entry, true );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to remove entry\r\n" )
+    #endif
+    // return result
+    return result;
+  }
+  // continue with next one
+  result = dwhci_continue_next( nullptr );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Unable to continue with next request\r\n" )
     #endif
     // return result
     return result;
@@ -1129,8 +1192,8 @@ response_t dwhci_channel_send_async(
     return result;
   }
   // duplicate message
-  usbd_control_message_t* dup_message = malloc( sizeof( *dup_message ) );
-  if ( ! dup_message ) {
+  usbd_control_message_t* dup_message = mmap( nullptr, sizeof( *dup_message ), PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0 );
+  if ( MAP_FAILED == dup_message ) {
     // clear entry again
     dwhci_queue_remove_entry( entry, true );
     // return no memory
@@ -1140,6 +1203,7 @@ response_t dwhci_channel_send_async(
   // populate entry
   entry->response_info = response_info;
   entry->message = dup_message;
+  entry->message_size = sizeof( *dup_message );
   // initialize split phase
   entry->split_phase = LIBUSB_SPEED_HIGH != data->pipe_address.speed ? DWHCI_SPLIT_PHASE_SSPLIT : DWHCI_SPLIT_PHASE_NONE;
   entry->channel_data_state = DWHCI_CHANNEL_STATE_DATA1;
@@ -1229,8 +1293,19 @@ response_t dwhci_channel_poll_async_data( channel_queue_entry_t* entry ) {
     .type = entry_data->pipe_address.type,
     .direction = entry_data->pipe_address.direction,
   };
+  // prepare dma
+  response_t result = dwhci_channel_prepare_dma( entry );
+  // handle error
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Unable to prepare dma for channel\r\n" )
+    #endif
+    // return result
+    return result;
+  }
   // prepare channel
-  const response_t result = dwhci_prepare_channel(
+  result = dwhci_prepare_channel(
     entry_data->parent_device_number,
     entry_data->port_number,
     entry->channel,
@@ -1321,8 +1396,8 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
     // allocate response structure
     const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + sizeof( usbd_interrupt_return_t )
       + sizeof( char ) * entry_data->last_transfer;
-    vfs_ioctl_perform_response_t* response = malloc( response_size );
-    if ( ! response ) {
+    vfs_ioctl_perform_response_t* response = mmap( nullptr, response_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0 );
+    if ( MAP_FAILED == response ) {
       // debug output
       #if defined( DWHCI_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Unable to allocate memory for response\r\n" )
@@ -1355,7 +1430,7 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
       true
     );
     // free entry
-    free( response );
+    munmap( response, response_size );
   }
   // reset entry partly
   entry->prepared = true;
@@ -1455,8 +1530,8 @@ response_t dwhci_channel_poll_async(
       constexpr size_t response_size = sizeof( vfs_ioctl_perform_response_t )
         + sizeof( usbd_interrupt_return_t );
       // allocate space for return
-      vfs_ioctl_perform_response_t* response = malloc( response_size );
-      if ( ! response ) {
+      vfs_ioctl_perform_response_t* response = mmap( nullptr, response_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0 );
+      if ( MAP_FAILED == response ) {
         // debug output
         #if defined( DWHCI_ENABLE_DEBUG )
           EARLY_STARTUP_PRINT( "Unable to allocate memory for response\r\n" )
@@ -1488,6 +1563,19 @@ response_t dwhci_channel_poll_async(
         true,
         true
       );
+      // handle error
+      if ( errno ) {
+        // debug output
+        #if defined( DWHCI_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "Unable to send interrupt response: %s\r\n", strerror( errno ) )
+        #endif
+        // unmap
+        munmap( response, response_size );
+        // return error
+        return HCD_RESPONSE_ERROR_IO;
+      }
+      // unmap
+      munmap( response, response_size );
       // return success
       return HCD_RESPONSE_OK;
     }
@@ -1506,8 +1594,8 @@ response_t dwhci_channel_poll_async(
     return result;
   }
   // duplicate message
-  usbd_interrupt_message_t* dup_message = malloc( sizeof( *dup_message ) );
-  if ( ! dup_message ) {
+  usbd_interrupt_message_t* dup_message = mmap( nullptr, sizeof( *dup_message ), PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0 );
+  if ( MAP_FAILED == dup_message ) {
     // clear entry again
     dwhci_queue_remove_entry( entry, true );
     // return no memory
@@ -1517,6 +1605,7 @@ response_t dwhci_channel_poll_async(
   // populate entry
   entry->origin = origin;
   entry->message = dup_message;
+  entry->message_size = sizeof( *dup_message );
   entry->interval = data->interval;
   entry->poll_state = DWHCI_CHANNEL_STATE_DATA0;
   // initialize split phase

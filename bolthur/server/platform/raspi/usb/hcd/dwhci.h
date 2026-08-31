@@ -92,6 +92,8 @@ typedef struct channel_queue_entry {
   uint32_t interval;
   /** message */
   void* message;
+  /** message size */
+  size_t message_size;
   /** registered timer */
   size_t timer;
   /** error */
@@ -108,6 +110,8 @@ typedef struct channel_queue_entry {
   uint32_t packets_to_transfer;
   /** packet size */
   uint32_t packet_size;
+  uint32_t poll_ssplit_frame_num;
+  uint32_t poll_csplit_frame_num;
   /** pointer to next entry */
   struct channel_queue_entry* next;
   /** pointer to previous entry */
@@ -144,6 +148,7 @@ response_t dwhci_queue_remove_entry( channel_queue_entry_t*, bool );
 response_t dwhci_queue_get_active_by_channel( uint8_t, channel_queue_entry_t** );
 response_t dwhci_enable_channel_interrupt( uint8_t );
 response_t dwhci_disable_channel_interrupt( uint8_t );
+response_t dwhci_channel_prepare_dma( channel_queue_entry_t* );
 response_t dwhci_channel_send_async_start_channel( channel_queue_entry_t* );
 response_t dwhci_channel_send_async_stop_channel( const channel_queue_entry_t*, bool );
 response_t dwhci_channel_send_async_setup( channel_queue_entry_t* );

@@ -119,9 +119,9 @@ task_thread_t* task_thread_create(
   // prepare area
   memset( ( void* )current_context, 0, sizeof( cpu_register_context_t ) );
   // set content
-  current_context->reg.pc = ( uint32_t )entry;
+  current_context->reg.pc = ( uint32_t )entry & ~1U;
   // only user mode threads are possible
-  current_context->reg.spsr = 0x60000000 | CPSR_MODE_USER;
+  current_context->reg.spsr = /*0x60000000 |*/ CPSR_MODE_USER;
   // add arm thumb mode to spsr if necessary
   if ( ( uint32_t )entry & 0x1 ) {
     // add thumb mode to spsr

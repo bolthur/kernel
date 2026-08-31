@@ -31,7 +31,7 @@
 /**
  * @brief event manager structure
  */
-event_manager_t* event = nullptr;
+static event_manager_t* event = nullptr;
 
 /**
  * @brief Compare event callback necessary for avl tree
@@ -45,8 +45,8 @@ static int32_t compare_event_callback(
   const avl_node_t* b
 ) {
   // get blocks
-  event_block_t* block_a = EVENT_GET_BLOCK( a );
-  event_block_t* block_b = EVENT_GET_BLOCK( b );
+  const event_block_t* block_a = EVENT_GET_BLOCK( a );
+  const event_block_t* block_b = EVENT_GET_BLOCK( b );
 
   // -1 if address of a->type is greater than address of b->type
   if ( block_a->type > block_b->type ) {
@@ -280,7 +280,7 @@ void event_unbind(
  * @return true
  * @return false
  */
-bool event_enqueue( event_type_t type, event_origin_t origin ) {
+bool event_enqueue( const event_type_t type, const event_origin_t origin ) {
   // do nothing if not initialized
   if ( ! event ) {
     return true;

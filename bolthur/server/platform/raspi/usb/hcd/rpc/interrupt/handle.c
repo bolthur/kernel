@@ -23,6 +23,7 @@
 #include "../../constants.h"
 #include "../../dwhci.h"
 #include "../../../../libhcd.h"
+#include "../../../../../../../library/usb/usb.h"
 
 /**
  * @fn void toggle_split_phase(const uint32_t, channel_queue_entry_t*);
@@ -74,6 +75,19 @@ static bool toggle_split_phase( const uint32_t cipt, channel_queue_entry_t* entr
 }
 
 /**
+ * @fn void wait_for_next_microframe( void )
+ * @brief Helper to wait for next microframe
+ */
+static void wait_for_next_microframe( void ) {
+  uint32_t start_frame = mmio_read( PERIPHERAL_DWHCI_HOST_FRM_NUM ) & 0xFFFF;
+  uint32_t current_frame;
+  do {
+    current_frame = mmio_read( PERIPHERAL_DWHCI_HOST_FRM_NUM ) & 0xFFFF;
+    __asm__ __volatile__ ( "nop" );
+  } while ( start_frame == current_frame );
+}
+
+/**
  * @fn void rpc_interrupt_handle(size_t, pid_t, size_t, size_t)
  * @brief Interrupt handler
  * @param type message type
@@ -87,6 +101,7 @@ void rpc_interrupt_handle(
   [[maybe_unused]] size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  uint32_t frame_num_entry = mmio_read( PERIPHERAL_DWHCI_HOST_FRM_NUM );
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Interrupt handler called\r\n" )
   #endif
@@ -152,10 +167,12 @@ void rpc_interrupt_handle(
         }
         // get channel interrupt
         const uint32_t cipt = mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_INT( channel ) );
-        //#if defined( DWHCI_ENABLE_DEBUG )
-          if ( DWHCI_QUEUE_POLL_STATUS_DATA == entry->status )
+        // write back to mark them as handled
+        mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_INT( channel ), cipt );
+
+        #if defined( DWHCI_ENABLE_DEBUG )
           EARLY_STARTUP_PRINT( "cipt = %#"PRIx32"\r\n", cipt )
-        //#endif
+        #endif
         if ( cipt & HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE ) {
           #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "Transfer complete for channel %"PRIu32"\r\n", channel )
@@ -359,11 +376,11 @@ void rpc_interrupt_handle(
             entry->buffer_offset = 0;
           } else {
             // debug output
-            //#if defined( DWHCI_ENABLE_DEBUG )
+            #if defined( DWHCI_ENABLE_DEBUG )
               if (DWHCI_QUEUE_POLL_STATUS_DATA == entry->status)
               EARLY_STARTUP_PRINT( "Restart current state with remaining, %"PRIu32" / %"PRIu32", transfer_size: %"PRIx32"\r\n",
                 remaining, entry->buffer_size_to_transfer, transfer_size )
-            //#endif
+            #endif
             // increase buffer offset
             entry->buffer_offset += transferred;
           }
@@ -380,7 +397,7 @@ void rpc_interrupt_handle(
               && split_complete
             )
           )
-          ) {
+        ) {
           // debug output
           #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "entry->channel_data_state = %x\r\n", entry->channel_data_state )
