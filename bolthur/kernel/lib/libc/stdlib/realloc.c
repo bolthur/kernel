@@ -19,14 +19,24 @@
 
 #include <stddef.h>
 #include "../../stdlib.h"
+#include "../../../mm/heap.h"
 
 /**
- * @fn void malloc*(size_t)
+ * @fn void* realloc(void*, size_t)
  * @brief Malloc implementation
  *
  * @param size size to allocate
  * @return void* allocated address or nullptr
  */
-__allocator void* malloc( const size_t size ) {
-  return aligned_alloc( alignof( max_align_t ), size );
+__allocator void* realloc( void* ptr, const size_t size ) {
+  // no pointer just allocate
+  if ( ! ptr ) {
+    return malloc( size );
+  }
+  // no size just free
+  if ( ! size ) {
+    free( ptr );
+    return nullptr;
+  }
+  return heap_reallocate( ptr, alignof( max_align_t ), size );
 }

@@ -33,8 +33,10 @@
   #include "../lib/kasan/kasan.h"
 #endif
 
+// dlmalloc forward declarations
 void* dlmemalign( size_t, size_t );
 void dlfree( void* );
+void* dlrealloc( void*, size_t );
 
 /**
  * @brief Kernel heap
@@ -150,13 +152,67 @@ void heap_init( const heap_init_state_t state ) {
 }
 
 /**
+ * @fn void* heap_reallocate(void*, size_t)
+ * @brief Reallocate area
+ * @param addr address to reallocate
+ * @param alignment alignment
+ * @param size size to reallocate to
+ * @return
+ */
+void* heap_reallocate( void* addr, const size_t alignment, const size_t size ) {
+  if ( ! kernel_heap ) {
+    return nullptr;
+  }
+  const uintptr_t uaddr = ( uintptr_t )addr;
+  // handle in initial heap
+  if ( uaddr >= kernel_heap->start && uaddr <= kernel_heap->end ) {
+    // try to find matching one
+    heap_block_t* current = kernel_heap->used;
+    while ( current ) {
+      // handle "match"
+      if ( current->address >= uaddr ) {
+        break;
+      }
+      // get to next
+      current = current->next;
+    }
+    // handle not found
+    if ( ! current ) {
+      return nullptr;
+    }
+    // handle same size
+    if ( current->size == size ) {
+      return addr;
+    }
+    // allocate new block
+    void* new_address = heap_allocate( alignment, size );
+    if ( ! new_address ) {
+      return nullptr;
+    }
+    // copy data
+    const size_t copy_size = current->size < size ? current->size : size;
+    memcpy( new_address, addr, copy_size );
+    // free old area
+    heap_free( addr );
+    // skip rest
+    return new_address;
+  }
+  // use dlrealloc if normal state is set up
+  if ( HEAP_INIT_NORMAL == kernel_heap->state ) {
+    return dlrealloc( addr, size );
+  }
+  // should never be reached
+  return nullptr;
+}
+
+/**
  * @fn void heap_allocate*(size_t, size_t)
  * @brief
  *
  * @param alignment
  * @param size
  */
-void* heap_allocate( size_t alignment, size_t size ) {
+void* heap_allocate( const size_t alignment, const size_t size ) {
   // ensure that heap is initialized and size is valid
   if ( ! kernel_heap || 0 == size) {
     return nullptr;
@@ -372,12 +428,9 @@ void* heap_allocate( size_t alignment, size_t size ) {
  * @param addr
  */
 void heap_free( void* addr ) {
-  uintptr_t uaddr = ( uintptr_t )addr;
+  const uintptr_t uaddr = ( uintptr_t )addr;
   // initial heap supports only simple free without block merging
-  if (
-    uaddr >= kernel_heap->start
-    && uaddr <= kernel_heap->end
-  ) {
+  if ( uaddr >= kernel_heap->start && uaddr <= kernel_heap->end ) {
     // try to find matching one
     heap_block_t* current = kernel_heap->used;
     while ( current ) {
@@ -424,7 +477,7 @@ void heap_free( void* addr ) {
  * @todo add support for decrease
  * @todo add check for some max heap which needs to be defined
  */
-void* heap_sbrk( intptr_t increment ) {
+void* heap_sbrk( const intptr_t increment ) {
   static uint8_t* heap_end = nullptr;
   static uint8_t* max_heap = nullptr;
   static uint8_t* min_heap = nullptr;

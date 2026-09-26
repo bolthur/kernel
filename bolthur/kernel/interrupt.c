@@ -306,23 +306,13 @@ bool interrupt_register_handler(
         }
       }
       if ( ! found ) {
-        if ( ! process->registered_interrupts ) {
-          process->registered_interrupts_size = 1;
-          process->registered_interrupts = calloc( 1, sizeof( uint32_t ) );
-          if ( ! process->registered_interrupts ) {
-            return false;
-          }
-        } else {
-          uint32_t* tmp = calloc( process->registered_interrupts_size + 1, sizeof( uint32_t ) );
-          if ( ! tmp ) {
-            return false;
-          }
-          memcpy( tmp, process->registered_interrupts, sizeof( uint32_t ) * process->registered_interrupts_size );
-          free( process->registered_interrupts );
-          process->registered_interrupts = tmp;
-          process->registered_interrupts_size++;
+        uint32_t* tmp = realloc( process->registered_interrupts, sizeof( uint32_t ) * ( process->registered_interrupts_size + 1 ) );
+        if ( ! tmp ) {
+          return false;
         }
-        process->registered_interrupts[ process->registered_interrupts_size - 1 ] = num;
+        process->registered_interrupts = tmp;
+        process->registered_interrupts[ process->registered_interrupts_size ] = num;
+        process->registered_interrupts_size++;
       }
       block->external = process;
     }
