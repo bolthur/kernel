@@ -63,6 +63,7 @@ typedef struct {
 bool heap_init_get( void );
 heap_init_state_t heap_get_state( void );
 void heap_init( heap_init_state_t );
+bool heap_address_is_in_early( void* );
 void* heap_allocate( size_t, size_t );
 void* heap_reallocate( void*, size_t, size_t );
 void heap_free( void* );

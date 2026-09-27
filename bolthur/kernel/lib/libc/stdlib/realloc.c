@@ -20,6 +20,7 @@
 #include <stddef.h>
 #include "../../stdlib.h"
 #include "../../../mm/heap.h"
+#include "../../kasan/kasan.h"
 
 /**
  * @fn void* realloc(void*, size_t)
@@ -29,14 +30,21 @@
  * @return void* allocated address or nullptr
  */
 __allocator void* realloc( void* ptr, const size_t size ) {
-  // no pointer just allocate
-  if ( ! ptr ) {
-    return malloc( size );
-  }
-  // no size just free
-  if ( ! size ) {
-    free( ptr );
-    return nullptr;
-  }
-  return heap_reallocate( ptr, alignof( max_align_t ), size );
+  // sanitizer stuff
+  #if defined( HAS_SANITIZER )
+    return kasan_realloc_hook( ptr, alignof( max_align_t ), size );
+  // no sanitizer stuff
+  #else
+    // no pointer just allocate
+    if ( ! ptr ) {
+      return malloc( size );
+    }
+    // no size just free
+    if ( ! size ) {
+      free( ptr );
+      return nullptr;
+    }
+    // use heap allocation
+    return heap_reallocate( ptr, alignof( max_align_t ), size );
+  #endif
 }

@@ -152,6 +152,20 @@ void heap_init( const heap_init_state_t state ) {
 }
 
 /**
+ * @fn bool heap_address_is_in_early(void*)
+ * @brief Helper to check if address is in early heap
+ * @param addr
+ * @return
+ */
+bool heap_address_is_in_early( void* addr ) {
+  if ( ! kernel_heap ) {
+    return false;
+  }
+  const uintptr_t uaddr = ( uintptr_t )addr;
+  return uaddr >= kernel_heap->start && uaddr <= kernel_heap->end;
+}
+
+/**
  * @fn void* heap_reallocate(void*, size_t)
  * @brief Reallocate area
  * @param addr address to reallocate
@@ -344,8 +358,7 @@ void* heap_allocate( const size_t alignment, const size_t size ) {
       DEBUG_OUTPUT( "size = %#zx!\r\n", size )
     #endif
     // new block with proper alignment
-    heap_block_t* new_block = ( heap_block_t* )(
-      ( uintptr_t )current->address + alignment_offset );
+    auto new_block = ( heap_block_t* )( ( uintptr_t )current->address + alignment_offset );
     // prepare new block
     new_block->address = ( uintptr_t )new_block + sizeof( *new_block );
     new_block->size = current->size - alignment_offset;
@@ -377,8 +390,7 @@ void* heap_allocate( const size_t alignment, const size_t size ) {
 
   // check whether split is possible
   if ( current->size > size + sizeof( *current ) ) {
-    heap_block_t* new_block = ( heap_block_t* )(
-      current->address + size );
+    auto new_block = ( heap_block_t* )( current->address + size );
     // set size and address of new block
     new_block->size = current->size - size - sizeof( *new_block );
     new_block->address = ( uintptr_t )new_block + sizeof( *new_block );

@@ -35,12 +35,11 @@ __no_sanitize void kasan_free_hook( void* ptr ) {
     return;
   }
   // translate to kasan heap header
-  kasan_heap_header_t* kasan_heap_header = ( kasan_heap_header_t* )(
-    ( uintptr_t )ptr - KASAN_HEAP_HEAD_REDZONE_SIZE );
+  auto const header = ( kasan_heap_header_t* )( ( uintptr_t )ptr - KASAN_HEAP_HEAD_REDZONE_SIZE );
   // extract aligned size
-  const size_t aligned_size = kasan_heap_header->aligned_size;
+  const size_t aligned_size = header->aligned_size;
   // free address
-  heap_free( kasan_heap_header );
+  heap_free( header );
   // poison shadow
   kasan_poison_shadow( ( uintptr_t )ptr, aligned_size, ASAN_SHADOW_HEAP_FREE_MAGIC, false );
 }

@@ -69,6 +69,7 @@ void kasan_unpoison_shadow( uintptr_t, size_t );
 int kasan_check_memory( uintptr_t, size_t, bool, uintptr_t );
 
 // hook functions
+void* kasan_realloc_hook( void*, size_t, size_t );
 void* kasan_aligned_alloc_hook( size_t, size_t );
 void kasan_free_hook( void* );
 
