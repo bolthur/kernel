@@ -615,6 +615,14 @@ void rpc_interrupt_handle(
           entry->poll_state = DWHCI_CHANNEL_STATE_DATA0 == entry->poll_state
             ? DWHCI_CHANNEL_STATE_DATA1 : DWHCI_CHANNEL_STATE_DATA0;
         }
+        // handle error
+        if ( ! switch_to_next_state && entry->error ) {
+          if ( DWHCI_QUEUE_POLL_STATUS_DATA == entry->status ) {
+            entry->status = DWHCI_QUEUE_POLL_STATUS_DONE;
+          } else {
+            entry->status = DWHCI_QUEUE_CHANNEL_STATUS_DONE;
+          }
+        }
         // handle switch to next
         if ( switch_to_next_state ) {
           // evaluate next state
