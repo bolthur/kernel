@@ -116,7 +116,7 @@ void kasan_bug_report(
   const bool write,
   const uintptr_t pc
 ) {
-  [[maybe_unused]] uintptr_t buggy_address = KASAN_SHADOW_TO_MEM( buggy_shadow_address );
+  const uintptr_t buggy_address = KASAN_SHADOW_TO_MEM( buggy_shadow_address );
   printf( "[KASan] ===================================================\r\n" );
   printf( "[KASan] ERROR: Invalid memory access: address %#"PRIxPTR", size %zu, write %d, ip %#"PRIxPTR"\r\n",
     addr, size, write ? 1 : 0, pc );

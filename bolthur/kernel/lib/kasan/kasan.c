@@ -21,8 +21,7 @@
 #include "kasan.h"
 #include "../assert.h"
 #include "../string.h"
-#include "../../../application/usr/lib/ld-bolthur/tmp/_dl-int.h"
-#include "../../debug/debug.h"
+#include "../../mm/phys.h"
 #include "../../mm/virt.h"
 
 uintptr_t kasan_shadow_memory_start = 0;
@@ -35,18 +34,57 @@ uintptr_t kasan_shadow_memory_end = 0;
  * @param size
  * @return
  */
+__attribute__((__optimize__("O3"), pure))
 __no_sanitize __no_stack_protector uintptr_t kasan_get_poisoned_shadow_address(
   const uintptr_t addr,
   const size_t size
 ) {
-  const uintptr_t addr_shadow_start = KASAN_MEM_TO_SHADOW( addr );
-  const uintptr_t addr_shadow_end = KASAN_MEM_TO_SHADOW( addr + size - 1 ) + 1;
+  auto shadow_ptr = ( uint8_t* )KASAN_MEM_TO_SHADOW( addr );
+  auto const shadow_end = ( const uint8_t* )KASAN_MEM_TO_SHADOW( addr + size - 1 ) + 1;
   uintptr_t non_zero_shadow_addr = 0;
 
-  for ( uintptr_t i = 0; i < addr_shadow_end - addr_shadow_start; i++ ) {
-    if ( *( uint8_t* )( addr_shadow_start + i ) ) {
-      non_zero_shadow_addr = addr_shadow_start + i;
+  // iterate until proper alignment
+  while ( shadow_ptr < shadow_end && ( ( uintptr_t )shadow_ptr & 7 ) ) {
+    if ( *shadow_ptr ) {
+      non_zero_shadow_addr = ( uintptr_t )shadow_ptr;
       break;
+    }
+    shadow_ptr++;
+  }
+  // in case nothing has been found try to iterate 64bit wise
+  if ( ! non_zero_shadow_addr ) {
+    // get 64 bit addresses of shadow ptr and end
+    auto shadow_ptr64 = ( uint64_t* )shadow_ptr;
+    auto const shadow_end64 = ( const uint64_t* )shadow_end;
+    // loop while there is room left
+    while ( shadow_ptr64 < shadow_end64 ) {
+      // handle 1 somewhere in the 64
+      if ( *shadow_ptr64 ) {
+        // find first 8 bit value not null
+        shadow_ptr = ( uint8_t* )shadow_ptr64;
+        // loop  shadow 8-Bit wise to find the issue
+        while ( shadow_ptr < shadow_end ) {
+          if ( *shadow_ptr ) {
+            non_zero_shadow_addr = ( uintptr_t )shadow_ptr;
+            break;
+          }
+          shadow_ptr++;
+        }
+        break;
+      }
+      shadow_ptr64++;
+    }
+    // update shadow ptr to continue with remaining
+    shadow_ptr = ( uint8_t* )shadow_ptr64;
+  }
+  // tackle remaining bytes
+  if ( ! non_zero_shadow_addr ) {
+    while ( shadow_ptr < shadow_end ) {
+      if ( *shadow_ptr ) {
+        non_zero_shadow_addr = ( uintptr_t )shadow_ptr;
+        break;
+      }
+      shadow_ptr++;
     }
   }
 
