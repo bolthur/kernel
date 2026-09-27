@@ -32,6 +32,91 @@
  * @return
  */
 bool rpc_init( void ) {
+  // register generic handlers
+  bolthur_rpc_bind( RPC_VFS_ADD, rpc_generic_add, true );
+  if ( errno ) {
+    #if defined( HID_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register add handler!\r\n" )
+    #endif
+    return false;
+  }
+  bolthur_rpc_bind( RPC_VFS_CLOSE, rpc_generic_close, true );
+  if ( errno ) {
+    #if defined( HID_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register close handler!\r\n" )
+    #endif
+    return false;
+  }
+  bolthur_rpc_bind( RPC_VFS_EXEC, rpc_generic_exec, true );
+  if ( errno ) {
+    #if defined( HID_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register exec handler!\r\n" )
+    #endif
+    return false;
+  }
+  bolthur_rpc_bind( RPC_VFS_EXIT, rpc_generic_exit, true );
+  if ( errno ) {
+    #if defined( HID_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register exit handler!\r\n" )
+    #endif
+    return false;
+  }
+  bolthur_rpc_bind( RPC_VFS_FORK, rpc_generic_fork, true );
+  if ( errno ) {
+    #if defined( HID_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register fork handler!\r\n" )
+    #endif
+    return false;
+  }
+  bolthur_rpc_bind( RPC_VFS_IOCTL, rpc_generic_ioctl, true );
+  if ( errno ) {
+    #if defined( HID_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register ioctl handler!\r\n" )
+    #endif
+    return false;
+  }
+  bolthur_rpc_bind( RPC_VFS_OPEN, rpc_generic_open, true );
+  if ( errno ) {
+    #if defined( HID_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register open handler!\r\n" )
+    #endif
+    return false;
+  }
+  bolthur_rpc_bind( RPC_VFS_READ, rpc_generic_read, true );
+  if ( errno ) {
+    #if defined( HID_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register read handler!\r\n" )
+    #endif
+    return false;
+  }
+  bolthur_rpc_bind( RPC_VFS_REMOVE, rpc_generic_remove, true );
+  if ( errno ) {
+    #if defined( HID_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register remove handler!\r\n" )
+    #endif
+    return false;
+  }
+  bolthur_rpc_bind( RPC_VFS_SEEK, rpc_generic_seek, true );
+  if ( errno ) {
+    #if defined( HID_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register seek handler!\r\n" )
+    #endif
+    return false;
+  }
+  bolthur_rpc_bind( RPC_VFS_STAT, rpc_generic_stat, true );
+  if ( errno ) {
+    #if defined( HID_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register stat handler!\r\n" )
+    #endif
+    return false;
+  }
+  bolthur_rpc_bind( RPC_VFS_WRITE, rpc_generic_write, true );
+  if ( errno ) {
+    #if defined( HID_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register write handler!\r\n" )
+    #endif
+    return false;
+  }
   // default handler
   bolthur_rpc_bind( RPC_TIMER, rpc_default_timer, true );
   if ( errno ) {
