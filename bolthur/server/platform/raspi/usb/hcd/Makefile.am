@@ -14,6 +14,18 @@ hcd_LDADD = \
   ${abs_top_builddir}/../library/usb/libusb.la
 hcd_SOURCES = \
   rpc/default/timer.c \
+  rpc/generic/add.c \
+  rpc/generic/close.c \
+  rpc/generic/exec.c \
+  rpc/generic/exit.c \
+  rpc/generic/fork.c \
+  rpc/generic/ioctl.c \
+  rpc/generic/open.c \
+  rpc/generic/read.c \
+  rpc/generic/remove.c \
+  rpc/generic/seek.c \
+  rpc/generic/stat.c \
+  rpc/generic/write.c \
   rpc/interrupt/handle.c \
   rpc/poll/interrupt.c \
   rpc/stop/transmission.c \

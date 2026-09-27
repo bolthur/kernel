@@ -17,9 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../../server/platform/raspi/iomem/generic.h"
 #include "../lib/string.h"
 #include "../lib/stdlib.h"
 #include "../lib/inttypes.h"
+#include "../mm/phys.h"
 #if defined( PRINT_PROCESS )
   #include "../debug/debug.h"
 #endif
@@ -71,7 +73,7 @@ static void task_stack_cleanup( avl_node_t* a ) {
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "Cleanup a = %p\r\n", a )
   #endif
-  free( ( void* )a );
+  free( a );
 }
 
 /**
@@ -105,7 +107,7 @@ task_stack_manager_t* task_stack_manager_create( void ) {
     return nullptr;
   }
   // prepare
-  memset( ( void* )manager, 0, sizeof( *manager ) );
+  memset( manager, 0, sizeof( *manager ) );
   // create tree
   manager->tree = avl_create_tree(
     task_stack_callback,
@@ -130,7 +132,7 @@ task_stack_manager_t* task_stack_manager_create( void ) {
  * @return false
  */
 bool task_stack_manager_add(
-  uintptr_t stack,
+  const uintptr_t stack,
   task_stack_manager_t* manager
 ) {
   // check manager
@@ -157,7 +159,7 @@ bool task_stack_manager_add(
  * @return false
  */
 bool task_stack_manager_remove(
-  uintptr_t stack,
+  const uintptr_t stack,
   task_stack_manager_t* manager
 ) {
   // check manager
@@ -176,4 +178,47 @@ bool task_stack_manager_remove(
   free( node );
   // return success
   return true;
+}
+
+/**
+ * @fn void task_stack_manager_cleanup_stack(uint64_t*, size_t)
+ * @brief Helper to cleanup stack
+ * @param stack stack to cleanup
+ * @param stack_size total stack size
+ */
+void task_stack_manager_cleanup_stack( uint64_t* stack, const size_t stack_size ) {
+  if ( ! stack ) {
+    return;
+  }
+  const size_t max_index = stack_size / PAGE_SIZE;
+  for ( size_t i = 0; i < max_index; i++ ) {
+    if ( stack[ i ] ) {
+      phys_free_page( stack[ i ] );
+      stack[ i ] = 0;
+    }
+  }
+  free( stack );
+}
+
+/**
+ * @fn uint64_t* task_stack_manager_allocate_stack(size_t)
+ * @brief Helper to allocate stack
+ * @param stack_size
+ * @return
+ */
+uint64_t* task_stack_manager_allocate_stack( const size_t stack_size ) {
+  const size_t max_index = stack_size / PAGE_SIZE;
+  uint64_t* stack = calloc( max_index, sizeof( uint64_t ) );
+  if ( ! stack ) {
+    return nullptr;
+  }
+  for ( size_t i = 0; i < max_index; i++ ) {
+    auto const page = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
+    if ( INVALID_ADDRESS == page ) {
+      task_stack_manager_cleanup_stack( stack, stack_size );
+      return nullptr;
+    }
+    stack[ i ] = page;
+  }
+  return stack;
 }

@@ -34,6 +34,7 @@ bool v7_long_map(
 bool v7_long_map_random(
   virt_context_t*, uintptr_t, virt_memory_type_t, uint32_t );
 uintptr_t v7_long_map_temporary( uint64_t, size_t );
+uintptr_t v7_long_map_temporary_range( const uint64_t*, size_t );
 bool v7_long_unmap( virt_context_t*, uintptr_t, bool );
 void v7_long_unmap_temporary( uintptr_t, size_t );
 uint64_t v7_long_create_table( virt_context_t*, uintptr_t, uint64_t );

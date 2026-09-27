@@ -19,6 +19,7 @@
 
 #include "../../../../../lib/assert.h"
 #include "../../../../../lib/inttypes.h"
+#include "../../../../../lib/stdlib.h"
 #include "../../../../../task/stack.h"
 #include "../../../../../mm/phys.h"
 #if defined( REMOTE_DEBUG )
@@ -74,23 +75,33 @@ void vector_data_abort_handler( cpu_register_context_t* cpu ) {
       && fault < task_thread_current_thread->stack_virtual
       && fault >= task_thread_current_thread->stack_virtual - task_thread_current_thread->stack_size - PAGE_SIZE
     ) {
-      // map down growing stack
-      if ( ! virt_map_address_random(
-        task_thread_current_thread->process->virtual_context,
-        fault,
-        VIRT_MEMORY_TYPE_NORMAL,
-        VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
-      ) ) {
-        PANIC( "Mapping failed" )
+      // reallocate physical
+      const size_t new_physical_size = task_thread_current_thread->stack_size / PAGE_SIZE + 1;
+      uint64_t* new_physical = realloc( task_thread_current_thread->stack_physical, new_physical_size );
+      if ( new_physical ) {
+        // map down growing stack
+        if ( ! virt_map_address_random(
+          task_thread_current_thread->process->virtual_context,
+          fault,
+          VIRT_MEMORY_TYPE_NORMAL,
+          VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
+        ) ) {
+          PANIC( "Mapping failed" )
+        }
+        // get mapped address
+        new_physical[ new_physical_size - 1 ] = virt_get_mapped_address_in_context(
+          task_thread_current_thread->process->virtual_context, fault );
+        // overwrite physical
+        task_thread_current_thread->stack_physical = new_physical;
+        // increase stack size
+        task_thread_current_thread->stack_size += PAGE_SIZE;
+        // enqueue cleanup
+        event_enqueue( EVENT_INTERRUPT_CLEANUP );
+        // decrement nested counter
+        nested_data_abort--;
+        // return to thread
+        return;
       }
-      // increase stack size
-      task_thread_current_thread->stack_size += PAGE_SIZE;
-      // enqueue cleanup
-      event_enqueue( EVENT_INTERRUPT_CLEANUP );
-      // decrement nested counter
-      nested_data_abort--;
-      // return to thread
-      return;
     }
   }
   // debug output

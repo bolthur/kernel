@@ -76,7 +76,7 @@ __bootstrap void virt_startup_setup( void ) {
  * @param phys physical address
  * @param virt virtual address
  */
-__bootstrap void virt_startup_map( uint64_t phys, uintptr_t virt ) {
+__bootstrap void virt_startup_map( const uint64_t phys, const uintptr_t virt ) {
   // check for invalid paging support
   if (
     ! (
@@ -126,10 +126,10 @@ __bootstrap void virt_startup_flush( void ) {
  */
 bool virt_map_address(
   virt_context_t* ctx,
-  uintptr_t vaddr,
-  uint64_t paddr,
-  virt_memory_type_t type,
-  uint32_t page
+  const uintptr_t vaddr,
+  const uint64_t paddr,
+  const virt_memory_type_t type,
+  const uint32_t page
 ) {
   // check context
   if ( ! ctx ) {
@@ -163,9 +163,9 @@ bool virt_map_address(
  */
 bool virt_map_address_random(
   virt_context_t* ctx,
-  uintptr_t vaddr,
-  virt_memory_type_t type,
-  uint32_t page
+  const uintptr_t vaddr,
+  const virt_memory_type_t type,
+  const uint32_t page
 ) {
   // check context
   if ( ! ctx ) {
@@ -194,7 +194,7 @@ bool virt_map_address_random(
  * @param size size to map
  * @return uintptr_t
  */
-uintptr_t virt_map_temporary( uint64_t paddr, size_t size ) {
+uintptr_t virt_map_temporary( const uint64_t paddr, const size_t size ) {
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == virt_supported_mode ) {
     return v7_long_map_temporary( paddr, size );
@@ -211,6 +211,30 @@ uintptr_t virt_map_temporary( uint64_t paddr, size_t size ) {
 }
 
 /**
+ * @fn uintptr_t virt_map_temporary_range(uint64_t, size_t)
+ * @brief Map a physical address within temporary space
+ *
+ * @param paddr physical address
+ * @param size size to map
+ * @return uintptr_t
+ */
+uintptr_t virt_map_temporary_range( const uint64_t* paddr, const size_t size ) {
+  // check for v7 long descriptor format
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == virt_supported_mode ) {
+    return v7_long_map_temporary_range( paddr, size );
+    // check v7 short descriptor format
+  } else if (
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == virt_supported_mode )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN == virt_supported_mode )
+  ) {
+    return v7_short_map_temporary_range( paddr, size );
+    // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" )
+  }
+}
+
+/**
  * @fn bool virt_unmap_address(virt_context_t*, uintptr_t, bool)
  * @brief unmap virtual address
  *
@@ -220,7 +244,7 @@ uintptr_t virt_map_temporary( uint64_t paddr, size_t size ) {
  * @return true
  * @return false
  */
-bool virt_unmap_address( virt_context_t* ctx, uintptr_t addr, bool free_phys ) {
+bool virt_unmap_address( virt_context_t* ctx, const uintptr_t addr, const bool free_phys ) {
   // check context
   if ( ! ctx ) {
     return false;
@@ -247,7 +271,7 @@ bool virt_unmap_address( virt_context_t* ctx, uintptr_t addr, bool free_phys ) {
  * @param addr virtual temporary address
  * @param size size to unmap
  */
-void virt_unmap_temporary( uintptr_t addr, size_t size ) {
+void virt_unmap_temporary( const uintptr_t addr, const size_t size ) {
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == virt_supported_mode ) {
     v7_long_unmap_temporary( addr, size );
@@ -354,7 +378,7 @@ virt_context_t* virt_fork_context( virt_context_t* ctx, task_process_t* proc ) {
  * @param unmap_only
  * @return
  */
-bool virt_destroy_context( virt_context_t* ctx, bool unmap_only ) {
+bool virt_destroy_context( virt_context_t* ctx, const bool unmap_only ) {
   // check context
   if ( ! ctx ) {
     return false;
@@ -386,8 +410,8 @@ bool virt_destroy_context( virt_context_t* ctx, bool unmap_only ) {
  */
 uint64_t virt_create_table(
   virt_context_t* ctx,
-  uintptr_t addr,
-  uint64_t table
+  const uintptr_t addr,
+  const uint64_t table
 ) {
   // check context
   if ( ! ctx ) {
@@ -465,7 +489,7 @@ void virt_flush_complete( void ) {
  * @param ctx used context
  * @param addr virtual address to flush
  */
-void virt_flush_address( virt_context_t* ctx, uintptr_t addr ) {
+void virt_flush_address( virt_context_t* ctx, const uintptr_t addr ) {
   // no flush if not initialized or context currently not active
   if (
     ! virt_init_get()
@@ -550,7 +574,7 @@ void virt_arch_prepare( void ) {
  * @return true
  * @return false
  */
-bool virt_is_mapped_in_context( virt_context_t* ctx, uintptr_t addr ) {
+bool virt_is_mapped_in_context( virt_context_t* ctx, const uintptr_t addr ) {
   // check context
   if ( ! ctx ) {
     return false;

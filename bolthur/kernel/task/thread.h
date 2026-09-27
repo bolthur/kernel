@@ -41,8 +41,8 @@ typedef struct  task_thread {
   pid_t id;
   /** virtual stack address */
   uintptr_t stack_virtual;
-  /** physical stack address */
-  uint64_t stack_physical;
+  /** physical stack address array */
+  uint64_t* stack_physical;
   /** stack size */
   size_t stack_size;
   /** root entry point */

@@ -67,13 +67,8 @@ task_thread_t* task_thread_create(
   #endif
 
   // create stack
-  uint64_t stack_physical = phys_find_free_page_range(
-    STACK_SIZE,
-    STACK_SIZE,
-    PHYS_MEMORY_TYPE_NORMAL
-  );
-  // handle error
-  if ( INVALID_ADDRESS == stack_physical ) {
+  uint64_t* stack_physical = task_stack_manager_allocate_stack( STACK_SIZE );
+  if ( ! stack_physical) {
     return nullptr;
   }
 
@@ -83,7 +78,7 @@ task_thread_t* task_thread_create(
   );
   // handle error
   if ( 0 == stack_virtual ) {
-    phys_free_page_range( stack_physical, STACK_SIZE );
+    task_stack_manager_cleanup_stack( stack_physical, STACK_SIZE );
     return nullptr;
   }
   // debug output
@@ -95,7 +90,7 @@ task_thread_t* task_thread_create(
   task_thread_t* thread = malloc( sizeof( *thread ) );
   // check
   if ( ! thread ) {
-    phys_free_page_range( stack_physical, STACK_SIZE );
+    task_stack_manager_cleanup_stack( stack_physical, STACK_SIZE );
     return nullptr;
   }
   // prepare
@@ -109,7 +104,7 @@ task_thread_t* task_thread_create(
   thread->current_context = malloc( sizeof( cpu_register_context_t ) );
   // handle error
   if ( ! thread->current_context ) {
-    phys_free_page_range( stack_physical, STACK_SIZE );
+    task_stack_manager_cleanup_stack( stack_physical, STACK_SIZE );
     free( thread );
     return nullptr;
   }
@@ -117,7 +112,7 @@ task_thread_t* task_thread_create(
   // cache locally
   auto current_context = ( cpu_register_context_t* )thread->current_context;
   // prepare area
-  memset( ( void* )current_context, 0, sizeof( cpu_register_context_t ) );
+  memset( current_context, 0, sizeof( cpu_register_context_t ) );
   // set content
   current_context->reg.pc = ( uint32_t )entry & ~1U;
   // only user mode threads are possible
@@ -155,10 +150,10 @@ task_thread_t* task_thread_create(
   #endif
 
   // map stack temporary
-  uintptr_t tmp_virtual_user = virt_map_temporary( stack_physical, STACK_SIZE );
+  uintptr_t tmp_virtual_user = virt_map_temporary_range( stack_physical, STACK_SIZE );
   // handle error
   if ( 0 == tmp_virtual_user ) {
-    phys_free_page_range( stack_physical, STACK_SIZE );
+    task_stack_manager_cleanup_stack( stack_physical, STACK_SIZE );
     free( thread->current_context );
     free( thread );
     return nullptr;
@@ -176,17 +171,17 @@ task_thread_t* task_thread_create(
     stack_virtual,
     process->thread_stack_manager
   ) ) {
-    phys_free_page_range( stack_physical, STACK_SIZE );
+    task_stack_manager_cleanup_stack( stack_physical, STACK_SIZE );
     free( thread->current_context );
     free( thread );
     return nullptr;
   }
   uintptr_t virtual = stack_virtual - PAGE_SIZE;
-  uint64_t physical = stack_physical + STACK_SIZE - PAGE_SIZE;
+  size_t physical_index = ( STACK_SIZE / PAGE_SIZE ) - 1;
   for(
     uintptr_t stack_current = 0;
     stack_current < STACK_SIZE;
-    stack_current += PAGE_SIZE, virtual -= PAGE_SIZE, physical -= PAGE_SIZE
+    stack_current += PAGE_SIZE, virtual -= PAGE_SIZE
   ) {
     #if defined( PRINT_PROCESS )
       DEBUG_OUTPUT( "virtual = %#"PRIxPTR"\r\n", virtual )
@@ -196,12 +191,12 @@ task_thread_t* task_thread_create(
     if ( ! virt_map_address(
       process->virtual_context,
       virtual,
-      physical,
+      stack_physical[ physical_index-- ],
       VIRT_MEMORY_TYPE_NORMAL,
       VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
     ) ) {
       task_stack_manager_remove( stack_virtual, process->thread_stack_manager );
-      phys_free_page_range( stack_physical, STACK_SIZE );
+      task_stack_manager_cleanup_stack( stack_physical, STACK_SIZE );
       free( thread->current_context );
       free( thread );
       return nullptr;
@@ -222,7 +217,7 @@ task_thread_t* task_thread_create(
   // push back into free list
   if ( ! list_push_back_data( process->thread_list, thread ) ) {
     task_stack_manager_remove( stack_virtual, process->thread_stack_manager );
-    virt_unmap_address( process->virtual_context, stack_virtual, true );
+    virt_unmap_address( process->virtual_context, stack_virtual, true ); /// FIXME: UNMAP WHOLE STACK COMPLETELY
     free( thread->current_context );
     free( thread );
     return nullptr;
@@ -269,10 +264,19 @@ task_thread_t* task_thread_fork(
   thread->stack_virtual = thread_to_fork->stack_virtual;
   thread->entry = thread_to_fork->entry;
   thread->handling_interrupt = thread_to_fork->handling_interrupt;
-  thread->stack_physical = virt_get_mapped_address_in_context(
-    thread->process->virtual_context,
-    thread->stack_virtual
-  );
+  uint64_t* physical = calloc( thread_to_fork->stack_size / PAGE_SIZE, sizeof( uint64_t ) );
+  if ( ! physical ) {
+    free( thread->current_context );
+    free( thread );
+    return nullptr;
+  }
+  for ( size_t i = 0; i < thread->stack_size / PAGE_SIZE; i++ ) {
+    physical[ i ] = virt_get_mapped_address_in_context(
+      thread->process->virtual_context,
+      thread->stack_virtual - i * PAGE_SIZE
+    );
+  }
+  thread->stack_physical = physical;
   // copy over weight, vruntime and nice level
   thread->weight = thread_to_fork->weight;
   thread->vruntime = thread_to_fork->vruntime;
@@ -302,6 +306,7 @@ task_thread_t* task_thread_fork(
     thread->stack_virtual,
     thread->process->thread_stack_manager
   ) ) {
+    free( thread->stack_physical );
     free( thread->current_context );
     free( thread );
     return nullptr;
@@ -313,6 +318,7 @@ task_thread_t* task_thread_fork(
       thread->stack_virtual,
       thread->process->thread_stack_manager
     );
+    free( thread->stack_physical );
     free( thread->current_context );
     free( thread );
     return nullptr;
@@ -373,7 +379,7 @@ bool task_thread_push_arguments(
     memset( argv_ptr, 0, ( size_t )argv_count * sizeof( uintptr_t ) );
   }
   // map stack temporarily
-  const uintptr_t stack_tmp = virt_map_temporary( thread->stack_physical, STACK_SIZE );
+  const uintptr_t stack_tmp = virt_map_temporary_range( thread->stack_physical, thread->stack_size );
   if ( !stack_tmp ) {
     free( env_ptr );
     free( argv_ptr );
@@ -383,7 +389,7 @@ bool task_thread_push_arguments(
     DEBUG_OUTPUT( "stack_tmp = %#"PRIxPTR", thread->stack_virtual = %#"PRIxPTR"\r\n", stack_tmp, thread->stack_virtual )
   #endif
   // get top stack of temporary and user
-  uintptr_t rsp = stack_tmp + STACK_SIZE - alignof( max_align_t );
+  uintptr_t rsp = stack_tmp + thread->stack_size - alignof( max_align_t );
   uintptr_t user_rsp = thread->stack_virtual - alignof( max_align_t );
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "rsp = %#"PRIxPTR", user_rsp = %#"PRIxPTR"\r\n", rsp, user_rsp )
