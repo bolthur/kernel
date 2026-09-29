@@ -21,6 +21,7 @@
 #include "../../../../syscall.h"
 #if defined( PRINT_SYSCALL )
   #include "../../../../debug/debug.h"
+  #include "../../../../lib/inttypes.h"
 #endif
 
 /**
@@ -42,7 +43,7 @@ void syscall_timer_acquire( void* context ) {
   const bool interruptable = syscall_get_parameter( context, 3 );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_timer_acquire( %zu, %zu )\r\n", rpc_num, timeout )
+    DEBUG_OUTPUT( "syscall_timer_acquire( %"PRIu64", %zu, %d )\r\n", timeout, rpc_num, interruptable )
   #endif
   // handle timeout already reached
   if ( timeout <= timer_get_current_tick_value() ) {
@@ -65,7 +66,7 @@ void syscall_timer_acquire( void* context ) {
   if ( ! item ) {
     // debug output
     #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "Unable to acquire timer\r\n" )
+      DEBUG_OUTPUT( "Unable to acquire timer\r\n" )
     #endif
     syscall_populate_error( context, ( size_t )-EAGAIN );
     return;

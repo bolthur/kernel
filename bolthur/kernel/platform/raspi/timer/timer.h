@@ -20,11 +20,15 @@
 #ifndef _PLATFORM_RASPI_TIMER_H
 #define _PLATFORM_RASPI_TIMER_H
 
+#include <stdint.h>
+
 // Timer match bits
 #define ARM_CORE0_TIMER_MATCH ( 1 << 3 )
 
 // timer interrupts => Above highest rpi interrupt to prevent timer invoke
 // on other interrupt
 #define ARM_CORE0_TIMER_INTERRUPT 64
+
+uint64_t timer_get_compare_value( void );
 
 #endif

@@ -66,9 +66,9 @@ void rpc_default_timer(
     entry->status = DWHCI_QUEUE_POLL_STATUS_DATA;
   } else {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    //#if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Timeout reached\r\n" )
-    #endif
+    //#endif
     // switch status and cancel channel
     entry->status = DWHCI_QUEUE_POLL_STATUS_DATA == entry->status
       ? DWHCI_QUEUE_POLL_STATUS_CANCEL : DWHCI_QUEUE_CANCEL;

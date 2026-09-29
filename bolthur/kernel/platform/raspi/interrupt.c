@@ -110,47 +110,13 @@ void interrupt_clear( const int8_t num ) {
  * @param num interrupt number to enable
  */
 void interrupt_mask_specific( const int8_t num ) {
-  uint32_t interrupt = ( uint32_t )num;
-  // get peripheral base
-  const uintptr_t base = peripheral_base_get( PERIPHERAL_GPIO );
-  // get interrupt enable and pending
-  uintptr_t interrupt_to_enable = base;
-  uintptr_t interrupt_pending = base;
-  if ( 32 > interrupt ) {
-    interrupt_to_enable += INTERRUPT_ENABLE_IRQ_1;
-    interrupt_pending += INTERRUPT_IRQ_PENDING_1;
-  } else if ( 64 > interrupt ) {
-    interrupt_to_enable += INTERRUPT_ENABLE_IRQ_2;
-    interrupt_pending += INTERRUPT_IRQ_PENDING_2;
-    interrupt -= 32;
+  if ( 32 > num ) {
+    io_out32( peripheral_base_get( PERIPHERAL_GPIO ) + INTERRUPT_ENABLE_IRQ_1, 1U << num );
+  } else if ( 64 > num ) {
+    io_out32( peripheral_base_get( PERIPHERAL_GPIO ) + INTERRUPT_ENABLE_IRQ_2, 1U << ( num - 32 ) );
   } else {
     PANIC( "Unsupported interrupt number!" )
   }
-  // transform to bit
-  interrupt = 1 << interrupt;
-  // get and set interrupt enable
-  uint32_t interrupt_line = io_in32( interrupt_to_enable );
-  #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Interrupt line %#"PRIx32"\r\n", interrupt_line )
-  #endif
-  // stop if already set
-  if ( ! ( interrupt_line & interrupt ) ) {
-    #if defined( PRINT_INTERRUPT )
-      DEBUG_OUTPUT( "Interrupt %"PRId8" not yet enabled\r\n", num )
-    #endif
-    interrupt_line |= interrupt;
-    // write changes
-    io_out32( interrupt_to_enable, interrupt_line );
-  }
-  #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Clearing interrupt %"PRId8"\r\n", num )
-    DEBUG_OUTPUT( "Interrupt line %#"PRIx32"\r\n", interrupt_line )
-  #endif
-  // get and clear pending interrupt from memory
-  interrupt_line = io_in32( interrupt_pending );
-  interrupt_line &= ~interrupt;
-  // write changes
-  io_out32( interrupt_pending, interrupt_line );
 }
 
 /**
@@ -179,7 +145,7 @@ void interrupt_handle_possible( void* context, const bool fast ) {
   // get source
   const uint32_t source = io_in32( peripheral_base_get( PERIPHERAL_LOCAL ) + 0x60 );
   // handle not fast and timer match
-  if ( ! fast && source & ARM_CORE0_TIMER_MATCH ) {
+  if ( ! fast && ( source & ARM_CORE0_TIMER_MATCH || timer_missed_interrupt() ) ) {
     interrupt_handle(
       ARM_CORE0_TIMER_INTERRUPT,
       INTERRUPT_NORMAL,

@@ -25,3 +25,8 @@ EXPORT( timer_get_current_tick_value )
 timer_get_current_tick_value:
   mrrc p15, 1, r0, r1, c14
   bx lr
+
+EXPORT( timer_get_compare_value )
+timer_get_compare_value:
+  mrrc p15, 2, r0, r1, c14
+  bx lr

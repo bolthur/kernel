@@ -42,10 +42,14 @@ typedef enum {
 } dwhci_split_phase_t;
 
 typedef enum {
-  DWHCI_QUEUE_CHANNEL_STATUS_PENDING = 0,
+  DWHCI_QUEUE_SETUP = 0,
+
+  DWHCI_QUEUE_CHANNEL_STATUS_PENDING,
   DWHCI_QUEUE_CHANNEL_STATUS_SETUP,
   DWHCI_QUEUE_CHANNEL_STATUS_DATA,
+  DWHCI_QUEUE_CHANNEL_STATUS_DATA_CANCEL_RETRY,
   DWHCI_QUEUE_CHANNEL_STATUS_ACK,
+  DWHCI_QUEUE_CHANNEL_STATUS_ACK_CANCEL_RETRY,
   DWHCI_QUEUE_CHANNEL_STATUS_DONE,
 
   DWHCI_QUEUE_POLL_STATUS_PENDING,
@@ -105,23 +109,28 @@ typedef struct channel_queue_entry {
   libusb_transfer_error_t previous_transfer_status;
   /** poll channel state */
   dwhci_channel_state_t poll_state;
-  /** last poll timer */
-  uint64_t poll_last_timer;
+  /** last tick count */
+  uint64_t last_tick_count;
   /** poll timer */
   size_t poll_timer_id;
   /** channel data state */
   dwhci_channel_state_t channel_data_state;
   /** packets to transfer */
   uint32_t packets_to_transfer;
+  /** transaction packet count */
+  uint32_t transaction_packet_count;
   /** packet size */
   uint32_t packet_size;
   /** polling timeout */
   size_t poll_timeout;
+  /** setup timeout */
+  size_t setup_timeout;
   /** timer frequency */
   size_t timer_frequency;
   // debugging stuff
-  uint32_t poll_ssplit_frame_num;
-  uint32_t poll_csplit_frame_num;
+  uint32_t ssplit_frame_num;
+  uint32_t csplit_frame_num_previous;
+  uint32_t csplit_frame_num;
   uint32_t verify_char;
   uint32_t verify_split;
   uint32_t verify_size;

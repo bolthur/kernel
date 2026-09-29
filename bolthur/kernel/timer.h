@@ -37,8 +37,9 @@ typedef struct {
 
 void timer_init( void );
 void timer_platform_init( void );
-size_t timer_get_frequency( void );
-size_t timer_get_interval( void );
+uint32_t timer_get_frequency( void );
+uint32_t timer_get_interval( void );
+bool timer_missed_interrupt( void );
 
 size_t timer_generate_id( void );
 timer_callback_entry_t* timer_register_callback( task_thread_t*, size_t, uint64_t, bool );

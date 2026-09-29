@@ -20,10 +20,8 @@
 #include "timer.h"
 #include "../peripheral.h"
 #include "../../../arch/arm/barrier.h"
-#include "../mailbox/property.h"
 #include "../../../io.h"
 #include "../../../timer.h"
-#include "../../../event.h"
 #include "../../../interrupt.h"
 #if defined( PRINT_TIMER )
   #include "../../lib/inttypes.h"
@@ -91,6 +89,18 @@ static void timer_control( uint32_t control ) {
 }
 
 /**
+ * @fn bool timer_missed_interrupt(void)
+ * @brief Helper to check if timer interrupt was missed
+ * @return
+ */
+bool timer_missed_interrupt( void ) {
+  const uint64_t counter = timer_get_current_tick_value();
+  const uint64_t compare = timer_get_compare_value();
+  const uint64_t interval = timer_get_interval() / 20;
+  return counter >= compare + interval;
+}
+
+/**
  * @fn void timer_clear(void*)
  * @brief Clear timer callback
  *
@@ -107,7 +117,7 @@ static void timer_clear( void* context ) {
   timer_control( 1 );
   // handle timers
   timer_handle_callback();
-  // handle vruntime update
+  // handle vruntime update only when happening from user mode
   if ( ! context ) {
     timer_handle_vruntime( timer_get_interval() );
   }
@@ -140,12 +150,12 @@ void timer_platform_init( void ) {
 }
 
 /**
- * @fn size_t timer_get_frequency(void)
+ * @fn uint32_t timer_get_frequency(void)
  * @brief Helper to get timer frequency
  *
  * @return
  */
-size_t timer_get_frequency( void ) {
+uint32_t timer_get_frequency( void ) {
   #if defined( BCM2709 ) || defined( BCM2710 )
     uint32_t frequency;
     __asm__ __volatile__( "mrc p15, 0, %0, c14, c0, 0" : "=r" ( frequency ) );
@@ -156,11 +166,11 @@ size_t timer_get_frequency( void ) {
 }
 
 /**
- * @fn size_t timer_get_interval(void)
+ * @fn uint32_t timer_get_interval(void)
  * @brief Helper to get timer interval
  *
  * @return
  */
-size_t timer_get_interval( void ) {
+uint32_t timer_get_interval( void ) {
   return timer_get_frequency() / TIMER_INTERRUPT_FREQUENCY;
 }

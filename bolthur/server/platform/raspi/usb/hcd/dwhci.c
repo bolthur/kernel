@@ -32,6 +32,8 @@
 // shared includes
 #include "../../libhcd.h"
 // library includes
+#include <assert.h>
+
 #include "delay.h"
 #include "mmio.h"
 #include "timer.h"
@@ -118,11 +120,9 @@ response_t dwhci_prepare_channel(
     EARLY_STARTUP_PRINT( "packet_count = %"PRIu32", buffer_length = %"PRIu32"\r\n",
       packet_count, buffer_length )
   #endif
-  if ( DWHCI_QUEUE_CHANNEL_STATUS_DATA == entry->status ) {
+  if ( buffer_length > usb_number_from_packet_size( usb_pipe->max_size ) ) {
+    buffer_length = usb_number_from_packet_size( usb_pipe->max_size );
     packet_count = 1;
-    if ( buffer_length > usb_number_from_packet_size( usb_pipe->max_size ) ) {
-      buffer_length = usb_number_from_packet_size( usb_pipe->max_size );
-    }
     entry->buffer_size_to_transfer = buffer_length;
   }
   // debug output
@@ -149,6 +149,7 @@ response_t dwhci_prepare_channel(
   transfer_data |= HCD_DWHCI_CHAN_XFER_SIZE_PACKET_COUNT( packet_count );
   // set packet size and count if not set
   if ( 0 == entry->packets_to_transfer ) {
+    entry->transaction_packet_count = packet_count;
     entry->packets_to_transfer = original_packet_count;
     entry->packet_size = usb_number_from_packet_size( usb_pipe->max_size );
     // debug output
@@ -563,7 +564,7 @@ response_t dwhci_channel_prepare_dma( channel_queue_entry_t* entry ) {
   }
   // set time
   if ( DWHCI_QUEUE_POLL_STATUS_DATA == entry->status ) {
-    entry->poll_last_timer = _syscall_timer_tick_count();
+    entry->last_tick_count = _syscall_timer_tick_count();
   }
   // disable all interrupts in mask
   mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( entry->channel ), 0 );
@@ -596,7 +597,7 @@ response_t dwhci_channel_send_async_start_channel( channel_queue_entry_t* entry 
     | HCD_CHANNEL_INTERRUPT_NOT_YET
   ) );
   mmio_write( PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK, mmio_read( PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK ) | 1U << entry->channel );
-  entry->poll_ssplit_frame_num = mmio_read( PERIPHERAL_DWHCI_HOST_FRM_NUM );
+  entry->ssplit_frame_num = mmio_read( PERIPHERAL_DWHCI_HOST_FRM_NUM );
 
   entry->verify_char = mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ) );
   entry->verify_split = mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_SPLIT_CTRL( entry->channel ) );
@@ -644,6 +645,8 @@ response_t dwhci_channel_send_async_stop_channel( channel_queue_entry_t* entry, 
     && (
       DWHCI_QUEUE_CANCEL == entry->status
       || DWHCI_QUEUE_POLL_STATUS_CANCEL == entry->status
+      || DWHCI_QUEUE_CHANNEL_STATUS_DATA_CANCEL_RETRY == entry->status
+      || DWHCI_QUEUE_CHANNEL_STATUS_ACK_CANCEL_RETRY == entry->status
     )
   ) {
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -653,7 +656,9 @@ response_t dwhci_channel_send_async_stop_channel( channel_queue_entry_t* entry, 
     #endif
     // read characteristics and set enable / disable
     uint32_t characteristic = mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ) );
+    EARLY_STARTUP_PRINT( "characteristic = %#"PRIx32"\r\n", characteristic )
     if ( characteristic & HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 ) ) {
+      EARLY_STARTUP_PRINT( "CANCELLING CHANNEL\r\n" )
       // enable interrupts in mask
       mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( entry->channel ), (
         HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE
@@ -678,6 +683,22 @@ response_t dwhci_channel_send_async_stop_channel( channel_queue_entry_t* entry, 
         }
         // fake a nack
         entry->error = LIBUSB_TRANSFER_ERROR_NO_ACKNOWLEDGE;
+      } else if ( DWHCI_QUEUE_CHANNEL_STATUS_DATA_CANCEL_RETRY == entry->status ) {
+        EARLY_STARTUP_PRINT( "No channel halt necessary, continuing with data\r\n" )
+        // set data status
+        entry->status = DWHCI_QUEUE_CHANNEL_STATUS_DATA;
+        // reset split phase
+        if ( entry->split_phase != DWHCI_SPLIT_PHASE_NONE ) {
+          entry->split_phase = DWHCI_SPLIT_PHASE_SSPLIT;
+        }
+      } else if ( DWHCI_QUEUE_CHANNEL_STATUS_ACK_CANCEL_RETRY == entry->status ) {
+        EARLY_STARTUP_PRINT( "No channel halt necessary, continuing with ack\r\n" )
+        // set data status
+        entry->status = DWHCI_QUEUE_CHANNEL_STATUS_ACK;
+        // reset split phase
+        if ( entry->split_phase != DWHCI_SPLIT_PHASE_NONE ) {
+          entry->split_phase = DWHCI_SPLIT_PHASE_SSPLIT;
+        }
       } else {
         // continue with cancel done
         entry->status = DWHCI_QUEUE_CANCEL_DONE;
@@ -1060,7 +1081,12 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
  */
 response_t dwhci_channel_send_cancel( channel_queue_entry_t* entry ) {
   // handle not correct status
-  if ( DWHCI_QUEUE_CANCEL != entry->status && DWHCI_QUEUE_POLL_STATUS_CANCEL != entry->status ) {
+  if (
+    DWHCI_QUEUE_CANCEL != entry->status
+    && DWHCI_QUEUE_POLL_STATUS_CANCEL != entry->status
+    && DWHCI_QUEUE_CHANNEL_STATUS_DATA_CANCEL_RETRY != entry->status
+    && DWHCI_QUEUE_CHANNEL_STATUS_ACK_CANCEL_RETRY != entry->status
+  ) {
     return HCD_RESPONSE_ERROR_EINVAL;
   }
   // stop transmission
@@ -1182,6 +1208,8 @@ response_t dwhci_channel_async_continue( channel_queue_entry_t* entry ) {
     // cancellation ( regular and poll cancellation )
     case DWHCI_QUEUE_CANCEL:
     case DWHCI_QUEUE_POLL_STATUS_CANCEL:
+    case DWHCI_QUEUE_CHANNEL_STATUS_DATA_CANCEL_RETRY:
+    case DWHCI_QUEUE_CHANNEL_STATUS_ACK_CANCEL_RETRY:
       return dwhci_channel_send_cancel( entry );
     case DWHCI_QUEUE_CANCEL_DONE:
       return dwhci_channel_send_cancel_done( entry );
@@ -1211,7 +1239,7 @@ response_t dwhci_channel_send_async(
   #endif
   // push data with channel to queue
   channel_queue_entry_t* entry = nullptr;
-  response_t result = dwhci_queue_add_entry( data, data_size, DWHCI_QUEUE_CHANNEL_STATUS_PENDING, &entry );
+  response_t result = dwhci_queue_add_entry( data, data_size, DWHCI_QUEUE_SETUP, &entry );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -1236,6 +1264,8 @@ response_t dwhci_channel_send_async(
   // initialize split phase
   entry->split_phase = LIBUSB_SPEED_HIGH != data->pipe_address.speed ? DWHCI_SPLIT_PHASE_SSPLIT : DWHCI_SPLIT_PHASE_NONE;
   entry->channel_data_state = DWHCI_CHANNEL_STATE_DATA1;
+  entry->setup_timeout = data->timeout;
+  entry->timer_frequency = _syscall_timer_frequency();
   // try to allocate a channel
   uint8_t channel = 0;
   result = dwhci_allocate_channel( &channel );
@@ -1244,6 +1274,8 @@ response_t dwhci_channel_send_async(
     #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to allocate a channel, entry is queued\r\n" )
     #endif
+    // adjust state
+    entry->status = DWHCI_QUEUE_CHANNEL_STATUS_PENDING;
     // return error
     return HCD_RESPONSE_OK;
   }
@@ -1281,6 +1313,8 @@ response_t dwhci_channel_send_async(
       // return error
       return HCD_RESPONSE_ERROR_IO;
     }
+    // set time
+    entry->last_tick_count = _syscall_timer_tick_count();
   }
   // continue async
   return dwhci_channel_async_continue( entry );
@@ -1476,11 +1510,11 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
   memset( entry->buffer, 0, entry_data->buffer_length );
   // check interval
   size_t wait_time = 0;
-  if ( entry->poll_last_timer > 0 ) {
+  if ( entry->last_tick_count > 0 ) {
     // get current tick count
     const uint64_t current_tick_count = _syscall_timer_tick_count();
     // calculate difference and finally passed milliseconds
-    const uint64_t difference = current_tick_count - entry->poll_last_timer;
+    const uint64_t difference = current_tick_count - entry->last_tick_count;
     const size_t passed_milliseconds = ( size_t )( ( ( double )difference / ( double )entry->timer_frequency ) * 1000.0 );
     #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "passed_milliseconds = %zu\r\n", passed_milliseconds )
@@ -1493,7 +1527,7 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
     } else {
       entry->status = DWHCI_QUEUE_POLL_STATUS_DATA;
     }
-    entry->poll_last_timer = 0;
+    entry->last_tick_count = 0;
   } else {
     // next step is poll data
     entry->status = DWHCI_QUEUE_POLL_STATUS_DATA;
@@ -1620,7 +1654,7 @@ response_t dwhci_channel_poll_async(
   }
   // push data with channel to queue
   channel_queue_entry_t* entry = nullptr;
-  response_t result = dwhci_queue_add_entry( data, data_size, DWHCI_QUEUE_POLL_STATUS_PENDING, &entry );
+  response_t result = dwhci_queue_add_entry( data, data_size, DWHCI_QUEUE_SETUP, &entry );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -1656,6 +1690,8 @@ response_t dwhci_channel_poll_async(
     #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to allocate a channel, entry is queued\r\n" )
     #endif
+    // set pending status
+    entry->status = DWHCI_QUEUE_POLL_STATUS_PENDING;
     // return error
     return HCD_RESPONSE_OK;
   }
