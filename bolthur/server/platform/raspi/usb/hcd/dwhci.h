@@ -83,6 +83,8 @@ typedef struct channel_queue_entry {
   void* buffer;
   /** transfer buffer size */
   uint32_t buffer_size_to_transfer;
+  /** transfer max packet size */
+  uint32_t packet_size;
   /** buffer offset for transfer */
   uint32_t buffer_offset;
   /** transferred data */
@@ -115,12 +117,6 @@ typedef struct channel_queue_entry {
   size_t poll_timer_id;
   /** channel data state */
   dwhci_channel_state_t channel_data_state;
-  /** packets to transfer */
-  uint32_t packets_to_transfer;
-  /** transaction packet count */
-  uint32_t transaction_packet_count;
-  /** packet size */
-  uint32_t packet_size;
   /** polling timeout */
   size_t poll_timeout;
   /** setup timeout */

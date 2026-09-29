@@ -74,7 +74,7 @@ response_t dwhci_prepare_channel(
   const uint32_t parent_device_number,
   const uint32_t port_number,
   const uint8_t channel,
-  uint32_t buffer_length,
+  const uint32_t buffer_length,
   const dwhci_channel_state_t packet_id,
   const libusb_pipe_address_t* usb_pipe,
   const bool channel_prepared,
@@ -113,18 +113,9 @@ response_t dwhci_prepare_channel(
   if ( 0 == packet_count ) {
     packet_count = 1;
   }
-  const uint32_t original_packet_count = packet_count;
+  // populate packet size
+  entry->packet_size = usb_number_from_packet_size( usb_pipe->max_size );
   // reset packet count and buffer_size for data to one packet at the time
-  // debug output
-  #if defined ( DWHCI_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "packet_count = %"PRIu32", buffer_length = %"PRIu32"\r\n",
-      packet_count, buffer_length )
-  #endif
-  if ( buffer_length > usb_number_from_packet_size( usb_pipe->max_size ) ) {
-    buffer_length = usb_number_from_packet_size( usb_pipe->max_size );
-    packet_count = 1;
-    entry->buffer_size_to_transfer = buffer_length;
-  }
   // debug output
   #if defined ( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "packet_count = %"PRIu32", buffer_length = %"PRIu32"\r\n",
@@ -147,17 +138,6 @@ response_t dwhci_prepare_channel(
   }
   // set packet count
   transfer_data |= HCD_DWHCI_CHAN_XFER_SIZE_PACKET_COUNT( packet_count );
-  // set packet size and count if not set
-  if ( 0 == entry->packets_to_transfer ) {
-    entry->transaction_packet_count = packet_count;
-    entry->packets_to_transfer = original_packet_count;
-    entry->packet_size = usb_number_from_packet_size( usb_pipe->max_size );
-    // debug output
-    #if defined ( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "packet_size = %"PRIu32", transfer count = %"PRIu32"\r\n",
-        entry->packet_size, entry->packets_to_transfer )
-    #endif
-  }
   // set odd frame only for pollings
   if ( DWHCI_QUEUE_POLL_STATUS_DATA == entry->status ) {
     // calculate target frame
