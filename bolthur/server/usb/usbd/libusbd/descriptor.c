@@ -122,14 +122,8 @@ static void descriptor_get_async_first_finished(
     usbd_context_get_descriptor_destroy( ctx );
     return;
   }
-  if ( usb_control_message->last_transfer == usb_control_message->buffer_length ) {
-    // copy over from hcd poll buffer into device descriptor
-    memcpy(
-      ctx->buffer,
-      usb_control_message->buffer,
-      usb_control_message->buffer_length
-    );
-  }
+  // copy over from hcd poll buffer into set buffer
+  memcpy( ctx->buffer, usb_control_message->buffer, usb_control_message->last_transfer );
   // populate last transfer and error
   ctx->dev->last_transfer = usb_control_message->last_transfer;
   ctx->dev->error = usb_control_message->error;
@@ -325,27 +319,31 @@ static void descriptor_read_device_finished(
 }
 
 /**
- * @fn int usbd_descriptor_read_device(libusb_device_t*, rpc_handler_t, usbd_attach_context_t*)
+ * @fn int usbd_descriptor_read_device(libusb_device_t*, rpc_handler_t, usbd_attach_context_t*, bool)
  * @brief Read usb device descriptor
  * @param dev device to read descriptor for
  * @param callback callback to be executed once finished
  * @param context context to be passed through
+ * @param first_read pass true in case it's the first descriptor read
  * @return
  */
 int usbd_descriptor_read_device(
   libusb_device_t* dev,
   const rpc_handler_t callback,
-  usbd_attach_context_t* context
+  usbd_attach_context_t* context,
+  const bool first_read
 ) {
   // debug output
   #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Read device descriptor\r\n" )
   #endif
   // determine descriptor speed
-  if ( LIBUSB_SPEED_LOW == dev->speed ) {
-    dev->descriptor.max_packet_size0 = 8;
-  } else if ( LIBUSB_SPEED_FULL == dev->speed || LIBUSB_SPEED_HIGH == dev->speed ) {
-    dev->descriptor.max_packet_size0 = 64;
+  if ( first_read ) {
+    if ( LIBUSB_SPEED_LOW == dev->speed ) {
+      dev->descriptor.max_packet_size0 = 8;
+    } else if ( LIBUSB_SPEED_FULL == dev->speed || LIBUSB_SPEED_HIGH == dev->speed ) {
+      dev->descriptor.max_packet_size0 = 64;
+    }
   }
   // allocate context
   usbd_descriptor_context_t* ctx;
@@ -376,7 +374,7 @@ int usbd_descriptor_read_device(
     LIBUSB_DESCRIPTOR_DEVICE,
     0,
     0,
-    ( void* )&dev->descriptor,
+    &dev->descriptor,
     sizeof( dev->descriptor ),
     0,
     descriptor_read_device_finished,

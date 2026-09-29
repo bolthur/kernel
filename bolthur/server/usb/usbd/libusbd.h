@@ -245,7 +245,7 @@ void usbd_deallocate_device( libusb_device_t*, rpc_handler_t, void*, size_t, pid
 const char* usbd_description_get( const libusb_device_t* );
 // descriptor
 int usbd_descriptor_get_async( libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, const void*, size_t, uint8_t, rpc_handler_t, pid_t, size_t, void*, size_t, void*, size_t );
-int usbd_descriptor_read_device( libusb_device_t*, rpc_handler_t, usbd_attach_context_t* );
+int usbd_descriptor_read_device( libusb_device_t*, rpc_handler_t, usbd_attach_context_t*, bool );
 // device
 int usbd_device_configure( libusb_device_t*, uint8_t, rpc_handler_t, usbd_attach_context_t* );
 int usbd_device_get_by_number( uint32_t, libusb_device_t** );

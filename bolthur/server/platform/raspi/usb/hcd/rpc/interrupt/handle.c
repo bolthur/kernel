@@ -335,7 +335,7 @@ void rpc_interrupt_handle(
         (
           channel_nack
           && DWHCI_QUEUE_POLL_STATUS_DATA != entry->status
-        // treat not yet with no split as retry
+        // treat not yet as retry
         ) || (
           channel_not_yet
           && DWHCI_QUEUE_POLL_STATUS_DATA != entry->status

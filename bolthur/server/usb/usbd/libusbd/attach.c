@@ -341,7 +341,8 @@ static void attach_set_address_finished(
   const int result = usbd_descriptor_read_device(
     attach_context->device,
     attach_read_device_finished_2,
-    attach_context
+    attach_context,
+    false
   );
   #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "dev->speed = %d\r\n", attach_context->device->speed )
@@ -519,7 +520,8 @@ int usbd_attach_device(
   result = usbd_descriptor_read_device(
     dev,
     attach_read_device_finished_1,
-    ctx
+    ctx,
+    true
   );
   // handle error
   if ( 0 != result ) {

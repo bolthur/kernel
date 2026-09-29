@@ -65,11 +65,10 @@ bool mmio_init( void ) {
 uint32_t mmio_read(const uintptr_t address ) {
   // determine read begin and end address since address contains only an offset
   auto volatile const read_begin = ( void* )( ( uintptr_t )mmio_start + address );
-  // barrier
+  const uint32_t value = *( volatile uint32_t* )read_begin;
   barrier_dmb();
-  barrier_dsb();
   // read word
-  return *( volatile uint32_t* )read_begin;
+  return value;
 }
 
 /**
@@ -84,8 +83,7 @@ void mmio_write(const uintptr_t address, const uint32_t data ) {
   auto volatile const write_begin = ( void* )( ( uintptr_t )mmio_start + address );
   // barrier, write and barrier
   barrier_dmb();
-  barrier_dsb();
   *( volatile uint32_t* )write_begin  = data;
   barrier_dmb();
-  barrier_dsb();
+  barrier_isb();
 }
