@@ -322,136 +322,29 @@ void rpc_interrupt_handle(
         #endif
         // reset error
         entry->error = 0;
-        // handle possible wait for next microframe
-        entry->current_frame_num = mmio_read( PERIPHERAL_DWHCI_HOST_FRM_NUM );
-        const uint32_t ssplit_frame = ( entry->start_frame_num >> 3 ) & 0x7FF;
-        const uint32_t ssplit_uframe = entry->start_frame_num & 0x7;
-        const uint32_t csplit_frame = ( entry->current_frame_num >> 3 ) & 0x7FF;
-        const uint32_t csplit_uframe = entry->current_frame_num & 0x7;
-        // calculate passed frames
-        uint32_t start = entry->start_frame_num & 0xFFFF;
-        uint32_t current = entry->current_frame_num & 0xFFFF;
-        uint32_t passed_frames = current >= start ? current - start : ( ( uint16_t )-1 - start ) + current;
-        // in case of a split phase delay by 2 micro frames
-        if (
-          DWHCI_SPLIT_PHASE_NONE != entry->split_phase
-          && (
-            ( ssplit_frame == csplit_frame && ssplit_uframe == csplit_uframe )
-            || passed_frames < 4
-          )
-        ) {
-          wait_for_next_microframe( 4 - passed_frames );
-        }
-        if ( entry->previous_current_frame_num != 0 && DWHCI_SPLIT_PHASE_NONE != entry->split_phase ) {
-          // extract frame and micro frame
-          const uint32_t csplit_frame_previous = ( entry->previous_current_frame_num >> 3 ) & 0x7FF;
-          const uint32_t csplit_uframe_previous = entry->previous_current_frame_num & 0x7;
-          // calculate passed frames
-          start = entry->previous_current_frame_num & 0xFFFF;
-          current = entry->current_frame_num & 0xFFFF;
-          passed_frames = current >= start ? current - start : ( ( uint16_t )-1 - start ) + current;
-          // in case of a split phase delay by 2 micro frames
-          if (
-            ( csplit_frame_previous == csplit_frame && csplit_uframe_previous == csplit_uframe )
-            || passed_frames < 4
-          ) {
-            wait_for_next_microframe( 4 - passed_frames );
-          }
-        }
-        // calculate difference and finally passed milliseconds
-        const uint64_t tick = _syscall_timer_tick_count();
-        const uint64_t difference = tick - entry->last_tick_count;
-        const uint64_t passed_milliseconds = ( uint64_t )( ( ( double )difference / ( double )entry->timer_frequency ) * 1000.0 );
-        // handle smaller
-        const bool split_transaction_timeout_reached = passed_milliseconds >= entry->setup_timeout;
-        // handle frame miss
-        if ( split_transaction_timeout_reached ) {
-          entry->error |= LIBUSB_TRANSFER_ERROR_EAGAIN;
-          #if defined( DWHCI_ENABLE_DEBUG )
-            EARLY_STARTUP_PRINT( "tick = %"PRIu64"\r\n", tick )
-            EARLY_STARTUP_PRINT( "last_tick_count = %"PRIu64"\r\n", entry->last_tick_count )
-            EARLY_STARTUP_PRINT( "passed_milliseconds = %"PRIu64"\r\n", passed_milliseconds )
-            EARLY_STARTUP_PRINT( "setup_timeout = %zu\r\n", entry->setup_timeout )
-            EARLY_STARTUP_PRINT( "frame window missed: %"PRIu32"\r\n", passed_frames / 8 )
-            EARLY_STARTUP_PRINT( "EAGAIN\r\n" )
-            EARLY_STARTUP_PRINT(
-              "SSPLIT: HFNUM = %#"PRIx32" frame=%"PRIu32" uframe=%"PRIu32"\r\n",
-              entry->start_frame_num,
-              (entry->start_frame_num >> 3) & 0x7FF,
-              entry->start_frame_num & 0x7
-            )
-            EARLY_STARTUP_PRINT(
-              "RPC ENTRY: HFNUM = %#"PRIx32" frame=%"PRIu32" uframe=%"PRIu32"\r\n",
-              frame_num_entry,
-              (frame_num_entry >> 3) & 0x7FF,
-              frame_num_entry & 0x7
-            )
-            EARLY_STARTUP_PRINT(
-              "CSPLIT: HFNUM = %#"PRIx32" frame=%"PRIu32" uframe=%"PRIu32"\r\n",
-              entry->current_frame_num,
-              (entry->current_frame_num >> 3) & 0x7FF,
-              entry->current_frame_num & 0x7
-            )
-            EARLY_STARTUP_PRINT(
-              "CSPLIT PREVIOUS: HFNUM = %#"PRIx32" frame=%"PRIu32" uframe=%"PRIu32"\r\n",
-              entry->previous_current_frame_num,
-              (entry->previous_current_frame_num >> 3) & 0x7FF,
-              entry->previous_current_frame_num & 0x7
-            )
-          #endif
-        } else {
-          if ( DWHCI_SPLIT_PHASE_CSPLIT == entry->split_phase ) {
-            // read out split ctrl, set complete split and write it back
-            uint32_t split_control = mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_SPLIT_CTRL( channel ) );
-            split_control |= HCD_DWHCI_CHAN_SPLIT_CONTROL_COMPLETE_SPLIT( 1 );
-            mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_SPLIT_CTRL( channel ), split_control );
-          }
-          // write int mask again
-          mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( channel ),
-            HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE
-            | HCD_CHANNEL_INTERRUPT_HALT
-            | HCD_CHANNEL_INTERRUPT_ERROR_MASK
-            | HCD_CHANNEL_INTERRUPT_ACKNOWLEDGEMENT
-            | HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT
-            | HCD_CHANNEL_INTERRUPT_NOT_YET
-          );
-          // write transfer size
-          entry->previous_current_frame_num = mmio_read( PERIPHERAL_DWHCI_HOST_FRM_NUM );
-          // read character and enable it again
-          uint32_t characteristic = mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( channel ) );
-          characteristic &= ~HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 );
-          characteristic |= HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 );
-          mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( channel ), characteristic );
-          // debug output
-          #if defined( DWHCI_ENABLE_DEBUG )
-            EARLY_STARTUP_PRINT(
-              "SSPLIT: HFNUM = %#"PRIx32" frame=%"PRIu32" uframe=%"PRIu32"\r\n",
-              entry->start_frame_num,
-              (entry->start_frame_num >> 3) & 0x7FF,
-              entry->start_frame_num & 0x7
-            )
-            EARLY_STARTUP_PRINT(
-              "RPC ENTRY: HFNUM = %#"PRIx32" frame=%"PRIu32" uframe=%"PRIu32"\r\n",
-              frame_num_entry,
-              (frame_num_entry >> 3) & 0x7FF,
-              frame_num_entry & 0x7
-            )
-            EARLY_STARTUP_PRINT(
-              "CSPLIT: HFNUM = %#"PRIx32" frame=%"PRIu32" uframe=%"PRIu32"\r\n",
-              entry->current_frame_num,
-              (entry->current_frame_num >> 3) & 0x7FF,
-              entry->current_frame_num & 0x7
-            )
-            EARLY_STARTUP_PRINT(
-              "CSPLIT PREVIOUS: HFNUM = %#"PRIx32" frame=%"PRIu32" uframe=%"PRIu32"\r\n",
-              entry->previous_current_frame_num,
-              (entry->previous_current_frame_num >> 3) & 0x7FF,
-              entry->previous_current_frame_num & 0x7
-            )
-          #endif
-          // skip rest
+        // set retry in n microframes
+        if ( DWHCI_SPLIT_PHASE_NONE != entry->split_phase ) {
+          entry->retry_in_micro_frames = DWHCI_MICRO_FRAME_RETRY_SPLIT;
           continue;
         }
+        // write int mask again
+        mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( channel ),
+          HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE
+          | HCD_CHANNEL_INTERRUPT_HALT
+          | HCD_CHANNEL_INTERRUPT_ERROR_MASK
+          | HCD_CHANNEL_INTERRUPT_ACKNOWLEDGEMENT
+          | HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT
+          | HCD_CHANNEL_INTERRUPT_NOT_YET
+        );
+        // write transfer size
+        entry->previous_current_frame_num = mmio_read( PERIPHERAL_DWHCI_HOST_FRM_NUM );
+        // read character and enable it again
+        uint32_t characteristic = mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( channel ) );
+        characteristic &= ~HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 );
+        characteristic |= HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 );
+        mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( channel ), characteristic );
+        // skip rest
+        continue;
       }
 
       // on short response we've to reset buffer size to transfer because it marks
@@ -764,6 +657,9 @@ void rpc_interrupt_handle(
             // skip rest
             continue;
         }
+        // set flag and skip
+        entry->continue_after_interrupt = true;
+        continue;
       }
       // continue with new step
       dwhci_channel_async_continue( entry );
@@ -772,6 +668,105 @@ void rpc_interrupt_handle(
         EARLY_STARTUP_PRINT( "cipt = %#"PRIx32"\r\n", cipt )
       #endif
     }
+  }
+  // Handle stuff after interrupt handling
+  // iterate over channels again with continue with delay or later
+  channel_mask = 1;
+  for ( uint32_t channel = 0; channel < configuration.channel.count; channel++, channel_mask <<= 1 ) {
+    // handle no channel interrupt
+    if ( ! ( channel_interrupt & channel_mask ) ) {
+      continue;
+    }
+    #if defined( DWHCI_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "channel = %"PRIu32"\r\n", channel )
+    #endif
+    // get queue entry matching to channel
+    channel_queue_entry_t* entry;
+    const response_t result = dwhci_queue_get_active_by_channel( ( uint8_t )channel, &entry );
+    if ( HCD_RESPONSE_OK != result ) {
+      // debug output
+      #if defined( DWHCI_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "No queued entry found for channel %"PRIu32"\r\n", channel )
+      #endif
+      // skip rest
+      continue;
+    }
+    // handle no retry / continue
+    if ( entry->retry_in_micro_frames == DWHCI_MICRO_FRAME_RETRY_INVALID && ! entry->continue_after_interrupt ) {
+      continue;
+    }
+    // handle retry in micro frames
+    if ( entry->retry_in_micro_frames != DWHCI_MICRO_FRAME_RETRY_INVALID ) {
+      // handle possible wait for next microframe
+      entry->current_frame_num = mmio_read( PERIPHERAL_DWHCI_HOST_FRM_NUM );
+      // calculate passed frames
+      uint32_t start = entry->start_frame_num & 0xFFFF;
+      if ( entry->previous_current_frame_num != 0 ) {
+        start = entry->previous_current_frame_num & 0xFFFF;
+      }
+      const uint32_t current = entry->current_frame_num & 0xFFFF;
+      const uint32_t passed_frames = current >= start ? current - start : ( ( uint16_t )-1 - start ) + current;
+      if ( passed_frames < entry->retry_in_micro_frames ) {
+        wait_for_next_microframe( entry->retry_in_micro_frames - passed_frames );
+      }
+      if ( DWHCI_SPLIT_PHASE_CSPLIT == entry->split_phase ) {
+        // read out split ctrl, set complete split and write it back
+        uint32_t split_control = mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_SPLIT_CTRL( channel ) );
+        split_control |= HCD_DWHCI_CHAN_SPLIT_CONTROL_COMPLETE_SPLIT( 1 );
+        mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_SPLIT_CTRL( channel ), split_control );
+      }
+      // write int mask again
+      mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( channel ),
+        HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE
+        | HCD_CHANNEL_INTERRUPT_HALT
+        | HCD_CHANNEL_INTERRUPT_ERROR_MASK
+        | HCD_CHANNEL_INTERRUPT_ACKNOWLEDGEMENT
+        | HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT
+        | HCD_CHANNEL_INTERRUPT_NOT_YET
+      );
+      // write transfer size
+      entry->previous_current_frame_num = mmio_read( PERIPHERAL_DWHCI_HOST_FRM_NUM );
+      // read character and enable it again
+      uint32_t characteristic = mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( channel ) );
+      characteristic &= ~HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 );
+      characteristic |= HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 );
+      mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( channel ), characteristic );
+      // debug output
+      #if defined( DWHCI_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT(
+          "SSPLIT: HFNUM = %#"PRIx32" frame=%"PRIu32" uframe=%"PRIu32"\r\n",
+          entry->start_frame_num,
+          (entry->start_frame_num >> 3) & 0x7FF,
+          entry->start_frame_num & 0x7
+        )
+        EARLY_STARTUP_PRINT(
+          "RPC ENTRY: HFNUM = %#"PRIx32" frame=%"PRIu32" uframe=%"PRIu32"\r\n",
+          frame_num_entry,
+          (frame_num_entry >> 3) & 0x7FF,
+          frame_num_entry & 0x7
+        )
+        EARLY_STARTUP_PRINT(
+          "CSPLIT: HFNUM = %#"PRIx32" frame=%"PRIu32" uframe=%"PRIu32"\r\n",
+          entry->current_frame_num,
+          (entry->current_frame_num >> 3) & 0x7FF,
+          entry->current_frame_num & 0x7
+        )
+        EARLY_STARTUP_PRINT(
+          "CSPLIT PREVIOUS: HFNUM = %#"PRIx32" frame=%"PRIu32" uframe=%"PRIu32"\r\n",
+          entry->previous_current_frame_num,
+          (entry->previous_current_frame_num >> 3) & 0x7FF,
+          entry->previous_current_frame_num & 0x7
+        )
+      #endif
+      // reset wait time
+      entry->retry_in_micro_frames = DWHCI_MICRO_FRAME_RETRY_INVALID;
+      // skip rest
+      continue;
+    }
+    // reset flag
+    entry->continue_after_interrupt = false;
+    // continue with next state
+    dwhci_channel_async_continue( entry );
   }
   // fire handle done
   #if defined( DWHCI_ENABLE_DEBUG )

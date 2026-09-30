@@ -27,6 +27,9 @@
 
 //#define DWHCI_ENABLE_DEBUG 1
 
+#define DWHCI_MICRO_FRAME_RETRY_INVALID 0U
+#define DWHCI_MICRO_FRAME_RETRY_SPLIT 4U
+
 typedef enum {
   DWHCI_CHANNEL_STATE_DATA0 = 0,
   DWHCI_CHANNEL_STATE_DATA1 = 2,
@@ -129,6 +132,10 @@ typedef struct channel_queue_entry {
   uint32_t previous_current_frame_num;
   /** csplit frame number */
   uint32_t current_frame_num;
+  /** retry current state in n micro frames */
+  uint32_t retry_in_micro_frames;
+  /** flag indicating to continue after interrupt */
+  bool continue_after_interrupt;
   /** pointer to next entry */
   struct channel_queue_entry* next;
   /** pointer to previous entry */

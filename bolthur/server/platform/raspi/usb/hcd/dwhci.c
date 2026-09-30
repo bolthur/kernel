@@ -1240,6 +1240,7 @@ response_t dwhci_channel_send_async(
   entry->channel_data_state = DWHCI_CHANNEL_STATE_DATA1;
   entry->setup_timeout = data->timeout;
   entry->timer_frequency = _syscall_timer_frequency();
+  entry->retry_in_micro_frames = DWHCI_MICRO_FRAME_RETRY_INVALID;
   // try to allocate a channel
   uint8_t channel = 0;
   result = dwhci_allocate_channel( &channel );
@@ -1654,6 +1655,7 @@ response_t dwhci_channel_poll_async(
   entry->poll_timeout = data->timeout;
   entry->timer_frequency = _syscall_timer_frequency();
   entry->poll_state = DWHCI_CHANNEL_STATE_DATA0;
+  entry->retry_in_micro_frames = DWHCI_MICRO_FRAME_RETRY_INVALID;
   // initialize split phase
   entry->split_phase = LIBUSB_SPEED_HIGH != data->pipe_address.speed ? DWHCI_SPLIT_PHASE_SSPLIT : DWHCI_SPLIT_PHASE_NONE;
   // try to allocate a channel
