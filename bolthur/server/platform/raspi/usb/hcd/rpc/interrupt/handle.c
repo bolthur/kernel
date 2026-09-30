@@ -345,7 +345,7 @@ void rpc_interrupt_handle(
           && DWHCI_QUEUE_POLL_STATUS_DATA != entry->status
         )
       ) {
-        //#if defined( DWHCI_ENABLE_DEBUG )
+        #if defined( DWHCI_ENABLE_DEBUG )
           EARLY_STARTUP_PRINT( "cipt = %"PRIx32" / %d / %d / %d / %d\r\n",
             cipt,
             channel_nack,
@@ -353,7 +353,7 @@ void rpc_interrupt_handle(
             !transfer_complete && !split_complete,
             entry->status
           )
-        //#endif
+        #endif
         // reset error
         entry->error = 0;
         // handle possible wait for next microframe
@@ -363,19 +363,33 @@ void rpc_interrupt_handle(
         const uint32_t csplit_frame = ( entry->csplit_frame_num >> 3 ) & 0x7FF;
         const uint32_t csplit_uframe = entry->csplit_frame_num & 0x7;
         // calculate passed frames
-        const uint32_t start = entry->ssplit_frame_num & 0xFFFF;
-        const uint32_t current = entry->csplit_frame_num & 0xFFFF;
-        [[maybe_unused]] const uint32_t passed_frames = current >= start ? current - start : ( ( uint16_t )-1 - start ) + current;
-        // wait for next micro frame if it's below 2
-        if ( ssplit_frame == csplit_frame && ssplit_uframe == csplit_uframe ) {
-          wait_for_next_microframe( 1 );
+        uint32_t start = entry->ssplit_frame_num & 0xFFFF;
+        uint32_t current = entry->csplit_frame_num & 0xFFFF;
+        uint32_t passed_frames = current >= start ? current - start : ( ( uint16_t )-1 - start ) + current;
+        // in case of a split phase delay by 2 micro frames
+        if (
+          DWHCI_SPLIT_PHASE_NONE != entry->split_phase
+          && (
+            ( ssplit_frame == csplit_frame && ssplit_uframe == csplit_uframe )
+            || passed_frames < 4
+          )
+        ) {
+          wait_for_next_microframe( 4 - passed_frames );
         }
         if ( entry->csplit_frame_num_previous != 0 && DWHCI_SPLIT_PHASE_NONE != entry->split_phase ) {
+          // extract frame and micro frame
           const uint32_t csplit_frame_previous = ( entry->csplit_frame_num_previous >> 3 ) & 0x7FF;
           const uint32_t csplit_uframe_previous = entry->csplit_frame_num_previous & 0x7;
-          // wait for next micro frame if it's below 2
-          if ( csplit_frame_previous == csplit_frame && csplit_uframe_previous == csplit_uframe ) {
-            wait_for_next_microframe( 1 );
+          // calculate passed frames
+          start = entry->csplit_frame_num_previous & 0xFFFF;
+          current = entry->csplit_frame_num & 0xFFFF;
+          passed_frames = current >= start ? current - start : ( ( uint16_t )-1 - start ) + current;
+          // in case of a split phase delay by 2 micro frames
+          if (
+            ( csplit_frame_previous == csplit_frame && csplit_uframe_previous == csplit_uframe )
+            || passed_frames < 4
+          ) {
+            wait_for_next_microframe( 4 - passed_frames );
           }
         }
         // calculate difference and finally passed milliseconds
@@ -411,6 +425,12 @@ void rpc_interrupt_handle(
               entry->csplit_frame_num,
               (entry->csplit_frame_num >> 3) & 0x7FF,
               entry->csplit_frame_num & 0x7
+            )
+            EARLY_STARTUP_PRINT(
+              "CSPLIT PREVIOUS: HFNUM = %#"PRIx32" frame=%"PRIu32" uframe=%"PRIu32"\r\n",
+              entry->csplit_frame_num_previous,
+              (entry->csplit_frame_num_previous >> 3) & 0x7FF,
+              entry->csplit_frame_num_previous & 0x7
             )
           #endif
         } else {
@@ -455,6 +475,12 @@ void rpc_interrupt_handle(
               entry->csplit_frame_num,
               (entry->csplit_frame_num >> 3) & 0x7FF,
               entry->csplit_frame_num & 0x7
+            )
+            EARLY_STARTUP_PRINT(
+              "CSPLIT PREVIOUS: HFNUM = %#"PRIx32" frame=%"PRIu32" uframe=%"PRIu32"\r\n",
+              entry->csplit_frame_num_previous,
+              (entry->csplit_frame_num_previous >> 3) & 0x7FF,
+              entry->csplit_frame_num_previous & 0x7
             )
           #endif
           // skip rest
