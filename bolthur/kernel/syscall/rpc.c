@@ -200,7 +200,6 @@ void syscall_rpc_raise( void* context ) {
     origin_rpc_data_id,
     false,
     false,
-    false,
     false
   );
   // free duplicate again
@@ -579,7 +578,6 @@ void syscall_rpc_ret( void* context ) {
       nullptr,
       true,
       blocked_data_id,
-      false,
       false,
       false,
       false

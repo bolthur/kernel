@@ -274,8 +274,7 @@ void timer_handle_callback( void ) {
         entry->id,
         true,
         false,
-        true,
-        false
+        true
       );
       // debug output
       #if defined( PRINT_TIMER )

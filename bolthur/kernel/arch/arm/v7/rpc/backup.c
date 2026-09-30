@@ -30,7 +30,7 @@
 #endif
 
 /**
- * @fn rpc_backup_t* rpc_backup_create(task_thread_t*, const task_process_t*, size_t, const void*, size_t, task_thread_t*, bool, size_t, bool, bool, bool, bool)
+ * @fn rpc_backup_t* rpc_backup_create(task_thread_t*, const task_process_t*, size_t, const void*, size_t, task_thread_t*, bool, size_t, bool, bool, bool)
  * @brief Helper to create rpc backup
  * @param source
  * @param target
@@ -43,7 +43,6 @@
  * @param disable_data
  * @param is_interrupt
  * @param is_timer
- * @param measure
  * @return
  */
 rpc_backup_t* rpc_backup_create(
@@ -57,10 +56,8 @@ rpc_backup_t* rpc_backup_create(
   const size_t origin_data_id,
   const bool disable_data,
   const bool is_interrupt,
-  const bool is_timer,
-  const bool measure
+  const bool is_timer
 ) {
-  const uint64_t t_before_thread_look_up = timer_get_current_tick_value();
   // try to use target thread
   task_thread_t* thread = target_thread;
   // choose one from free thread list
@@ -76,7 +73,6 @@ rpc_backup_t* rpc_backup_create(
       current = current->next;
     }
   }
-  const uint64_t t_after_thread_look_up = timer_get_current_tick_value();
   // handle no inactive thread
   if ( ! thread ) {
     return nullptr;
@@ -96,7 +92,6 @@ rpc_backup_t* rpc_backup_create(
     DEBUG_OUTPUT( "thread->process->id = %d\r\n", thread->process->id )
   #endif
 
-  const uint64_t t_before_rpc_pool_pop = timer_get_current_tick_value();
   // reserve space for backup object
   rpc_backup_t* backup = rpc_pool_pop();
   if ( ! backup ) {
@@ -109,44 +104,36 @@ rpc_backup_t* rpc_backup_create(
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "Reserved backup object: %p\r\n", backup )
   #endif
-  const uint64_t t_after_rpc_pool_pop = timer_get_current_tick_value();
 
   // get thread cpu context
   const cpu_register_context_t* cpu = thread->current_context;
   if ( thread->current_active_backup ) {
     cpu = thread->current_active_backup->context;
   }
-  const uint64_t t_before_cpu_pool_pop = timer_get_current_tick_value();
   // reserve space for backup context
   backup->context = cpu_pool_pop();
   if ( ! backup->context ) {
     rpc_backup_destroy( backup );
     return nullptr;
   }
-  const uint64_t t_after_cpu_pool_pop = timer_get_current_tick_value();
   // load cpu into cache before copying it
-  const uint64_t t_before_pure_cpu_to_cache = timer_get_current_tick_value();
   auto const ptr = ( const uint8_t* )cpu->raw;
   constexpr size_t total_size = sizeof( uint32_t ) * CPU_CONTEXT_WORD_SIZE;
   constexpr size_t cache_size = 32;
   for ( size_t offset = 0; offset < total_size; offset += cache_size ) {
     __builtin_prefetch( ptr + offset, 0, 3 );
   }
-  const uint64_t t_after_pure_cpu_to_cache = timer_get_current_tick_value();
   // debug output
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "Reserved backup cpu context: %p\r\n", backup->context )
   #endif
-  const uint64_t t_before_cpu_copy = timer_get_current_tick_value();
   // prepare and backup context area
   memcpy( backup->context, cpu, sizeof( cpu_register_context_t ) );
   // debug output
   #if defined( PRINT_RPC )
     DUMP_REGISTER( backup->context )
   #endif
-  const uint64_t t_after_cpu_copy = timer_get_current_tick_value();
   // backup parameter data as message
-  const uint64_t t_before_data_queue = timer_get_current_tick_value();
   backup->data_id = 0;
   if ( ! disable_data ) {
     if ( data && data_size ) {
@@ -199,7 +186,6 @@ rpc_backup_t* rpc_backup_create(
       #endif
     }
   }
-  const uint64_t t_after_data_queue = timer_get_current_tick_value();
   // debug output
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "async: %d, type: %zu\r\n", sync ? 0 : 1, type )
@@ -212,7 +198,6 @@ rpc_backup_t* rpc_backup_create(
       thread->process->id, backup->thread_state, thread->state )
   #endif
   // save thread state and state data
-  const uint64_t t_before_thread_backup = timer_get_current_tick_value();
   backup->thread_state = thread->state;
   backup->thread_state_data.data_ptr = thread->state_data.data_ptr;
   backup->thread_state_data.data_size = thread->state_data.data_size;
@@ -221,7 +206,6 @@ rpc_backup_t* rpc_backup_create(
   if ( TASK_THREAD_STATE_RPC_WAIT_FOR_CALL == backup->thread_state ) {
     backup->thread_state = TASK_THREAD_STATE_ACTIVE;
   }
-  const uint64_t t_after_thread_backup = timer_get_current_tick_value();
   // debug output
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT(
@@ -230,7 +214,6 @@ rpc_backup_t* rpc_backup_create(
       backup->thread_state_data.data_ptr
     )
   #endif
-  const uint64_t t_before_backup_fill = timer_get_current_tick_value();
   backup->prepared = false;
   backup->source = source;
   backup->type = type;
@@ -245,13 +228,11 @@ rpc_backup_t* rpc_backup_create(
   backup->active = false;
   backup->list_item = nullptr;
   backup->squeezed_in = false;
-  const uint64_t t_after_backup_fill = timer_get_current_tick_value();
   // debug output
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "Pushing backup object to rpc queue!\r\n" )
   #endif
   // push back backup to queue
-  const uint64_t t_before_push_back_data = timer_get_current_tick_value();
   list_item_t* item = list_push_back_data( thread->process->rpc_queue, backup );
   if ( ! item ) {
     rpc_backup_destroy( backup );
@@ -259,18 +240,6 @@ rpc_backup_t* rpc_backup_create(
   }
   // cache in backup
   backup->list_item = item;
-  const uint64_t t_after_push_back_data = timer_get_current_tick_value();
-  if ( measure ) {
-    DEBUG_OUTPUT( "t_after_thread_look_up - t_before_thread_look_up = %"PRIu64"\r\n", t_after_thread_look_up - t_before_thread_look_up )
-    DEBUG_OUTPUT( "t_after_rpc_pool_pop - t_before_rpc_pool_pop = %"PRIu64"\r\n", t_after_rpc_pool_pop - t_before_rpc_pool_pop )
-    DEBUG_OUTPUT( "t_after_cpu_pool_pop - t_before_cpu_pool_pop = %"PRIu64"\r\n", t_after_cpu_pool_pop - t_before_cpu_pool_pop )
-    DEBUG_OUTPUT( "t_after_pure_cpu_to_cache - t_before_pure_cpu_to_cache = %"PRIu64"\r\n", t_after_pure_cpu_to_cache - t_before_pure_cpu_to_cache )
-    DEBUG_OUTPUT( "t_after_cpu_copy - t_before_cpu_copy = %"PRIu64"\r\n", t_after_cpu_copy - t_before_cpu_copy )
-    DEBUG_OUTPUT( "t_after_data_queue - t_before_data_queue = %"PRIu64"\r\n", t_after_data_queue - t_before_data_queue )
-    DEBUG_OUTPUT( "t_after_thread_backup - t_before_thread_backup = %"PRIu64"\r\n", t_after_thread_backup - t_before_thread_backup )
-    DEBUG_OUTPUT( "t_after_backup_fill - t_before_backup_fill = %"PRIu64"\r\n", t_after_backup_fill - t_before_backup_fill )
-    DEBUG_OUTPUT( "t_after_push_back_data - t_before_push_back_data = %"PRIu64"\r\n", t_after_push_back_data - t_before_push_back_data )
-  }
   // return created backup
   return backup;
 }

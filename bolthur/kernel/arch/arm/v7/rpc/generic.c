@@ -170,21 +170,20 @@ bool rpc_generic_restore( task_thread_t* thread ) {
       DEBUG_OUTPUT( "Preparing another queued rpc entry\r\n" )
     #endif
     // return prepared invoke
-    return rpc_generic_prepare_invoke( next, false );
+    return rpc_generic_prepare_invoke( next );
   }
   // return success
   return true;
 }
 
 /**
- * @fn bool rpc_generic_prepare_invoke(rpc_backup_t*, bool)
+ * @fn bool rpc_generic_prepare_invoke(rpc_backup_t*)
  * @brief Prepare rpc invoke with backup data
  *
  * @param backup
- * @param measure
  * @return
  */
-bool rpc_generic_prepare_invoke( rpc_backup_t* backup, const bool measure ) {
+bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
   // debug output
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "rpc_generic_prepare_invoke( %p )!\r\n", backup )
@@ -202,7 +201,6 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup, const bool measure ) {
     // return success
     return true;
   }
-  const uint64_t t_before_wait_for_return_check = timer_get_current_tick_value();
   // get register context
   auto const proc = backup->thread->process;
   // evaluate wait for return block
@@ -232,8 +230,6 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup, const bool measure ) {
       }
     #endif
   }
-  const uint64_t t_after_wait_for_return_check = timer_get_current_tick_value();
-  const uint64_t t_before_block_check = timer_get_current_tick_value();
   // enqueue only when state is set
   if (
     (
@@ -252,8 +248,6 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup, const bool measure ) {
     // return success
     return true;
   }
-  const uint64_t t_after_block_check = timer_get_current_tick_value();
-  const uint64_t t_before_interrupt_check = timer_get_current_tick_value();
   // skip enqueue in case an interrupt is handled
   if (
     backup->thread->handling_interrupt
@@ -271,35 +265,18 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup, const bool measure ) {
     // return success
     return true;
   }
-  const uint64_t t_after_interrupt_check = timer_get_current_tick_value();
-  const uint64_t t_before_active_push_back = timer_get_current_tick_value();
 
-  uint64_t t_before_active_fetch = 0;
-  uint64_t t_after_active_fetch = 0;
-  uint64_t t_before_list_lookup = 0;
-  uint64_t t_after_list_lookup = 0;
-  uint64_t t_before_backup_remove = 0;
-  uint64_t t_after_backup_remove = 0;
-  uint64_t t_before_squeeze_in_backup = 0;
-  uint64_t t_after_squeeze_in_backup = 0;
-  uint64_t t_before_copy_data = 0;
-  uint64_t t_after_copy_data = 0;
   // handle nested interrupts
   if ( backup->thread->current_active_backup ) {
     // get current active rpc
-    t_before_active_fetch = timer_get_current_tick_value();
     rpc_backup_t* active = backup->thread->current_active_backup;
     assert( active && active != backup );
-    t_after_active_fetch = timer_get_current_tick_value();
-    t_before_list_lookup = timer_get_current_tick_value();
     // get current active item
     list_item_t* active_item = list_lookup_data( backup->thread->process->rpc_queue, active );
     // debug output
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT( "active = %#p, active_item = %#p\r\n", active, active_item )
     #endif
-    t_after_list_lookup = timer_get_current_tick_value();
-    t_before_backup_remove = timer_get_current_tick_value();
     // remove current backup from list without cleanup
     if ( ! list_remove_item( backup->thread->process->rpc_queue, backup->list_item, false ) ) {
       #if defined( PRINT_RPC )
@@ -307,8 +284,6 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup, const bool measure ) {
       #endif
       return false;
     }
-    t_after_backup_remove = timer_get_current_tick_value();
-    t_before_squeeze_in_backup = timer_get_current_tick_value();
     // insert before active item
     backup->list_item = list_insert_item_before( backup->thread->process->rpc_queue, active_item, backup->list_item );
     if ( ! backup->list_item ) {
@@ -317,8 +292,6 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup, const bool measure ) {
       #endif
       return false;
     }
-    t_after_squeeze_in_backup = timer_get_current_tick_value();
-    t_before_copy_data = timer_get_current_tick_value();
     // set active to inactive
     active->active = false;
     // manipulate states and stuff of backup
@@ -343,12 +316,9 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup, const bool measure ) {
       DEBUG_OUTPUT( "cpu->reg.spsr = %"PRIx32"\r\n", ( ( cpu_register_context_t* )backup->context )->reg.spsr )
       DUMP_REGISTER( backup->context )
     #endif
-    t_after_copy_data = timer_get_current_tick_value();
   }
 
-  const uint64_t t_after_active_push_back = timer_get_current_tick_value();
   // handle timer
-  const uint64_t t_before_sleep_timer = timer_get_current_tick_value();
   if ( backup->thread->interruptable_sleep_timer ) {
     // mark as handled to prevent raise of rpc
     backup->thread->interruptable_sleep_timer->handled = true;
@@ -368,9 +338,7 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup, const bool measure ) {
     // adjust previous state
     backup->thread_state = TASK_THREAD_STATE_ACTIVE;
   }
-  const uint64_t t_after_sleep_timer = timer_get_current_tick_value();
 
-  const uint64_t t_before_cpu_prepare = timer_get_current_tick_value();
   cpu_register_context_t* cpu = backup->thread->current_context;
   // debug output
   #if defined( PRINT_RPC )
@@ -406,8 +374,6 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup, const bool measure ) {
   if ( backup->is_interrupt ) {
     cpu->reg.spsr |= CPSR_IRQ_INHIBIT | CPSR_FIQ_INHIBIT | CPSR_ASYNC_ABORT_INHIBIT;
   }
-  const uint64_t t_after_cpu_prepare = timer_get_current_tick_value();
-  const uint64_t t_before_thread_set_state = timer_get_current_tick_value();
   // set correct state ( set directly to active if it's the current thread
   // and state is rpc queued )
   if (
@@ -422,7 +388,6 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup, const bool measure ) {
     task_queue_dequeue_blocked( backup->thread );
     task_queue_enqueue( backup->thread );
   }
-  const uint64_t t_after_thread_set_state = timer_get_current_tick_value();
   backup->prepared = true;
   backup->active = true;
   backup->thread->handling_interrupt = backup->is_interrupt;
@@ -431,22 +396,6 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup, const bool measure ) {
   #if defined( PRINT_RPC )
     DUMP_REGISTER( cpu )
   #endif
-  if ( measure ) {
-    DEBUG_OUTPUT( "t_after_wait_for_return_check - t_before_wait_for_return_check = %"PRIu64"\r\n", t_after_wait_for_return_check - t_before_wait_for_return_check )
-    DEBUG_OUTPUT( "t_after_block_check - t_before_block_check = %"PRIu64"\r\n", t_after_block_check - t_before_block_check )
-    DEBUG_OUTPUT( "t_after_interrupt_check - t_before_interrupt_check = %"PRIu64"\r\n", t_after_interrupt_check - t_before_interrupt_check )
-
-    DEBUG_OUTPUT( "t_after_active_fetch - t_before_active_fetch = %"PRIu64"\r\n", t_after_active_fetch - t_before_active_fetch )
-    DEBUG_OUTPUT( "t_after_list_lookup - t_before_list_lookup = %"PRIu64"\r\n", t_after_list_lookup - t_before_list_lookup )
-    DEBUG_OUTPUT( "t_after_backup_remove - t_before_backup_remove = %"PRIu64"\r\n", t_after_backup_remove - t_before_backup_remove )
-    DEBUG_OUTPUT( "t_after_squeeze_in_backup - t_before_squeeze_in_backup = %"PRIu64"\r\n", t_after_squeeze_in_backup - t_before_squeeze_in_backup )
-    DEBUG_OUTPUT( "t_after_copy_data - t_before_copy_data = %"PRIu64"\r\n", t_after_copy_data - t_before_copy_data )
-
-    DEBUG_OUTPUT( "t_before_active_push_back - t_after_active_push_back = %"PRIu64"\r\n", t_after_active_push_back - t_before_active_push_back )
-    DEBUG_OUTPUT( "t_after_sleep_timer - t_before_sleep_timer = %"PRIu64"\r\n", t_after_sleep_timer - t_before_sleep_timer )
-    DEBUG_OUTPUT( "t_after_cpu_prepare - t_before_cpu_prepare = %"PRIu64"\r\n", t_after_cpu_prepare - t_before_cpu_prepare )
-    DEBUG_OUTPUT( "t_after_thread_set_state - t_before_thread_set_state = %"PRIu64"\r\n", t_after_thread_set_state - t_before_thread_set_state )
-  }
   // return success
   return true;
 }

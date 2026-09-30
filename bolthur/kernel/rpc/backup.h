@@ -68,7 +68,7 @@ typedef struct __aligned( 64 ) rpc_backup {
   struct rpc_backup* next;
 } rpc_backup_t;
 
-rpc_backup_t* rpc_backup_create( task_thread_t*, const task_process_t*, size_t, const void*, size_t, task_thread_t*, bool, size_t, bool, bool, bool, bool );
+rpc_backup_t* rpc_backup_create( task_thread_t*, const task_process_t*, size_t, const void*, size_t, task_thread_t*, bool, size_t, bool, bool, bool );
 void rpc_backup_destroy( rpc_backup_t* );
 
 #endif

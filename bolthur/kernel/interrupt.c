@@ -359,16 +359,12 @@ void interrupt_handle( const size_t num, const interrupt_type_t type, void* cont
     DEBUG_OUTPUT( "Handle interrupt %zu\r\n", num )
   #endif
 
-  const uint64_t start_tick_count = timer_get_current_tick_value();
-
   // get correct tree to use
   avl_tree_t* tree = tree_by_type( type );
   // check tree
   if ( ! tree ) {
     return;
   }
-
-  const uint64_t t_tree_by_type = timer_get_current_tick_value();
 
   // debug output
   #if defined( PRINT_INTERRUPT )
@@ -382,8 +378,6 @@ void interrupt_handle( const size_t num, const interrupt_type_t type, void* cont
     DEBUG_OUTPUT( "Found node %p\r\n", node )
   #endif
 
-  const uint64_t t_node_by_num = timer_get_current_tick_value();
-
   // handle nothing found which means nothing bound
   if ( ! node ) {
     return;
@@ -396,11 +390,7 @@ void interrupt_handle( const size_t num, const interrupt_type_t type, void* cont
     // fire with data
     block->internal( context );
   }
-
-  const uint64_t t_bound_wrapper = timer_get_current_tick_value();
-
-  // get first element of process handlers
-
+  // bound external handler
   if ( block->external ) {
     // take first thread
     task_thread_t* thread = list_peek_front_data( block->external->thread_list );
@@ -410,7 +400,7 @@ void interrupt_handle( const size_t num, const interrupt_type_t type, void* cont
         num, thread->process->id )
     #endif
     // try to raise rpc without data
-    rpc_backup_t* rpc = rpc_generic_raise(
+    const rpc_backup_t* rpc = rpc_generic_raise(
       thread,
       block->external,
       num,
@@ -421,8 +411,7 @@ void interrupt_handle( const size_t num, const interrupt_type_t type, void* cont
       0,
       true,
       true,
-      false,
-      9 == num && false
+      false
     );
     // handle error by skip
     if ( rpc ) {
@@ -438,15 +427,10 @@ void interrupt_handle( const size_t num, const interrupt_type_t type, void* cont
       }
     }
   }
-
-  const uint64_t t_irq_rpc_create = timer_get_current_tick_value();
-
   // post handler
   if ( block->post ) {
     block->post( context );
   }
-
-  const uint64_t t_post_handler = timer_get_current_tick_value();
 
   // debug output
   #if defined( PRINT_INTERRUPT )
@@ -455,23 +439,6 @@ void interrupt_handle( const size_t num, const interrupt_type_t type, void* cont
   if ( disable ) {
     // disable interrupt to prevent it firing all along
     interrupt_disable_after_handling( ( int8_t )num );
-  }
-
-  const uint64_t t_disable_interrupt = timer_get_current_tick_value();
-
-  const uint64_t end_tick_count = timer_get_current_tick_value();
-  if ( 9 == num && false ) {
-    DEBUG_OUTPUT( "start_tick_count = %"PRIu64"\r\n", start_tick_count )
-    DEBUG_OUTPUT( "t_tree_by_type = %"PRIu64"\r\n", t_tree_by_type )
-    DEBUG_OUTPUT( "t_node_by_num = %"PRIu64"\r\n", t_node_by_num )
-    DEBUG_OUTPUT( "t_bound_wrapper = %"PRIu64"\r\n", t_bound_wrapper )
-    DEBUG_OUTPUT( "t_irq_rpc_create = %"PRIu64"\r\n", t_irq_rpc_create )
-    DEBUG_OUTPUT( "t_post_handler = %"PRIu64"\r\n", t_post_handler )
-    DEBUG_OUTPUT( "t_disable_interrupt = %"PRIu64"\r\n", t_disable_interrupt )
-    DEBUG_OUTPUT( "end_tick_count = %"PRIu64"\r\n", end_tick_count )
-    for (;;) {
-      __asm__ __volatile__ ( "nop" );
-    }
   }
 }
 
