@@ -123,14 +123,12 @@ typedef struct channel_queue_entry {
   size_t setup_timeout;
   /** timer frequency */
   size_t timer_frequency;
-  // debugging stuff
-  uint32_t ssplit_frame_num;
-  uint32_t csplit_frame_num_previous;
-  uint32_t csplit_frame_num;
-  uint32_t verify_char;
-  uint32_t verify_split;
-  uint32_t verify_size;
-  uint32_t verify_num;
+  /** ssplit frame number */
+  uint32_t start_frame_num;
+  /** previous csplit frame number */
+  uint32_t previous_current_frame_num;
+  /** csplit frame number */
+  uint32_t current_frame_num;
   /** pointer to next entry */
   struct channel_queue_entry* next;
   /** pointer to previous entry */

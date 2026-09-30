@@ -577,13 +577,7 @@ response_t dwhci_channel_send_async_start_channel( channel_queue_entry_t* entry 
     | HCD_CHANNEL_INTERRUPT_NOT_YET
   ) );
   mmio_write( PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK, mmio_read( PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK ) | 1U << entry->channel );
-  entry->ssplit_frame_num = mmio_read( PERIPHERAL_DWHCI_HOST_FRM_NUM );
-
-  entry->verify_char = mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ) );
-  entry->verify_split = mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_SPLIT_CTRL( entry->channel ) );
-  entry->verify_size = mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_XFER_SIZE( entry->channel ) );
-  entry->verify_num = mmio_read( PERIPHERAL_DWHCI_HOST_FRM_NUM );
-
+  entry->start_frame_num = mmio_read( PERIPHERAL_DWHCI_HOST_FRM_NUM );
   mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ), (
     ( mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ) ) & ~HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 ) ) |
       HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 )
