@@ -117,7 +117,7 @@ proc scanDirectory*( path: string, fileType: string, additionalInfo: string, sys
 
         var pos = -1
         for idx, value in splittedHead:
-          if value == "application" or value == "server" or value == "usr" or value == "font" or value == "bosl":
+          if value == "application" or value == "server" or value == "usr" or value == "bosl":
             pos = idx
         if pos != -1:
           if pos + 1 < len( splittedHead ) and "platform" == splittedHead[ pos + 1 ]:
