@@ -118,8 +118,9 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   #endif
   _syscall_rpc_set_ready( true );
 
+  constexpr uint32_t device_info[] = { TERMINAL_BOOTSTRAP, };
   // push terminal device as indicator init is done
-  if ( ! vfs_dev_add_file( "/dev/terminal", nullptr, 0, nullptr ) ) {
+  if ( ! vfs_dev_add_file( "/dev/terminal", device_info, 1, nullptr ) ) {
     #if defined( TERMINAL_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     #endif

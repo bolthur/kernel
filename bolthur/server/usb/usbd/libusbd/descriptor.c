@@ -213,6 +213,10 @@ int usbd_descriptor_get_async(
   if ( LIBUSB_SPEED_HIGH == dev->speed && minimum_length == DESCRIPTOR_READ_MIN_LENGTH ) {
     minimum_length = buffer_length;
   }
+  // debug output
+  #if defined( USBD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "minimum_length = %zu\r\n", minimum_length )
+  #endif
   // create context
   usbd_get_descriptor_context_t* ctx;
   int result = usbd_context_get_descriptor_create(

@@ -856,14 +856,14 @@ int hub_port_connection_changed(
     return result;
   }
   // handle not connected and not enabled
-  if ( ( ! full_status->status.connected && ! full_status->status.enabled ) || device_data->children[ port ] ) {
+  /*if ( ( ! full_status->status.connected && ! full_status->status.enabled ) || device_data->children[ port ] ) {
     // debug output
     #if defined ( HUB_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Disconnected %s with port %"PRIu8"\r\n",
         usb_get_description( device_number ), ( uint8_t )( port + 1 ) )
     #endif
     /// FIXME: HANDLE!
-  }
+  }*/
   // reset hub port
   result = hub_port_reset( device_number, device_data, port );
   // handle error
