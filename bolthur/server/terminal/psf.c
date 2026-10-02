@@ -27,7 +27,7 @@
 
 // FIXME: ADD VALUE CONVERSION FROM ENDIAN HEADER OVERALL
 
-psf_font_t* font = nullptr;
+static psf_font_t* font = nullptr;
 
 /**
  * @fn bool psf_load_font(psf_font_t*)
@@ -157,14 +157,14 @@ bool psf_init( void ) {
   }
 
   // handle unicode offset
-  uint32_t unicode_offset = psf_unicode_table_offset();
+  const uint32_t unicode_offset = psf_unicode_table_offset();
   if (
     PSF_FONT_HEADER_TYPE_V1 == font->type
     && 0 < unicode_offset
   ) {
     // get unicode table and calculate end of buffer
-    uint16_t* table = ( uint16_t* )( font->font_buffer + unicode_offset );
-    uint16_t* end = ( uint16_t* )( font->font_buffer + font->font_buffer_size );
+    auto table = ( uint16_t* )( font->font_buffer + unicode_offset );
+    auto const end = ( uint16_t* )( font->font_buffer + font->font_buffer_size );
     uint16_t glyph = 0;
     // allocate unicode mapping table
     font->unicode = calloc( USHRT_MAX, 2 );
@@ -214,8 +214,9 @@ bool psf_init( void ) {
  */
 uint32_t psf_glyph_size( void ) {
   if ( PSF_FONT_HEADER_TYPE_V1 == font->type ) {
-    return ( uint32_t )font->header.v1.height;
-  } else if ( PSF_FONT_HEADER_TYPE_V2 == font->type ) {
+    return font->header.v1.height;
+  }
+  if ( PSF_FONT_HEADER_TYPE_V2 == font->type ) {
     return font->header.v2.charsize;
   }
   return 0;
@@ -229,8 +230,9 @@ uint32_t psf_glyph_size( void ) {
  */
 uint32_t psf_glyph_height( void ) {
   if ( PSF_FONT_HEADER_TYPE_V1 == font->type ) {
-    return ( uint32_t )font->header.v1.height;
-  } else if ( PSF_FONT_HEADER_TYPE_V2 == font->type ) {
+    return font->header.v1.height;
+  }
+  if ( PSF_FONT_HEADER_TYPE_V2 == font->type ) {
     return font->header.v2.height;
   }
   return 0;
@@ -245,7 +247,8 @@ uint32_t psf_glyph_height( void ) {
 uint32_t psf_glyph_width( void ) {
   if ( PSF_FONT_HEADER_TYPE_V1 == font->type ) {
     return 8;
-  } else if ( PSF_FONT_HEADER_TYPE_V2 == font->type ) {
+  }
+  if ( PSF_FONT_HEADER_TYPE_V2 == font->type ) {
     return font->header.v2.width;
   }
   return 0;
@@ -261,10 +264,10 @@ uint32_t psf_glyph_total( void ) {
   if ( PSF_FONT_HEADER_TYPE_V1 == font->type ) {
     if ( font->header.v1.mode & PSF1_MODE512 ) {
       return 512;
-    } else {
-      return 256;
     }
-  } else if ( PSF_FONT_HEADER_TYPE_V2 == font->type ) {
+    return 256;
+  }
+  if ( PSF_FONT_HEADER_TYPE_V2 == font->type ) {
     return font->header.v2.length;
   }
   return 0;
@@ -332,5 +335,5 @@ uint8_t* psf_char_to_glyph( uint32_t c ) {
   if ( c < psf_glyph_total() ) {
     off += c * psf_glyph_size();
   }
-  return ( uint8_t* )( font->font_buffer + header_size + off );
+  return font->font_buffer + header_size + off;
 }

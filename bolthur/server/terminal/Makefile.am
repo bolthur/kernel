@@ -13,8 +13,9 @@ terminal_LDADD = \
   ${abs_top_builddir}/../library/collection/list/liblist.la \
   ${abs_top_builddir}/../library/vfs/libvfs.la
 terminal_SOURCES = \
+  rpc/custom/bootstrap.c \
+  rpc/default/ioctl.c \
   rpc/init.c \
-  rpc/ioctl.c \
   main.c \
   output.c \
   psf.c \

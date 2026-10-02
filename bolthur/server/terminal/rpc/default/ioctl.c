@@ -24,8 +24,8 @@
 #include <inttypes.h>
 #include <sys/bolthur.h>
 #include <unistd.h>
-#include "../rpc.h"
-#include "../global.h"
+#include "../../rpc.h"
+#include "../../global.h"
 
 /**
  * @fn void rpc_handle_ioctl(size_t, pid_t, size_t, size_t)
@@ -38,7 +38,7 @@
  *
  * @todo save result of info to prevent similar requests somehow
  */
-void rpc_handle_ioctl(
+void rpc_default_ioctl(
   size_t type,
   pid_t origin,
   size_t data_info,

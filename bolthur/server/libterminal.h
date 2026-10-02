@@ -22,9 +22,14 @@
 
 #include <sys/bolthur.h>
 
-#define TERMINAL_IN_START RPC_CUSTOM_START
-#define TERMINAL_OUT_START TERMINAL_IN_START + 1
-#define TERMINAL_ERR_START TERMINAL_OUT_START + 1
+#define TERMINAL_BOOTSTRAP RPC_CUSTOM_START
+#define TERMINAL_IN_START ( TERMINAL_BOOTSTRAP + 1 )
+#define TERMINAL_OUT_START ( TERMINAL_IN_START + 1 )
+#define TERMINAL_ERR_START ( TERMINAL_OUT_START + 1 )
+
+typedef struct {
+  char config[ PATH_MAX ];
+} terminal_bootstrap_t;
 
 typedef struct {
   size_t len;

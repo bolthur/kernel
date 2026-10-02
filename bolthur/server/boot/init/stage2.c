@@ -23,25 +23,65 @@
 #include <sys/mount.h>
 #include <sys/bolthur.h>
 #include <mntent.h>
+#include <sys/ioctl.h>
 #include "../init.h"
 #include "../configuration.h"
 #include "../global.h"
+#include "../../libterminal.h"
 #include "../../../library/vfs/wait.h"
 
 /**
- * @fn void init_stage2(const char*)
- * @brief Stage 2 init starting necessary stuff so that stage 3 with stuff from disk can be started
- * @param bootarg boot arguments
+ * @fn void bootstrap_terminal(void)
+ * @brief Helper to bootstrap terminal with config
  */
-void init_stage2( const char* bootarg ) {
-  // start servers by configuration
-  if ( ! configuration_handle( "/ramdisk/config/stage2.ini", bootarg ) ) {
+static void bootstrap_terminal( void ) {
+  // bootstrap terminal
+  terminal_bootstrap_t* bootstrap = malloc( sizeof( *bootstrap ) );
+  if ( ! bootstrap ) {
     #if defined( BOOT_ENABLE_OUTPUT )
-      EARLY_STARTUP_PRINT( "Something went wrong with stage2 startup!\r\n" )
+      STARTUP_PRINT( "unable to allocate space for terminal bootstrap\r\n" )
     #endif
     exit( 1 );
   }
+  // clear memory
+  memset( bootstrap, 0, sizeof( *bootstrap ) );
+  // prepare terminal bootstrap
+  strncpy( bootstrap->config, "/etc/vconsole.conf", PATH_MAX );
+  // open terminal
+  const int term = open( "/dev/terminal", O_RDWR );
+  if ( -1 == term ) {
+    #if defined( BOOT_ENABLE_OUTPUT )
+      STARTUP_PRINT( "unable to open terminal for bootstrap\r\n" )
+    #endif
+    exit( 1 );
+  }
+  // perform ioctl
+  const int ioctl_result = ioctl(
+    term,
+    IOCTL_BUILD_REQUEST(
+      TERMINAL_BOOTSTRAP,
+      sizeof( *bootstrap ),
+      IOCTL_RDWR
+    ),
+    bootstrap
+  );
+  // handle error
+  if ( -1 == ioctl_result ) {
+    #if defined( BOOT_ENABLE_OUTPUT )
+      STARTUP_PRINT( "unable to perform terminal ioctl command\r\n" )
+    #endif
+    exit( 1 );
+  }
+  free( bootstrap );
+  close( term );
+}
 
+/**
+ * @fn void mount_root(const char*)
+ * @brief Mount root by checking bootargs
+ * @param bootarg
+ */
+static void mount_root( const char* bootarg ) {
   // determine root device and partition type from config
   #if defined( BOOT_ENABLE_OUTPUT )
     STARTUP_PRINT( "Extracting root device and partition type...\r\n" )
@@ -109,7 +149,7 @@ void init_stage2( const char* bootarg ) {
       root_device, root_partition_type )
   #endif
   fflush( stdout );
-  int result = mount( root_device, "/", root_partition_type, MS_MGC_VAL, "" );
+  const int result = mount( root_device, "/", root_partition_type, MS_MGC_VAL, "" );
   if ( 0 != result ) {
     #if defined( BOOT_ENABLE_OUTPUT )
       STARTUP_PRINT( "Mount of \"%s\" with type \"%s\" to / failed: \"%s\"\r\n",
@@ -117,7 +157,16 @@ void init_stage2( const char* bootarg ) {
     #endif
     exit( 1 );
   }
+  // free up device and partition type strings
+  free( root_device );
+  free( root_partition_type );
+}
 
+/**
+ * @fn void mount_remaining(void)
+ * @brief Mount remaining by checking fstab
+ */
+static void mount_remaining( void ) {
   FILE* fstab = setmntent("/etc/fstab", "r");
   struct mntent* m = nullptr;
   if ( fstab ) {
@@ -157,7 +206,7 @@ void init_stage2( const char* bootarg ) {
         mount_flags |= MS_NOSUID;
       }
       // try to mount
-      result = mount( m->mnt_fsname, m->mnt_dir, m->mnt_type, mount_flags, "" );
+      const int result = mount( m->mnt_fsname, m->mnt_dir, m->mnt_type, mount_flags, "" );
       // handle error
       if ( 0 != result ) {
         #if defined( BOOT_ENABLE_OUTPUT )
@@ -170,15 +219,36 @@ void init_stage2( const char* bootarg ) {
     }
     endmntent( fstab );
   }
-  // free up device and partition type strings
-  free( root_device );
-  free( root_partition_type );
+}
+
+/**
+ * @fn void init_stage2(const char*)
+ * @brief Stage 2 init starting necessary stuff so that stage 3 with stuff from disk can be started
+ * @param bootarg boot arguments
+ */
+void init_stage2( const char* bootarg ) {
+  // start servers by configuration
+  if ( ! configuration_handle( "/ramdisk/config/stage2.ini", bootarg ) ) {
+    #if defined( BOOT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Something went wrong with stage2 startup!\r\n" )
+    #endif
+    exit( 1 );
+  }
+  // mount root and afterwards remaining stuff
+  mount_root( bootarg );
+  mount_remaining();
+  // bootstrap terminal
+  bootstrap_terminal();
+  // debug output
   #if defined( BOOT_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "done, yay!\r\n" )
+  #endif
+  // debug output
+  #if defined( BOOT_ENABLE_OUTPUT )
     STARTUP_PRINT( "Opening \"/boot/cmdline.txt\" for reading\r\n" )
   #endif
   // open fstap
-  int cmdline = open( "/boot/cmdline.txt", O_RDONLY );
+  const int cmdline = open( "/boot/cmdline.txt", O_RDONLY );
   if ( -1 == cmdline ) {
     #if defined( BOOT_ENABLE_OUTPUT )
       STARTUP_PRINT( "unable to open: %s\r\n", strerror( errno ) )
