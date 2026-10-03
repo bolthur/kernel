@@ -132,6 +132,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     CONSOLE_ADD,
     CONSOLE_SELECT,
     CONSOLE_INPUT,
+    CONSOLE_GET_ACTIVE,
     RPC_VFS_IOCTL_TERMIOS_GET,
     RPC_VFS_IOCTL_TERMIOS_SET,
   };

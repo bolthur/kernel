@@ -28,6 +28,7 @@
 // FIXME: ADD VALUE CONVERSION FROM ENDIAN HEADER OVERALL
 
 static psf_font_t* font = nullptr;
+static bool initialized = false;
 
 /**
  * @fn bool psf_load_font(psf_font_t*)
@@ -201,9 +202,31 @@ bool psf_init( void ) {
     free( font );
     return false;
   }
-
+  // set initialized
+  initialized = true;
   // return success
   return true;
+}
+
+/**
+ * @fn void psf_destroy(void)
+ * @brief Destroy psf font
+ */
+void psf_destroy( void ) {
+  if ( initialized ) {
+    free( font->font_buffer );
+    free( font );
+  }
+  initialized = false;
+}
+
+/**
+ * @fn bool psf_initialized(void)
+ * @brief Returns initialized state
+ * @return
+ */
+bool psf_initialized( void ) {
+  return initialized;
 }
 
 /**
@@ -336,4 +359,57 @@ uint8_t* psf_char_to_glyph( uint32_t c ) {
     off += c * psf_glyph_size();
   }
   return font->font_buffer + header_size + off;
+}
+
+/**
+ * @fn void psf_render_char(uint8_t*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t)
+ * @brief Helper to render character to passed surface
+ *
+ * @param surface
+ * @param depth
+ * @param pitch
+ * @param c
+ * @param start_x
+ * @param start_y
+ * @param color_fg
+ * @param color_bg
+ */
+void psf_render_char(
+  volatile uint8_t* surface,
+  const uint32_t depth,
+  const uint32_t pitch,
+  const uint32_t c,
+  uint32_t start_x,
+  uint32_t start_y,
+  const uint32_t color_fg,
+  const uint32_t color_bg
+) {
+  // get glyph of character
+  uint8_t* glyph = psf_char_to_glyph( c );
+  if ( ! glyph ) {
+    return;
+  }
+  const uint32_t font_height = psf_glyph_height();
+  const uint32_t font_width = psf_glyph_width();
+  start_x *= font_width;
+  start_y *= font_height;
+  uint32_t off = ( start_y * pitch ) + ( start_x * ( depth / CHAR_BIT ) );
+  uint32_t line = off;
+  const uint32_t bytesperline = ( font_width + 7 ) / 8;
+  uint32_t idx = 0;
+  const uint32_t max = font_width * font_height;
+  while( idx < max ) {
+    const uint32_t x = idx % font_width;
+    *( ( uint32_t* )( surface + line ) ) = ( glyph[ x / 8 ] & ( 0x80 >> ( x & 7 ) ) ) ? color_fg : color_bg;
+    line += 4;
+    idx++;
+    // handle new line
+    if ( 0 == idx % font_width && idx < max ) {
+      *( ( uint32_t* )( surface + line ) ) = 0;
+      glyph += bytesperline;
+      off += pitch;
+      // reset line to new offset
+      line = off;
+    }
+  }
 }

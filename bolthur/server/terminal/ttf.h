@@ -17,36 +17,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _LIBCONSOLE_H
-#define _LIBCONSOLE_H
+#ifndef _TTF_H
+#define _TTF_H
 
-#include <sys/bolthur.h>
-
-#define CONSOLE_ADD RPC_CUSTOM_START
-#define CONSOLE_SELECT ( CONSOLE_ADD + 1 )
-#define CONSOLE_INPUT ( CONSOLE_SELECT + 1 )
-#define CONSOLE_GET_ACTIVE ( CONSOLE_INPUT + 1 )
-
-#define CONSOLE_MAX_INPUT_SEQUENCE 25
-
-typedef struct console_command_add {
-  char terminal[ PATH_MAX ];
-  size_t in;
-  size_t out;
-  size_t err;
-  pid_t origin;
-} console_command_add_t;
-
-typedef struct {
-  char path[ PATH_MAX ];
-} console_command_select_t;
-
-typedef struct {
-  char input[ CONSOLE_MAX_INPUT_SEQUENCE ];
-} console_command_input_t;
-
-typedef struct {
-  char path[ PATH_MAX ];
-} console_command_active_t;
+bool ttf_init( const char*, uint32_t, uint32_t );
+void ttf_destroy( void );
+bool ttf_initialized( void );
+void ttf_render_char( volatile uint8_t*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t );
+uint32_t ttf_glyph_height( void );
+uint32_t ttf_glyph_width( void );
 
 #endif

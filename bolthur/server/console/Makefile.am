@@ -10,6 +10,7 @@ console_LDADD = \
   ${abs_top_builddir}/../library/collection/list/liblist.la \
   ${abs_top_builddir}/../library/vfs/libvfs.la
 console_SOURCES = \
+  rpc/custom/active.c \
   rpc/custom/add.c \
   rpc/custom/input.c \
   rpc/custom/select.c \

@@ -99,6 +99,13 @@ bool rpc_init( void ) {
     #endif
     return false;
   }
+  bolthur_rpc_bind( CONSOLE_GET_ACTIVE, rpc_custom_handle_get_active, true );
+  if ( errno ) {
+    #if defined( CONSOLE_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler console get active!\r\n" )
+    #endif
+    return false;
+  }
   bolthur_rpc_bind( RPC_VFS_IOCTL_TERMIOS_GET, rpc_termios_get, true );
   if ( errno ) {
     #if defined( CONSOLE_ENABLE_OUTPUT )

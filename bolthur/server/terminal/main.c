@@ -95,8 +95,16 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     EARLY_STARTUP_PRINT( "Setup pc screen font\r\n" )
   #endif
   // psf init
-  // FIXME: MOVE TO OUTPUT?
   if ( ! psf_init() ) {
+    close( console_manager_fd );
+    close( output_driver_fd );
+    return -1;
+  }
+
+  #if defined( TERMINAL_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Setup framebuffer surface\r\n" )
+  #endif
+  if ( ! terminal_allocate_framebuffer() ) {
     close( console_manager_fd );
     close( output_driver_fd );
     return -1;

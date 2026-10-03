@@ -16,10 +16,12 @@ terminal_SOURCES = \
   rpc/custom/bootstrap.c \
   rpc/default/ioctl.c \
   rpc/init.c \
+  buffer.c \
   main.c \
   output.c \
   psf.c \
   render.c \
   terminal.c \
+  ttf.c \
   utf8.c
 terminal_LDFLAGS = -all-static --static

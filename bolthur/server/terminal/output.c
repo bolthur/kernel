@@ -122,6 +122,18 @@ void output_handle_out(
     free( request );
     return;
   }
+  // render
+  const int result = render_terminal( found->data, shm_addr );
+  if ( result != 0 ) {
+    #if defined( TERMINAL_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "unable to render terminal\r\n" )
+    #endif
+    _syscall_memory_shared_detach( terminal->shm_id );
+    error.status = result;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+    free( request );
+    return;
+  }
   // allocate response
   vfs_ioctl_perform_response_t* response;
   constexpr size_t response_size = sizeof( vfs_write_response_t ) + sizeof( *response );
@@ -137,8 +149,6 @@ void output_handle_out(
     return;
   }
   memset( response, 0, response_size );
-  // render
-  render_terminal( found->data, shm_addr );
   // fill dummy return
   const vfs_write_response_t dummy = { .len = ( ssize_t )strlen( shm_addr ) };
   _syscall_memory_shared_detach( terminal->shm_id );
@@ -211,6 +221,18 @@ void output_handle_err(
     free( request );
     return;
   }
+  // render
+  const int result = render_terminal( found->data, shm_addr );
+  if ( result != 0 ) {
+    #if defined( TERMINAL_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "unable to render terminal\r\n" )
+    #endif
+    _syscall_memory_shared_detach( terminal->shm_id );
+    error.status = result;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+    free( request );
+    return;
+  }
   // allocate response
   vfs_ioctl_perform_response_t* response;
   constexpr size_t response_size = sizeof( vfs_write_response_t ) + sizeof( *response );
@@ -226,8 +248,6 @@ void output_handle_err(
     return;
   }
   memset( response, 0, response_size );
-  // render
-  render_terminal( found->data, shm_addr );
   // fill dummy return
   const vfs_write_response_t dummy = { .len = ( ssize_t )strlen( shm_addr ) };
   memcpy( response->container, &dummy, sizeof( dummy ) );
