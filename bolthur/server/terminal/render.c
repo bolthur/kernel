@@ -34,7 +34,14 @@
 #include "utf8.h"
 #include "../libframebuffer.h"
 
+/**
+ * @brief Foreground color
+ */
 static uint32_t foreground_color = 0xf0f0f0;
+
+/**
+ * @brief Background color
+ */
 static uint32_t background_color = 0;
 
 /**
@@ -164,12 +171,12 @@ static void terminal_push_utf8( terminal_t* term, uint16_t* s ) {
       }
     }
     // handle end of row reached
-    if ( term->max_col <= term->col ) {
+    if ( term->max_col == term->col ) {
       term->col = 0;
       term->row++;
     }
     // handle scroll
-    if ( term->max_row <= term->row ) {
+    if ( term->max_row == term->row ) {
       // scroll up content
       terminal_scroll();
       // set row and col correctly
@@ -215,7 +222,7 @@ static void terminal_push_utf8( terminal_t* term, uint16_t* s ) {
         if ( psf_initialized() ) {
           psf_render_char(
             surface,
-            term->bpp,
+            resolution_data.depth,
             surface_data.pitch,
             *s,
             term->col,
@@ -226,7 +233,7 @@ static void terminal_push_utf8( terminal_t* term, uint16_t* s ) {
         } else if ( ttf_initialized() ) {
           ttf_render_char(
             surface,
-            term->bpp,
+            resolution_data.depth,
             surface_data.pitch,
             *s,
             term->col,
@@ -253,7 +260,7 @@ static void terminal_push_utf8( terminal_t* term, uint16_t* s ) {
  */
 int render_terminal( terminal_t* term, const char* s ) {
   // FIXME: currently only 32 bit depth is supported
-  if ( 32 != term->bpp ) {
+  if ( 32 != resolution_data.depth ) {
     return -ENOSYS;
   }
   // decode utf8
@@ -320,15 +327,16 @@ void render_whole_terminal( terminal_t* term ) {
   term->row = term->col = 0;
   // rerender whole terminal
   uint32_t current = term->buffer.tail;
+  // loop until the newest line
   while ( current != term->buffer.head ) {
+    // get current line pointer
     uint16_t* line_ptr = &term->buffer.data[ current * term->buffer.columns ];
     // push utf8 to terminal
     terminal_push_utf8( term, line_ptr );
     // get to next line
-    if ( current == term->buffer.mask ) {
+    current++;
+    if ( current >= term->buffer.rows ) {
       current = 0;
-    } else {
-      current++;
     }
   }
   // allocate rpc parameter block
@@ -340,8 +348,6 @@ void render_whole_terminal( terminal_t* term ) {
   memset( action, 0, sizeof( *action ) );
   // populate
   action->surface_id = surface_data.surface_id;
-  action->x = 0;
-  action->y = 0;
   // call render surface
   ioctl(
     output_driver_fd,

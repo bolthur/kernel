@@ -168,9 +168,16 @@ void rpc_custom_bootstrap(
   while ( current ) {
     // get terminal
     auto const term = ( terminal_t* )current->data;
-    // adjust max row and column
+    // adjust max row
     term->max_row = resolution_data.height / ttf_glyph_height();
+    if ( 0 == resolution_data.height % ttf_glyph_height() ) {
+      term->max_row--;
+    }
+    // adjust max col
     term->max_col = resolution_data.width / ttf_glyph_width();
+    if ( 0 == resolution_data.width % ttf_glyph_width() ) {
+      term->max_col--;
+    }
     // reinit buffer
     buffer_reinit( &term->buffer, term->max_row, term->max_col );
     // render whole terminal

@@ -128,7 +128,7 @@ bool ttf_init( const char* filename, const uint32_t width, const uint32_t height
     return false;
   }
   #if defined( TERMINAL_ENABLE_OUTPUT )
-    EARLY_STARTUP_PRINT( "Set pixel sizes to 8x9\r\n" )
+    EARLY_STARTUP_PRINT( "Set pixel sizes\r\n" )
   #endif
   // set font size
   if ( FT_Set_Pixel_Sizes( face, width, height ) ) {
@@ -284,13 +284,10 @@ void ttf_render_char(
       if ( 0 > current_x ) {
         continue;
       }
-      // compute absolute byte offset for this specific x coordinate
-      const uint32_t pixel_byte_offset = ( uint32_t )current_x * bytes_per_pixel;
       // Calculate the specific pixel address using pure byte math offsets
-      auto const pixel_addr = ( volatile uint32_t* )( target_row_ptr + pixel_byte_offset );
+      auto const pixel_addr = ( volatile uint32_t* )( target_row_ptr + ( ( uint32_t )current_x * bytes_per_pixel ) );
       // get possible alpha
-      const uint32_t buffer_index = row * ( uint32_t )bitmap->pitch + column;
-      const uint8_t alpha = bitmap->buffer[ buffer_index ];
+      const uint8_t alpha = bitmap->buffer[ row * ( uint32_t )bitmap->pitch + column ];
       // background color previously set => skip
       if ( 0 == alpha ) {
         continue;

@@ -35,7 +35,6 @@ void buffer_init( circular_line_buffer_t* buffer, const uint32_t rows, const uin
   // assert valid buffer
   assert( buffer );
   // initialize buffer by setting mask, head and tail
-  buffer->mask = rows - 1;
   buffer->head = 0;
   buffer->tail = 0;
   buffer->rows = rows;
@@ -61,12 +60,13 @@ void buffer_reinit( circular_line_buffer_t* buffer, const uint32_t rows, const u
   // assert valid buffer
   assert( buffer );
   // save old data
-  auto const old_rows = buffer->rows;
   auto const old_cols = buffer->columns;
   auto const old_data = buffer->data;
   auto const old_len = buffer->len;
+  auto const old_tail = buffer->tail;
+  auto const old_head = buffer->head;
+  auto const old_rows = buffer->rows;
   // initialize buffer by setting mask, head and tail
-  buffer->mask = rows - 1;
   buffer->head = 0;
   buffer->tail = 0;
   buffer->rows = rows;
@@ -74,14 +74,25 @@ void buffer_reinit( circular_line_buffer_t* buffer, const uint32_t rows, const u
   // allocate buffer
   buffer->data = malloc( ( rows * cols ) * sizeof( uint16_t ) );
   assert( buffer->data );
-  memset( buffer->data, 0, sizeof( uint16_t ) * ( rows * cols ) );
+  memset( buffer->data, 0, ( rows * cols ) * sizeof( uint16_t ) );
   // allocate length array
   buffer->len = calloc( rows, sizeof( uint32_t ) );
   assert( buffer->len );
   memset( buffer->len, 0, rows * sizeof( uint32_t ) );
-  // push to buffer
-  for ( uint32_t row = 0; row < old_rows; row++ ) {
-    buffer_push( buffer, &old_data[ row * old_cols ], old_len[ row ] );
+  // push buffer from oldest to newest
+  uint32_t current = old_tail;
+  // loop until the newest line
+  while ( current != old_head ) {
+    // get current line pointer
+    auto const line_ptr = &old_data[ current * old_cols ];
+    const uint32_t length = old_len[ current ];
+    // push to buffer
+    buffer_push( buffer, line_ptr, length );
+    // get to next line
+    current++;
+    if ( current >= old_rows ) {
+      current = 0;
+    }
   }
   // free old data
   free( old_data );
@@ -122,7 +133,10 @@ bool buffer_is_empty( const circular_line_buffer_t* buffer ) {
  * @return
  */
 bool buffer_is_full( const circular_line_buffer_t* buffer ) {
-  const uint32_t next_head = buffer->head == buffer->mask ? 0 : buffer->head + 1;
+  uint32_t next_head = buffer->head + 1;
+  if ( next_head >= buffer->rows ) {
+    next_head = 0;
+  }
   return next_head == buffer->tail;
 }
 
@@ -147,10 +161,9 @@ void buffer_push( circular_line_buffer_t* buffer, const uint16_t* data, const si
     // in case buffer is full => continue with oldest one
     if ( buffer_is_full( buffer ) ) {
       // increase tail
-      if (buffer->tail == buffer->mask) {
+      buffer->tail++;
+      if (buffer->tail >= buffer->rows ) {
         buffer->tail = 0;
-      } else {
-        buffer->tail++;
       }
     }
     // evaluate columns to copy
@@ -170,10 +183,9 @@ void buffer_push( circular_line_buffer_t* buffer, const uint16_t* data, const si
       memset( &dest[ cols ], 0, ( buffer->columns - cols ) * sizeof( uint16_t ) );
     }
     // push head pointer further
-    if (buffer->head == buffer->mask) {
+    buffer->head++;
+    if ( buffer->head >= buffer->rows ) {
       buffer->head = 0;
-    } else {
-      buffer->head++;
     }
   }
 }
@@ -190,7 +202,7 @@ uint16_t* buffer_last_pushed_data( const circular_line_buffer_t* buffer ) {
   }
   uint32_t last_index = 0;
   if ( ! buffer->head ) {
-    last_index = buffer->mask;
+    last_index = buffer->rows - 1;
   } else {
     last_index = buffer->head - 1;
   }

@@ -44,8 +44,6 @@ typedef struct terminal {
   uint32_t max_col;
   /** max row */
   uint32_t max_row;
-  /** bits per pixel */
-  uint32_t bpp;
 } terminal_t;
 
 extern list_manager_t* terminal_list;

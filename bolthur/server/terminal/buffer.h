@@ -28,8 +28,6 @@ typedef struct circular_line_buffer {
   uint16_t* data;
   /** array with len per row */
   uint32_t* len;
-  /** buffer mask */
-  uint32_t mask;
   /** rows */
   uint32_t rows;
   /** columns */

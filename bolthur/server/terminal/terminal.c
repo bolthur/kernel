@@ -203,7 +203,6 @@ bool terminal_init( void ) {
     term->max_col = resolution_data.width / psf_glyph_width();
     term->max_row = resolution_data.height / psf_glyph_height();
     strncpy( term->path, tty_path, PATH_MAX - 1 );
-    term->bpp = resolution_data.depth;
     // init ring buffer
     buffer_init( &term->buffer, term->max_row, term->max_col );
     // push back
