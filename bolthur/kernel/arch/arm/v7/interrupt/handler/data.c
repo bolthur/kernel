@@ -68,37 +68,55 @@ void vector_data_abort_handler( cpu_register_context_t* cpu ) {
     const uintptr_t fault = virt_data_fault_address();
     #if defined( PRINT_EXCEPTION )
       DEBUG_OUTPUT( "data abort while accessing %#"PRIxPTR"\r\n", fault )
+      DEBUG_OUTPUT( "%#"PRIxPTR", %#"PRIxPTR", %#"PRIxPTR"\r\n",
+        fault,
+        task_thread_current_thread->stack_virtual,
+        task_thread_current_thread->stack_virtual - task_thread_current_thread->stack_size )
     #endif
     // handle in user stack => extend it
     if (
       fault >= task_thread_current_thread->stack_virtual - THREAD_STACK_MAX_SIZE
       && fault < task_thread_current_thread->stack_virtual
-      && fault >= task_thread_current_thread->stack_virtual - task_thread_current_thread->stack_size - PAGE_SIZE
     ) {
-      // reallocate physical
-      const size_t new_physical_size = task_thread_current_thread->stack_size / PAGE_SIZE + 1;
-      uint64_t* new_physical = realloc( task_thread_current_thread->stack_physical, new_physical_size );
+      const uintptr_t diff = ROUND_UP_TO_FULL_PAGE( task_thread_current_thread->stack_virtual - task_thread_current_thread->stack_size - fault );
+      // reallocate
+      const size_t current_stack_size = task_thread_current_thread->stack_size / PAGE_SIZE;
+      const size_t add_stack_size = diff / PAGE_SIZE;
+      const size_t new_physical_size = current_stack_size + add_stack_size;
+      uint64_t* new_physical = realloc( task_thread_current_thread->stack_physical, new_physical_size * sizeof( uint64_t ) );
       if ( new_physical ) {
         // map down growing stack
-        if ( ! virt_map_address_random(
-          task_thread_current_thread->process->virtual_context,
-          fault,
-          VIRT_MEMORY_TYPE_NORMAL,
-          VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
-        ) ) {
-          PANIC( "Mapping failed" )
+        for ( uintptr_t start = 1; start <= add_stack_size; start++ ) {
+          const uintptr_t vaddr = task_thread_current_thread->stack_virtual - task_thread_current_thread->stack_size - start * PAGE_SIZE;
+          #if defined( PRINT_EXCEPTION )
+            DEBUG_OUTPUT( "vaddr = %#"PRIxPTR"\r\n", vaddr )
+            DEBUG_OUTPUT( "new_physical = %#"PRIxPTR"\r\n", ( uintptr_t )new_physical )
+          #endif
+          // try to map it
+          if ( ! virt_map_address_random(
+            task_thread_current_thread->process->virtual_context,
+            vaddr,
+            VIRT_MEMORY_TYPE_NORMAL,
+            VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
+          ) ) {
+            PANIC( "Mapping failed" )
+          }
+          new_physical[ current_stack_size + start - 1 ] = virt_get_mapped_address_in_context(
+            task_thread_current_thread->process->virtual_context,
+            vaddr
+          );
         }
-        // get mapped address
-        new_physical[ new_physical_size - 1 ] = virt_get_mapped_address_in_context(
-          task_thread_current_thread->process->virtual_context, fault );
         // overwrite physical
         task_thread_current_thread->stack_physical = new_physical;
         // increase stack size
-        task_thread_current_thread->stack_size += PAGE_SIZE;
+        task_thread_current_thread->stack_size += diff;
         // enqueue cleanup
         event_enqueue( EVENT_INTERRUPT_CLEANUP );
         // decrement nested counter
         nested_data_abort--;
+        #if defined( PRINT_EXCEPTION )
+          DEBUG_OUTPUT( "User stack expanded %#"PRIxPTR"\r\n", ( uintptr_t )task_thread_current_thread )
+        #endif
         // return to thread
         return;
       }

@@ -204,7 +204,7 @@ void rpc_keyboard_key(
   if ( dev->key_field[ 0 ] ) {
     dev->modifier.left_control = dev->key_field[ 0 ]->value._bool;
     #if defined( KEYBOARD_ENABLE_OUTPUT )
-      if (dev->modifier.left_control) {
+      if ( dev->modifier.left_control ) {
         EARLY_STARTUP_PRINT( "Left control\r\n" )
       }
     #endif
@@ -212,7 +212,7 @@ void rpc_keyboard_key(
   if ( dev->key_field[ 1 ] ) {
     dev->modifier.left_shift = dev->key_field[ 1 ]->value._bool;
     #if defined( KEYBOARD_ENABLE_OUTPUT )
-      if (dev->modifier.left_shift) {
+      if ( dev->modifier.left_shift ) {
         EARLY_STARTUP_PRINT( "Left shift\r\n" )
       }
     #endif
@@ -220,7 +220,7 @@ void rpc_keyboard_key(
   if ( dev->key_field[ 2 ] ) {
     dev->modifier.left_alt = dev->key_field[ 2 ]->value._bool;
     #if defined( KEYBOARD_ENABLE_OUTPUT )
-      if (dev->modifier.left_alt) {
+      if ( dev->modifier.left_alt ) {
         EARLY_STARTUP_PRINT( "Left alt\r\n" )
       }
     #endif
@@ -228,7 +228,7 @@ void rpc_keyboard_key(
   if ( dev->key_field[ 3 ] ) {
     dev->modifier.left_gui = dev->key_field[ 3 ]->value._bool;
     #if defined( KEYBOARD_ENABLE_OUTPUT )
-      if (dev->modifier.left_gui) {
+      if ( dev->modifier.left_gui ) {
         EARLY_STARTUP_PRINT( "Left gui\r\n" )
       }
     #endif
@@ -236,7 +236,7 @@ void rpc_keyboard_key(
   if ( dev->key_field[ 4 ] ) {
     dev->modifier.right_control = dev->key_field[ 4 ]->value._bool;
     #if defined( KEYBOARD_ENABLE_OUTPUT )
-      if (dev->modifier.right_control) {
+      if ( dev->modifier.right_control ) {
         EARLY_STARTUP_PRINT( "Right control\r\n" )
       }
     #endif
@@ -244,7 +244,7 @@ void rpc_keyboard_key(
   if ( dev->key_field[ 5 ] ) {
     dev->modifier.right_shift = dev->key_field[ 5 ]->value._bool;
     #if defined( KEYBOARD_ENABLE_OUTPUT )
-      if (dev->modifier.right_shift) {
+      if ( dev->modifier.right_shift ) {
         EARLY_STARTUP_PRINT( "Right shift\r\n" )
       }
     #endif
@@ -252,7 +252,7 @@ void rpc_keyboard_key(
   if ( dev->key_field[ 6 ] ) {
     dev->modifier.right_alt = dev->key_field[ 6 ]->value._bool;
     #if defined( KEYBOARD_ENABLE_OUTPUT )
-      if (dev->modifier.right_alt) {
+      if ( dev->modifier.right_alt ) {
         EARLY_STARTUP_PRINT( "Right alt\r\n" )
       }
     #endif
@@ -260,7 +260,7 @@ void rpc_keyboard_key(
   if ( dev->key_field[ 7 ] ) {
     dev->modifier.right_gui = dev->key_field[ 7 ]->value._bool;
     #if defined( KEYBOARD_ENABLE_OUTPUT )
-      if (dev->modifier.right_gui) {
+      if ( dev->modifier.right_gui ) {
         EARLY_STARTUP_PRINT( "Right gui\r\n" )
       }
     #endif
