@@ -330,14 +330,14 @@ void rpc_keyboard_key(
       case KEYMAP_SPECIAL_KEY_NUM_LOCK:
         keymap->num_lock = !keymap->num_lock;
         if ( dev->led.num_lock ) {
-          dev->led_field[ 0 ]->value._bool = keymap->caps_lock;
+          dev->led_field[ 0 ]->value._bool = keymap->num_lock;
         }
         set_led = true;
         break;
       case KEYMAP_SPECIAL_KEY_SCROLL_LOCK:
         keymap->scroll_lock = !keymap->scroll_lock;
         if ( dev->led.scroll_lock ) {
-          dev->led_field[ 2 ]->value._bool = keymap->caps_lock;
+          dev->led_field[ 2 ]->value._bool = keymap->scroll_lock;
         }
         set_led = true;
         break;
