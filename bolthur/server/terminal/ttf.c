@@ -217,7 +217,7 @@ void ttf_render_char(
   // get glyph index
   auto const glyph = FT_Get_Char_Index( face, c );
   // get glyph
-  if ( FT_Load_Glyph( face, glyph, FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT ) ) {
+  if ( FT_Load_Glyph( face, glyph, FT_LOAD_RENDER ) ) {
     #if defined( TERMINAL_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Failed to load glyph\r\n" )
     #endif

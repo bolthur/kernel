@@ -108,59 +108,46 @@ static void terminal_push_utf8( terminal_t* term, uint16_t* s ) {
     if ( *s == '\x1b' && s[ 1 ] == '[' ) {
       // skip control character and opening brackets
       s += 2;
-      // loop while end is reached
-      auto end = s;
-      auto str = s;
-      while ( *end && *end != 'm' && *end != ',' ) {
-        end++;
-      }
-      // set terminating flag
-      const bool terminating = *end == 'm';
-      // convert into string
-      size_t size = ( size_t )( end - str );
-      char* cs = malloc( ( size + 1 ) * sizeof( char ) );
-      if ( cs ) {
+      // terminated flag
+      bool terminated = false;
+      // loop while not terminated
+      while ( ! terminated ) {
+        // cache s in two pointers
+        auto end = s;
+        auto const str = s;
+        // loop until end is reached or semicolon
+        while ( *end && *end != 'm' && *end != ';' ) {
+          end++;
+        }
+        // evaluate termination
+        terminated = 'm' == *end;
+        // calculate size
+        const size_t size = ( size_t )( end - str );
+        // increase s by size + 1 to skip the separator / terminator
+        s += ( size + 1 );
+        // allocate space
+        char* cs = malloc( ( size + 1 ) * sizeof( char ) );
+        // skip if not possible to allocate
+        if ( ! cs ) {
+          continue;
+        }
+        // copy over for conversion to integer
         for ( size_t i = 0; i < size; i++ ) {
           cs[ i ] = ( char )str[ i ];
         }
         cs[ size ] = '\0';
-        // skip size and separator
-        s += ( size + 1 );
-        // convert to unsigned integer
-        uint32_t color = ( uint32_t )strtoul( cs, nullptr, 10 );
-        // evaluate color
-        foreground_color = terminal_evaluate_foreground_color( color );
-        background_color = terminal_evaluate_background_color( color );
-        // handle reset
-        if ( terminating && 0 == color ) {
+        // convert to integer
+        auto const color = ( uint32_t )strtoul( cs, nullptr, 10 );
+        // free up space
+        free( cs );
+        // evaluate colors if not reset
+        if ( color != 0 ) {
+          foreground_color = terminal_evaluate_foreground_color( color );
+          background_color = terminal_evaluate_background_color( color );
+        // color is 0 check for termination
+        } else if ( terminated ) {
           foreground_color = terminal_evaluate_foreground_color( 37 );
           background_color = terminal_evaluate_background_color( 40 );
-        }
-        free( cs );
-        // handle not yet terminating
-        if ( ! terminating ) {
-          end = s;
-          // loop until end
-          while ( *end && *end != 'm' ) {
-            end++;
-          }
-          // calculate size
-          size = ( size_t )( end - str );
-          cs = malloc( ( size + 1 ) * sizeof( char ) );
-          if ( cs ) {
-            for ( size_t i = 0; i < size; i++ ) {
-              cs[ i ] = ( char )str[ i ];
-            }
-            cs[ size ] = '\0';
-            // convert to unsigned integer
-            color = ( uint32_t )strtoul( cs, nullptr, 10 );
-            // evaluate color
-            foreground_color = terminal_evaluate_foreground_color( color );
-            background_color = terminal_evaluate_background_color( color );
-            // skip terminating sequence
-            str += ( size + 1 );
-            free( cs );
-          }
         }
       }
     }
