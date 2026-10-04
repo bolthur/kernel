@@ -630,9 +630,13 @@ response_t dwhci_channel_send_async_stop_channel( channel_queue_entry_t* entry, 
     #endif
     // read characteristics and set enable / disable
     uint32_t characteristic = mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ) );
-    EARLY_STARTUP_PRINT( "characteristic = %#"PRIx32"\r\n", characteristic )
+    #if defined( DWHCI_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "characteristic = %#"PRIx32"\r\n", characteristic )
+    #endif
     if ( characteristic & HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 ) ) {
-      EARLY_STARTUP_PRINT( "CANCELLING CHANNEL\r\n" )
+      #if defined( DWHCI_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "CANCELLING CHANNEL\r\n" )
+      #endif
       // enable interrupts in mask
       mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( entry->channel ), (
         HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE
@@ -649,6 +653,9 @@ response_t dwhci_channel_send_async_stop_channel( channel_queue_entry_t* entry, 
       mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ), characteristic );
     } else {
       if ( DWHCI_QUEUE_POLL_STATUS_CANCEL == entry->status ) {
+        #if defined( DWHCI_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "Nothing to cancel, faking a nack" )
+        #endif
         // continue with ack
         entry->status = DWHCI_QUEUE_POLL_STATUS_ACK;
         // reset split phase
@@ -658,7 +665,9 @@ response_t dwhci_channel_send_async_stop_channel( channel_queue_entry_t* entry, 
         // fake a nack
         entry->error = LIBUSB_TRANSFER_ERROR_NO_ACKNOWLEDGE;
       } else if ( DWHCI_QUEUE_CHANNEL_STATUS_DATA_CANCEL_RETRY == entry->status ) {
-        EARLY_STARTUP_PRINT( "No channel halt necessary, continuing with data\r\n" )
+        #if defined( DWHCI_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "No channel halt necessary, continuing with data\r\n" )
+        #endif
         // set data status
         entry->status = DWHCI_QUEUE_CHANNEL_STATUS_DATA;
         // reset split phase
@@ -666,7 +675,9 @@ response_t dwhci_channel_send_async_stop_channel( channel_queue_entry_t* entry, 
           entry->split_phase = DWHCI_SPLIT_PHASE_SSPLIT;
         }
       } else if ( DWHCI_QUEUE_CHANNEL_STATUS_ACK_CANCEL_RETRY == entry->status ) {
-        EARLY_STARTUP_PRINT( "No channel halt necessary, continuing with ack\r\n" )
+        #if defined( DWHCI_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "No channel halt necessary, continuing with ack\r\n" )
+        #endif
         // set data status
         entry->status = DWHCI_QUEUE_CHANNEL_STATUS_ACK;
         // reset split phase

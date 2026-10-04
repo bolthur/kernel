@@ -304,7 +304,7 @@ void rpc_keyboard_attach(
           if ( report->fields[ inner ].attribute.variable ) {
             if (
               report->fields[ inner ].usage.keyboard >= LIBUSB_HID_USAGE_PAGE_KEYBOARD_LEFT_CONTROL
-              && report->fields[ inner ].usage.keyboard <= LIBUSB_HID_USAGE_PAGE_KEYBOARD_RIGHT_CONTROL
+              && report->fields[ inner ].usage.keyboard <= LIBUSB_HID_USAGE_PAGE_KEYBOARD_RIGHT_GUI
             ) {
               #if defined( KEYBOARD_ENABLE_OUTPUT )
                 EARLY_STARTUP_PRINT(
