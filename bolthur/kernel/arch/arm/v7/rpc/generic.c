@@ -372,24 +372,36 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
   // pass data id => 64 bit
   cpu->reg.r2 = ( uint32_t )backup->data_id; // lower value
   cpu->reg.r3 = ( uint32_t )( ( backup->data_id >> 32 ) & 0xFFFFFFFF ); // higher value
-  // map stack random
-  const uintptr_t tmp_stack = virt_map_temporary_range( backup->thread->stack_physical, backup->thread->stack_size );
-  if ( ! tmp_stack ) {
-    // debug output
-    #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "unable to map stack temporary\r\n" )
-    #endif
-    // return success
-    return false;
+  // handle same thread
+  if ( task_thread_current_thread == backup->thread ) {
+    // get real stack and subtract space for 64bit
+    auto const real_stack = ( uint8_t* )cpu->reg.sp - sizeof( uint64_t );
+    // push origin_data_id to stack
+    *( uint64_t* )real_stack = backup->origin_data_id;
+  } else {
+    // map stack random
+    const uintptr_t tmp_stack = virt_map_temporary_range( backup->thread->stack_physical, backup->thread->stack_size );
+    if ( ! tmp_stack ) {
+      // debug output
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "unable to map stack temporary\r\n" )
+      #endif
+      // return success
+      return false;
+    }
+    // calculate offset
+    const size_t stack_offset_from_end = backup->thread->stack_virtual - cpu->reg.sp;
+    // get target stack
+    auto const target_stack = ( uint8_t* )tmp_stack + ( backup->thread->stack_size - stack_offset_from_end );
+    // subtract space for 64bit
+    auto const real_stack = target_stack - sizeof( uint64_t );
+    // push origin_data_id to stack
+    *( uint64_t* )real_stack = backup->origin_data_id;
+    // unmap again
+    virt_unmap_temporary( tmp_stack, backup->thread->stack_size );
   }
-  const size_t stack_offset_from_end = backup->thread->stack_virtual - cpu->reg.sp;
-  auto const target_stack = ( uint8_t* )tmp_stack + ( backup->thread->stack_size - stack_offset_from_end );
-  auto const real_stack = target_stack - sizeof( uint64_t );
-  *( uint64_t* )real_stack = backup->origin_data_id;
   // subtract from sp
   cpu->reg.sp -= sizeof( uint64_t );
-  // unmap again
-  virt_unmap_temporary( tmp_stack, backup->thread->stack_size );
   // handle interrupt by masking irq, fiq and async aborts to ensure that
   // handler doesn't get interrupted
   if ( backup->is_interrupt ) {
