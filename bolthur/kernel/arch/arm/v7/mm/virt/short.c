@@ -1163,7 +1163,7 @@ bool v7_short_prepare_temporary( virt_context_t* ctx ) {
 
   temporary_size = ( TEMPORARY_SPACE_SIZE + 1 ) / SD_TBL_SIZE;
   // free page table
-  uint64_t phys = phys_find_free_page_range( PAGE_SIZE, temporary_size, PHYS_MEMORY_TYPE_NORMAL );
+  const uint64_t phys = phys_find_free_page_range( PAGE_SIZE, temporary_size, PHYS_MEMORY_TYPE_NORMAL );
   // handle error
   if ( INVALID_ADDRESS == phys ) {
     return false;
@@ -1213,7 +1213,7 @@ bool v7_short_prepare_temporary( virt_context_t* ctx ) {
   }
 
   uintptr_t map_start = TEMPORARY_SPACE_START;
-  uintptr_t map_end = TEMPORARY_SPACE_START + temporary_size;
+  const uintptr_t map_end = TEMPORARY_SPACE_START + temporary_size;
   while ( map_start < map_end ) {
     if ( ! v7_short_map(
       ctx,
@@ -1239,19 +1239,10 @@ bool v7_short_prepare_temporary( virt_context_t* ctx ) {
  * @return
  */
 virt_context_t* v7_short_create_context( virt_context_type_t type ) {
-  size_t size;
-  size_t alignment;
-
   // determine size
-  size = type == VIRT_CONTEXT_TYPE_KERNEL
-    ? SD_TTBR_SIZE_4G
-    : SD_TTBR_SIZE_2G;
-
+  const size_t size = type == VIRT_CONTEXT_TYPE_KERNEL ? SD_TTBR_SIZE_4G : SD_TTBR_SIZE_2G;
   // determine alignment
-  alignment = type == VIRT_CONTEXT_TYPE_KERNEL
-    ? SD_TTBR_ALIGNMENT_4G
-    : SD_TTBR_ALIGNMENT_2G;
-
+  const size_t alignment = type == VIRT_CONTEXT_TYPE_KERNEL ? SD_TTBR_ALIGNMENT_4G : SD_TTBR_ALIGNMENT_2G;
   // reserve space for context
   uint64_t phys;
   if ( !virt_init_get() ) {

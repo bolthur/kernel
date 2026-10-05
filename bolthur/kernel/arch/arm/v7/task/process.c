@@ -292,22 +292,21 @@ uintptr_t task_process_prepare_init_arch( const task_process_t* proc ) {
   // round up size
   const size_t rounded_fdt_size = ROUND_UP_TO_FULL_PAGE( fdt_size );
   // get physical area
-  const uint64_t phys_address_fdt = phys_find_free_page_range(
-    PAGE_SIZE,
+  uint64_t* phys_address_fdt = phys_find_free_page_range_random(
     rounded_fdt_size,
     PHYS_MEMORY_TYPE_NORMAL
   );
   // handle error
-  if( INVALID_ADDRESS == phys_address_fdt ) {
+  if( ! phys_address_fdt ) {
     return 0;
   }
   // map temporary
-  uintptr_t fdt_tmp = virt_map_temporary(
+  const uintptr_t fdt_tmp = virt_map_temporary_range(
     phys_address_fdt,
     rounded_fdt_size
   );
-  if ( !fdt_tmp ) {
-    phys_free_page_range( phys_address_fdt, rounded_fdt_size );
+  if ( ! fdt_tmp ) {
+    phys_free_page_range_random( phys_address_fdt, rounded_fdt_size );
     return 0;
   }
   // clear area
@@ -317,7 +316,7 @@ uintptr_t task_process_prepare_init_arch( const task_process_t* proc ) {
   // unmap again
   virt_unmap_temporary( fdt_tmp, rounded_fdt_size );
   // find free page range
-  uintptr_t proc_fdt_start = virt_find_free_page_range(
+  const uintptr_t proc_fdt_start = virt_find_free_page_range(
     proc->virtual_context,
     rounded_fdt_size,
     0
@@ -326,7 +325,7 @@ uintptr_t task_process_prepare_init_arch( const task_process_t* proc ) {
     DEBUG_OUTPUT( "proc_fdt_start = %#"PRIxPTR"\r\n", proc_fdt_start )
   #endif
   if ( ! proc_fdt_start ) {
-    phys_free_page_range( phys_address_fdt, rounded_fdt_size );
+    phys_free_page_range_random( phys_address_fdt, rounded_fdt_size );
     return 0;
   }
   // map device tree
@@ -338,9 +337,11 @@ uintptr_t task_process_prepare_init_arch( const task_process_t* proc ) {
     VIRT_MEMORY_TYPE_NORMAL,
     VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
   ) ) {
-    phys_free_page_range( phys_address_fdt, rounded_fdt_size );
+    phys_free_page_range_random( phys_address_fdt, rounded_fdt_size );
     return 0;
   }
+  // free up array since everything was mapped
+  free( phys_address_fdt );
   // return proc
   return proc_fdt_start;
 }

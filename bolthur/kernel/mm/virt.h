@@ -78,7 +78,8 @@ uint64_t virt_create_table( virt_context_t*, uintptr_t, uint64_t );
 
 bool virt_map_address( virt_context_t*, uintptr_t, uint64_t, virt_memory_type_t, uint32_t );
 bool virt_map_address_random( virt_context_t*, uintptr_t, virt_memory_type_t, uint32_t );
-bool virt_map_address_range( virt_context_t*, uintptr_t, uint64_t, size_t, virt_memory_type_t, uint32_t );
+bool virt_map_address_range( virt_context_t*, uintptr_t, const uint64_t*, size_t, virt_memory_type_t, uint32_t );
+bool virt_map_address_range_contiguous( virt_context_t*, uintptr_t, uint64_t, size_t, virt_memory_type_t, uint32_t );
 bool virt_map_address_range_random( virt_context_t*, uintptr_t, size_t, virt_memory_type_t, uint32_t );
 uintptr_t virt_map_temporary( uint64_t, size_t );
 uintptr_t virt_map_temporary_range( const uint64_t*, size_t );
@@ -89,8 +90,8 @@ bool virt_unmap_address_range( virt_context_t*, uintptr_t, size_t, bool );
 void virt_unmap_temporary( uintptr_t, size_t );
 
 uintptr_t virt_find_free_page_range( virt_context_t*, size_t, uintptr_t );
-uintptr_t virt_get_context_min_address( virt_context_t* );
-uintptr_t virt_get_context_max_address( virt_context_t* );
+uintptr_t virt_get_context_min_address( const virt_context_t* );
+uintptr_t virt_get_context_max_address( const virt_context_t* );
 uint32_t virt_get_supported_modes( void );
 bool virt_set_context( virt_context_t* );
 void virt_flush_complete( void );

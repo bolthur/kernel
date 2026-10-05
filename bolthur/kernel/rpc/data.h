@@ -31,7 +31,7 @@ typedef struct {
 } rpc_data_mailbox_entry_t;
 
 size_t rpc_data_queue_generate_id( void );
-bool rpc_data_queue_ready( task_process_t* );
+bool rpc_data_queue_ready( const task_process_t* );
 int rpc_data_queue_add( pid_t, const char*, size_t, size_t* );
 
 #endif

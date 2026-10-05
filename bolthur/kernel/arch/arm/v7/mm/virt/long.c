@@ -1270,7 +1270,7 @@ virt_context_t* v7_long_create_context( virt_context_type_t type ) {
     ctx = ( uintptr_t )tmp;
     ctx = VIRT_2_PHYS( ctx );
   } else {
-    ctx = phys_find_free_page_range( PAGE_SIZE, sizeof( ld_global_page_directory_t ), PHYS_MEMORY_TYPE_NORMAL );
+    ctx = phys_find_free_page( sizeof( ld_global_page_directory_t ), PHYS_MEMORY_TYPE_NORMAL );
     // handle error
     if ( INVALID_ADDRESS == ctx ) {
       return nullptr;

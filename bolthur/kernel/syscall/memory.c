@@ -195,7 +195,7 @@ void syscall_memory_acquire( void* context ) {
         len
       )
     #endif
-    if ( ! virt_map_address_range(
+    if ( ! virt_map_address_range_contiguous(
       virtual_context,
       start,
       phys,

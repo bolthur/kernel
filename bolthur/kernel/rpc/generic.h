@@ -25,6 +25,8 @@
 #include "../task/thread.h"
 #include "backup.h"
 
+#define MAILBOX_SIZE 0x1000
+
 typedef struct {
   /** @brief avl node */
   avl_node_t node;

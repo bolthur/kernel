@@ -45,8 +45,8 @@ size_t rpc_data_queue_generate_id( void ) {
  *
  * @param proc
  */
-bool rpc_data_queue_ready( task_process_t* proc ) {
-  return proc->rpc_mailbox > 0 && proc->rpc_mailbox_virt > 0;
+bool rpc_data_queue_ready( const task_process_t* proc ) {
+  return proc->rpc_mailbox && proc->rpc_mailbox_virt > 0;
 }
 
 /**
@@ -121,7 +121,7 @@ int rpc_data_queue_add(
     mailbox = task_thread_current_thread->process->rpc_mailbox_virt;
   // map mailbox temporarily
   } else {
-    mailbox = virt_map_temporary( target_process->rpc_mailbox, PAGE_SIZE );
+    mailbox = virt_map_temporary_range( target_process->rpc_mailbox, target_process->rpc_mailbox_size );
     if ( ! mailbox ) {
       // debug output
       #if defined( PRINT_RPC )
@@ -133,7 +133,7 @@ int rpc_data_queue_add(
     // set mapped flag
     mapped = true;
   }
-  const uintptr_t mailbox_end = mailbox + PAGE_SIZE;
+  const uintptr_t mailbox_end = mailbox + target_process->rpc_mailbox_size;
   // set pointer to beginning
   auto entry = ( rpc_data_mailbox_entry_t* )mailbox;
   #if defined( PRINT_RPC )
@@ -152,7 +152,7 @@ int rpc_data_queue_add(
     if ( current_entry_end > mailbox_end || current_entry_end < ( uintptr_t )entry ) {
       // unmap mailbox again
       if ( mapped ) {
-        virt_unmap_temporary( mailbox, PAGE_SIZE );
+        virt_unmap_temporary( mailbox, target_process->rpc_mailbox_size );
       }
       // return fault
       return EFAULT;
@@ -172,7 +172,7 @@ int rpc_data_queue_add(
   if ( entry_end_address >= mailbox_end ) {
     // unmap
     if ( mapped ) {
-      virt_unmap_temporary( mailbox, PAGE_SIZE );
+      virt_unmap_temporary( mailbox, target_process->rpc_mailbox_size );
     }
     // debug output
     #if defined( PRINT_RPC )
@@ -196,7 +196,7 @@ int rpc_data_queue_add(
   #endif
   // unmap temporary again
   if ( mapped ) {
-    virt_unmap_temporary( mailbox, PAGE_SIZE );
+    virt_unmap_temporary( mailbox, target_process->rpc_mailbox_size );
   }
   // debug output
   #if defined( PRINT_RPC )
