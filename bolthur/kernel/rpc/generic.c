@@ -122,7 +122,7 @@ static void cleanup_callback( avl_node_t* a ) {
  * @param id
  * @return
  */
-rpc_origin_source_t* rpc_generic_source_info( const size_t id ) {
+rpc_origin_source_t* rpc_generic_source_info( const uint64_t id ) {
   // try to find node by data
   avl_node_t* node = avl_find_by_data( origin_tree, id );
   if ( ! node ) {
@@ -296,7 +296,7 @@ void rpc_generic_destroy_mailbox( task_process_t* proc ) {
 }
 
 /**
- * @fn rpc_backup_t* rpc_generic_raise(task_thread_t*, task_process_t*, const size_t, void*, size_t, task_thread_t*, const bool, const size_t, const bool, const bool, const bool)
+ * @fn rpc_backup_t* rpc_generic_raise(task_thread_t*, task_process_t*, const size_t, void*, size_t, task_thread_t*, const bool, const uint64_t, const bool, const bool, const bool)
  * @brief Raise a rpc in target from source
  * @param source
  * @param target
@@ -319,7 +319,7 @@ rpc_backup_t* rpc_generic_raise(
   const size_t length,
   task_thread_t* target_thread,
   const bool sync,
-  const size_t origin_data_id,
+  const uint64_t origin_data_id,
   const bool disable_data,
   const bool is_interrupt,
   const bool is_timer

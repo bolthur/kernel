@@ -80,14 +80,13 @@ static void cleanup_process( list_item_t* a ) {
 }
 
 /**
- * @fn size_t generate_shared_memory_id(void)
+ * @fn uint64_t generate_shared_memory_id(void)
  * @brief Helper to generate new shared memory id
- *
  * @return
  */
-static size_t generate_shared_memory_id( void ) {
-  static size_t id = 1;
-  return id++;
+static uint64_t generate_shared_memory_id( void ) {
+  static uint64_t id = 0;
+  return ++id;
 }
 
 /**
@@ -283,7 +282,7 @@ shared_memory_entry_t* shared_memory_create( size_t len ) {
 }
 
 /**
- * @fn uintptr_t shared_memory_attach(task_process_t*, task_thread_t*, size_t, uintptr_t)
+ * @fn uintptr_t shared_memory_attach(task_process_t*, task_thread_t*, uint64_t, uintptr_t)
  * @brief Attached shared memory area by id
  *
  * @param process
@@ -295,7 +294,7 @@ shared_memory_entry_t* shared_memory_create( size_t len ) {
 uintptr_t shared_memory_attach(
   task_process_t* process,
   const task_thread_t* thread,
-  size_t id,
+  uint64_t id,
   uintptr_t virt_start
 ) {
   // debug output
@@ -472,14 +471,14 @@ uintptr_t shared_memory_attach(
 }
 
 /**
- * @fn size_t shared_memory_size(task_process_t*, size_t)
+ * @fn size_t shared_memory_size(task_process_t*, uint64_t)
  * @brief Get shared memory area size by id
  *
  * @param process
  * @param id
  * @return
  */
-size_t shared_memory_size( task_process_t* process, size_t id ) {
+size_t shared_memory_size( task_process_t* process, uint64_t id ) {
   // debug output
   #if defined( PRINT_MM_SHARED )
     DEBUG_OUTPUT(
@@ -528,14 +527,14 @@ size_t shared_memory_size( task_process_t* process, size_t id ) {
 }
 
 /**
- * @fn bool shared_memory_detach(task_process_t*, size_t)
+ * @fn bool shared_memory_detach(task_process_t*, uint64_t)
  * @brief Detach shared memory area by id
  *
  * @param process
  * @param id
  * @return
  */
-bool shared_memory_detach( task_process_t* process, size_t id ) {
+bool shared_memory_detach( task_process_t* process, uint64_t id ) {
   // debug output
   #if defined( PRINT_MM_SHARED )
     DEBUG_OUTPUT(

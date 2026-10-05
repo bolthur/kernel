@@ -28,7 +28,7 @@ typedef struct __aligned( 64 ) rpc_backup {
   /** cpu context */
   void* context;
   /** rpc data id */
-  size_t data_id;
+  uint64_t data_id;
   /** rpc type */
   size_t type;
   /** thread used */
@@ -48,14 +48,14 @@ typedef struct __aligned( 64 ) rpc_backup {
   /** synchronous flag */
   bool sync;
   /** origin data id */
-  size_t origin_data_id;
+  uint64_t origin_data_id;
   // necessary for nested rpc to return sync on end
   /** synchronous return on end */
   bool sync_return_on_end;
   /** synchronous return blocked data id */
-  size_t sync_return_blocked_data_id;
+  uint64_t sync_return_blocked_data_id;
   /** synchronous return data id */
-  size_t sync_return_data_id;
+  uint64_t sync_return_data_id;
   /** interrupt flag */
   bool is_interrupt;
   /** timer flag */
@@ -68,7 +68,7 @@ typedef struct __aligned( 64 ) rpc_backup {
   struct rpc_backup* next;
 } rpc_backup_t;
 
-rpc_backup_t* rpc_backup_create( task_thread_t*, const task_process_t*, size_t, const void*, size_t, task_thread_t*, bool, size_t, bool, bool, bool );
+rpc_backup_t* rpc_backup_create( task_thread_t*, const task_process_t*, size_t, const void*, size_t, task_thread_t*, bool, uint64_t, bool, bool, bool );
 void rpc_backup_destroy( rpc_backup_t* );
 
 #endif

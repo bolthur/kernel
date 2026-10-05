@@ -76,5 +76,29 @@ void syscall_timer_acquire( void* context ) {
     DEBUG_OUTPUT( "item->id = %zu\r\n", item->id )
   #endif
   // return success by returning timer id
-  syscall_populate_success( context, item->id );
+  syscall_populate_success64( context, item->id );
+}
+
+/**
+ * @fn void syscall_timer_release(void*)
+ * @brief Release given timer
+ *
+ * @param context
+ */
+void syscall_timer_release( void* context ) {
+  // parameters
+  const uint32_t lower_id = syscall_get_parameter( context, 0 );
+  const uint32_t upper_id = syscall_get_parameter( context, 1 );
+  const uint64_t id = ( uint64_t )upper_id << 32 | lower_id;
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "syscall_timer_release( %zu )\r\n", id )
+  #endif
+  // remove registered timer by id
+  if ( ! timer_unregister_callback( id ) ) {
+    syscall_populate_error( context, ( size_t )-EAGAIN );
+    return;
+  }
+  // return success
+  syscall_populate_success( context, 0 );
 }

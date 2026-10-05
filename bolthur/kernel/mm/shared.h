@@ -29,7 +29,7 @@
 typedef struct {
   avl_node_t node;
   uint64_t* address;
-  size_t id;
+  uint64_t id;
   size_t size;
   size_t use_count;
   list_manager_t* process_mapping;
@@ -46,9 +46,9 @@ typedef struct {
 
 bool shared_memory_init( void );
 shared_memory_entry_t* shared_memory_create( size_t );
-uintptr_t shared_memory_attach( task_process_t*, const task_thread_t*, size_t, uintptr_t );
-bool shared_memory_detach( task_process_t*, size_t );
-size_t shared_memory_size( task_process_t*, size_t );
+uintptr_t shared_memory_attach( task_process_t*, const task_thread_t*, uint64_t, uintptr_t );
+bool shared_memory_detach( task_process_t*, uint64_t );
+size_t shared_memory_size( task_process_t*, uint64_t );
 bool shared_memory_phys_is_shared( task_process_t*, uint64_t );
 bool shared_memory_address_is_shared( task_process_t*, uintptr_t, size_t );
 bool shared_memory_fork( task_process_t*, task_process_t* );

@@ -38,9 +38,9 @@ static list_manager_t* timer_list;
  * @brief generate new callback id
  * @return
  */
-size_t timer_generate_id( void ) {
+uint64_t timer_generate_id( void ) {
   // current pid
-  static size_t current = 0;
+  static uint64_t current = 0;
   // return new pid by simple increment
   return ++current;
 }
@@ -184,14 +184,15 @@ timer_callback_entry_t* timer_register_callback(
 }
 
 /**
- * @fn bool timer_unregister_callback(size_t)
+ * @fn bool timer_unregister_callback(uint64_t)
  * @brief Unregister timer callback by id
  * @param id
  * @return
+ * @todo fix id casting
  */
-bool timer_unregister_callback( const size_t id ) {
+bool timer_unregister_callback( const uint64_t id ) {
   // try to find item
-  list_item_t* item = list_lookup_data( timer_list, ( void* ) id );
+  list_item_t* item = list_lookup_data( timer_list, ( void* )( ( uint32_t )id ) );
   if ( ! item ) {
     return true;
   }

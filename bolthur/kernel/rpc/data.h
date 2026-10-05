@@ -25,13 +25,13 @@
 #include "../task/thread.h"
 
 typedef struct {
-  size_t id;
+  uint64_t id;
   size_t length;
   const char data[];
 } rpc_data_mailbox_entry_t;
 
-size_t rpc_data_queue_generate_id( void );
+uint64_t rpc_data_queue_generate_id( void );
 bool rpc_data_queue_ready( const task_process_t* );
-int rpc_data_queue_add( pid_t, const char*, size_t, size_t* );
+int rpc_data_queue_add( pid_t, const char*, size_t, uint64_t* );
 
 #endif
