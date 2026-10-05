@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,7 +22,7 @@
 __bootstrap_data static uint32_t MMIO_BASE;
 
 // The MMIO area base address, depends on board type
-__bootstrap static inline void mmio_init( const int raspi ) {
+__bootstrap static void mmio_init( const int raspi ) {
   switch ( raspi ) {
     case 2:
     case 3:  MMIO_BASE = 0x3F000000; break; // for raspi2 & 3
@@ -32,17 +32,17 @@ __bootstrap static inline void mmio_init( const int raspi ) {
 }
 
 // Memory-Mapped I/O output
-__bootstrap static inline void mmio_write( const uint32_t reg, const uint32_t data ) {
+__bootstrap static void mmio_write( const uint32_t reg, const uint32_t data ) {
   *( volatile uint32_t* )( MMIO_BASE + reg ) = data;
 }
 
 // Memory-Mapped I/O input
-__bootstrap static inline uint32_t mmio_read( const uint32_t reg ) {
+__bootstrap static uint32_t mmio_read( const uint32_t reg ) {
   return *( volatile uint32_t* )( MMIO_BASE + reg );
 }
 
 // Loop <delay> times in a way that the compiler won't optimize away
-__bootstrap static inline void delay( int32_t count ) {
+__bootstrap static void delay( int32_t count ) {
   __asm__ __volatile__(
     "__delay_%=: subs %[count], %[count], #1; bne __delay_%=\n"
     : "=r"(count): [count]"0"(count) : "cc"

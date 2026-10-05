@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,7 +19,9 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "queue.h"
 #include "console.h"
+#include "handler.h"
 
 /**
  * @fn void console_destroy(console_t*)
@@ -31,9 +33,15 @@ void console_destroy( console_t* console ) {
   if ( ! console ) {
     return;
   }
+  // cleanup possible listeners
+  queue_cleanup( console );
+  // free console path
   if ( console->path ) {
     free( console->path );
   }
+  // remove from handler tree
+  handler_remove( console->handler );
+  // free console itself
   free( console );
 }
 
@@ -44,7 +52,7 @@ void console_destroy( console_t* console ) {
  * @return
  */
 console_t* console_get_active( void ) {
-  list_item_t* current = console_list->first;
+  const list_item_t* current = console_list->first;
   while ( current ) {
     console_t* found = current->data;
     if ( found->active ) {
@@ -52,7 +60,7 @@ console_t* console_get_active( void ) {
     }
     current = current->next;
   }
-  return NULL;
+  return nullptr;
 }
 
 /**
@@ -63,7 +71,7 @@ console_t* console_get_active( void ) {
  * @return
  */
 console_t* console_get_by_path( const char* path ) {
-  list_item_t* current = console_list->first;
+  const list_item_t* current = console_list->first;
   while ( current ) {
     console_t* found = current->data;
     if ( 0 == strcmp( found->path, path ) ) {
@@ -71,5 +79,38 @@ console_t* console_get_by_path( const char* path ) {
     }
     current = current->next;
   }
-  return NULL;
+  return nullptr;
+}
+
+/**
+ * @fn void console_buffer_push(console_buffer_t*, char)
+ * @brief Push to buffer
+ * @param buffer
+ * @param c
+ */
+void console_buffer_push( console_buffer_t* buffer, char c ) {
+  // handle buffer full
+  if ( buffer->count >= MAX_BUFFER_SIZE ) {
+    return;
+  }
+  // push into buffer
+  buffer->buffer[ buffer->head ] = c;
+  buffer->head = ( buffer->head + 1 ) % MAX_BUFFER_SIZE;
+  buffer->count++;
+}
+
+/**
+ * @fn char console_buffer_pop(console_buffer_t*)
+ * @brief Pop a character from buffer
+ * @param buffer
+ * @return
+ */
+char console_buffer_pop( console_buffer_t* buffer ) {
+  if ( buffer->count == 0 ) {
+    return 0;
+  }
+  const char c = buffer->buffer[ buffer->tail ];
+  buffer->tail = ( buffer->tail + 1 ) % MAX_BUFFER_SIZE;
+  buffer->count--;
+  return c;
 }

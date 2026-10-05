@@ -2,9 +2,11 @@
 bin_PROGRAMS = fat
 fat_LDADD = \
   $(BFS_LIBS) \
-  ${abs_top_builddir}/../library/handle/libhandle.la
+  ${abs_top_builddir}/../library/handle/libhandle.la \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
 fat_DEPENDENCIES = \
-  ${abs_top_builddir}/../library/handle/libhandle.la
+  ${abs_top_builddir}/../library/handle/libhandle.la \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
 fat_CFLAGS = \
   -DPROGRAM_NAME=\"fs/fat\" \
   $(BFS_CFLAGS)

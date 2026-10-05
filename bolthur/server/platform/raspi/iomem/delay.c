@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -24,7 +24,7 @@
  *
  * @param count Amount of cycles to delay
  */
-inline void delay( uint32_t count ) {
+void delay( uint32_t count ) {
   __asm__ __volatile__(
     "__delay_%=: subs %[count], #1; bne __delay_%=\n"
     : "=r" ( count ) : [ count ] "0" ( count ) : "cc"

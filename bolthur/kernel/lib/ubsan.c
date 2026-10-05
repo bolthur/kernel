@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -24,7 +24,7 @@
 
 #define is_aligned( value, alignment ) !( value & ( alignment - 1 ) )
 
-const char* type_check_kind[] = {
+static const char* type_check_kind[] = {
   "load of",
   "store to",
   "reference binding to",
@@ -319,4 +319,30 @@ static void handle_type_mismatch_generic(
   print( &data->location );
   // abort execution
   abort();
+}
+
+/**
+ * @fn void __ubsan_handle_invalid_builtin( struct ubsan_invalid_builtin_data* )
+ * @brief
+ * @param data
+ */
+[[noreturn]] void __ubsan_handle_invalid_builtin( struct ubsan_invalid_builtin_data* data ) {
+  printf( "[UBSAN] KERNEL PANIC: Invalid argument passed to builtin!\r\n");
+  print( &data->location );
+  if ( data->type_check_kind == 0 ) {
+    printf( "[UBSAN] Error detail: Passed 0 to __builtin_ctz()\n" );
+  } else {
+    printf( "[UBSAN] Error detail: Passed 0 to __builtin_clz()\n" );
+  }
+  // abort execution
+  abort();
+}
+
+/**
+ * @fn void __ubsan_handle_invalid_builtin_abort( struct ubsan_invalid_builtin_data* )
+ * @brief
+ * @param data
+ */
+[[noreturn]] void __ubsan_handle_invalid_builtin_abort( struct ubsan_invalid_builtin_data* data ) {
+  __ubsan_handle_invalid_builtin(data);
 }

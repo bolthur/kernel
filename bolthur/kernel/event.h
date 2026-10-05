@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,20 +20,15 @@
 #ifndef _EVENT_H
 #define _EVENT_H
 
-#include <stdbool.h>
 #include "../library/collection/list/list.h"
 #include "../library/collection/avl/avl.h"
-#include "stack.h"
-
-#define EVENT_DETERMINE_ORIGIN( o ) \
-  ( ! o || ! stack_is_kernel( ( uintptr_t )o ) ) \
-    ? EVENT_ORIGIN_USER : EVENT_ORIGIN_KERNEL
 
 typedef enum {
-  EVENT_PROCESS = 1,
-  EVENT_SERIAL,
-  EVENT_DEBUG,
-  EVENT_INTERRUPT_CLEANUP
+  EVENT_PROCESS = 1U << 0,
+  EVENT_PROCESS_CLEANUP = 1U << 1,
+  EVENT_SERIAL = 1U << 2,
+  EVENT_DEBUG = 1U << 3,
+  EVENT_INTERRUPT_CLEANUP = 1U << 4,
 } event_type_t;
 
 typedef enum {
@@ -43,8 +38,7 @@ typedef enum {
 
 struct event_manager {
   avl_tree_t* tree;
-  list_manager_t* queue_kernel;
-  list_manager_t* queue_user;
+  uint32_t queue_bitmap;
 };
 
 struct event_block {
@@ -72,6 +66,7 @@ bool event_init( void );
 bool event_bind( event_type_t, event_callback_t, bool );
 void event_unbind( event_type_t, event_callback_t, bool );
 void event_handle( void* );
-bool event_enqueue( event_type_t, event_origin_t );
+void event_enqueue( event_type_t );
+event_origin_t event_determine_origin( const void* );
 
 #endif

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <libgen.h>
 #include "partition.h"
+#include "global.h"
 
 // define tree
 PARTITION_TREE_DEFINE(
@@ -72,7 +73,7 @@ partition_node_t* partition_extract( const char* path, bool create ) {
   partition_node_t* node = malloc( sizeof( *node ) );
   // handle error
   if ( ! node ) {
-    return NULL;
+    return nullptr;
   }
   // clear out node
   memset( node, 0, sizeof( *node ) );
@@ -80,7 +81,7 @@ partition_node_t* partition_extract( const char* path, bool create ) {
   node->name = strdup( path );
   if ( ! node->name ) {
     free( node );
-    return NULL;
+    return nullptr;
   }
   // lookup for node
   partition_node_t* found = partition_node_tree_find( &management_tree, node );
@@ -89,12 +90,12 @@ partition_node_t* partition_extract( const char* path, bool create ) {
     if ( ! create ) {
       free( node->name );
       free( node );
-      return NULL;
+      return nullptr;
     }
     if ( partition_node_tree_insert( &management_tree, node ) ) {
       free( node->name );
       free( node );
-      return NULL;
+      return nullptr;
     }
     return partition_node_tree_find( &management_tree, node );
   }
@@ -190,8 +191,10 @@ int partition_remove( const char* path ) {
  * @brief Simple method to dump mount point nodes
  */
 void partition_dump( void ) {
-  STARTUP_PRINT( "mountpoint node tree dump\r\n" )
-  partition_tree_each(&management_tree, partition_node, n, {
-      STARTUP_PRINT("%s\r\n", n->name);
-  });
+  #if defined( PARTITION_ENABLE_OUTPUT )
+    STARTUP_PRINT( "mountpoint node tree dump\r\n" )
+    partition_tree_each(&management_tree, partition_node, n, {
+        STARTUP_PRINT("%s\r\n", n->name);
+    });
+  #endif
 }

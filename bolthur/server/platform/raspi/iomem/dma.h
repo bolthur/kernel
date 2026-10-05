@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,9 +20,10 @@
 #ifndef _DMA_H
 #define _DMA_H
 
-#include <stdbool.h>
+// #define DMA_ENABLE_OUTPUT 1
+
 #include <stdint.h>
-#include "../libiomem.h"
+#include "../../../../library/platform/raspi/iomem/libiomem.h"
 
 typedef struct dma_control_block {
   uint32_t transfer_information;

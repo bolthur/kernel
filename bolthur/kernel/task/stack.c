@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,9 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../../server/platform/raspi/iomem/generic.h"
 #include "../lib/string.h"
 #include "../lib/stdlib.h"
 #include "../lib/inttypes.h"
+#include "../mm/phys.h"
 #if defined( PRINT_PROCESS )
   #include "../debug/debug.h"
 #endif
@@ -29,7 +31,7 @@
 /**
  * @brief Stack management structure
  */
-task_stack_manager_t* task_stack_manager = NULL;
+task_stack_manager_t* task_stack_manager = nullptr;
 
 /**
  * @fn int32_t task_stack_callback(const avl_node_t*, const avl_node_t*)
@@ -48,15 +50,14 @@ static int32_t task_stack_callback(
     DEBUG_OUTPUT( "a = %p, b = %p\r\n", a, b )
     DEBUG_OUTPUT( "a->data = %p, b->data = %p\r\n", a->data, b->data )
   #endif
-
   // -1 if address of a->data is greater than address of b->data
-  if ( ( uintptr_t )a->data > ( uintptr_t )b->data ) {
+  if ( a->data > b->data ) {
     return -1;
+  }
   // 1 if address of b->data is greater than address of a->data
-  } else if ( ( uintptr_t )b->data > ( uintptr_t )a->data ) {
+  if ( b->data > a->data ) {
     return 1;
   }
-
   // equal => return 0
   return 0;
 }
@@ -72,7 +73,7 @@ static void task_stack_cleanup( avl_node_t* a ) {
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "Cleanup a = %p\r\n", a )
   #endif
-  free( ( void* )a );
+  free( a );
 }
 
 /**
@@ -86,10 +87,8 @@ void task_stack_manager_destroy( task_stack_manager_t* manager ) {
   if ( ! manager ) {
     return;
   }
-
   // destroy tree
   avl_destroy_tree( manager->tree );
-
   // free up manager
   free( manager );
 }
@@ -105,19 +104,19 @@ task_stack_manager_t* task_stack_manager_create( void ) {
   task_stack_manager_t* manager = malloc( sizeof( *manager ) );
   // check
   if ( ! manager ) {
-    return NULL;
+    return nullptr;
   }
   // prepare
-  memset( ( void* )manager, 0, sizeof( *manager ) );
+  memset( manager, 0, sizeof( *manager ) );
   // create tree
   manager->tree = avl_create_tree(
     task_stack_callback,
-    NULL,
+    nullptr,
     task_stack_cleanup
   );
   if ( ! manager->tree ) {
     free( manager );
-    return NULL;
+    return nullptr;
   }
   // return manager
   return manager;
@@ -133,7 +132,7 @@ task_stack_manager_t* task_stack_manager_create( void ) {
  * @return false
  */
 bool task_stack_manager_add(
-  uintptr_t stack,
+  const uintptr_t stack,
   task_stack_manager_t* manager
 ) {
   // check manager
@@ -141,7 +140,7 @@ bool task_stack_manager_add(
     return false;
   }
   // create node
-  avl_node_t* node = avl_create_node( ( void* )stack );
+  avl_node_t* node = avl_create_node( stack );
   // handle error
   if ( ! node ) {
     return false;
@@ -160,7 +159,7 @@ bool task_stack_manager_add(
  * @return false
  */
 bool task_stack_manager_remove(
-  uintptr_t stack,
+  const uintptr_t stack,
   task_stack_manager_t* manager
 ) {
   // check manager
@@ -168,7 +167,7 @@ bool task_stack_manager_remove(
     return false;
   }
   // try to get node
-  avl_node_t* node = avl_find_by_data( manager->tree, ( void* )stack );
+  avl_node_t* node = avl_find_by_data( manager->tree, stack );
   // handle not found
   if ( ! node ) {
     return true;
@@ -179,4 +178,47 @@ bool task_stack_manager_remove(
   free( node );
   // return success
   return true;
+}
+
+/**
+ * @fn void task_stack_manager_cleanup_stack(uint64_t*, size_t)
+ * @brief Helper to cleanup stack
+ * @param stack stack to cleanup
+ * @param stack_size total stack size
+ */
+void task_stack_manager_cleanup_stack( uint64_t* stack, const size_t stack_size ) {
+  if ( ! stack ) {
+    return;
+  }
+  const size_t max_index = stack_size / PAGE_SIZE;
+  for ( size_t i = 0; i < max_index; i++ ) {
+    if ( stack[ i ] ) {
+      phys_free_page( stack[ i ] );
+      stack[ i ] = 0;
+    }
+  }
+  free( stack );
+}
+
+/**
+ * @fn uint64_t* task_stack_manager_allocate_stack(size_t)
+ * @brief Helper to allocate stack
+ * @param stack_size
+ * @return
+ */
+uint64_t* task_stack_manager_allocate_stack( const size_t stack_size ) {
+  const size_t max_index = stack_size / PAGE_SIZE;
+  uint64_t* stack = calloc( max_index, sizeof( uint64_t ) );
+  if ( ! stack ) {
+    return nullptr;
+  }
+  for ( size_t i = 0; i < max_index; i++ ) {
+    auto const page = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
+    if ( INVALID_ADDRESS == page ) {
+      task_stack_manager_cleanup_stack( stack, stack_size );
+      return nullptr;
+    }
+    stack[ i ] = page;
+  }
+  return stack;
 }

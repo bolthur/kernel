@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,6 +19,7 @@
 
 #include <errno.h>
 #include "../rpc.h"
+#include "../global.h"
 
 /**
  * @fn bool rpc_init(void)
@@ -29,12 +30,16 @@
 bool rpc_init( void ) {
   bolthur_rpc_bind( RPC_VFS_MOUNT, rpc_handle_mount, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler mount!\r\n" )
+    #if defined( MOUNT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler mount!\r\n" )
+    #endif
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_UMOUNT, rpc_handle_umount, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler umount!\r\n" )
+    #if defined( MOUNT_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler umount!\r\n" )
+    #endif
     return false;
   }
   return true;

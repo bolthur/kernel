@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -48,5 +48,22 @@ void barrier_dsb( void ) {
     );
   #else
     __asm__ __volatile__ ( "dsb" ::: "memory" );
+  #endif
+}
+
+
+/**
+ * @fn void barrier_isb(void)
+ * @brief instruction synchronization barrier
+ */
+void barrier_isb( void ) {
+  #if defined( BCM2708 )
+    __asm__ __volatile__ (
+      "mcr p15, #0, %[zero], c7, c5, #4"
+      : : [ zero ] "r" ( 0 )
+      : "memory"
+    );
+  #else
+    __asm__ __volatile__ ( "isb" ::: "memory" );
   #endif
 }

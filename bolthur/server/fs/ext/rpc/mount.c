@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -27,6 +27,7 @@
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../../../libmbr.h"
 
 // ext library
@@ -56,7 +57,7 @@ static char* split_device_partition(
   char* device = malloc( device_size );
   // handle error
   if( ! device ) {
-    return NULL;
+    return nullptr;
   }
   // clear out
   memset( device, 0, device_size );
@@ -73,13 +74,13 @@ static char* split_device_partition(
       char* num = malloc( sizeof( char ) * num_length );
       if ( ! num ) {
         free( device );
-        return NULL;
+        return nullptr;
       }
       // copy over
       strncpy( num, &source[ idx ], source_len - idx );
       // transform string to number
       if ( partition ) {
-        *partition = strtoul( num, ( char** )NULL, 10 );
+        *partition = strtoul( num, ( char** )nullptr, 10 );
       }
       free( num );
       break;
@@ -157,21 +158,23 @@ void rpc_handle_mount(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  STARTUP_PRINT( "ext mounting\r\n" )
+  #if defined( EXT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "ext mounting\r\n" )
+  #endif
   vfs_mount_response_t response = { .result = -ENOMEM };
   response.result = -EINVAL;
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // fetch rpc data
   size_t data_size;
-  vfs_mount_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_mount_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   // handle error
   if ( ! request ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -181,7 +184,7 @@ void rpc_handle_mount(
   int result = ext4_mount_point_stats( request->target, &stats );
   if ( ENOENT != result ) {
     response.result = -EALREADY;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }*/
@@ -192,14 +195,14 @@ void rpc_handle_mount(
   // handle error
   if ( ! device ) {
     response.result = -EINVAL;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
   // handle invalid partition
   if ( partition_index >= PARTITION_TABLE_NUMBER ) {
     response.result = -EINVAL;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     free( device );
     return;
@@ -208,24 +211,26 @@ void rpc_handle_mount(
   mbr_table_entry_t entry;
   if ( ! fetch_mbr_entry( device, partition_index, &entry ) ) {
     response.result = -EIO;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     free( device );
     return;
   }
 
-  STARTUP_PRINT( "request->source = %s\r\n", request->source )
-  STARTUP_PRINT( "request->target = %s\r\n", request->target )
-  STARTUP_PRINT( "request->type = %s\r\n", request->type )
-  STARTUP_PRINT( "request->flags = %"PRIx32"\r\n", request->flags )
-  STARTUP_PRINT( "device = %s\r\n", device )
-  STARTUP_PRINT( "partition_index = %"PRIu32"\r\n", partition_index )
+  #if defined( EXT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "request->source = %s\r\n", request->source )
+    STARTUP_PRINT( "request->target = %s\r\n", request->target )
+    STARTUP_PRINT( "request->type = %s\r\n", request->type )
+    STARTUP_PRINT( "request->flags = %lx\r\n", request->flags )
+    STARTUP_PRINT( "device = %s\r\n", device )
+    STARTUP_PRINT( "partition_index = %"PRIu32"\r\n", partition_index )
+  #endif
 
   // block device and block cache handle
   common_blockdev_t* bd = common_blockdev_get( device );
   if ( ! bd ) {
     response.result = -ENOMEM;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     free( device );
     return;
@@ -240,7 +245,7 @@ void rpc_handle_mount(
   // handle error
   if ( EOK != result ) {
     response.result = -result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     free( device );
     return;
@@ -259,7 +264,7 @@ void rpc_handle_mount(
   // handle error
   if ( EOK != result ) {
     response.result = -result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     free( device );
     return;
@@ -267,7 +272,7 @@ void rpc_handle_mount(
   // mount went well, return success with pid as handler
   response.result = 0;
   response.handler = getpid();
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
   free( request );
   free( device );
 }

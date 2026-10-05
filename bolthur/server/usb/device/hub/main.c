@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,8 +17,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// system includes
+#include <errno.h>
 #include <stdio.h>
 #include <sys/bolthur.h>
+// local includes
+#include "rpc.h"
+#include "hub.h"
+// library includes
+#include "../../../libusbd.h"
+#include "../../../../library/usb/usb.h"
+#include "../../../../library/vfs/dev.h"
+#include "../../../../library/vfs/handler.h"
 
 /**
  * @fn int main(int, char*[])
@@ -29,7 +39,85 @@
  * @return
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
-  // print something
-  EARLY_STARTUP_PRINT( "usb hub processing!\r\n" )
-  return -1;
+  // register rpc
+  #if defined( HUB_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Setup rpc handler\r\n" )
+  #endif
+  if ( !rpc_init() ) {
+    #if defined( HUB_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
+    #endif
+    return -1;
+  }
+
+  // initialize usb library
+  #if defined( HUB_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Setup usb library\r\n" )
+  #endif
+  int result = usb_init();
+  if ( 0 != result ) {
+    #if defined( HUB_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to bind usb library: %s\r\n", strerror( result ) );
+    #endif
+    return -1;
+  }
+
+  // query allowed rpc origin
+  const pid_t allowed_rpc_origin = vfs_get_file_handler( USBD_DEVICE_PATH );
+  if ( -1 == allowed_rpc_origin ) {
+    #if defined( HUB_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to get handler id of %s\r\n", USBD_DEVICE_PATH )
+    #endif
+    return -1;
+  }
+
+  // push to valid origin
+  if ( ! bolthur_rpc_origin_push_valid( allowed_rpc_origin ) ) {
+    #if defined( HUB_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to push mount pid to valid origin list!\r\n" )
+    #endif
+    return -1;
+  }
+
+  // registering handler
+  #if defined( HUB_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Registering handler at usbd\r\n" )
+  #endif
+  result = usb_register_handler( LIBUSB_INTERFACE_CLASS_HUB );
+  if ( 0 != result ) {
+    #if defined( HUB_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register handler at usbd\r\n" )
+    #endif
+    return -1;
+  }
+
+  // enable rpc
+  #if defined( HUB_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Enable rpc\r\n" )
+  #endif
+  _syscall_rpc_set_ready( true );
+
+  // add device file
+  #if defined( HUB_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Sending device to vfs\r\n" )
+  #endif
+  constexpr uint32_t device_info[] = {
+    GENERIC_ATTACH,
+    GENERIC_DETACH,
+    GENERIC_CHECK_FOR_CHANGE,
+    GENERIC_CHILD_DETACHED,
+  };
+  if ( ! vfs_dev_add_file( HUB_DEVICE_PATH, device_info, 4, nullptr ) ) {
+    #if defined( HUB_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to add dev usbd\r\n" )
+    #endif
+    return -1;
+  }
+
+  // wait for rpc
+  #if defined( HUB_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Wait for rpc\r\n" )
+  #endif
+  bolthur_rpc_wait_block();
+  return 0;
 }

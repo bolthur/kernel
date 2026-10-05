@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -27,13 +27,13 @@
 /**
  * @brief Prepare for initrd usage
  */
-void initrd_startup_init( void ) {
+__bootstrap void initrd_startup_init( void ) {
   // transfer to uintptr_t
-  uintptr_t atag_fdt = ( uintptr_t )firmware_info.atag_fdt;
+  const uintptr_t atag_fdt = ( uintptr_t )firmware_info.atag_fdt;
 
   // handle atag
   if ( atag_check( atag_fdt ) ) {
-    atag_t* ramdisk = atag_find( ( atag_t* )atag_fdt, ATAG_TAG_INITRD2 );
+    const atag_t* ramdisk = atag_find( ( atag_t* )atag_fdt, ATAG_TAG_INITRD2 );
     if ( ramdisk ) {
       initrd_set_start_address( ramdisk->initrd.start );
       initrd_set_size( ramdisk->initrd.size );
@@ -46,14 +46,13 @@ void initrd_startup_init( void ) {
     }
   } else if ( 0 == fdt_check_header( ( void* )atag_fdt ) ) {
     // get chosen node
-    int32_t node = fdt_path_offset( ( void* )atag_fdt, "/chosen" );
-    uint32_t* prop;
+    const int32_t node = fdt_path_offset( ( void* )atag_fdt, "/chosen" );
     int len;
     uintptr_t initrd_start = 0;
     uintptr_t initrd_end = 0;
 
     // try to get property initrd start
-    prop = ( uint32_t* )fdt_getprop(
+    const uint32_t* prop = ( uint32_t* )fdt_getprop(
       ( void* )atag_fdt,
       node,
       "linux,initrd-start",
@@ -93,7 +92,7 @@ void initrd_startup_init( void ) {
   // map initrd
   if ( initrd_exist() ) {
     uintptr_t start = initrd_get_start_address();
-    uintptr_t end = initrd_get_end_address();
+    const uintptr_t end = initrd_get_end_address();
     // map 1:1
     while ( start < end ) {
       virt_startup_map( start, start );

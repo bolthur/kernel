@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -53,7 +53,7 @@ void rpc_handle_read_async(
     return;
   }
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     return;
   }
   // original request
@@ -63,13 +63,13 @@ void rpc_handle_read_async(
   }
   // get message and data size
   size_t data_size;
-  vfs_read_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_read_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! response ) {
     return;
   }
   handle_node_t* container;
   // try to get handle information
-  int result = handle_get(
+  const int result = handle_get(
     &container,
     async_data->original_origin,
     request->handle
@@ -81,8 +81,8 @@ void rpc_handle_read_async(
     free( response );
     return;
   }
-  // update offsets and return
-  if ( 0 < response->len ) {
+  // update offsets if not stdin and return
+  if ( 0 < response->len && container->handle != STDIN_FILENO ) {
     container->pos += ( off_t )response->len;
   }
   bolthur_rpc_return( type, response, sizeof( *response ), async_data, 0 );
@@ -119,17 +119,17 @@ void rpc_handle_read(
   handle_node_t* container;
   response->len = -EINVAL;
   // handle no data
-  if( ! data_info ) {
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+  if ( ! data_info ) {
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     return;
   }
   // get message and data size
   size_t data_size;
-  vfs_read_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_read_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
-    response->len= -errno;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    response->len = -errno;
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     return;
   }
@@ -138,15 +138,15 @@ void rpc_handle_read(
   // handle error
   if ( 0 > result ) {
     response->len = result;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     free( request );
     return;
   }
-  // special handling for null device
+  // special handling for nullptr device
   if ( 0 == strcmp( container->path, "/dev/null" ) ) {
     response->len = 0;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     free( request );
     return;
@@ -167,12 +167,12 @@ void rpc_handle_read(
     sizeof( *request ),
     origin,
     data_info,
-    NULL,
+    nullptr,
     false
   );
   if ( errno ) {
     response->len = -errno;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
+    bolthur_rpc_return( type, response, sizeof( *response ), nullptr, 0 );
     free( response );
     free( request );
     return;

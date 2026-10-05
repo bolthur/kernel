@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -26,6 +26,7 @@
 #include "../rpc/data.h"
 #include "../rpc/generic.h"
 #include "../task/process.h"
+#include "../task/queue.h"
 #include "../task/thread.h"
 #if defined( PRINT_SYSCALL )
   #include "../lib/inttypes.h"
@@ -39,7 +40,7 @@
  * @param context
  */
 void syscall_rpc_set_handler( void* context ) {
-  uintptr_t handler = ( uintptr_t )syscall_get_parameter( context, 0 );
+  const uintptr_t handler = ( uintptr_t )syscall_get_parameter( context, 0 );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_rpc_set_handler( %#"PRIxPTR" )\r\n", handler )
@@ -62,18 +63,17 @@ void syscall_rpc_set_handler( void* context ) {
 /**
  * @fn void syscall_rpc_raise(void*)
  * @brief Raise rpc system call
- *
  * @param context
  */
 void syscall_rpc_raise( void* context ) {
-  size_t type = syscall_get_parameter( context, 0 );
-  pid_t process = ( pid_t )syscall_get_parameter( context, 1 );
-  void* data = ( void* )syscall_get_parameter( context, 2 );
-  size_t length = syscall_get_parameter( context, 3 );
-  size_t origin_rpc_data_id = syscall_get_parameter( context, 4 );
-  bool synchronous = ( bool )syscall_get_parameter( context, 5 );
-  bool no_return = ( bool )syscall_get_parameter( context, 6 );
-  bool cleanup_current_id = ( bool )syscall_get_parameter( context, 7 );
+  const size_t type = syscall_get_parameter( context, 0 );
+  const pid_t process = ( pid_t )syscall_get_parameter( context, 1 );
+  auto const data = ( void* )syscall_get_parameter( context, 2 );
+  const size_t length = syscall_get_parameter( context, 3 );
+  const size_t origin_rpc_data_id = syscall_get_parameter( context, 4 );
+  const bool synchronous = syscall_get_parameter( context, 5 );
+  const bool no_return = syscall_get_parameter( context, 6 );
+  const bool cleanup_current_id = syscall_get_parameter( context, 7 );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
@@ -85,7 +85,7 @@ void syscall_rpc_raise( void* context ) {
       origin_rpc_data_id,
       synchronous ? 1 : 0,
       no_return ? 1 : 0,
-      cleanup ? 1 : 0,
+      no_return ? 1 : 0,
       task_thread_current_thread->process->id
     )
   #endif
@@ -101,7 +101,7 @@ void syscall_rpc_raise( void* context ) {
     return;
   }
   // handle invalid type
-  if ( type <= UINT8_MAX  ) {
+  if ( type <= UINT8_MAX ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Interrupts are not allowed to be raised!\r\n" )
@@ -138,6 +138,7 @@ void syscall_rpc_raise( void* context ) {
     // early exit
     return;
   }
+  // FIXME: handle possible kill
   // validate addresses
   if ( data && length && ! syscall_validate_address( ( uintptr_t )data, length ) ) {
     // debug output
@@ -150,7 +151,7 @@ void syscall_rpc_raise( void* context ) {
     return;
   }
   // create data duplicate
-  char* dup_data = NULL;
+  char* dup_data = nullptr;
   if ( data && length ) {
     dup_data = malloc( sizeof( char ) * length );
     if ( ! dup_data ) {
@@ -181,6 +182,12 @@ void syscall_rpc_raise( void* context ) {
       return;
     }
   }
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT(
+      "calling process %d!\r\n",
+      target->id
+    )
+  #endif
   // call rpc
   rpc_backup_t* rpc = rpc_generic_raise(
     task_thread_current_thread,
@@ -188,9 +195,11 @@ void syscall_rpc_raise( void* context ) {
     type,
     dup_data,
     length,
-    NULL,
+    nullptr,
     synchronous,
     origin_rpc_data_id,
+    false,
+    false,
     false
   );
   // free duplicate again
@@ -211,7 +220,7 @@ void syscall_rpc_raise( void* context ) {
   // handle cleanup
   if ( cleanup_current_id ) {
     // get current active rpc
-    const rpc_backup_t* active = rpc_backup_get_active( task_thread_current_thread, 0 );
+    const rpc_backup_t* active = task_thread_current_thread->current_active_backup;
     // cleanup if active
     if ( active ) {
       rpc_generic_destroy_source_info( rpc_generic_source_info( active->data_id ) );
@@ -251,29 +260,35 @@ void syscall_rpc_raise( void* context ) {
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "rpc->data_id = %zu\r\n", rpc->data_id )
     #endif
-    // populate data id
-    syscall_populate_success( context, rpc->data_id );
+    // populate data id in backup in case it's in current thread and already active
+    if ( rpc->thread == task_thread_current_thread && rpc->active ) {
+      syscall_populate_success( rpc->context, rpc->data_id );
+    // populate regular success via context
+    } else {
+      syscall_populate_success( context, rpc->data_id );
+    }
   }
   // switch it
-  if ( task_thread_current_thread != rpc->thread ) {
+  if ( task_thread_current_thread != rpc->thread && synchronous ) {
     // enqueue scheduler
-    task_thread_try_switch_to = rpc->thread;
+    if ( ! task_thread_try_switch_to ) {
+      task_thread_try_switch_to = rpc->thread;
+    }
     // enqueue process event
-    event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
+    event_enqueue( EVENT_PROCESS );
   }
 }
 
 /**
  * @fn void syscall_rpc_ret(void*)
  * @brief Return rpc data
- *
  * @param context
  */
 void syscall_rpc_ret( void* context ) {
-  size_t type = syscall_get_parameter( context, 0 );
-  void* data = ( void* )syscall_get_parameter( context, 1 );
-  size_t length = syscall_get_parameter( context, 2 );
-  size_t original_rpc_id = syscall_get_parameter( context, 3 );
+  const size_t type = syscall_get_parameter( context, 0 );
+  auto const data = ( void* )syscall_get_parameter( context, 1 );
+  const size_t length = syscall_get_parameter( context, 2 );
+  const size_t original_rpc_id = syscall_get_parameter( context, 3 );
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
       "syscall_rpc_ret( %zu, %p, %#zx, %zu ) from %d\r\n",
@@ -303,7 +318,7 @@ void syscall_rpc_ret( void* context ) {
     return;
   }
   // get current active rpc
-  rpc_backup_t* active = rpc_backup_get_active( task_thread_current_thread, 0 );
+  rpc_backup_t* active = task_thread_current_thread->current_active_backup;
   if ( ! active ) {
     // debug output
     #if defined( PRINT_SYSCALL )
@@ -346,8 +361,13 @@ void syscall_rpc_ret( void* context ) {
   rpc_origin_source_t* info = rpc_generic_source_info(
     original_rpc_id ? original_rpc_id : active->data_id );
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "active->sync = %d, info->sync = %d\r\n", active->sync ? 1 : 0,
-        info->sync ? 1 : 0 )
+    DEBUG_OUTPUT( "active->sync = %d, info->sync = %d, rpc_id: %zu, source: %d, origin_rpc_id: %zu, type: %zu\r\n",
+        active->sync ? 1 : 0,
+        info->sync ? 1 : 0,
+        info->rpc_id,
+        info->source_process,
+        info->origin_rpc_id,
+        info->type )
   #endif
   if ( ! active->sync || original_rpc_id ) {
     // overwrite blocked data id
@@ -356,6 +376,31 @@ void syscall_rpc_ret( void* context ) {
       TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN,
       ( task_state_data_t ){ .data_size = blocked_data_id }
     );
+    // in case we have an original rpc id a valid target and a valid info object
+    // we need to overwrite sync and blocked_data_id similar to when no target
+    // was initially found
+    if ( original_rpc_id && target && info && active->type != type ) {
+      #if defined( PRINT_SYSCALL )
+        DEBUG_OUTPUT(
+          "rpc_id: %zu, source: %d, sync: %d, origin_rpc_id: %zu, type: %zu\r\n",
+          info->rpc_id,
+          info->source_process,
+          info->sync ? 1 : 0,
+          info->origin_rpc_id,
+          info->type
+        )
+        DEBUG_OUTPUT(
+          "sync = %d, data_id: %zu, original_data_id: %zu, type: %zu / %zu\r\n",
+          active->sync ? 1 : 0,
+          active->data_id,
+          active->origin_data_id,
+          active->type,
+          type
+        )
+      #endif
+      // reset sync to one from info
+      active->sync = info->sync;
+    }
     // handle no target
     if ( ! target ) {
       if ( ! info ) {
@@ -373,9 +418,12 @@ void syscall_rpc_ret( void* context ) {
       }
       #if defined( PRINT_SYSCALL )
         DEBUG_OUTPUT(
-          "rpc_id: %zu, source: %d\r\n",
+          "rpc_id: %zu, source: %d, sync: %d, origin_rpc_id: %zu, type: %zu\r\n",
           info->rpc_id,
-          info->source_process
+          info->source_process,
+          info->sync ? 1 : 0,
+          info->origin_rpc_id,
+          info->type
         )
       #endif
       // try to get pid
@@ -394,16 +442,16 @@ void syscall_rpc_ret( void* context ) {
       }
       // in case there is no target, use source and treat it as async
       // use first possible process
-      avl_node_t* current = avl_iterate_first( proc->thread_manager );
-      target = NULL;
+      target = nullptr;
+      auto current = proc->thread_list->first;
       // loop until usable thread has been found
       while ( current && ! target ) {
         // get thread
-        task_thread_t* tmp = TASK_THREAD_GET_BLOCK( current );
+        auto const tmp = ( task_thread_t* )current->data;
         // FIXME: CHECK IF ACTIVE
         target = tmp;
         // get next thread
-        current = avl_iterate_next( proc->thread_manager, current );
+        current = current->next;
       }
       // handle no inactive thread
       if ( ! target ) {
@@ -423,7 +471,9 @@ void syscall_rpc_ret( void* context ) {
   // destroy found info
   rpc_generic_destroy_source_info( info );
   // find and destroy possible info for current if original rpc id is set
-  if ( original_rpc_id ) {
+  // in case it's an interrupt it is not possible to clean up active context
+  // since we might have multiple returns
+  if ( original_rpc_id && ! active->is_interrupt && ! active->is_timer ) {
     rpc_generic_destroy_source_info( rpc_generic_source_info( active->data_id ) );
   }
   #if defined( PRINT_SYSCALL )
@@ -472,10 +522,13 @@ void syscall_rpc_ret( void* context ) {
     #endif
 
     // get possible active target backup
-    rpc_backup_t* target_active = NULL;
-    if ( target != task_thread_current_thread ) {
-      // get current active rpc
-      target_active = rpc_backup_get_active( target, blocked_data_id );
+    rpc_backup_t* target_active = nullptr;
+    if (
+      target != task_thread_current_thread
+      && target->current_active_backup
+      && target->current_active_backup->origin_data_id == blocked_data_id
+    ) {
+      target_active = target->current_active_backup;
     }
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "target_active = %p\r\n", ( void* )target_active )
@@ -503,6 +556,9 @@ void syscall_rpc_ret( void* context ) {
         ( task_state_data_t ){ .data_size = blocked_data_id }
       );
     } else {
+      #if defined( PRINT_SYSCALL )
+        DEBUG_OUTPUT( "sync return to %d on end!\r\n", target_active->thread->process->id )
+      #endif
       target_active->sync_return_on_end = true;
       target_active->sync_return_blocked_data_id = blocked_data_id;
       target_active->sync_return_data_id = data_id;
@@ -519,9 +575,11 @@ void syscall_rpc_ret( void* context ) {
       type,
       dup_data,
       length,
-      NULL,
+      nullptr,
       true,
       blocked_data_id,
+      false,
+      false,
       false
     );
     #if defined( PRINT_SYSCALL )
@@ -552,15 +610,12 @@ void syscall_rpc_ret( void* context ) {
     #endif
     // dummy success
     syscall_populate_success( context, 0 );
-    // enqueue scheduler
-    event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
   }
 }
 
 /**
  * @fn void syscall_rpc_wait_for_call(void*)
  * @brief Halt thread and wait for rpc call
- *
  * @param context
  */
 void syscall_rpc_wait_for_call( void* context ) {
@@ -584,7 +639,9 @@ void syscall_rpc_wait_for_call( void* context ) {
     return;
   }
   // set state
-  task_thread_current_thread->state = TASK_THREAD_STATE_RPC_WAIT_FOR_CALL;
+  task_thread_set_state( task_thread_current_thread, TASK_THREAD_STATE_RPC_WAIT_FOR_CALL );
+  // insert in wait queue
+  task_queue_enqueue_blocked( task_thread_current_thread );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
@@ -595,17 +652,16 @@ void syscall_rpc_wait_for_call( void* context ) {
   // set dummy return
   syscall_populate_success( context, 0 );
   // enqueue scheduler
-  event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
+  event_enqueue( EVENT_PROCESS );
 }
 
 /**
  * @fn void syscall_process_rpc_ready(void*)
  * @brief System call to set rpc ready flag
- *
  * @param context
  */
 void syscall_rpc_set_ready( void* context ) {
-  const bool ready = ( bool )syscall_get_parameter( context, 0 );
+  const bool ready = syscall_get_parameter( context, 0 );
   // cache process
   task_process_t* process = task_thread_current_thread->process;
   // set ready flag
@@ -618,7 +674,7 @@ void syscall_rpc_set_ready( void* context ) {
     )
   #endif
   // unblock parent which might wait for process to be rpc ready!
-  task_process_t* parent = task_process_get_by_id( process->parent );
+  const task_process_t* parent = task_process_get_by_id( process->parent );
   if ( parent ) {
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Unblocking process %d\r\n", parent->id )
@@ -636,10 +692,9 @@ void syscall_rpc_set_ready( void* context ) {
 /**
  * @fn void syscall_rpc_end(void*)
  * @brief RPC ended, return to previous execution or next rpc if queued
- *
  * @param context
  */
-void syscall_rpc_end( void* context ) {
+void syscall_rpc_end( [[maybe_unused]] void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
@@ -655,6 +710,9 @@ void syscall_rpc_end( void* context ) {
     #endif
     return;
   }
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "restore %d\r\n", task_thread_current_thread->process->id )
+  #endif
   // try to restore
   if ( ! rpc_generic_restore( task_thread_current_thread ) ) {
     // debug output
@@ -662,25 +720,27 @@ void syscall_rpc_end( void* context ) {
       DEBUG_OUTPUT( "Error during rpc restore or no rpc for restore -> kill!\r\n" )
     #endif
     // kill thread and trigger scheduling
-    task_thread_kill( task_thread_current_thread, true, context );
+    task_thread_kill( task_thread_current_thread, true );
     // skip rest
     return;
   }
   // enqueue scheduler
   if ( ! task_thread_is_active( task_thread_current_thread ) ) {
-    event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
+    // insert in wait queue
+    task_queue_enqueue_blocked( task_thread_current_thread );
+    // enqueue process
+    event_enqueue( EVENT_PROCESS );
   }
 }
 
 /**
  * @fn void syscall_rpc_wait_for_ready(void*)
  * @brief Wait for pid to be ready for rpc
- *
  * @param context
  */
 void syscall_rpc_wait_for_ready( void* context ) {
   // get parameter
-  pid_t process = ( pid_t )syscall_get_parameter( context, 0 );
+  const pid_t process = ( pid_t )syscall_get_parameter( context, 0 );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
@@ -732,7 +792,7 @@ void syscall_rpc_wait_for_ready( void* context ) {
     ( task_state_data_t ){ .data_size = ( size_t )process }
   );
   // enqueue schedule
-  event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
+  event_enqueue( EVENT_PROCESS );
 }
 
 /**
@@ -749,7 +809,14 @@ void syscall_rpc_cleanup( void* context ) {
     )
   #endif
   // get current active rpc
-  const rpc_backup_t* active = rpc_backup_get_active( task_thread_current_thread, 0 );
+  auto const active = task_thread_current_thread->current_active_backup;
+  #if defined( PRINT_SYSCALL )
+    if ( active ) {
+      DEBUG_OUTPUT( "cleanup %zu of %d\r\n", active->data_id, task_thread_current_thread->process->id )
+    } else {
+      DEBUG_OUTPUT( "cleanup %d\r\n", task_thread_current_thread->process->id )
+    }
+  #endif
   // cleanup if active
   if ( active ) {
     rpc_generic_destroy_source_info( rpc_generic_source_info( active->data_id ) );

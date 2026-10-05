@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2018 - 2025 bolthur project.
+# Copyright (C) 2018 - 2026 bolthur project.
 #
 # This file is part of bolthur/kernel.
 #
@@ -117,7 +117,7 @@ proc scanDirectory*( path: string, fileType: string, additionalInfo: string, sys
 
         var pos = -1
         for idx, value in splittedHead:
-          if value == "application" or value == "server" or value == "usr" or value == "font" or value == "bosl":
+          if value == "application" or value == "server" or value == "usr" or value == "bosl":
             pos = idx
         if pos != -1:
           if pos + 1 < len( splittedHead ) and "platform" == splittedHead[ pos + 1 ]:
@@ -142,4 +142,5 @@ proc scanDirectory*( path: string, fileType: string, additionalInfo: string, sys
           createDir( basePath )
           createSymlink( symlinkSrc, joinPath( basePath, executable ) )
         else:
+          createDir( basePath )
           copyFile( file, joinPath( basePath, executable ) )

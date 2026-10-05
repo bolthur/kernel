@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,21 +20,29 @@
 #ifndef _ENTRY_H
 #define _ENTRY_H
 
-#if defined( IS_HIGHER_HALF )
-  #if defined( ELF32 )
-    #define KERNEL_OFFSET 0xC0000000
+#if !defined( IS_HIGHER_HALF )
+#error "Kernel is meant to be higher half"
+#endif
 
-    #define USER_AREA_START 0x1000
-    #define USER_AREA_END 0x7FFFFFFF
+#if defined( ELF32 )
+  #define KERNEL_OFFSET 0xC0000000
 
-    #define KERNEL_AREA_START 0x80000000
-    #define KERNEL_AREA_END 0xFFFFFFFF
-  #elif defined( ELF64 )
-    #define KERNEL_OFFSET 0xffffffff80000000
-  #endif
-#else
-  #error "Unsupported memory model"
-  #define KERNEL_OFFSET 0
+  #define USER_AREA_START 0x1000
+  #define USER_AREA_END 0x80000000
+
+  #define KERNEL_AREA_START 0x80000000
+  #define KERNEL_AREA_END 0xFFFFFFFF
+
+  #define KERNEL_RPC_POOL_START 0xA0000000
+  #define KERNEL_RPC_POOL_END 0xAFFFFFFF
+
+  #define KERNEL_CPU_POOL_START 0xB0000000
+  #define KERNEL_CPU_POOL_END 0xBFFFFFFF
+
+  #define KERNEL_AREA_PROCESS_REPLACE_START 0xF3041000
+  #define KERNEL_AREA_PROCESS_REPLACE_END 0xFFFFFFFF
+#elif defined( ELF64 )
+  #define KERNEL_OFFSET 0xffffffff80000000
 #endif
 
 #ifndef ASSEMBLER_FILE

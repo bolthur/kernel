@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -24,6 +24,7 @@
 #include <sys/bolthur.h>
 #include "../../handler/node.h"
 #include "../../rpc.h"
+#include "../../global.h"
 
 /**
  * @fn void rpc_handle_watch_register(size_t, pid_t, size_t, size_t)
@@ -42,36 +43,38 @@ void rpc_handle_handler_register(
 ) {
   vfs_register_handler_response_t response = { .result = -EINVAL };
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     response.result = -ENODATA;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
-  vfs_register_handler_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_register_handler_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // check if existing
   if ( handler_node_extract( request->request ) ) {
     response.result = -EEXIST;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
   // add new handler
   if ( ! handler_node_add( request->request, origin ) ) {
     response.result = -EAGAIN;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
-  EARLY_STARTUP_PRINT( "Added %"PRIu32" with pid %d\r\n", request->request, origin )
+  #if defined( VFS_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Added %"PRIu32" with pid %d\r\n", request->request, origin )
+  #endif
   // return success
   response.result = 0;
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
   free( request );
 }

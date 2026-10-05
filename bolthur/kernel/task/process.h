@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -34,29 +34,42 @@ typedef struct task_thread_manager task_thread_manager_t;
 typedef struct task_stack_manager task_stack_manager_t;
 
 typedef struct task_process {
+  /** avl node */
   avl_node_t node_id;
-  avl_tree_t* thread_manager;
+  /** thread stack manager */
   task_stack_manager_t* thread_stack_manager;
+  /** free thread list */
+  list_manager_t* thread_list;
+  /** process id */
   pid_t id;
+  /** parent process id */
   pid_t parent;
-  pid_t current_thread_id;
+  /** process priority */
   size_t priority;
+  /** virtual context */
   virt_context_t* virtual_context;
+  /** rpc queue */
   list_manager_t* rpc_queue;
+  /** registered rpc handler */
   uintptr_t rpc_handler;
+  /** rpc mailbox */
   uint64_t rpc_mailbox;
+  /** mapped virtual address of mailbox */
   uintptr_t rpc_mailbox_virt;
+  /** array of registered interrupts */
+  uint32_t* registered_interrupts;
+  /** array of registered interrupts */
+  size_t registered_interrupts_size;
+  /** rpc ready flag */
   bool rpc_ready;
 } task_process_t;
 
 typedef struct task_manager {
-  // process id tree
+  /** process tree */
   avl_tree_t* process_id;
-  // thread priority tree
-  avl_tree_t* thread_priority;
-  // list of processes to clean up
+  /** list of processes to clean up */
   list_manager_t* process_to_cleanup;
-  // list of threads to clean up
+  /** list of threads to clean up */
   list_manager_t* thread_to_cleanup;
 } task_manager_t;
 
@@ -71,12 +84,12 @@ void task_process_cleanup( event_origin_t, void* );
 void task_process_start( void );
 pid_t task_process_generate_id( void );
 task_process_t* task_process_create( size_t, pid_t );
-task_process_t* task_process_fork( task_thread_t* );
+task_process_t* task_process_fork( const task_thread_t* );
 bool task_process_prepare_init( task_process_t* );
-uintptr_t task_process_prepare_init_arch( task_process_t* );
+uintptr_t task_process_prepare_init_arch( const task_process_t* );
 task_process_t* task_process_get_by_id( pid_t );
-void task_process_prepare_kill( void*, task_process_t* );
-int task_process_replace( task_process_t*, uintptr_t, const char**, const char**, void* );
-void task_unblock_threads( task_process_t*, task_thread_state_t, task_state_data_t );
+void task_process_prepare_kill( task_process_t* );
+int task_process_replace( task_process_t*, uint32_t, uintptr_t, const char**, const char** );
+void task_unblock_threads( const task_process_t*, task_thread_state_t, task_state_data_t );
 
 #endif

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,7 +21,6 @@
 #define _LIB_TAR_H
 
 #include <stdint.h>
-#include <stdbool.h>
 #include <stddef.h>
 
 #define TAR_HEADER_SIZE 512

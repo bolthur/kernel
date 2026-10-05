@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,6 +23,8 @@
 #include "../../library/collection/avl/avl.h"
 #include "process.h"
 
+#define THREAD_STACK_MAX_SIZE 0x200000
+
 typedef struct task_stack_manager {
   avl_tree_t* tree;
 } task_stack_manager_t;
@@ -33,5 +35,7 @@ void task_stack_manager_destroy( task_stack_manager_t* );
 uintptr_t task_stack_manager_next( task_stack_manager_t* );
 bool task_stack_manager_add( uintptr_t, task_stack_manager_t* );
 bool task_stack_manager_remove( uintptr_t, task_stack_manager_t* );
+void task_stack_manager_cleanup_stack( uint64_t*, size_t);
+uint64_t* task_stack_manager_allocate_stack( size_t );
 
 #endif

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -24,6 +24,7 @@
 #include <tar.h>
 #include <sys/bolthur.h>
 #include "../ramdisk.h"
+#include "../global.h"
 
 /**
  * @fn void ramdisk_dump(TAR*)
@@ -39,14 +40,20 @@ void ramdisk_dump( TAR* t ) {
     if ( TH_ISREG( t ) ) {
       // get filename
       char* filename = th_get_pathname( t );
-      EARLY_STARTUP_PRINT( "%10s - %s\r\n", "file", filename )
+      #if defined( BOOT_ENABLE_OUTPUT )
+        EARLY_STARTUP_PRINT( "%10s - %s\r\n", "file", filename )
+      #endif
       // skip to next file
       if ( tar_skip_regfile( t ) != 0 ) {
-        EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) )
+        #if defined( BOOT_ENABLE_OUTPUT )
+          EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) )
+        #endif
         break;
       }
     } else if ( TH_ISSYM( t ) ) {
-      EARLY_STARTUP_PRINT( "%10s - %s -> %s\r\n", "symlink", th_get_pathname( t ), th_get_linkname( t ) )
+      #if defined( BOOT_ENABLE_OUTPUT )
+        EARLY_STARTUP_PRINT( "%10s - %s -> %s\r\n", "symlink", th_get_pathname( t ), th_get_linkname( t ) )
+      #endif
     }
   }
 }

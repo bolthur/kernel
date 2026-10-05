@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,30 +22,45 @@
 #include <stdlib.h>
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
+#include <assert.h>
 #include "render.h"
+
+#include "buffer.h"
 #include "terminal.h"
 #include "psf.h"
+#include "ttf.h"
 #include "main.h"
 #include "output.h"
 #include "utf8.h"
 #include "../libframebuffer.h"
 
+/**
+ * @brief Foreground color
+ */
 static uint32_t foreground_color = 0xf0f0f0;
+
+/**
+ * @brief Background color
+ */
 static uint32_t background_color = 0;
 
 /**
- * @fn void terminal_scroll(terminal_t*)
+ * @fn void terminal_scroll(void)
  * @brief Scroll up terminal buffer
- *
- * @param term
  */
-static void terminal_scroll( terminal_t* term ) {
+static void terminal_scroll( void ) {
   // calculate offset and size
-  uint32_t offset = psf_glyph_height() * term->pitch;
-  uint32_t size = resolution_data.height * term->pitch;
+  uint32_t offset = 0;
+  if ( psf_initialized() ) {
+    offset = psf_glyph_height() * surface_data.pitch;
+  } else if ( ttf_initialized() ) {
+    offset = ttf_glyph_height() * surface_data.pitch;
+  }
+  assert( offset > 0 );
+  const uint32_t size = resolution_data.height * surface_data.pitch;
   // move up and reset last line
-  memmove( term->surface, term->surface + offset, size - offset );
-  memset( term->surface + size - offset, 0, offset );
+  memmove( surface, surface + offset, size - offset );
+  memset( surface + size - offset, 0, offset );
 }
 
 /**
@@ -88,161 +103,137 @@ static uint32_t terminal_evaluate_background_color( const uint32_t color ) {
   }
 }
 
-/**
- * @fn uint32_t terminal_push(terminal_t*, const char*)
- * @brief Push string to terminal buffer
- *
- * @param term terminal to push to
- * @param s utf8 string to push
- * @return
- */
-static uint32_t terminal_push( terminal_t* term, char* s ) {
-  uint32_t rendered = 0;
+static void terminal_push_utf8( terminal_t* term, uint16_t* s ) {
   while( *s ) {
     if ( *s == '\x1b' && s[ 1 ] == '[' ) {
       // skip control character and opening brackets
       s += 2;
-      // loop while end is reached
-      char* end = s;
-      while ( *end && *end != 'm' && *end != ',' ) {
-        end++;
-      }
-      // set terminating flag
-      const bool terminating = *end == 'm';
-      // convert to unsigned integer
-      uint32_t color = ( uint32_t )strtoul( s, &s, 10 );
-      // skip separator
-      s++;
-      // evaluate color
-      foreground_color = terminal_evaluate_foreground_color( color );
-      background_color = terminal_evaluate_background_color( color );
-      // handle reset
-      if ( terminating && 0 == color ) {
-        foreground_color = terminal_evaluate_foreground_color( 37 );
-        background_color = terminal_evaluate_background_color( 40 );
-      }
-      // handle not yet terminating
-      if ( ! terminating ) {
-        end = s;
-        // loop until end
-        while ( *end && *end != 'm' ) {
+      // terminated flag
+      bool terminated = false;
+      // loop while not terminated
+      while ( ! terminated ) {
+        // cache s in two pointers
+        auto end = s;
+        auto const str = s;
+        // loop until end is reached or semicolon
+        while ( *end && *end != 'm' && *end != ';' ) {
           end++;
         }
-        // convert to unsigned integer
-        color = ( uint32_t )strtoul( s, &s, 10 );
-        // evaluate color
-        foreground_color = terminal_evaluate_foreground_color( color );
-        background_color = terminal_evaluate_background_color( color );
-        // skip terminating sequence
-        s++;
+        // evaluate termination
+        terminated = 'm' == *end;
+        // calculate size
+        const size_t size = ( size_t )( end - str );
+        // increase s by size + 1 to skip the separator / terminator
+        s += ( size + 1 );
+        // allocate space
+        char* cs = malloc( ( size + 1 ) * sizeof( char ) );
+        // skip if not possible to allocate
+        if ( ! cs ) {
+          continue;
+        }
+        // copy over for conversion to integer
+        for ( size_t i = 0; i < size; i++ ) {
+          cs[ i ] = ( char )str[ i ];
+        }
+        cs[ size ] = '\0';
+        // convert to integer
+        auto const color = ( uint32_t )strtoul( cs, nullptr, 10 );
+        // free up space
+        free( cs );
+        // evaluate colors if not reset
+        if ( color != 0 ) {
+          foreground_color = terminal_evaluate_foreground_color( color );
+          background_color = terminal_evaluate_background_color( color );
+        // color is 0 check for termination
+        } else if ( terminated ) {
+          foreground_color = terminal_evaluate_foreground_color( 37 );
+          background_color = terminal_evaluate_background_color( 40 );
+        }
+      }
+    }
+    // handle delete by reducing column if greater 0
+    if ( '\b' == *s || 0x7f == *s ) {
+      if ( term->col > 0 ) {
+        term->col--;
       }
     }
     // handle end of row reached
-    if ( term->max_col <= term->col ) {
+    if ( term->max_col == term->col ) {
       term->col = 0;
       term->row++;
     }
     // handle scroll
-    if ( term->max_row <= term->row ) {
+    if ( term->max_row == term->row ) {
       // scroll up content
-      terminal_scroll( term );
+      terminal_scroll();
       // set row and col correctly
       term->row--;
       term->col = 0;
     }
-    // decode current character to utf8 for save
-    size_t len = 0;
-    const uint16_t c = utf8_decode( s, &len );
-    s += --len;
     // check character for actions
-    switch ( c ) {
-      // newline just increase row
+    switch ( *s ) {
+      // newline, increase row and reset column
       case '\n':
+        term->col = 0;
         term->row++;
         break;
       // carriage return reset column
       case '\r':
         term->col = 0;
         break;
+      // handle tab
       case '\t':
         // insert 4 spaces
-        terminal_push( term, "    " );
-        ++rendered;
+        size_t tab = 0;
+        uint16_t* tb = utf8_decode_string( "    ", &tab );
+        if ( tb ) {
+          terminal_push_utf8( term, tb );
+          free( tb );
+        }
+        break;
+      // handle backspace by overwriting character with space
+      case '\b':
+      case 0x7f:
+        size_t backspace = 0;
+        uint16_t* bsp = utf8_decode_string( " ", &backspace );
+        if ( bsp ) {
+          terminal_push_utf8( term, bsp );
+          free( bsp );
+        }
+        if ( term->col > 0 ) {
+          term->col--;
+        }
         break;
       default:
-        // render to surface
-        render_char_to_surface(
-          term->surface,
-          term->bpp,
-          term->pitch,
-          c,
-          term->col * psf_glyph_width(),
-          term->row * psf_glyph_height(),
-          foreground_color,
-          background_color
-        );
+        // render to surface via psf if initialized
+        if ( psf_initialized() ) {
+          psf_render_char(
+            surface,
+            resolution_data.depth,
+            surface_data.pitch,
+            *s,
+            term->col,
+            term->row,
+            foreground_color,
+            background_color
+          );
+        } else if ( ttf_initialized() ) {
+          ttf_render_char(
+            surface,
+            resolution_data.depth,
+            surface_data.pitch,
+            *s,
+            term->col,
+            term->row,
+            foreground_color,
+            background_color
+          );
+        }
         // increment column
         term->col++;
-        rendered++;
     }
-
     // next character
     s++;
-  }
-
-  return rendered;
-}
-
-/**
- * @fn void render_char_to_surface(uint8_t*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t)
- * @brief Helper to render character to passed surface
- *
- * @param surface
- * @param depth
- * @param pitch
- * @param c
- * @param start_x
- * @param start_y
- * @param color_fg
- * @param color_bg
- */
-void render_char_to_surface(
-  volatile uint8_t* surface,
-  uint32_t depth,
-  uint32_t pitch,
-  uint32_t c,
-  uint32_t start_x,
-  uint32_t start_y,
-  uint32_t color_fg,
-  uint32_t color_bg
-) {
-  // get glyph of character
-  uint8_t* glyph = psf_char_to_glyph( c );
-  if ( ! glyph ) {
-    return;
-  }
-  uint32_t font_height = psf_glyph_height();
-  uint32_t font_width = psf_glyph_width();
-  uint32_t off = ( start_y * pitch ) +
-    ( start_x * ( depth / CHAR_BIT ) );
-  uint32_t line = off;
-  uint32_t bytesperline = ( font_width + 7 ) / 8;
-  uint32_t idx = 0;
-  uint32_t max = font_width * font_height;
-  while( idx < max ) {
-    uint32_t x = idx % font_width;
-    *( ( uint32_t* )( surface + line ) ) =
-      ( glyph[ x / 8 ] & ( 0x80 >> ( x & 7 ) ) ) ? color_fg : color_bg;
-    line += 4;
-    idx++;
-    // handle new line
-    if ( 0 == idx % font_width && idx < max ) {
-      *( ( uint32_t* )( surface + line ) ) = 0;
-      glyph += bytesperline;
-      off += pitch;
-      // reset line to new offset
-      line = off;
-    }
   }
 }
 
@@ -254,15 +245,32 @@ void render_char_to_surface(
  * @param s
  * @return rendered character length
  */
-ssize_t render_terminal( terminal_t* term, const char* s ) {
+int render_terminal( terminal_t* term, const char* s ) {
   // FIXME: currently only 32 bit depth is supported
-  if ( 32 != term->bpp ) {
+  if ( 32 != resolution_data.depth ) {
     return -ENOSYS;
   }
-  auto char* p = ( char* )s;
+  // decode utf8
+  size_t len = 0;
+  uint16_t* line = utf8_decode_string( s, &len );
+  if ( ! line ) {
+    return -ENOMEM;
+  }
+  // push to buffer
+  buffer_push( &term->buffer, line, len );
+  // get active terminal
+  char* active = terminal_get_active();
+  if ( ! active ) {
+    return -ENOMEM;
+  }
+  // push current utf8 line to terminal if active
+  if ( 0 != strcmp( active, term->path ) ) {
+    free( active );
+    return 0;
+  }
+  free( active );
   // push to terminal
-  const uint32_t character_rendered = terminal_push( term, p );
-
+  terminal_push_utf8( term, buffer_last_pushed_data( &term->buffer ) );
   // allocate rpc parameter block
   framebuffer_surface_render_t* action = malloc( sizeof( *action ) );
   if ( ! action ) {
@@ -271,7 +279,7 @@ ssize_t render_terminal( terminal_t* term, const char* s ) {
   // initialize space with 0
   memset( action, 0, sizeof( *action ) );
   // populate
-  action->surface_id = term->surface_id;
+  action->surface_id = surface_data.surface_id;
   action->x = 0;
   action->y = 0;
   // call render surface
@@ -284,11 +292,58 @@ ssize_t render_terminal( terminal_t* term, const char* s ) {
     ),
     action
   );
+  free( action );
   // handle error
   if ( -1 == result ) {
-    free( action );
     return -EIO;
   }
   // return rendered character
-  return ( ssize_t )character_rendered;
+  return 0;
+}
+
+/**
+ * @fn void render_whole_terminal(terminal_t*)
+ * @brief Wrapper to render whole terminal
+ * @param term
+ */
+void render_whole_terminal( terminal_t* term ) {
+  // clear previous terminal
+  const uint32_t size = resolution_data.height * surface_data.pitch;
+  memset( surface, 0, size );
+  // reset col and row
+  term->row = term->col = 0;
+  // rerender whole terminal
+  uint32_t current = term->buffer.tail;
+  // loop until the newest line
+  while ( current != term->buffer.head ) {
+    // get current line pointer
+    uint16_t* line_ptr = &term->buffer.data[ current * term->buffer.columns ];
+    // push utf8 to terminal
+    terminal_push_utf8( term, line_ptr );
+    // get to next line
+    current++;
+    if ( current >= term->buffer.rows ) {
+      current = 0;
+    }
+  }
+  // allocate rpc parameter block
+  framebuffer_surface_render_t* action = malloc( sizeof( *action ) );
+  if ( ! action ) {
+    return;
+  }
+  // initialize space with 0
+  memset( action, 0, sizeof( *action ) );
+  // populate
+  action->surface_id = surface_data.surface_id;
+  // call render surface
+  ioctl(
+    output_driver_fd,
+    IOCTL_BUILD_REQUEST(
+      FRAMEBUFFER_SURFACE_RENDER,
+      sizeof( *action ),
+      IOCTL_WRONLY
+    ),
+    action
+  );
+  free( action );
 }

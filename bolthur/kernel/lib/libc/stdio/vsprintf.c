@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -167,7 +167,6 @@ static int print(
 int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
   uint32_t written = 0;
   int print_written;
-  size_t amount;
   char buf[ 256 ];
   char* buffer = _buffer;
 
@@ -184,7 +183,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
         format++;
       }
       // amount of characters to print
-      amount = 1;
+      size_t amount = 1;
       while ( format[ amount ] && format[ amount ] != '%' ) {
         amount++;
       }

@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2018 - 2025 bolthur project.
+* Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,7 +20,6 @@
 #ifndef _HT_H
 #define _HT_H
 
-#include <stdbool.h>
 #include <stddef.h>
 
 #define INITIAL_CAPACITY 16

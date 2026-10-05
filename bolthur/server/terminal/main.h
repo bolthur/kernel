@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,7 +20,6 @@
 #ifndef _MAIN_H
 #define _MAIN_H
 
-#define CONSOLE_MANAGER "/dev/console"
 #define OUTPUT_DRIVER "/dev/framebuffer"
 
 extern int output_driver_fd;

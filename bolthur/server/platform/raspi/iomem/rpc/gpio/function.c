@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -26,8 +26,8 @@
 #include "../../mmio.h"
 #include "../../rpc.h"
 #include "../../delay.h"
-#include "../../../libiomem.h"
-#include "../../../libperipheral.h"
+#include "../../../../../../library/platform/raspi/iomem/libiomem.h"
+#include "../../../../../../library/platform/raspi/iomem/libperipheral.h"
 
 /**
  * @fn void rpc_handle_gpio_set_function(size_t, pid_t, size_t, size_t)
@@ -47,34 +47,34 @@ void rpc_handle_gpio_set_function(
   vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // handle no data
   error.status = -EINVAL;
-  if( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+  if ( ! data_info ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   iomem_gpio_function_t* function_request;
   // handle invalid data size
   if ( data_size - sizeof( vfs_ioctl_perform_request_t ) != sizeof( *function_request ) ) {
     error.status = -EINVAL;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     free( request );
     return;
   }
   // allocate space for function_request
   function_request = ( iomem_gpio_function_t* )request->container;
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "gpio function: pin = %d, function = %x\r\n",
       function_request->pin, function_request->function
@@ -103,12 +103,12 @@ void rpc_handle_gpio_set_function(
   // handle invalid
   if ( 0 == address ) {
     error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     free( request );
     return;
   }
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "gpio function: pin = %d, function = %x\r\n",
       function_request->pin, function_request->function
@@ -117,13 +117,13 @@ void rpc_handle_gpio_set_function(
   // read value
   uint32_t value = mmio_read( address );
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
   #endif
   // mask bits
   value &= ( uint32_t )~( 7 << ( function_request->pin * 3 ) );
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "mask = %#"PRIx32", value = %#"PRIx32"\r\n",
       ( uint32_t )~( 7 << ( function_request->pin * 3 ) ),
@@ -133,7 +133,7 @@ void rpc_handle_gpio_set_function(
   // set value
   value |= ( ( function_request->function & 7 ) << ( function_request->pin * 3 ) );
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "bit = %#"PRIx32", value = %#"PRIx32"\r\n",
       ( uint32_t )( ( function_request->function & 7 ) << ( function_request->pin * 3 ) ),
@@ -141,7 +141,7 @@ void rpc_handle_gpio_set_function(
     )
   #endif
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
   #endif
   // write back changes
@@ -149,12 +149,12 @@ void rpc_handle_gpio_set_function(
   // delay 150 cycles
   delay( 150 );
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "wrote %#"PRIx32" to %#"PRIxPTR"\r\n", value, address )
   #endif
   // set status to 0
-  error.status = 0;
-  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+  memset( &error, 0, sizeof( error ) );
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
   // free function_request
   free( request );
 }

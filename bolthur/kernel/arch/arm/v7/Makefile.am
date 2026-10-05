@@ -1,6 +1,7 @@
 
 noinst_LTLIBRARIES = libv7.la
 libv7_la_SOURCES = \
+  cpu/pool.c \
   debug/barrier.c \
   debug/breakpoint.c \
   debug/cache.c \
@@ -23,12 +24,13 @@ libv7_la_SOURCES = \
   stub/cache.S \
   stub/stack.S \
   stub/start.S \
+  syscall/interrupt.c \
+  syscall/timer.c \
   task/process.c \
   task/stack.c \
   task/stub.S \
   task/thread.c \
   arch.c \
-  barrier.c \
   cache.c \
   fpu.S \
   syscall.c

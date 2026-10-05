@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,15 +23,6 @@
 #if defined( PRINT_SSP )
   #include "inttypes.h"
   #include "../debug/debug.h"
-  #if defined( ARCH_ARM_V7 ) || defined( ARCH_ARM_V6 )
-    #define DUMP_SSP_ORIGIN { \
-        uintptr_t lr; \
-        __asm__ __volatile__( "mov %0, lr" : "=r" ( lr ) : : "cc" ); \
-        DEBUG_OUTPUT( "lr = %#"PRIxPTR"\r\n", lr ) \
-      }
-  #else
-    #error "unsupported architecture"
-  #endif
 #endif
 
 #if UINT32_MAX == UINTPTR_MAX
@@ -51,7 +42,8 @@ uintptr_t __stack_chk_guard = STACK_CHK_GUARD;
  */
 [[noreturn]] void __stack_chk_fail( void ) {
   #if defined( PRINT_SSP )
-    DUMP_SSP_ORIGIN
+    auto const return_address = ( uintptr_t )__builtin_return_address( 0 );
+    DEBUG_OUTPUT( "return_address = %#"PRIxPTR"\r\n", return_address )
   #endif
   PANIC( "Stack smashing detected" )
 }

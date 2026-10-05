@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,6 +19,7 @@
 
 #include <errno.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../../../../libdev.h"
 
 /**
@@ -30,7 +31,9 @@
 bool rpc_init( void ) {
   bolthur_rpc_bind( RPC_VFS_READ, rpc_handle_read, true );
   if ( errno ) {
-    STARTUP_PRINT( "Unable to register handler add!\r\n" )
+    #if defined( RANDOM_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to register handler add!\r\n" )
+    #endif
     return false;
   }
   return true;

@@ -23,7 +23,7 @@
             <option value="$PROJECT_DIR$" />
           </set>
         </option>
-        <option name="preConfigureCommands" value="#!/bin/sh&#10;#&#10;# GNU Autotools template, feel free to customize.&#10;#&#10;which autoreconf &gt;/dev/null &amp;&amp; autoreconf --install --force --verbose &quot;${PROJECT_DIR:-..}&quot; 2&gt;&amp;1; /bin/sh &quot;${PROJECT_DIR:-..}/configure&quot; --host=arm-raspi2b_r1-bolthur-eabi --enable-device=raspi2b_r1 --enable-output --enable-silent-rules" />
+        <option name="preConfigureCommands" value="#!/bin/sh&#10;#&#10;# GNU Autotools template, feel free to customize.&#10;#&#10;which autoreconf &gt;/dev/null &amp;&amp; autoreconf --install --force --verbose &quot;${PROJECT_DIR:-..}&quot; 2&gt;&amp;1; /bin/sh &quot;${PROJECT_DIR:-..}/configure&quot; --host=arm-raspi2b_r1-bolthur-eabi --enable-device=raspi2b_r1 --enable-output --enable-silent-rules --with-debug-symbols" />
         <option name="switches" value="--makefile=Makefile " />
         <option name="version" value="2" />
       </MakefileProjectSettings>

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -40,38 +40,4 @@ void peripheral_base_set( const uintptr_t addr, const peripheral_type_t type ) {
   } else if ( PERIPHERAL_GPIO == type ) {
     gpio_peripheral_base = addr;
   }
-}
-
-/**
- * @fn uintptr_t peripheral_base_get(peripheral_type_t)
- * @brief Method to get peripheral base address
- *
- * @param type peripheral type
- * @return uintptr_t Peripheral base address
- */
-uintptr_t peripheral_base_get( const peripheral_type_t type ) {
-  if ( PERIPHERAL_LOCAL == type ) {
-    return cpu_peripheral_base;
-  }
-  if ( PERIPHERAL_GPIO == type ) {
-    return gpio_peripheral_base;
-  }
-  return 0;
-}
-
-/**
- * @fn uintptr_t peripheral_end_get(peripheral_type_t)
- * @brief Method to get peripheral base address
- *
- * @param type peripheral type
- * @return uintptr_t Peripheral end address
- */
-uintptr_t peripheral_end_get( const peripheral_type_t type ) {
-  if ( PERIPHERAL_LOCAL == type ) {
-    return cpu_peripheral_base + cpu_peripheral_size;
-  }
- if ( PERIPHERAL_GPIO == type ) {
-    return gpio_peripheral_base + gpio_peripheral_size;
-  }
-  return 0;
 }

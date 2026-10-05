@@ -6,6 +6,11 @@ initramfs initrd followkernel
 # Set gpu memory to 64
 gpu_mem=64
 
+# adjust hdmi resolution
+hdmi_force_hotplug=1
+hdmi_group=2
+hdmi_mode=16
+
 [pi1]
 
 [pi2]

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,11 +20,10 @@
 #ifndef _RPC_H
 #define _RPC_H
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <sys/bolthur.h>
 
-//#define RPC_ENABLE_DEBUG 1
+//#define RPC_ENABLE_OUTPUT 1
 
 bool rpc_init( void );
 void rpc_handle_ioctl( size_t, pid_t, size_t, size_t );

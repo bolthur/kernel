@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 
 /**
  * @fn void rpc_handle_exec(size_t, pid_t, size_t, size_t)
@@ -32,29 +33,31 @@
  */
 void rpc_handle_exec(
   size_t type,
-  [[maybe_unused]]  pid_t origin,
+  [[maybe_unused]] pid_t origin,
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "EXEC!\r\n" )
+  #if defined( CONSOLE_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "EXEC!\r\n" )
+  #endif
   // dummy error response
   vfs_exec_response_t response = { .result = -EINVAL };
   // handle no data
-  if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  if ( ! data_info ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
-  vfs_exec_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_exec_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // return success
   response.result = 0;
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
   // free request
   free( request );
 }

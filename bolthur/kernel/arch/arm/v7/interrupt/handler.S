@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -39,16 +39,15 @@ IMPORT( task_thread_current_thread )
 .endm
 
 // ensure correct stack alignment before calling any c function
-.macro stack_wind register:req, additional:req, stack:req
-  // test alignment
-  and \register, \stack, #8
-  sub \stack, \register
-  push { \register, \additional }
+.macro stack_wind register:req, stack:req
+  // calculate alignment offset
+  and \register, \stack, #4
+  // adjust stack
+  sub \stack, \stack, \register
 .endm
 
 // restore stack possibly changed due to stack alignment
-.macro stack_unwind register:req, additional:req, stack:req
-  pop { \register, \additional }
+.macro stack_unwind register:req, stack:req
   add \stack, \register
 .endm
 
@@ -94,7 +93,7 @@ IMPORT( task_thread_current_thread )
     \privileged
 .endm
 
-.macro push_register name:req, mode:req, fixup:req, thumb_offset:req
+.macro push_register name:req, mode:req, fixup:req
   // privileged / unprivileged switch
   privileged_unprivileged_switch \
     4, \
@@ -108,7 +107,12 @@ _\name\()_entry_unprivileged:
   get_thread_context lr
 
   // save registers
-  stmia lr, { r0 - r14 }^
+  stm lr, { r0 - r14 }^
+  // wait for stm to populate all registers
+  nop
+  isb
+  dsb
+  // push fpu register
   push_fpu_register lr
 
   // get pushed lr and fill it into struct
@@ -117,23 +121,6 @@ _\name\()_entry_unprivileged:
   // get pushed spsr and fill it into struct
   ldr r0, [ sp, #4 ]
   str r0, [ lr, #SPSR_OFFSET ]
-
-  // mask mode only for comparison
-  and r0, #CPSR_THUMB
-  // compare to passed mode
-  cmp r0, #CPSR_THUMB
-  // handle thumb mode
-  beq _\name\()_entry_unprivileged_thumb
-  // handle arm_mode
-  bne _\name\()_entry_unprivileged_arm
-
-  // thumb entry
-  _\name\()_entry_unprivileged_thumb:
-    ldr r0, [ lr, #PC_OFFSET ]
-    add r0, #\thumb_offset
-    str r0, [ lr, #PC_OFFSET ]
-  // arm entry
-  _\name\()_entry_unprivileged_arm:
 
   // adjust stack pointer back
   add sp, #8
@@ -148,29 +135,29 @@ _\name\()_entry_unprivileged:
 _\name\()_entry_privileged:
   // allocate space for context structure
   sub sp, #STACK_FRAME_SIZE
+
   // save registers to stack
-  stmia sp, { r0 - r12 }
+  stmia sp!, { r0 - r12 }
+  sub sp, #SP_OFFSET
+
+  // push fpu register
   push_fpu_register sp
+
   // get pushed lr and fill it into struct
   ldr r0, [ sp, #PRIVILEGED_PC_OFFSET ]
   str r0, [ sp, #PC_OFFSET ]
+
   // get pushed spsr and fill it into struct
   ldr r0, [ sp, #PRIVILEGED_SPSR_OFFSET ]
   str r0, [ sp, #SPSR_OFFSET ]
-  // get pushed spsr for mode switch
-  ldr r0, [ sp, #PRIVILEGED_SPSR_OFFSET ]
-  // switch to previous mode
-  orr r0, r0, #( CPSR_IRQ_INHIBIT | CPSR_FIQ_INHIBIT )
-  msr cpsr_c, r0
-  // get sp and lr
-  mov r1, sp
-  mov r2, lr
-  // switch mode again
-  cps \mode
 
-  // push sp, lr
-  str r1, [ sp, #SP_OFFSET ]
-  str r2, [ sp, #LR_OFFSET ]
+  // calculate previous stack pointer and push to context
+  add r0, sp, #(STACK_FRAME_SIZE + 8)
+  str r0, [ sp, #SP_OFFSET ]
+
+  // populate lr
+  str lr, [ sp, #LR_OFFSET ]
+
   // save sp in first register
   mov r1, sp
 
@@ -198,28 +185,19 @@ _\name\()_exit_unprivileged:
 
 // privileged exit
 _\name\()_exit_privileged:
-  // get lr and sp of previous mode
-  ldr r1, [ sp, #SP_OFFSET ]
-  ldr r2, [ sp, #LR_OFFSET ]
-  // switch to previous mode
-  ldr r0, [ sp, #SPSR_OFFSET ]
-  orr r0, r0, #( CPSR_IRQ_INHIBIT | CPSR_FIQ_INHIBIT )
-  msr cpsr_c, r0
-  // restore sp and lr
-  mov sp, r1
-  mov lr, r2
-
-  // switch again to passed mode
-  cps \mode
-
-  // load old pc
+  mov sp, \stack
+  // load old pc and push back onto stack
   ldr r0, [ sp, #PC_OFFSET ]
-  // push back onto stack
   str r0, [ sp, #PRIVILEGED_PC_OFFSET ]
-  // restore previous state
+  // load old spsr and push back onto stack
+  ldr r0, [ sp, #SPSR_OFFSET ]
+  str r0, [ sp, #PRIVILEGED_SPSR_OFFSET ]
+  // restore lr
+  ldr lr, [ sp, #LR_OFFSET ]
+  // restore previous state of fpu
   pop_fpu_register sp
-  // restore register without push back
-  ldmia sp, { r0 - r12 }
+  // restore previous register
+  ldm sp, { r0 - r12 }
   // correct stack pointer by removing kernel stack frame
   add sp, #STACK_FRAME_SIZE
 
@@ -230,34 +208,28 @@ _\name\()_exit_privileged:
 _\name\()_exit_finished:
 .endm
 
-.macro exception_handler fixup:req, thumb_offset:req, handler:req, mode:req, name:req, nested:req
+.macro exception_handler fixup:req, handler:req, mode:req, name:req, nested:req
   // switch to svc mode with fixup
   switch_mode \mode, \fixup
   // push register
-  push_register \name, \mode, \fixup, \thumb_offset
+  push_register \name, \mode, \fixup
+
+  mov r4, r1
+  stack_wind r5, sp
+  push { r4, r5 }
 
   // remote debugging
   #if defined( REMOTE_DEBUG )
     .ifnc \nested, all
-      // ensure stack alignment
-      stack_wind r0, r1, sp
       // disable  breakpoints
       bl debug_breakpoint_disable
-      // restore stack adjustments
-      stack_unwind r0, r1, sp
     .endif
   #endif
 
-  // ensure stack alignment
-  stack_wind r0, r1, sp
   // call handler routine with context parameter
-  mov r0, r1
+  mov r0, r4
   bl \handler
-  // restore stack adjustments
-  stack_unwind r0, r1, sp
 
-  // ensure stack alignment
-  stack_wind r0, r1 sp
   // enable interrupts
   .ifc \nested, all
     cpsie iaf
@@ -266,7 +238,7 @@ _\name\()_exit_finished:
     cpsie af
   .endif
   // handle events
-  mov r0, r1
+  mov r0, r4
   bl event_handle
   // disable interrupts
   .ifc \nested, all
@@ -275,20 +247,18 @@ _\name\()_exit_finished:
   .ifc \nested, fast
     cpsid af
   .endif
-  // restore stack adjustments
-  stack_unwind r0, r1, sp
 
   // remote debugging
   #if defined( REMOTE_DEBUG )
     .ifnc \nested, all
-      // ensure stack alignment
-      stack_wind r0, r1, sp
       // add breakpoints
       bl debug_breakpoint_enable
-      // restore stack adjustments
-      stack_unwind r0, r1, sp
     .endif
   #endif
+
+  pop { r4, r5 }
+  stack_unwind r5, sp
+  mov r1, r4
 
   // restore registers for return
   pop_register \name, \mode, r1
@@ -299,13 +269,13 @@ _\name\()_exit_finished:
 .macro push_fpu_register register:req
   #if defined( ARM_CPU_HAS_NEON )
     // save floating point control status
-    vmrs r0, fpscr
-    str r0, [ \register, #GENERAL_PURPOSE_REGISTER_END ]
+    vmrs r4, fpscr
+    str r4, [ \register, #GENERAL_PURPOSE_REGISTER_END ]
     // start with first fpu registers
     add \register, #NEON_REGISTER_START
     // backup fpu registers
-    vstmia \register!, { d0 - d15 }
-    vstmia \register!, { d16 - d31 }
+    vstmia.64 \register!, { d0 - d15 }
+    vstmia.64 \register!, { d16 - d31 }
     // restore passed register to point to begin
     sub \register, #STACK_FRAME_SIZE
   #endif
@@ -314,13 +284,13 @@ _\name\()_exit_finished:
 .macro pop_fpu_register register:req
   #if defined( ARM_CPU_HAS_NEON )
     // restore floating point control status
-    ldr r0, [ \register, #GENERAL_PURPOSE_REGISTER_END ]
-    vmsr fpscr, r0
+    ldr r4, [ \register, #GENERAL_PURPOSE_REGISTER_END ]
+    vmsr fpscr, r4
     // start with first fpu registers
     add \register, #NEON_REGISTER_START
     // restore fpu registers
-    vldmia \register!, { d0 - d15 }
-    vldmia \register!, { d16 - d31 }
+    vldmia.64 \register!, { d0 - d15 }
+    vldmia.64 \register!, { d16 - d31 }
     // restore passed register to point to begin
     sub \register, #STACK_FRAME_SIZE
   #endif

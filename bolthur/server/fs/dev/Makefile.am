@@ -4,10 +4,12 @@ AM_CFLAGS = -DPROGRAM_NAME=\"fs/dev\"
 bin_PROGRAMS = dev
 dev_DEPENDENCIES = \
   ${abs_top_builddir}/../library/collection/list/liblist.la \
-  ${abs_top_builddir}/../library/collection/avl/libavl.la
+  ${abs_top_builddir}/../library/collection/avl/libavl.la \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
 dev_LDADD = \
   ${abs_top_builddir}/../library/collection/list/liblist.la \
-  ${abs_top_builddir}/../library/collection/avl/libavl.la
+  ${abs_top_builddir}/../library/collection/avl/libavl.la \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
 dev_SOURCES = \
   ioctl/handler.c \
   rpc/custom/kill.c \

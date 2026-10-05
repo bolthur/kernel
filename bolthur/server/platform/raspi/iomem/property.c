@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -37,12 +37,12 @@ int32_t property_index = 0;
 /**
  * @brief property tag buffer
  */
-int32_t* property_buffer = NULL;
+int32_t* property_buffer = nullptr;
 
 /**
  * @brief phys property tag buffer
  */
-volatile int32_t* property_buffer_phys = NULL;
+volatile int32_t* property_buffer_phys = nullptr;
 
 /**
  * @fn bool property_setup(void)
@@ -53,7 +53,7 @@ volatile int32_t* property_buffer_phys = NULL;
 bool property_setup( void ) {
   // map buffer as device memory
   void* tmp_buffer = mmap(
-    NULL,
+    nullptr,
     PAGE_SIZE,
     PROT_READ | PROT_WRITE,
     MAP_ANONYMOUS | MAP_DEVICE,
@@ -296,12 +296,12 @@ uint32_t property_process( void ) {
  * @brief Read tag from previous executed mailbox property process
  *
  * @param tag tag to read from mailbox property process
- * @return pointer to structure of tag or NULL
+ * @return pointer to structure of tag or nullptr
  */
 raspi_property_t* property_get( raspi_mailbox_tag_t tag ) {
   // property structure for return and tag buffer
   static raspi_property_t property;
-  int32_t* tag_buffer = NULL;
+  int32_t* tag_buffer = nullptr;
   // Get the tag from the buffer and start with first available tag position
   int32_t selected_index = 2;
   int32_t size = property_buffer[ PT_OSIZE ] >> 2;
@@ -314,9 +314,9 @@ raspi_property_t* property_get( raspi_mailbox_tag_t tag ) {
     // progress with next tag if we haven't yet discovered the wanted tag
     selected_index += ( property_buffer[ selected_index + 1 ] >> 2 ) + 3;
   }
-  // nothing found, return NULL
+  // nothing found, return nullptr
   if ( ! tag_buffer ) {
-    return NULL;
+    return nullptr;
   }
   // clear return
   memset( &property, 0, sizeof( property ) );

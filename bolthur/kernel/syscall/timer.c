@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -41,7 +41,7 @@ void syscall_timer_tick_count( void* context ) {
       task_thread_current_thread->process->id
     )
   #endif
-  syscall_populate_success( context, timer_get_tick() );
+  syscall_populate_success64( context, timer_get_current_tick_value() );
 }
 
 /**
@@ -59,45 +59,6 @@ void syscall_timer_frequency( void* context ) {
 }
 
 /**
- * @fn void syscall_timer_acquire(void*)
- * @brief Acquire to pause thread until timer resolved
- *
- * @param context
- */
-void syscall_timer_acquire( void* context ) {
-  // parameters
-  size_t rpc_num = syscall_get_parameter( context, 0 );
-  size_t timeout = syscall_get_parameter( context, 1 );
-  // debug output
-  #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_timer_acquire( %zu, %zu )\r\n", rpc_num, timeout )
-  #endif
-  // handle timeout already reached
-  if ( timeout <= timer_get_tick() ) {
-    // return success without doing anything
-    syscall_populate_success( context, 0 );
-    return;
-  }
-  // add to timer
-  timer_callback_entry_t* item = timer_register_callback(
-    task_thread_current_thread,
-    rpc_num,
-    timeout
-  );
-  // handle error
-  if ( ! item ) {
-    syscall_populate_error( context, ( size_t )-EAGAIN );
-    return;
-  }
-  // debug output
-  #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "item->id = %zu\r\n", item->id )
-  #endif
-  // return success by returning timer id
-  syscall_populate_success( context, item->id );
-}
-
-/**
  * @fn void syscall_timer_release(void*)
  * @brief Release given timer
  *
@@ -105,7 +66,7 @@ void syscall_timer_acquire( void* context ) {
  */
 void syscall_timer_release( void* context ) {
   // parameters
-  size_t id = syscall_get_parameter( context, 0 );
+  const size_t id = syscall_get_parameter( context, 0 );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_timer_release( %zu )\r\n", id )

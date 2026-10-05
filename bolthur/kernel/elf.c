@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -141,11 +141,11 @@ static bool load_program_header( uintptr_t elf, task_process_t* process ) {
       DEBUG_OUTPUT(
         "type = %#"PRIx32", vaddr = %#"PRIx32", paddr = %#"PRIx32", "
         "size = %#"PRIx32", offset = %#"PRIx32"!\r\n",
-        program_header->p_type,
-        program_header->p_vaddr,
-        program_header->p_paddr,
-        program_header->p_memsz,
-        program_header->p_offset
+        ( uint32_t )program_header->p_type,
+        ( uint32_t )program_header->p_vaddr,
+        ( uint32_t )program_header->p_paddr,
+        ( uint32_t )program_header->p_memsz,
+        ( uint32_t )program_header->p_offset
       )
     #endif
     // skip all sections except load

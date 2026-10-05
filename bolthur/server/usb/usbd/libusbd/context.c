@@ -1,0 +1,645 @@
+/**
+ * Copyright (C) 2018 - 2026 bolthur project.
+ *
+ * This file is part of bolthur/kernel.
+ *
+ * bolthur/kernel is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * bolthur/kernel is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <errno.h>
+#include "../libusbd.h"
+
+/**
+ * @fn int context_attach_create(rpc_handler_t, pid_t, size_t, const void*, size_t, bool, libusb_device_t*, usbd_attach_context_t**)
+ * @brief Helper to allocate context
+ * @param callback
+ * @param origin
+ * @param data_info
+ * @param original_request
+ * @param original_request_size
+ * @param address
+ * @param device_number
+ * @param dev
+ * @param ctx
+ * @return
+ */
+int usbd_context_attach_create(
+  const rpc_handler_t callback,
+  const pid_t origin,
+  const size_t data_info,
+  const void* original_request,
+  const size_t original_request_size,
+  const uint8_t address,
+  const uint8_t device_number,
+  libusb_device_t* dev,
+  usbd_attach_context_t** ctx
+) {
+  // allocate additional context
+  *ctx = malloc( sizeof( usbd_attach_context_t ) );
+  // handle error
+  if ( ! *ctx ) {
+    // debug output
+    #if defined( USBD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
+    #endif
+    // return error
+    return ENOMEM;
+  }
+  // clear out context
+  memset( *ctx, 0, sizeof( usbd_attach_context_t ) );
+  // duplicate request
+  void* req = malloc( original_request_size );
+  if ( ! req ) {
+    // free context
+    usbd_context_attach_destroy( *ctx, true );
+    // debug output
+    #if defined( USBD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
+    #endif
+    // return error
+    return ENOMEM;
+  }
+  // copy over request
+  memcpy( req, original_request, original_request_size );
+  // populate context
+  ( *ctx )->data_info = data_info;
+  ( *ctx )->origin = origin;
+  ( *ctx )->request = req;
+  ( *ctx )->request_size = original_request_size;
+  ( *ctx )->handler = callback;
+  ( *ctx )->device_number = device_number;
+  ( *ctx )->device = dev;
+  ( *ctx )->address = address;
+  // return success
+  return 0;
+}
+
+/**
+ * @fn void context_attach_destroy(usbd_attach_context_t*, bool)
+ * @brief Helper to destroy created context
+ * @param ctx
+ * @param destroy
+ */
+void usbd_context_attach_destroy( usbd_attach_context_t* ctx, const bool destroy ) {
+  if ( ! ctx ) {
+    return;
+  }
+  if ( destroy ) {
+    usbd_destroy_device( ctx->device );
+  }
+  if ( ctx->request ) {
+    free( ctx->request );
+  }
+  free( ctx );
+}
+
+/**
+ * @fn int usbd_context_descriptor_create(rpc_handler_t, void*, usbd_descriptor_context_t**)
+ * @brief Helper to allocate context
+ * @param callback
+ * @param context
+ * @param ctx
+ * @return
+ */
+int usbd_context_descriptor_create(
+  const rpc_handler_t callback,
+  void* context,
+  usbd_descriptor_context_t** ctx
+) {
+  // allocate additional context
+  *ctx = malloc( sizeof( usbd_descriptor_context_t ) );
+  // handle error
+  if ( ! *ctx ) {
+    // debug output
+    #if defined( USBD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
+    #endif
+    // return error
+    return ENOMEM;
+  }
+  // clear out context
+  memset( *ctx, 0, sizeof( usbd_descriptor_context_t ) );
+  // populate context
+  ( *ctx )->context = context;
+  ( *ctx )->handler = callback;
+  // return success
+  return 0;
+}
+
+/**
+ * @fn void usbd_context_descriptor_destroy(usbd_descriptor_context_t*)
+ * @brief Helper to destroy created context
+ * @param ctx
+ */
+void usbd_context_descriptor_destroy( usbd_descriptor_context_t* ctx ) {
+  if ( ! ctx ) {
+    return;
+  }
+  // debug output
+  #if defined( USBD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Destroy descriptor context %p\r\n", ( void* )ctx )
+  #endif
+  free( ctx );
+}
+
+/**
+ * @fn int usbd_context_get_descriptor_create(libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, void*, size_t, uint8_t, rpc_handler_t, pid_t, size_t, void*, size_t, void*, usbd_get_descriptor_context_t**)
+ * @brief Wrapper to create get descriptor context
+ * @param dev
+ * @param type
+ * @param idx
+ * @param lang_id
+ * @param buffer
+ * @param buffer_length
+ * @param recipient
+ * @param callback
+ * @param origin
+ * @param data_info
+ * @param original_request
+ * @param original_request_size
+ * @param context
+ * @param ctx
+ * @return
+ */
+int usbd_context_get_descriptor_create(
+  libusb_device_t* dev,
+  const libusb_descriptor_type_t type,
+  const uint8_t idx,
+  const uint16_t lang_id,
+  void* buffer,
+  const size_t buffer_length,
+  const uint8_t recipient,
+  const rpc_handler_t callback,
+  const pid_t origin,
+  const size_t data_info,
+  void* original_request,
+  const size_t original_request_size,
+  void* context,
+  usbd_get_descriptor_context_t** ctx
+) {
+  // allocate additional context
+  *ctx = malloc( sizeof( usbd_get_descriptor_context_t ) );
+  // handle error
+  if ( ! *ctx ) {
+    // debug output
+    #if defined( USBD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
+    #endif
+    // return error
+    return ENOMEM;
+  }
+  memset( *ctx, 0, sizeof( usbd_get_descriptor_context_t ) );
+  // duplicate request
+  void* req = malloc( original_request_size );
+  if ( ! req ) {
+    // free context
+    usbd_context_get_descriptor_destroy( *ctx );
+    // debug output
+    #if defined( USBD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
+    #endif
+    // return error
+    return ENOMEM;
+  }
+  // copy over request
+  memcpy( req, original_request, original_request_size );
+  // clear out context
+  memset( *ctx, 0, sizeof( usbd_descriptor_context_t ) );
+  // populate context
+  ( *ctx )->dev = dev;
+  ( *ctx )->type = type;
+  ( *ctx )->idx = idx;
+  ( *ctx )->lang_id = lang_id;
+  ( *ctx )->buffer = buffer;
+  ( *ctx )->buffer_length = buffer_length;
+  ( *ctx )->recipient = recipient;
+  ( *ctx )->callback = callback;
+  ( *ctx )->origin = origin;
+  ( *ctx )->data_info = data_info;
+  ( *ctx )->original_request = req;
+  ( *ctx )->original_request_size = original_request_size;
+  ( *ctx )->context = context;
+  // return success
+  return 0;
+}
+
+/**
+ * @fn void usbd_context_get_descriptor_destroy(usbd_get_descriptor_context_t*)
+ * @brief Helper to destroy created context
+ * @param ctx
+ */
+void usbd_context_get_descriptor_destroy( usbd_get_descriptor_context_t* ctx ) {
+  if ( ! ctx ) {
+    return;
+  }
+  if ( ctx->original_request ) {
+    free( ctx->original_request );
+  }
+  // debug output
+  #if defined( USBD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Destroy descriptor context %p\r\n", ( void* )ctx )
+  #endif
+  free( ctx );
+}
+
+/**
+ * @fn int usbd_context_address_create(rpc_handler_t, void*, usbd_address_context_t**)
+ * @brief Helper to allocate context
+ * @param callback
+ * @param context
+ * @param address
+ * @param ctx
+ * @return
+ */
+int usbd_context_address_create(
+  const rpc_handler_t callback,
+  void* context,
+  uint8_t address,
+  usbd_address_context_t** ctx
+) {
+  // allocate additional context
+  *ctx = malloc( sizeof( usbd_address_context_t ) );
+  // handle error
+  if ( ! *ctx ) {
+    // debug output
+    #if defined( USBD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
+    #endif
+    // return error
+    return ENOMEM;
+  }
+  // clear out context
+  memset( *ctx, 0, sizeof( usbd_address_context_t ) );
+  // populate context
+  ( *ctx )->context = context;
+  ( *ctx )->handler = callback;
+  ( *ctx )->address = address;
+  // return success
+  return 0;
+}
+
+/**
+ * @fn void usbd_context_descriptor_destroy(usbd_address_context_t*)
+ * @brief Helper to destroy created context
+ * @param ctx
+ */
+void usbd_context_address_destroy( usbd_address_context_t* ctx ) {
+  if ( ! ctx ) {
+    return;
+  }
+  // debug output
+  #if defined( USBD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Destroy address context %p\r\n", ( void* )ctx )
+  #endif
+  free( ctx );
+}
+
+/**
+ * @fn int usbd_context_configure_create(rpc_handler_t, void*, usbd_configure_context_t**)
+ * @brief Helper to allocate context
+ * @param callback
+ * @param context
+ * @param configuration
+ * @param ctx
+ * @return
+ */
+int usbd_context_configure_create(
+  const rpc_handler_t callback,
+  void* context,
+  uint8_t configuration,
+  usbd_configure_context_t** ctx
+) {
+  // allocate additional context
+  *ctx = malloc( sizeof( usbd_configure_context_t ) );
+  // handle error
+  if ( ! *ctx ) {
+    // debug output
+    #if defined( USBD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
+    #endif
+    // return error
+    return ENOMEM;
+  }
+  // clear out context
+  memset( *ctx, 0, sizeof( usbd_configure_context_t ) );
+  // populate context
+  ( *ctx )->context = context;
+  ( *ctx )->handler = callback;
+  ( *ctx )->configuration = configuration;
+  // return success
+  return 0;
+}
+
+/**
+ * @fn void usbd_context_configure_destroy(usbd_configure_context_t*)
+ * @brief Helper to destroy created context
+ * @param ctx
+ */
+void usbd_context_configure_destroy( usbd_configure_context_t* ctx ) {
+  if ( ! ctx ) {
+    return;
+  }
+  // debug output
+  #if defined( USBD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Destroy configure context %p\r\n", ( void* )ctx )
+  #endif
+  free( ctx );
+}
+
+/**
+ * @fn int usbd_context_configuration_create(rpc_handler_t, void*, usbd_configuration_context_t**)
+ * @brief Helper to allocate context
+ * @param callback
+ * @param context
+ * @param configuration
+ * @param ctx
+ * @return
+ */
+int usbd_context_configuration_create(
+  const rpc_handler_t callback,
+  void* context,
+  uint8_t configuration,
+  usbd_configuration_context_t** ctx
+) {
+  // allocate additional context
+  *ctx = malloc( sizeof( usbd_configuration_context_t ) );
+  // handle error
+  if ( ! *ctx ) {
+    // debug output
+    #if defined( USBD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
+    #endif
+    // return error
+    return ENOMEM;
+  }
+  // clear out context
+  memset( *ctx, 0, sizeof( usbd_configuration_context_t ) );
+  // populate context
+  ( *ctx )->context = context;
+  ( *ctx )->handler = callback;
+  ( *ctx )->configuration = configuration;
+  // return success
+  return 0;
+}
+
+/**
+ * @fn void usbd_context_configure_destroy(usbd_configuration_context_t*)
+ * @brief Helper to destroy created context
+ * @param ctx
+ */
+void usbd_context_configuration_destroy( usbd_configuration_context_t* ctx ) {
+  if ( ! ctx ) {
+    return;
+  }
+  // debug output
+  #if defined( USBD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Destroy configuration context %p\r\n", ( void* )ctx )
+  #endif
+  free( ctx );
+}
+
+/**
+ * @fn int usbd_context_control_create(rpc_handler_t, void*, usbd_control_context_t**)
+ * @brief Create control context
+ * @param callback handler to be called
+ * @param context different context
+ * @param ctx output context
+ * @return
+ */
+int usbd_context_control_create( rpc_handler_t callback, void* context, usbd_control_context_t** ctx ) {
+  // allocate additional context
+  *ctx = malloc( sizeof( usbd_control_context_t ) );
+  // handle error
+  if ( ! *ctx ) {
+    // debug output
+    #if defined( USBD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
+    #endif
+    // return error
+    return ENOMEM;
+  }
+  // clear out context
+  memset( *ctx, 0, sizeof( usbd_control_context_t ) );
+  // populate context
+  ( *ctx )->context = context;
+  ( *ctx )->handler = callback;
+  // return success
+  return 0;
+}
+
+/**
+ * @fn void usbd_context_control_destroy(usbd_control_context_t*)
+ * @brief Destroy control context
+ * @param ctx
+ */
+void usbd_context_control_destroy( usbd_control_context_t* ctx ) {
+  if ( ! ctx ) {
+    return;
+  }
+  free( ctx );
+}
+
+/**
+ * @fn int usbd_context_deallocate_create(rpc_handler_t, libusb_device_t*, void*, usbd_deallocate_context_t**)
+ * @brief Create deallocation context
+ * @param handler
+ * @param dev
+ * @param additional_context
+ * @param ctx
+ * @return
+ */
+int usbd_context_deallocate_create( const rpc_handler_t handler, libusb_device_t* dev, void* additional_context, usbd_deallocate_context_t** ctx ) {
+  // allocate additional context
+  *ctx = malloc( sizeof( usbd_deallocate_context_t ) );
+  // handle error
+  if ( ! *ctx ) {
+    // debug output
+    #if defined( USBD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
+    #endif
+    // return error
+    return ENOMEM;
+  }
+  // clear out context
+  memset( *ctx, 0, sizeof( usbd_control_context_t ) );
+  // populate context
+  ( *ctx )->device = dev;
+  ( *ctx )->handler = handler;
+  ( *ctx )->context = additional_context;
+  // return success
+  return 0;
+}
+
+/**
+ * @fn void usbd_context_deallocate_destroy(usbd_deallocate_context_t*)
+ * @brief destroy deallocation context
+ * @param ctx
+ */
+void usbd_context_deallocate_destroy( usbd_deallocate_context_t* ctx ) {
+  if ( ! ctx ) {
+    return;
+  }
+  free( ctx );
+}
+
+/**
+ * @fn int usbd_context_read_string_create(rpc_handler_t, libusb_device_t*, uint8_t, uint16_t, void*, size_t, void*, pid_t, size_t, usbd_get_string_context_t**)
+ * @brief Function to create get string context
+ * @param handler handler to be called once finished
+ * @param dev device to get string for
+ * @param string_index string index to get
+ * @param language_id language id
+ * @param buffer buffer address
+ * @param buffer_length buffer size
+ * @param request original request
+ * @param request_size original request size
+ * @param origin origin process id
+ * @param data_info data id
+ * @param ctx output context
+ * @return
+ */
+int usbd_context_read_string_create(
+  const rpc_handler_t handler, libusb_device_t* dev, const uint8_t string_index,
+  const uint16_t language_id, void* buffer, const size_t buffer_length, void* request,
+  const size_t request_size, const pid_t origin, const size_t data_info,
+  usbd_read_string_context_t** ctx
+) {
+  // allocate additional context
+  *ctx = malloc( sizeof( usbd_read_string_context_t ) );
+  // handle error
+  if ( ! *ctx ) {
+    // debug output
+    #if defined( USBD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
+    #endif
+    // return error
+    return ENOMEM;
+  }
+  // clear out context
+  memset( *ctx, 0, sizeof( usbd_control_context_t ) );
+  // populate context
+  ( *ctx )->handler = handler;
+  ( *ctx )->device = dev;
+  ( *ctx )->string_index = string_index;
+  ( *ctx )->language_id = language_id;
+  ( *ctx )->buffer = buffer;
+  ( *ctx )->buffer_length = buffer_length;
+  ( *ctx )->origin = origin;
+  ( *ctx )->data_info = data_info;
+  ( *ctx )->request = request;
+  ( *ctx )->request_size = request_size;
+  // return success
+  return 0;
+}
+
+/**
+ * @fn void usbd_context_get_string_destroy(usbd_get_string_context_t*)
+ * @brief Destroy get string context
+ * @param ctx Context to destroy
+ */
+void usbd_context_read_string_destroy( usbd_read_string_context_t* ctx ) {
+  if ( ! ctx ) {
+    return;
+  }
+  if ( ctx->request ) {
+    free( ctx->request );
+  }
+  free( ctx );
+}
+
+/**
+ * @fn int usbd_context_get_string_create(rpc_handler_t, void*, size_t, usbd_read_lang_context_t*, usbd_get_string_context_t**)
+ * @brief Create get string context
+ * @param callback
+ * @param buffer
+ * @param buffer_length
+ * @param context
+ * @param out
+ * @return
+ */
+int usbd_context_get_string_create( const rpc_handler_t callback, void* buffer,
+  const size_t buffer_length, usbd_read_lang_context_t* context,
+  usbd_get_string_context_t** out
+) {
+  *out = malloc( sizeof( usbd_get_string_context_t ) );
+  if ( ! *out ) {
+    #if defined( USBD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
+    #endif
+    return ENOMEM;
+  }
+  memset( *out, 0, sizeof( usbd_get_string_context_t ) );
+  ( *out )->callback = callback;
+  ( *out )->buffer = buffer;
+  ( *out )->buffer_length = buffer_length;
+  ( *out )->context = context;
+  return 0;
+}
+
+/**
+ * @fn void usbd_context_get_string_destroy(usbd_get_string_context_t*)
+ * @brief Destroy get string context
+ * @param ctx
+ */
+void usbd_context_get_string_destroy( usbd_get_string_context_t* ctx ) {
+  if ( ! ctx ) {
+    return;
+  }
+  free( ctx );
+}
+
+/**
+ * @fn int usbd_context_read_lang_create(void*, size_t, uint8_t, uint16_t, rpc_handler_t, usbd_read_string_context_t*, usbd_read_lang_context_t**)
+ * @brief Create read lang context
+ * @param buffer
+ * @param buffer_length
+ * @param string_index
+ * @param lang_id
+ * @param callback
+ * @param ctx
+ * @param out
+ * @return
+ */
+int usbd_context_read_lang_create( void* buffer, const size_t buffer_length,
+  const uint8_t string_index, const uint16_t lang_id, const rpc_handler_t callback,
+  usbd_read_string_context_t* ctx, usbd_read_lang_context_t** out
+) {
+  *out = malloc( sizeof( usbd_read_lang_context_t ) );
+  if ( ! *out ) {
+    #if defined( USBD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
+    #endif
+    return ENOMEM;
+  }
+  memset( *out, 0, sizeof( usbd_read_lang_context_t ) );
+  ( *out )->callback = callback;
+  ( *out )->context = ctx;
+  ( *out )->buffer = buffer;
+  ( *out )->buffer_length = buffer_length;
+  ( *out )->string_index = string_index;
+  ( *out )->language_id = lang_id;
+  return 0;
+}
+
+/**
+ * @fn void usbd_context_read_lang_destroy(usbd_read_lang_context_t*)
+ * @brief Destroy read lang context
+ * @param ctx
+ */
+void usbd_context_read_lang_destroy( usbd_read_lang_context_t* ctx ) {
+  if ( ! ctx ) {
+    return;
+  }
+  free( ctx );
+}

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,26 +22,36 @@
 
 #include "../../library/collection/list/list.h"
 #include "../libterminal.h"
+#include "../libframebuffer.h"
+#include "buffer.h"
 
 #define TERMINAL_BASE_PATH "/dev/tty"
 #define TERMINAL_MAX_NUM 7
 
-typedef struct {
+/**
+ * @brief Terminal representation
+ */
+typedef struct terminal {
+  /** terminal path */
   char path[ PATH_MAX ];
+  /** circular buffer */
+  circular_line_buffer_t buffer;
+  /** current column */
   uint32_t col;
+  /** current row */
   uint32_t row;
+  /** max column */
   uint32_t max_col;
+  /** max row */
   uint32_t max_row;
-  uint32_t bpp;
-  // space for mapped surface, internal surface id and surface memory id
-  uint8_t* surface;
-  size_t surface_id;
-  size_t surface_memory_id;
-  uint32_t pitch;
 } terminal_t;
 
 extern list_manager_t* terminal_list;
+extern uint8_t* surface;
+extern framebuffer_surface_allocate_t surface_data;
 
+bool terminal_allocate_framebuffer( void );
 bool terminal_init( void );
+char* terminal_get_active( void );
 
 #endif

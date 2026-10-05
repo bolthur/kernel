@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,8 +22,8 @@
 #include <sys/bolthur.h>
 #include "util.h"
 #include "global.h"
+#include "../../library/vfs/wait.h"
 #include "../libdev.h"
-#include "../libhelper.h"
 
 /**
  * @fn pid_t util_execute_device_server(const char*, const char*, const char*)
@@ -41,37 +41,58 @@ pid_t util_execute_device_server(
 ) {
   pid_t proc;
   // calculate message size
-  size_t msg_size = sizeof( dev_command_start_t );
+  size_t msg_size = sizeof( dev_command_start_data_t );
   if ( args ) {
     msg_size += sizeof( char ) * ( strlen( args ) + 1 );
   } else {
     msg_size += sizeof( char );
   }
+  // allocate shared memory
+  const size_t shm_id = _syscall_memory_shared_create( msg_size );
+  // handle error
+  if ( errno ) {
+    // return error
+    return 0;
+  }
+  // attach shared memory
+  void* shm_addr = _syscall_memory_shared_attach( shm_id,
+    ( uintptr_t )NULL );
+  // handle error
+  if ( errno ) {
+    // return error
+    return 0;
+  }
+  // populate message data
+  auto const data = ( dev_command_start_data_t* )shm_addr;
+  strncpy( data->path, path, PATH_MAX - 1 );
+  if ( args ) {
+    strcpy( data->args, args );
+  }
   // allocate message
-  dev_command_start_t* start = malloc( msg_size );
+  dev_command_start_t* start = malloc( sizeof( *start ) );
   // handle allocation failed
   if ( ! start ) {
+    _syscall_memory_shared_detach( shm_id );
     return 0;
   }
   // clear out
-  memset( start, 0, msg_size );
-  // prepare command content by copy path
-  strncpy( start->path, path, PATH_MAX - 1 );
-  // copy possible arguments
-  if ( args ) {
-    strcpy( start->args, args );
-  }
+  memset( start, 0, sizeof( *start ) );
+  start->shm_id = shm_id;
+  start->data_size = msg_size;
   // raise request
   const int result = ioctl(
     fd_dev_manager,
-    IOCTL_BUILD_REQUEST( DEV_START, msg_size, IOCTL_RDWR ),
+    IOCTL_BUILD_REQUEST( DEV_START, sizeof( *start ), IOCTL_RDWR ),
     start
   );
   // handle error
   if ( -1 == result ) {
+    _syscall_memory_shared_detach( shm_id );
     free( start );
     return 0;
   }
+  // detach shared memory
+  _syscall_memory_shared_detach( shm_id );
   // extract process
   memcpy( &proc, start, sizeof( proc ) );
   // free ioctl start object

@@ -16,6 +16,12 @@ BUILT_SOURCES = \
   libtarget.la \
   kernel.elf \
   kernel_qemu.elf
+# add kasan and ubsan to built sources when has sanitizer is set
+if HAS_SANITIZER
+  BUILT_SOURCES += \
+    ${abs_top_builddir}/lib/kasan/libkasan.la \
+    ${abs_top_builddir}/lib/libubsan.la
+endif
 
 # no installable programs
 noinst_PROGRAMS = kernel.elf kernel_qemu.elf ${output_img} ${output_img_qemu}
@@ -32,8 +38,7 @@ libtarget_la_DEPENDENCIES = \
   ${abs_top_builddir}/lib/libc/libc.la \
   ${abs_top_builddir}/lib/tar/libtar.la \
   ${abs_top_builddir}/lib/libduplicate.la \
-  ${abs_top_builddir}/lib/libssp.la \
-  ${abs_top_builddir}/lib/libubsan.la
+  ${abs_top_builddir}/lib/libssp.la
 libtarget_la_SOURCES =
 libtarget_la_LIBADD = \
   ${abs_top_builddir}/../library/collection/list/liblist.la \
@@ -46,9 +51,17 @@ libtarget_la_LIBADD = \
   ${abs_top_builddir}/lib/libc/libc.la \
   ${abs_top_builddir}/lib/tar/libtar.la \
   ${abs_top_builddir}/lib/libduplicate.la \
-  ${abs_top_builddir}/lib/libssp.la \
-  ${abs_top_builddir}/lib/libubsan.la
+  ${abs_top_builddir}/lib/libssp.la
 libtarget_la_LDFLAGS = -all-static -Wl,-static
+# sanitizer additions
+if HAS_SANITIZER
+  libtarget_la_DEPENDENCIES += \
+    ${abs_top_builddir}/lib/kasan/libkasan.la \
+    ${abs_top_builddir}/lib/libubsan.la
+  libtarget_la_LIBADD += \
+    ${abs_top_builddir}/lib/kasan/libkasan.la \
+    ${abs_top_builddir}/lib/libubsan.la
+endif
 
 # Normal kernel building for physical device
 kernel_elf_SOURCES =
@@ -60,7 +73,6 @@ kernel_elf_LDFLAGS = \
   -all-static -Wl,-static \
   -Wl,--start-group,-ltarget,-lgcc,-lfdt,--end-group
 kernel_elf_LDADD = -L./.libs
-  
 
 # Normal kernel building for physical device
 kernel_qemu_elf_SOURCES =

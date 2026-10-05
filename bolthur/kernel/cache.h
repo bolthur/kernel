@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,5 +21,7 @@
 #define _CACHE_H
 
 void cache_enable( void );
+void cache_invalidate_instruction_cache( void );
+void cache_invalidate_save( void );
 
 #endif

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,8 +20,9 @@
 #ifndef _WATCH_H
 #define _WATCH_H
 
+#define __PERMIT_DEPRECATED_SYS_TREE_H 1
+
 #include <stdint.h>
-#include <stdbool.h>
 #include <unistd.h>
 #include <sys/bolthur.h>
 #include <sys/tree.h>

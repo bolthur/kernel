@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -74,7 +74,7 @@ stat_node_t* stat_node_extract( const char* path ) {
   node.path = ( char* )path;
   // lookup
   stat_node_t* n = stat_node_tree_find( &management_tree, &node );
-  // return node or null
+  // return node or nullptr
   return n;
 }
 
@@ -151,7 +151,7 @@ bool stat_node_add( const char* path, struct stat* st ) {
 struct stat* stat_fetch( const char* path ) {
   stat_node_t* node = stat_node_extract( path );
   if ( ! node ) {
-    return NULL;
+    return nullptr;
   }
   return node->st;
 }

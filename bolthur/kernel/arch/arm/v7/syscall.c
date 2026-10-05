@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -28,14 +28,32 @@
  * @param context
  * @param value
  */
-void syscall_populate_success( void* context, size_t value ) {
+void syscall_populate_success( void* context, const size_t value ) {
   // get context
   context = interrupt_get_context( context );
   // get cpu context
-  cpu_register_context_t* cpu = ( cpu_register_context_t* )context ;
+  auto const cpu = ( cpu_register_context_t* )context ;
   // set return values
   cpu->reg.r0 = value;
   cpu->reg.r1 = 0;
+}
+
+/**
+ * @fn void syscall_populate_success(void*, uint64_t)
+ * @brief Populate single return to caller
+ *
+ * @param context
+ * @param value
+ */
+void syscall_populate_success64( void* context, const uint64_t value ) {
+  // get context
+  context = interrupt_get_context( context );
+  // get cpu context
+  auto const cpu = ( cpu_register_context_t* )context ;
+  // set return values
+  cpu->reg.r0 = ( uint32_t )value; // lower value
+  cpu->reg.r1 = ( uint32_t )( ( value >> 32 ) & 0xFFFFFFFF ); // higher value
+  cpu->reg.r2 = 0;
 }
 
 /**
@@ -45,14 +63,32 @@ void syscall_populate_success( void* context, size_t value ) {
  * @param context
  * @param error
  */
-void syscall_populate_error( void* context, size_t error ) {
+void syscall_populate_error( void* context, const size_t error ) {
   // get context
   context = interrupt_get_context( context );
   // get cpu context
-  cpu_register_context_t* cpu = ( cpu_register_context_t* )context ;
+  auto const cpu = ( cpu_register_context_t* )context ;
   // set return values
   cpu->reg.r0 = 0;
   cpu->reg.r1 = error;
+}
+
+/**
+ * @fn void syscall_populate_error(void*, size_t)
+ * @brief Populate error return to caller
+ *
+ * @param context
+ * @param error
+ */
+void syscall_populate_error64( void* context, const size_t error ) {
+  // get context
+  context = interrupt_get_context( context );
+  // get cpu context
+  auto const cpu = ( cpu_register_context_t* )context ;
+  // set return values
+  cpu->reg.r0 = 0;
+  cpu->reg.r1 = 0;
+  cpu->reg.r2 = error;
 }
 
 /**
@@ -63,11 +99,11 @@ void syscall_populate_error( void* context, size_t error ) {
  * @param num
  * @return
  */
-size_t syscall_get_parameter( void* context, size_t num ) {
+size_t syscall_get_parameter( void* context, const size_t num ) {
   // get context
   context = interrupt_get_context( context );
   // transform to cpu structure
-  cpu_register_context_t* cpu = ( cpu_register_context_t* )context;
+  auto const cpu = ( cpu_register_context_t* )context;
   // number sanitize
   assert( num <= CPSR )
   // return value

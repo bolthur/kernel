@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,123 +17,242 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../lib/stdlib.h"
-#include "../lib/string.h"
+#include "queue.h"
+#include "thread.h"
 #include "../lib/inttypes.h"
+#include "../lib/stdlib.h"
 #if defined( PRINT_PROCESS )
   #include "../debug/debug.h"
 #endif
-#include "queue.h"
+
+static queue_manager_t* queue_manager;
 
 /**
- * @fn int32_t queue_compare_priority_callback(const avl_node_t*, const avl_node_t*)
- * @brief Compare id callback necessary for avl tree
+ * @fn int32_t queue_compare_vruntime_callback(const avl_node_t*, const avl_node_t*)
+ * @brief Compare vruntime callback necessary for avl tree
  *
  * @param a node a
  * @param b node b
  * @return int32_t
  */
-static int32_t queue_compare_priority_callback(
+static int32_t queue_compare_vruntime_callback(
   const avl_node_t* a,
   const avl_node_t* b
 ) {
-  // debug output
-  #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "a = %p, b = %p\r\n", a, b )
-    DEBUG_OUTPUT(
-      "a->data = %zu, b->data = %zu\r\n",
-      ( size_t )a->data,
-      ( size_t )b->data
-    )
-  #endif
-
-  // -1 if address of a->data is greater than address of b->data
-  if ( ( size_t )a->data > ( size_t )b->data ) {
+  auto const thread_a = TASK_THREAD_GET_QUEUE_BLOCK( a );
+  auto const thread_b = TASK_THREAD_GET_QUEUE_BLOCK( b );
+  if ( thread_a->vruntime < thread_b->vruntime ) {
     return -1;
-  // 1 if address of b->data is greater than address of a->data
-  } else if ( ( size_t )b->data > ( size_t )a->data ) {
+  }
+  if ( thread_a->vruntime > thread_b->vruntime ) {
     return 1;
   }
-
+  if ( thread_a->id < thread_b->id ) {
+    return -1;
+  }
+  if ( thread_a->id > thread_b->id ) {
+    return 1;
+  }
   // equal => return 0
   return 0;
 }
 
 /**
- * @fn avl_tree_t task_queue_init*(void)
+ * @fn bool task_queue_init(void)
  * @brief Initialize task process manager
  *
- * @return avl_tree_t*
+ * @return queue_manager_t*
  */
-avl_tree_t* task_queue_init( void ) {
-  return avl_create_tree( queue_compare_priority_callback, NULL, NULL );
+ bool task_queue_init( void ) {
+  queue_manager = malloc( sizeof( *queue_manager ) );
+  if ( ! queue_manager ) {
+    return false;
+  }
+  queue_manager->thread_scheduling_tree = avl_create_tree( queue_compare_vruntime_callback, nullptr, nullptr );
+  if ( ! queue_manager->thread_scheduling_tree ) {
+    free( queue_manager );
+    return false;
+  }
+  queue_manager->thread_wait_queue = list_construct( nullptr, nullptr, nullptr );
+  if ( ! queue_manager->thread_wait_queue ) {
+    avl_destroy_tree( queue_manager->thread_scheduling_tree );
+    free( queue_manager );
+    return false;
+  }
+  queue_manager->min_vruntime = 0;
+  queue_manager->thread_count = 0;
+  return true;;
 }
 
 /**
- * @fn task_priority_queue_t task_queue_get_queue*(task_manager_t*, size_t)
- * @brief Get the thread queue object
- *
- * @param manager
- * @param priority
- * @return task_priority_queue_t*
+ * @fn void task_queue_destroy(void)
+ * @brief Destroy task queue
  */
-task_priority_queue_t* task_queue_get_queue(
-  task_manager_t* manager,
-  size_t priority
-) {
-  // check parameter
-  if ( ! manager ) {
-    return NULL;
+void task_queue_destroy( void ) {
+  if ( ! queue_manager ) {
+    return;
   }
-  // debug output
-  #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Called task_queue_get_queue( %zu )\r\n", priority )
-  #endif
-  // get correct tree to use
-  avl_tree_t* tree = manager->thread_priority;
+  if ( queue_manager->thread_scheduling_tree ) {
+    avl_destroy_tree( queue_manager->thread_scheduling_tree );
+  }
+  if ( queue_manager->thread_wait_queue ) {
+    list_destruct( queue_manager->thread_wait_queue );
+  }
+  free( queue_manager );
+}
 
-  // try to find node
-  avl_node_t* node = avl_find_by_data( tree, ( void* )priority );
-  task_priority_queue_t* queue;
-  // debug output
-  #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Found node %p\r\n", node )
-  #endif
-  // handle not yet added
+/**
+ * @fn task_thread_t* task_queue_dequeue(void)
+ * @brief Wrapper to dequeue next task
+ * @return
+ */
+task_thread_t* task_queue_dequeue( void ) {
+  if ( ! queue_manager || ! queue_manager->thread_scheduling_tree ) {
+    return nullptr;
+  }
+  // get min node
+  avl_node_t* node = avl_get_min( queue_manager->thread_scheduling_tree->root );
+  // handle nothing
   if ( ! node ) {
-    // reserve block
-    queue = malloc( sizeof( *queue ) );
-    // check parameter
-    if ( ! queue ) {
-      return NULL;
-    }
-    // prepare memory
-    memset( queue, 0, sizeof( *queue ) );
-    // debug output
-    #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "Initialized new node at %p\r\n", queue )
-    #endif
-    // populate queue
-    queue->priority = priority;
-    queue->thread_list = list_construct( NULL, NULL, NULL );
-    if ( ! queue->thread_list ) {
-      free( queue );
-      return NULL;
-    }
-    queue->current = NULL;
-    queue->last_handled = NULL;
-    // prepare and insert node
-    avl_prepare_node( &queue->node, ( void* )priority );
-    if ( ! avl_insert_by_node( tree, &queue->node ) ) {
-      list_destruct( queue->thread_list );
-      free( queue );
-      return NULL;
-    }
-  // existing? => gather block
-  } else {
-    queue = TASK_QUEUE_GET_PRIORITY( node );
+    return nullptr;
   }
+  // remove it
+  avl_remove_by_node( queue_manager->thread_scheduling_tree, node );
+  // increment count
+  queue_manager->thread_count--;
+  // return thread block
+  return TASK_THREAD_GET_QUEUE_BLOCK( node );
+}
 
-  // return queue
-  return queue;
+/**
+ * @fn task_thread_t* task_queue_peek(void)
+ * @brief Peek next queue entry
+ * @return
+ */
+task_thread_t* task_queue_peek( void ) {
+  if ( ! queue_manager || ! queue_manager->thread_scheduling_tree ) {
+    return nullptr;
+  }
+  // get min node
+  avl_node_t* node = avl_get_min( queue_manager->thread_scheduling_tree->root );
+  // handle nothing
+  if ( ! node ) {
+    return nullptr;
+  }
+  // return thread block
+  return TASK_THREAD_GET_QUEUE_BLOCK( node );
+}
+
+/**
+ * @fn void task_queue_dequeue_specific(task_thread_t*)
+ * @brief Dequeue speicifc thread
+ * @param thread
+ */
+void task_queue_dequeue_specific( task_thread_t* thread ) {
+  if ( ! queue_manager || ! queue_manager->thread_scheduling_tree || ! thread ) {
+    return;
+  }
+  // remove node
+  avl_remove_by_node( queue_manager->thread_scheduling_tree, &thread->queue_node );
+  // increment count
+  queue_manager->thread_count--;
+}
+
+/**
+ * @fn void task_queue_enqueue(task_thread_t*)
+ * @brief Function enqueue a task
+ * @param thread
+ */
+void task_queue_enqueue( task_thread_t* thread ) {
+  if ( ! queue_manager || ! queue_manager->thread_scheduling_tree || ! thread ) {
+    return;
+  }
+  // prepare queue node
+  avl_prepare_node( &thread->queue_node, thread->vruntime );
+  // add to tree
+  avl_insert_by_node( queue_manager->thread_scheduling_tree, &thread->queue_node );
+  // increment count
+  queue_manager->thread_count++;
+}
+
+/**
+ * @fn void task_queue_enqueue_blocked(task_thread_t*)
+ * @brief Queue blocked thread
+ * @param thread
+ */
+void task_queue_enqueue_blocked( task_thread_t* thread ) {
+  if ( ! queue_manager || ! queue_manager->thread_wait_queue || ! thread ) {
+    return;
+  }
+  // push to blocked
+  list_push_back_data( queue_manager->thread_wait_queue, thread );
+  // remove from scheduling tree
+  avl_remove_by_node( queue_manager->thread_scheduling_tree, &thread->queue_node );
+}
+
+/**
+ * @fn void task_queue_dequeue_blocked(task_thread_t*)
+ * @brief Dequeue specific blocked
+ * @param thread
+ */
+void task_queue_dequeue_blocked( task_thread_t* thread ) {
+  if ( ! queue_manager || ! queue_manager->thread_wait_queue || ! thread ) {
+    return;
+  }
+  // remove from blocked list
+  list_remove_data( queue_manager->thread_wait_queue, thread, true );
+  // adjust vruntime for fair scheduling
+  if ( thread->vruntime < queue_manager->min_vruntime ) {
+    // inactivity bonus
+    constexpr uint64_t bonus = 10000;
+    // adjust vruntime
+    thread->vruntime = queue_manager->min_vruntime > bonus ? queue_manager->min_vruntime - bonus : 0;
+  }
+}
+
+/**
+ * @fn list_item_t* task_queue_get_first_blocked( void )
+ * @brief Function to get first blocked thread
+ * @return
+ */
+list_item_t* task_queue_get_first_blocked( void ) {
+  if ( ! queue_manager || ! queue_manager->thread_wait_queue ) {
+    return nullptr;
+  }
+  return queue_manager->thread_wait_queue->first;
+}
+
+/**
+ * @fn void task_queue_update_min_vruntime(task_thread_t*)
+ * @brief update min vruntime
+ * @param current_thread
+ */
+void task_queue_update_min_vruntime( task_thread_t* current_thread ) {
+  if ( ! queue_manager || ! queue_manager->thread_wait_queue ) {
+    return;
+  }
+  // use from manager
+  uint64_t vruntime = queue_manager->min_vruntime;
+  // handle thread passed
+  if ( current_thread ) {
+    vruntime = current_thread->vruntime;
+  }
+  // peek min thread
+  auto const min = task_queue_peek();
+  // handle existing
+  if ( min ) {
+    // overwrite vruntime in case no current thread is passed
+    if ( ! current_thread ) {
+      vruntime = min->vruntime;
+    // use minimum of vruntime and min if current thread is set
+    } else {
+      vruntime = vruntime < min->vruntime
+        ? vruntime
+        : min->vruntime;
+    }
+  }
+  // overwrite min vruntime
+  queue_manager->min_vruntime = queue_manager->min_vruntime > vruntime
+    ? queue_manager->min_vruntime
+    : vruntime;
 }

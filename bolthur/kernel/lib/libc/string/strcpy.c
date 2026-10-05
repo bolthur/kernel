@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -29,9 +29,9 @@
  * @return char*
  */
 char* strcpy( char* dst, const char* src ) {
-  // handle null
+  // handle invalid
   if ( ! dst ) {
-    return NULL;
+    return nullptr;
   }
   // cache destination due to loop
   char *p = dst;

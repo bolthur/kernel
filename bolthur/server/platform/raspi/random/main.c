@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,11 +19,13 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <sys/bolthur.h>
 #include <inttypes.h>
-#include "../../../libhelper.h"
 #include "rpc.h"
 #include "random.h"
+#include "global.h"
+#include "../../../../library/vfs/dev.h"
 
 /**
  * @fn int main(int, char*[])
@@ -34,34 +36,50 @@
  * @return
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
-  STARTUP_PRINT( "Setup random\r\n" )
+  #if defined( RANDOM_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Setup random\r\n" )
+  #endif
   if ( ! random_setup() ) {
-    STARTUP_PRINT( "Error while setting up random: %s\r\n", strerror( errno ) )
+    #if defined( RANDOM_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Error while setting up random: %s\r\n", strerror( errno ) )
+    #endif
     return -1;
   }
 
-  STARTUP_PRINT( "Setup rpc handler\r\n" )
+  #if defined( RANDOM_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Setup rpc handler\r\n" )
+  #endif
   // register handlers
   if ( ! rpc_init() ) {
-    STARTUP_PRINT( "Error while binding rpc: %s\r\n", strerror( errno ) )
+    #if defined( RANDOM_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Error while binding rpc: %s\r\n", strerror( errno ) )
+    #endif
     return -1;
   }
 
   // enable rpc
-  STARTUP_PRINT( "Enable rpc\r\n" )
+  #if defined( RANDOM_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Enable rpc\r\n" )
+  #endif
   _syscall_rpc_set_ready( true );
 
-  if ( !dev_add_file( "/dev/urandom", NULL, 0 ) ) {
-    STARTUP_PRINT( "Unable to add dev fs\r\n" )
+  if ( ! vfs_dev_add_file( "/dev/urandom", nullptr, 0, nullptr ) ) {
+    #if defined( RANDOM_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    #endif
     return -1;
   }
-  if ( !dev_add_file( "/dev/random", NULL, 0 ) ) {
-    STARTUP_PRINT( "Unable to add dev fs\r\n" )
+  if ( ! vfs_dev_add_file( "/dev/random", nullptr, 0, nullptr ) ) {
+    #if defined( RANDOM_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    #endif
     return -1;
   }
 
   // wait for rpc
-  STARTUP_PRINT( "Wait for rpc\r\n" )
+  #if defined( RANDOM_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Wait for rpc\r\n" )
+  #endif
   bolthur_rpc_wait_block();
   return 0;
 }

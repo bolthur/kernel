@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,7 +22,6 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <stdbool.h>
 #include "interrupt.h"
 
 #define SYSCALL_BIND( id, handler ) interrupt_register_handler( id, handler, NULL, INTERRUPT_SOFTWARE, false, false )
@@ -59,6 +58,7 @@
 
 #define SYSCALL_INTERRUPT_ACQUIRE 40
 #define SYSCALL_INTERRUPT_RELEASE 41
+#define SYSCALL_INTERRUPT_HANDLED 42
 
 #define SYSCALL_TIMER_TICK_COUNT 51
 #define SYSCALL_TIMER_FREQUENCY 52
@@ -70,7 +70,9 @@
 
 bool syscall_init( void );
 void syscall_populate_success( void*, size_t );
+void syscall_populate_success64( void*, uint64_t );
 void syscall_populate_error( void*, size_t );
+void syscall_populate_error64( void*, size_t );
 size_t syscall_get_parameter( void*, size_t );
 bool syscall_validate_address( uintptr_t, size_t );
 
@@ -97,6 +99,7 @@ void syscall_memory_translate_bus( void* );
 
 void syscall_interrupt_acquire( void* );
 void syscall_interrupt_release( void* );
+void syscall_interrupt_handled( void* );
 
 void syscall_rpc_set_handler( void* );
 void syscall_rpc_raise( void* );

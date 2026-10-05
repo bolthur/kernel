@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,7 +21,6 @@
 #define _MM_SHARED_H
 
 #include <stddef.h>
-#include <stdbool.h>
 #include "../../library/collection/list/list.h"
 #include "../../library/collection/avl/avl.h"
 #include "../task/process.h"
@@ -47,7 +46,7 @@ typedef struct {
 
 bool shared_memory_init( void );
 shared_memory_entry_t* shared_memory_create( size_t );
-uintptr_t shared_memory_attach( task_process_t*, task_thread_t*, size_t, uintptr_t );
+uintptr_t shared_memory_attach( task_process_t*, const task_thread_t*, size_t, uintptr_t );
 bool shared_memory_detach( task_process_t*, size_t );
 size_t shared_memory_size( task_process_t*, size_t );
 bool shared_memory_phys_is_shared( task_process_t*, uint64_t );

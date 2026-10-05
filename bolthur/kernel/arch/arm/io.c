@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -27,7 +27,7 @@
  * @param port port to read
  * @return uint8_t received value
  */
-uint8_t io_in8( uint32_t port ) {
+__no_stack_protector uint8_t io_in8( const uint32_t port ) {
   return ( uint8_t )io_in32( port );
 }
 
@@ -37,7 +37,7 @@ uint8_t io_in8( uint32_t port ) {
  * @param port port to read
  * @param val value to write
  */
-void io_out8( uint32_t port, uint8_t val ) {
+__no_stack_protector void io_out8( const uint32_t port, const uint8_t val ) {
   io_out32( port, ( uint32_t )val );
 }
 
@@ -47,7 +47,7 @@ void io_out8( uint32_t port, uint8_t val ) {
  * @param port port to read
  * @return uint16_t received value
  */
-uint16_t io_in16( uint32_t port ) {
+__no_stack_protector uint16_t io_in16( const uint32_t port ) {
   return ( uint16_t )io_in32( port );
 }
 
@@ -57,7 +57,7 @@ uint16_t io_in16( uint32_t port ) {
  * @param port port to read
  * @param val value to write
  */
-void io_out16( uint32_t port, uint16_t val ) {
+__no_stack_protector void io_out16( const uint32_t port, const uint16_t val ) {
   io_out32( port, ( uint32_t )val );
 }
 
@@ -67,7 +67,7 @@ void io_out16( uint32_t port, uint16_t val ) {
  * @param port port to read
  * @return uint32_t received value
  */
-uint32_t io_in32( uint32_t port ) {
+__no_stack_protector uint32_t io_in32( const uint32_t port ) {
   barrier_data_mem();
   return *( volatile uint32_t* )( port );
 }
@@ -78,8 +78,7 @@ uint32_t io_in32( uint32_t port ) {
  * @param port port to read
  * @param val value to write
  */
-void io_out32( uint32_t port, uint32_t val ) {
-  barrier_data_mem();
+__no_stack_protector void io_out32( const uint32_t port, const uint32_t val ) {
   *( volatile uint32_t* )( port ) = val;
-  barrier_data_mem();
+  barrier_data_sync();
 }

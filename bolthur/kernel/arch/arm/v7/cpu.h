@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -32,10 +32,10 @@
 
 #define CPSR_MODE_MASK 0x1F
 
-#define CPSR_THUMB 1 << 5
-#define CPSR_FIQ_INHIBIT 1 << 6
-#define CPSR_IRQ_INHIBIT 1 << 7
-#define CPSR_ASYNC_ABORT_INHIBIT 1 << 8
+#define CPSR_THUMB 1U << 5
+#define CPSR_FIQ_INHIBIT 1U << 6
+#define CPSR_IRQ_INHIBIT 1U << 7
+#define CPSR_ASYNC_ABORT_INHIBIT 1U << 8
 
 #define PC_OFFSET 60
 #define SPSR_OFFSET 64
@@ -58,18 +58,19 @@
 #define SYS_CTRL_REG_ENABLE_BRANCH_PREDICTION 1 << 11
 #define SYS_CTRL_REG_ENABLE_INSTRUCTION_CACHE 1 << 12
 
+#if defined( ARM_CPU_HAS_NEON )
+  #define CPU_CONTEXT_WORD_SIZE 82
+#else
+  #define CPU_CONTEXT_WORD_SIZE 17
+#endif
+
 #ifndef ASSEMBLER_FILE
   #include "../../../debug/debug.h"
   #include "../../../lib/inttypes.h"
   /**
    * @brief CPU register context
    */
-  typedef union __packed {
-    #if defined( ARM_CPU_HAS_NEON )
-      uint32_t raw[ 82 ];
-    #else
-      uint32_t raw[ 17 ];
-    #endif
+  typedef union {
     struct {
       /* general purpose register */
       uint32_t r0;
@@ -91,9 +92,10 @@
       uint32_t spsr;
       #if defined( ARM_CPU_HAS_NEON )
         uint32_t fpscr;
-        uint64_t neon[ 32 ];
+        uint32_t neon[ 64 ];
       #endif
     } reg;
+    uint32_t raw[ CPU_CONTEXT_WORD_SIZE ];
   } cpu_register_context_t;
 
   /**
@@ -104,7 +106,7 @@
   } cpu_register_map_t;
 
   #if defined( ARM_CPU_HAS_NEON )
-    #define DUMP_REGISTER( context ) \
+    #define DUMP_REGISTER( context ) { \
       DEBUG_OUTPUT( "CPU register dump:\r\n" ) \
       DEBUG_OUTPUT( "  r0: %#"PRIx32", r1: %#"PRIx32",  r2: %#"PRIx32", r3: %#"PRIx32"\r\n", ( ( cpu_register_context_t* )context )->reg.r0, ( ( cpu_register_context_t* )context )->reg.r1,  ( ( cpu_register_context_t* )context )->reg.r2, ( ( cpu_register_context_t* )context )->reg.r3 ) \
       DEBUG_OUTPUT( "  r4: %#"PRIx32", r5: %#"PRIx32",  r6: %#"PRIx32", r7: %#"PRIx32"\r\n", ( ( cpu_register_context_t* )context )->reg.r4, ( ( cpu_register_context_t* )context )->reg.r5,  ( ( cpu_register_context_t* )context )->reg.r6, ( ( cpu_register_context_t* )context )->reg.r7 ) \
@@ -128,7 +130,7 @@
       DEBUG_OUTPUT( "d24: %#"PRIx64", d25: %#"PRIx64"\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 24 ], ( ( cpu_register_context_t* )context )->reg.neon[ 25 ] ) \
       DEBUG_OUTPUT( "d26: %#"PRIx64", d27: %#"PRIx64"\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 26 ], ( ( cpu_register_context_t* )context )->reg.neon[ 27 ] ) \
       DEBUG_OUTPUT( "d28: %#"PRIx64", d29: %#"PRIx64"\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 28 ], ( ( cpu_register_context_t* )context )->reg.neon[ 29 ] ) \
-      DEBUG_OUTPUT( "d30: %#"PRIx64", d31: %#"PRIx64"\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 30 ], ( ( cpu_register_context_t* )context )->reg.neon[ 31 ] )
+      DEBUG_OUTPUT( "d30: %#"PRIx64", d31: %#"PRIx64"\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 30 ], ( ( cpu_register_context_t* )context )->reg.neon[ 31 ] ) }
   #else
     #define DUMP_REGISTER( context ) \
       DEBUG_OUTPUT( \

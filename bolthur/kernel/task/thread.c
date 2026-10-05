@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,6 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../debug/debug.h"
 #include "../lib/stdlib.h"
 #include "../lib/string.h"
 #include "../lib/inttypes.h"
@@ -33,57 +34,55 @@
  * @brief Current running thread
  * @todo Transform to pointer to multiple threads ( depending on cpu size )
  */
-task_thread_t* task_thread_current_thread = NULL;
+task_thread_t* task_thread_current_thread = nullptr;
 
 /**
  * @brief next thread to try to switch to
  */
-task_thread_t* task_thread_try_switch_to = NULL;
+task_thread_t* task_thread_try_switch_to = nullptr;
+
+/**
+ * @brief Task thread priority weight
+ */
+const uint32_t task_thread_priority_weight[ 40 ] = {
+  /* -20 */ 88761, 71755, 56483, 46273, 36291,
+  /* -15 */ 29154, 23254, 18705, 14949, 11916,
+  /* -10 */  9548,  7620,  6100,  4904,  3906,
+  /*  -5 */  3121,  2501,  1991,  1586,  1277,
+  /*   0 */  1024,   820,   655,   526,   423,
+  /*   5 */   335,   272,   215,   172,   137,
+  /*  10 */   110,    87,    70,    56,    45,
+  /*  15 */    36,    29,    23,    18,    15,
+};
 
 /**
  * @fn int32_t thread_compare_id_callback(const avl_node_t*, const avl_node_t*)
- * @brief Helper necessary for avl thread manager tree
+ * @brief Helper necessary for thread manager list
  *
  * @param a node a
  * @param b node b
  * @return
  */
-static int32_t thread_compare_id_callback(
-  const avl_node_t* a,
-  const avl_node_t* b
-) {
-  // debug output
-  #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "a = %p, b = %p\r\n", a, b )
-    DEBUG_OUTPUT(
-      "a->data = %zu, b->data = %zu\r\n",
-      ( size_t )a->data,
-      ( size_t )b->data
-    )
-  #endif
-
-  // -1 if address of a->data is greater than address of b->data
-  if ( ( size_t )a->data > ( size_t )b->data ) {
-    return -1;
-  // 1 if address of b->data is greater than address of a->data
-  } else if ( ( size_t )b->data > ( size_t )a->data ) {
-    return 1;
+static int32_t thread_compare_id_callback( const list_item_t* a, const void* b ) {
+  auto const thread = ( task_thread_t* )a->data;
+  if ( thread->id == ( pid_t )b ) {
+    return 0;
   }
-
-  // equal => return 0
-  return 0;
+  return 1;
 }
 
 /**
- * @fn void thread_destroy_callback(avl_node_t*)
- * @brief Helper to destroy avl node
+ * @fn void thread_destroy_callback(list_item_t*)
+ * @brief Helper to destroy list node
  *
- * @param a
+ * @param node
+ *
+ * @todo check and revise function
  */
-static void thread_destroy_callback( avl_node_t* node ) {
+static void thread_destroy_callback( list_item_t* node ) {
   // get thread and context
-  task_thread_t* thread = TASK_THREAD_GET_BLOCK( node );
-  task_process_t* proc = thread->process;
+  auto const thread = ( task_thread_t* )node->data;
+  const task_process_t* proc = thread->process;
   virt_context_t* ctx = proc->virtual_context;
   // debug output
   #if defined( PRINT_PROCESS )
@@ -96,16 +95,12 @@ static void thread_destroy_callback( avl_node_t* node ) {
   // unmap thread stack
   while (
     proc->virtual_context
-    && ! virt_unmap_address( ctx, thread->stack_virtual, true )
+    && ! virt_unmap_address_range( ctx, thread->stack_virtual - thread->stack_size, thread->stack_size, true )
   ) {
     // loop until successful unmapped!
   }
-  // get thread queue by priority
-  task_priority_queue_t* queue = task_queue_get_queue(
-    process_manager, proc->priority );
-  while( queue && ! list_remove_data( queue->thread_list, thread ) ) {
-    // loop until successfully removed
-  }
+  // remove from scheduling tree
+  task_queue_dequeue_specific( thread );
   // remove from stack address from manager
   while ( ! task_stack_manager_remove(
     thread->stack_virtual,
@@ -117,79 +112,83 @@ static void thread_destroy_callback( avl_node_t* node ) {
   if ( thread->current_context ) {
     free( thread->current_context );
   }
+  // free thread
   free( thread );
+  // call default cleanup
+  list_default_cleanup( node );
 }
 
 /**
- * @fn pid_t task_thread_generate_id(task_process_t*)
+ * @fn pid_t task_thread_generate_id(void)
  * @brief Method to generate new thread id
- *
- * @param proc process to generate id for
  * @return
  */
-pid_t task_thread_generate_id( task_process_t* proc ) {
+pid_t task_thread_generate_id( void ) {
   // return new pid by simple increment
-  return ++proc->current_thread_id;
+  static pid_t current_thread_id = 0;
+  return ++current_thread_id;
 }
 
 /**
- * @fn bool task_thread_set_current(task_thread_t*, task_priority_queue_t*)
+ * @fn bool task_thread_set_current(task_thread_t*)
  * @brief Sets current running thread
  *
  * @param thread
- * @param queue
  * @return
  */
-bool task_thread_set_current(
-  task_thread_t* thread,
-  task_priority_queue_t* queue
-) {
+bool task_thread_set_current( task_thread_t* thread ) {
   // check parameter
-  if ( ! thread || ! queue ) {
+  if ( ! thread ) {
     return false;
   }
   // set current thread
   task_thread_current_thread = thread;
-  // update queue current
-  queue->current = thread;
   // set state
-  task_thread_current_thread->state =
+  task_thread_set_state(
+    task_thread_current_thread,
     task_thread_current_thread->state == TASK_THREAD_STATE_RPC_QUEUED
       ? TASK_THREAD_STATE_RPC_ACTIVE
-      : TASK_THREAD_STATE_ACTIVE;
+      : TASK_THREAD_STATE_ACTIVE
+  );
+  // return success
   return true;
 }
 
 /**
  * @fn void task_thread_reset_current(void)
- * @brief Reset current thread and process queue
+ * @brief Reset current thread
  */
 void task_thread_reset_current( void ) {
-  // reset queue
-  task_process_queue_reset();
   // set state
   if ( task_thread_current_thread ) {
     if ( TASK_THREAD_STATE_HALT_SWITCH == task_thread_current_thread->state ) {
-      task_thread_current_thread->state = TASK_THREAD_STATE_READY;
+      task_thread_set_state( task_thread_current_thread, TASK_THREAD_STATE_READY );
     } else if ( TASK_THREAD_STATE_RPC_HALT_SWITCH == task_thread_current_thread->state ) {
-      task_thread_current_thread->state = TASK_THREAD_STATE_RPC_QUEUED;
+      task_thread_set_state( task_thread_current_thread, TASK_THREAD_STATE_RPC_QUEUED );
+    }
+    // push to tree if ready
+    if (
+      TASK_THREAD_STATE_READY == task_thread_current_thread->state
+      || TASK_THREAD_STATE_RPC_QUEUED == task_thread_current_thread->state
+    ) {
+      task_queue_enqueue( task_thread_current_thread );
     }
   }
   // unset current thread
-  task_thread_current_thread = NULL;
+  task_thread_current_thread = nullptr;
 }
 
 /**
- * @fn avl_tree_t* task_thread_init(void)
+ * @fn list_manager_t* task_thread_init(void)
  * @brief Create thread manager for task
  *
  * @return
  */
-avl_tree_t* task_thread_init( void ) {
-  return avl_create_tree(
+list_manager_t* task_thread_init( void ) {
+  return list_construct(
     thread_compare_id_callback,
-    NULL,
-    thread_destroy_callback
+    thread_destroy_callback,
+    nullptr
   );
 }
 
@@ -210,7 +209,7 @@ void task_thread_destroy( avl_tree_t* tree ) {
  * @param thread
  * @return
  */
-bool task_thread_is_ready( task_thread_t* thread ) {
+bool task_thread_is_ready( const task_thread_t* thread ) {
   return
     TASK_THREAD_STATE_READY == thread->state
     || TASK_THREAD_STATE_HALT_SWITCH == thread->state
@@ -225,169 +224,19 @@ bool task_thread_is_ready( task_thread_t* thread ) {
  * @param thread
  * @return
  */
-bool task_thread_is_active( task_thread_t* thread ) {
+bool task_thread_is_active( const task_thread_t* thread ) {
   return
     TASK_THREAD_STATE_ACTIVE == thread->state
     || TASK_THREAD_STATE_RPC_ACTIVE == thread->state;
 }
 
 /**
- * @fn task_thread_t* task_thread_next(void)
- * @brief Function to get next thread for execution
- *
- * @return
- */
-task_thread_t* task_thread_next( void ) {
-  // check process manager
-  if ( ! process_manager ) {
-    return NULL;
-  }
-
-  // min / max queue
-  task_priority_queue_t* min_queue = NULL;
-  task_priority_queue_t* max_queue = NULL;
-  avl_node_t* min = NULL;
-  avl_node_t* max = NULL;
-
-  // get min and max priority queue
-  min = avl_get_min( process_manager->thread_priority->root );
-  max = avl_get_max( process_manager->thread_priority->root );
-  // debug output
-  #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "min: %p, max: %p\r\n", min, max )
-  #endif
-
-  // get nodes from min/max
-  if ( min ) {
-    min_queue = TASK_QUEUE_GET_PRIORITY( min );
-  }
-  if ( max ) {
-    max_queue = TASK_QUEUE_GET_PRIORITY( max );
-  }
-  // handle no min or no max queue
-  if ( ! min_queue || ! max_queue ) {
-    return NULL;
-  }
-
-  // loop through priorities and try to get next task
-  for (
-    size_t priority = max_queue->priority;
-    priority >= min_queue->priority;
-    priority--
-  ) {
-    // try to find queue for priority
-    avl_node_t* current_node = avl_find_by_data(
-      process_manager->thread_priority,
-      ( void* )priority );
-    // skip if not existing
-    if ( ! current_node ) {
-      // debug output
-      #if defined( PRINT_PROCESS )
-        DEBUG_OUTPUT( "no queue for prio %zu\r\n", priority )
-      #endif
-      // prevent endless loop by checking against 0
-      if ( 0 == priority ) {
-        break;
-      }
-      // skip if no such queue exists
-      continue;
-    }
-
-    // get queue
-    task_priority_queue_t* current = TASK_QUEUE_GET_PRIORITY( current_node );
-    // check for no items left or empty list
-    if (
-      list_empty( current->thread_list )
-      || current->last_handled == ( task_thread_t* )current->thread_list->last->data
-    ) {
-      // prevent endless loop by checking against 0
-      if ( 0 == priority ) {
-        break;
-      }
-      // skip if queue is handled
-      continue;
-    }
-
-    // find next thread in queue ( default case: start with first one )
-    list_item_t* item = current->thread_list->first;
-    // handle already executed entry
-    if ( current->last_handled ) {
-      // debug output
-      #if defined( PRINT_PROCESS )
-        DEBUG_OUTPUT(
-          "current->last_handled = %p\r\n",
-          current->last_handled
-        )
-      #endif
-      // try to find element in list
-      item = list_lookup_data(
-        current->thread_list, ( void* )current->last_handled );
-      // check return
-      if ( ! item ) {
-        // prevent endless loop by checking against 0
-        if ( 0 == priority ) {
-          break;
-        }
-        // skip due to an error
-        continue;
-      }
-      // debug output
-      #if defined( PRINT_PROCESS )
-        DEBUG_OUTPUT( "item->data = %p\r\n", item->data )
-      #endif
-      // head to next
-      item = item->next;
-    }
-
-    // get next ready task
-    while ( item ) {
-      // get task object
-      task_thread_t* task = ( task_thread_t* )item->data;
-      // debug output
-      #if defined( PRINT_PROCESS )
-        DEBUG_OUTPUT( "task %d with state %d\r\n", task->id, task->state )
-      #endif
-      // check for ready
-      if ( task_thread_is_ready( task ) ) {
-        break;
-      }
-      // try next if not ready
-      item = item->next;
-    }
-
-    // skip if nothing is existing after last handled
-    if ( ! item ) {
-      // debug output
-      #if defined( PRINT_PROCESS )
-        DEBUG_OUTPUT( "no next task set!\r\n" )
-      #endif
-      // prevent endless loop by checking against 0
-      if ( 0 == priority ) {
-        break;
-      }
-      // skip if nothing is left
-      continue;
-    }
-    // return next thread
-    return ( task_thread_t* )item->data;
-  }
-
-  // debug output
-  #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "no task found!\r\n" )
-  #endif
-  return NULL;
-}
-
-/**
- * @fn void task_thread_kill(task_thread_t*, bool, void*)
+ * @fn void task_thread_kill(task_thread_t*, bool)
  * @brief Prepare kill of a thread
- *
  * @param thread thread to push to kill handling
  * @param schedule flag to indicate scheduling
- * @param context current valid context only necessary when schedule is true
  */
-void task_thread_kill( task_thread_t* thread, bool schedule, void* context ) {
+void task_thread_kill( task_thread_t* thread, const bool schedule ) {
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT(
@@ -397,11 +246,12 @@ void task_thread_kill( task_thread_t* thread, bool schedule, void* context ) {
     )
   #endif
   // set thread state and push thread to clean up list
-  thread->state = TASK_THREAD_STATE_KILL;
-    list_push_back_data( process_manager->thread_to_cleanup, thread->process );
+  task_thread_set_state( thread, TASK_THREAD_STATE_KILL );
+  list_push_back_data( process_manager->thread_to_cleanup, thread->process );
   // trigger schedule if necessary
   if ( schedule ) {
-    event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
+    event_enqueue( EVENT_PROCESS );
+    event_enqueue( EVENT_PROCESS_CLEANUP );
   }
 }
 
@@ -416,11 +266,14 @@ void task_thread_cleanup(
   [[maybe_unused]] event_origin_t origin,
   [[maybe_unused]] void* context
 ) {
+  if ( ! process_manager->thread_to_cleanup->first ) {
+    return;
+  }
   list_item_t* current = process_manager->thread_to_cleanup->first;
   // loop
   while ( current ) {
     // get process from item
-    task_thread_t* thread = ( task_thread_t* )current->data;
+    auto const thread = ( task_thread_t* )current->data;
     // skip running
     if ( thread->state != TASK_THREAD_STATE_KILL ) {
       continue;
@@ -439,11 +292,9 @@ void task_thread_cleanup(
     current = current->next;
     // remove node from tree and cleanup
     task_process_t* process = thread->process;
-    avl_remove_by_node( process->thread_manager, &thread->node_id );
-    process->thread_manager->cleanup( &thread->node_id );
+    list_remove_data( process->thread_list, thread, true );
     // check if threads are empty
-    avl_node_t* avl_thread = avl_iterate_first( process->thread_manager );
-    if ( ! avl_thread ) {
+    if ( ! process->thread_list->first ) {
       list_item_t* match = list_lookup_data
         ( process_manager->process_to_cleanup,
         ( void* )process->id
@@ -454,7 +305,7 @@ void task_thread_cleanup(
       }
     }
     // remove list item
-    list_remove_item( process_manager->thread_to_cleanup, remove );
+    list_remove_item( process_manager->thread_to_cleanup, remove, true );
   }
 }
 
@@ -468,8 +319,8 @@ void task_thread_cleanup(
  */
 void task_thread_block(
   task_thread_t* thread,
-  task_thread_state_t state,
-  task_state_data_t data
+  const task_thread_state_t state,
+  const task_state_data_t data
 ) {
   // no block if state is not ready or active
   if (
@@ -490,8 +341,11 @@ void task_thread_block(
     thread->state_backup = TASK_THREAD_STATE_RPC_QUEUED;
   }
   // set state and data
-  thread->state = state;
+  task_thread_set_state( thread, state );
   thread->state_data = data;
+  // enqueue in wait queue
+  task_queue_enqueue_blocked( thread );
+  // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "thread->state_backup = %d\r\n", thread->state_backup )
     DEBUG_OUTPUT( "thread->state = %d\r\n", thread->state )
@@ -508,8 +362,8 @@ void task_thread_block(
  */
 void task_thread_unblock(
   task_thread_t* thread,
-  task_thread_state_t necessary_state,
-  task_state_data_t necessary_data
+  const task_thread_state_t necessary_state,
+  const task_state_data_t necessary_data
 ) {
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "process = %d\r\n", thread->process->id )
@@ -541,15 +395,36 @@ void task_thread_unblock(
     #endif
     return;
   }
+  // validate data size
+  if ( thread->state_data.data_size != necessary_data.data_size ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT(
+        "invalid data size attribute %zu / %zu\r\n",
+        thread->state_data.data_size,
+        necessary_data.data_size
+      )
+    #endif
+    return;
+  }
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "thread->state = %d\r\n", thread->state )
+    DEBUG_OUTPUT( "%d: thread->state = %d\r\n", thread->process->id, thread->state )
   #endif
   // set back to back up again
-  thread->state = thread->state_backup;
+  task_thread_set_state( thread, thread->state_backup );
+  if (
+    TASK_THREAD_STATE_READY == thread->state
+    || TASK_THREAD_STATE_RPC_QUEUED == thread->state_backup
+  ) {
+    // remove from queue
+    task_queue_dequeue_blocked( thread );
+    // prepare node and add again to schedule tree
+    task_queue_enqueue( thread );
+  }
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "thread->state = %d\r\n", thread->state )
+    DEBUG_OUTPUT( "%d: thread->state = %d\r\n", thread->process->id, thread->state )
   #endif
 }
 
@@ -562,51 +437,39 @@ void task_thread_unblock(
  * @return
  */
 task_thread_t* task_thread_get_blocked(
-  task_thread_state_t necessary_thread_state,
-  task_state_data_t necessary_thread_data
+  const task_thread_state_t necessary_thread_state,
+  const task_state_data_t necessary_thread_data
 ) {
-  // debug output
-  #if defined( PRINT_PROCESS )
-    avl_print( process_manager->process_id, NULL );
-  #endif
-  avl_node_t* avl_proc = avl_iterate_first( process_manager->process_id );
-  while ( avl_proc ) {
-    // get process container
-    task_process_t* proc = TASK_PROCESS_GET_BLOCK_ID( avl_proc );
-    // debug output
-    #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "proc->id = %d\r\n", proc->id )
-    #endif
-    // get first thread
-    avl_node_t* avl_thread = avl_iterate_first( proc->thread_manager );
-    while ( avl_thread ) {
-      // get thread
-      task_thread_t* thread = TASK_THREAD_GET_BLOCK( avl_thread );
-      // debug output
-      #if defined( PRINT_PROCESS )
-        DEBUG_OUTPUT(
-          "thread->state = %d, thread->state_data.data_ptr = %p\r\n",
-          thread->state,
-          thread->state_data.data_ptr
-        )
-        DEBUG_OUTPUT(
-          "necessary_thread_state = %d, necessary_thread_data.data_ptr = %p\r\n",
-          necessary_thread_state,
-          necessary_thread_data.data_ptr
-        )
-      #endif
-      // return thread if matching
-      if (
-        thread->state == necessary_thread_state
-        && thread->state_data.data_ptr == necessary_thread_data.data_ptr
-      ) {
-        return thread;
-      }
-      // get next thread
-      avl_thread = avl_iterate_next( proc->thread_manager, avl_thread );
+  auto current = task_queue_get_first_blocked();
+  while ( current ) {
+    auto const thread = ( task_thread_t* )current->data;
+    if (
+      thread->state == necessary_thread_state
+      && thread->state_data.data_ptr == necessary_thread_data.data_ptr
+      && thread->state_data.data_size == necessary_thread_data.data_size
+    ) {
+      return thread;
     }
-    // get next process
-    avl_proc = avl_iterate_next( process_manager->process_id, avl_proc );
+    current = current->next;
   }
-  return NULL;
+  return nullptr;
+}
+
+/**
+ * @fn void task_thread_set_state(task_thread_t*, task_thread_state_t)
+ * @brief Wrapper to set thread state
+ * @param thread
+ * @param state
+ */
+void task_thread_set_state( task_thread_t* thread, const task_thread_state_t state ) {
+  if ( ! thread ) {
+    return;
+  }
+  #if defined( PRINT_PROCESS )
+    void* returnAddress = __builtin_return_address(0);
+    DEBUG_OUTPUT( "change thread for pid %d from %d to %d. Return address is: %p\r\n",
+      thread->process ? thread->process->id : 0, thread->state, state,
+      returnAddress )
+  #endif
+  thread->state = state;
 }

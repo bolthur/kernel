@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,7 +19,6 @@
 
 // FIXME: RESTRICT TO COMPILING NEWLIB ONLY IF NECESSARY
 
-#include <stdbool.h>
 #include <elf.h>
 #include <dlfcn.h>
 

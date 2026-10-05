@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -300,7 +300,6 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount, phys
 
   // found address range
   uint64_t address = 0;
-  uint64_t tmp;
   bool stop = false;
 
   size_t max_idx = phys_bitmap_length;
@@ -369,7 +368,7 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount, phys
     #endif
   }
   // set temporary address
-  tmp = address;
+  uint64_t tmp = address;
   // loop until amount and mark as used
   for ( size_t idx = 0; idx < found_amount; idx++, tmp += PAGE_SIZE ) {
     phys_mark_page_used( tmp );
@@ -389,7 +388,7 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount, phys
  * @param type
  * @return
  */
-uint64_t phys_find_free_page( size_t alignment, phys_memory_type_t type ) {
+uint64_t phys_find_free_page(const size_t alignment, const phys_memory_type_t type ) {
   return phys_find_free_page_range( alignment, PAGE_SIZE, type );
 }
 
@@ -399,7 +398,7 @@ uint64_t phys_find_free_page( size_t alignment, phys_memory_type_t type ) {
  *
  * @param address address to free
  */
-void phys_free_page( uint64_t address ) {
+void phys_free_page(const uint64_t address ) {
   phys_free_page_range( address, PAGE_SIZE );
 }
 

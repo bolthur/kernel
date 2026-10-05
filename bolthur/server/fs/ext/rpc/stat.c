@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../stat.h"
 
 // ext library
@@ -48,46 +49,56 @@ void rpc_handle_stat(
   vfs_stat_response_t response = { .success = false };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // handle no data
-  if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  if ( ! data_info ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // fetch rpc data
   size_t data_size;
-  vfs_stat_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_stat_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   // handle error
   if ( ! request ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
-  STARTUP_PRINT( "ext stat call \"%s\"\r\n", request->file_path )
+  #if defined( EXT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "ext stat call \"%s\"\r\n", request->file_path )
+  #endif
   struct stat st;
   struct stat* cached = stat_fetch( request->file_path );
   if ( !cached ) {
     // fetch stat information
     const int result = ext_stat( request->file_path, &st );
     if ( EOK != result ) {
-      STARTUP_PRINT( "ext stat call failed: %d => %s\r\n", result, strerror( result ) )
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      #if defined( EXT_ENABLE_OUTPUT )
+        STARTUP_PRINT( "ext stat call failed: %d => %s\r\n", result, strerror( result ) )
+      #endif
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( request );
       return;
     }
-    STARTUP_PRINT("%s: %lld\r\n", request->file_path, st.st_size)
+    #if defined( EXT_ENABLE_OUTPUT )
+      STARTUP_PRINT("%s: %lld\r\n", request->file_path, st.st_size)
+    #endif
     // try to push back
     if ( ! stat_push( request->file_path, &st ) ) {
-      STARTUP_PRINT( "Unable to push stat to cache!\r\n" )
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      #if defined( EXT_ENABLE_OUTPUT )
+        STARTUP_PRINT( "Unable to push stat to cache!\r\n" )
+      #endif
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( request );
       return;
     }
     // set cached for copy
     cached = &st;
   } else {
-    STARTUP_PRINT( "CACHE HIT!\r\n" )
+    #if defined( EXT_ENABLE_OUTPUT )
+      STARTUP_PRINT( "CACHE HIT!\r\n" )
+    #endif
   }
   memcpy( &response.info, cached, sizeof( *cached ) );
 
@@ -95,6 +106,6 @@ void rpc_handle_stat(
   response.success = true;
   response.handler = getpid();
   // return data
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
   free( request );
 }

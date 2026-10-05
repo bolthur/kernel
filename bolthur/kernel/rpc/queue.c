@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -55,7 +55,7 @@ bool rpc_queue_setup( task_process_t* proc ) {
     return true;
   }
   // prepare rpc data queue
-  proc->rpc_queue = list_construct( NULL, rpc_queue_cleanup, NULL );
+  proc->rpc_queue = list_construct( nullptr, rpc_queue_cleanup, nullptr );
   return proc->rpc_queue;
 }
 
@@ -83,6 +83,6 @@ void rpc_queue_destroy( task_process_t* proc ) {
   }
   // destroy rpc data queue
   list_destruct( proc->rpc_queue );
-  // set to NULL after destroy
-  proc->rpc_queue = NULL;
+  // set to nullptr after destroy
+  proc->rpc_queue = nullptr;
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,18 +17,20 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdlib.h>
+#include <sys/bolthur.h>
 #include "utf8.h"
 
 /**
  * @fn uint16_t utf8_decode(const char*, size_t*)
  * @brief Helper to decode utf8 character
  *
- * @param str
+ * @param s
  * @param ol
  * @return
  */
 uint16_t utf8_decode( const char* s, size_t* ol ) {
-  const uint8_t* str = ( const uint8_t* )s; // Use unsigned chars
+  auto const str = ( const uint8_t* )s; // Use unsigned chars
   uint16_t u = *str;
   uint32_t l = 1;
   // handle no unicode
@@ -41,10 +43,10 @@ uint16_t utf8_decode( const char* s, size_t* ol ) {
     return u;
   }
   // decode
-  uint16_t a = (u&0x20)? ((u&0x10)? ((u&0x08)? ((u&0x04)? 6 : 5) : 4) : 3) : 2;
+  const uint16_t a = ( u & 0x20 ) ? ( ( u & 0x10 ) ? ( ( u & 0x08 ) ? ( ( u & 0x04 ) ? 6 : 5 ) : 4 ) : 3 ) : 2;
   if ( a < 6 || !( u & 0x02 ) ) {
-    u = ((u<<(a+1))&0xff)>>(a+1);
-    for ( int b=1; b<a; ++b ) {
+    u = ( ( u << ( a + 1 ) ) & 0xff ) >> ( a + 1 );
+    for ( int b = 1; b < a; ++b ) {
       u = ( uint16_t )( ( u << 6 ) | ( str[ l++ ] & 0x3f ) );
     }
   }
@@ -54,4 +56,45 @@ uint16_t utf8_decode( const char* s, size_t* ol ) {
   }
   // return decoded
   return u;
+}
+
+/**
+ * @fn uint16_t* utf8_decode_string(const char*, size_t*)
+ * @brief Wrapper to decode whole string
+ * @param s
+ * @param ol
+ * @return
+ */
+uint16_t* utf8_decode_string( const char* s, size_t* ol ) {
+  // get total utf8 length
+  auto str = ( char* )s;
+  size_t len = 0;
+  while ( *str ) {
+    size_t cl = 0;
+    utf8_decode( str, &cl );
+    len += cl;
+    str += cl;
+  }
+  // space for null termination
+  len++;
+  // allocate response
+  uint16_t* result = calloc( len, sizeof( uint16_t ) );
+  if ( ! result ) {
+    return nullptr;
+  }
+  memset( result, 0, len * sizeof( uint16_t ) );
+  // decode and copy over
+  str = ( char* )s;
+  size_t idx = 0;
+  while ( *str ) {
+    size_t cl = 0;
+    result[ idx++ ] = utf8_decode( str, &cl );
+    str += cl;
+  }
+  // push len to pointer
+  if ( ol ) {
+    *ol = len;
+  }
+  // return result
+  return result;
 }

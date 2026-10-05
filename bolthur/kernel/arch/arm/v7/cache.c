@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,6 +19,7 @@
 
 #include "../../../cache.h"
 #include "../cache.h"
+#include "../barrier.h"
 #include "../../../interrupt.h"
 
 /**
@@ -35,6 +36,8 @@ void cache_invalidate_instruction_cache( void ) {
     return;
   }
   __asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 0" : : "r" ( 0 ) : "memory" );
+  barrier_data_sync();
+  barrier_instruction_sync();
 }
 
 /**

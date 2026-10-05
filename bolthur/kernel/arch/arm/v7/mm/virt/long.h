@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -34,6 +34,7 @@ bool v7_long_map(
 bool v7_long_map_random(
   virt_context_t*, uintptr_t, virt_memory_type_t, uint32_t );
 uintptr_t v7_long_map_temporary( uint64_t, size_t );
+uintptr_t v7_long_map_temporary_range( const uint64_t*, size_t );
 bool v7_long_unmap( virt_context_t*, uintptr_t, bool );
 void v7_long_unmap_temporary( uintptr_t, size_t );
 uint64_t v7_long_create_table( virt_context_t*, uintptr_t, uint64_t );
@@ -41,10 +42,10 @@ bool v7_long_set_context( virt_context_t* );
 bool v7_long_prepare_temporary( virt_context_t* );
 virt_context_t* v7_long_create_context( virt_context_type_t );
 
-bool v7_long_fork_table( ld_page_table_t*, ld_page_table_t*, task_process_t* );
-bool v7_long_fork_middle_directory( ld_middle_page_directory*, ld_middle_page_directory*, task_process_t* );
-bool v7_long_fork_global_directory( ld_global_page_directory_t*, ld_global_page_directory_t*, task_process_t* );
-virt_context_t* v7_long_fork_context( virt_context_t*, task_process_t* );
+bool v7_long_fork_table( const ld_page_table_t*, ld_page_table_t*, task_process_t* );
+bool v7_long_fork_middle_directory( const ld_middle_page_directory*, ld_middle_page_directory*, task_process_t* );
+bool v7_long_fork_global_directory( const ld_global_page_directory_t*, ld_global_page_directory_t*, task_process_t* );
+virt_context_t* v7_long_fork_context( const virt_context_t*, task_process_t* );
 
 void v7_long_destroy_table( ld_page_table_t* );
 bool v7_long_destroy_middle_directory( ld_middle_page_directory* );

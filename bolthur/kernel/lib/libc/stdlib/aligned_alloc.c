@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,6 +20,9 @@
 #include <stddef.h>
 #include "../../stdlib.h"
 #include "../../../mm/heap.h"
+#if defined( HAS_SANITIZER )
+  #include "../../kasan/kasan.h"
+#endif
 
 /**
  * @fn void aligned_alloc*(size_t, size_t)
@@ -32,8 +35,14 @@
 __allocator void* aligned_alloc( size_t alignment, size_t size ) {
   // standard conformance
   if ( 0 == size ) {
-    return NULL;
+    return nullptr;
   }
-  // use heap allocation
-  return heap_allocate( alignment, size );
+  // sanitizer stuff
+  #if defined( HAS_SANITIZER )
+    return kasan_aligned_alloc_hook( alignment, size );
+  // no sanitizer stuff
+  #else
+    // use heap allocation
+    return heap_allocate( alignment, size );
+  #endif
 }

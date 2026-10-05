@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -31,7 +31,7 @@
 uint8_t* tar_file( tar_header_t* header ) {
   // check for invalid
   if ( ! header || '\0' == header->file_name[ 0 ] ) {
-    return NULL;
+    return nullptr;
   }
   // build return
   return ( uint8_t* )header + TAR_HEADER_SIZE;

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,24 +21,31 @@
 #define _TIMER_H
 
 #include <stddef.h>
-#include "task/thread.h"
+
+#define TIMER_INTERRUPT_FREQUENCY 1000
+
+typedef struct task_thread task_thread_t;
 
 typedef struct {
   size_t id;
-  size_t expire;
+  uint64_t expire;
   task_thread_t* thread;
+  bool handled;
   size_t rpc;
+  bool interruptable;
 } timer_callback_entry_t;
 
 void timer_init( void );
 void timer_platform_init( void );
-size_t timer_get_frequency( void );
-size_t timer_get_interval( void );
-size_t timer_get_tick( void );
+uint32_t timer_get_frequency( void );
+uint32_t timer_get_interval( void );
+bool timer_missed_interrupt( void );
 
 size_t timer_generate_id( void );
-timer_callback_entry_t* timer_register_callback( task_thread_t*, size_t, size_t );
+timer_callback_entry_t* timer_register_callback( task_thread_t*, size_t, uint64_t, bool );
 bool timer_unregister_callback( size_t );
 void timer_handle_callback( void );
+void timer_handle_vruntime( uint64_t );
+uint64_t timer_get_current_tick_value( void );
 
 #endif

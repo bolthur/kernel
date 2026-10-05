@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -41,32 +41,32 @@
 __bootstrap void virt_startup_platform_setup( void ) {
   // cpu local peripherals
   #if defined( BCM2709 ) || defined( BCM2710 )
-    uintptr_t cpu_peripheral_base = 0x40000000;
-    constexpr size_t cpu_peripheral_size = 0x3FFFF;
-    const uintptr_t cpu_peripheral_end = cpu_peripheral_base + cpu_peripheral_size;
+    uintptr_t cpu_base = 0x40000000;
+    constexpr size_t cpu_size = 0x3FFFF;
+    const uintptr_t cpu_end = cpu_base + cpu_size;
 
-    while ( cpu_peripheral_base < cpu_peripheral_end ) {
+    while ( cpu_base < cpu_end ) {
       // identity map gpio
-      virt_startup_map( ( uint64_t )cpu_peripheral_base, cpu_peripheral_base );
+      virt_startup_map( ( uint64_t )cpu_base, cpu_base );
       // next page
-      cpu_peripheral_base += PAGE_SIZE;
+      cpu_base += PAGE_SIZE;
     }
   #endif
   // GPIO related
   #if defined( BCM2709 ) || defined( BCM2710 )
-    uintptr_t gpio_peripheral_base = 0x3F000000;
-    constexpr size_t gpio_peripheral_size = 0xFFFFFF;
+    uintptr_t gpio_base = 0x3F000000;
+    constexpr size_t gpio_size = 0xFFFFFF;
   #else
     uintptr_t gpio_peripheral_base = 0x20000000;
     constexpr size_t gpio_peripheral_size = 0xFFFFFF;
   #endif
-  const uintptr_t gpio_peripheral_end = gpio_peripheral_base + gpio_peripheral_size;
+  const uintptr_t gpio_end = gpio_base + gpio_size;
   // map gpio if set
-  while ( gpio_peripheral_base < gpio_peripheral_end ) {
+  while ( gpio_base < gpio_end ) {
     // identity map gpio
-    virt_startup_map( ( uint64_t )gpio_peripheral_base, gpio_peripheral_base );
+    virt_startup_map( ( uint64_t )gpio_base, gpio_base );
     // next page
-    gpio_peripheral_base += PAGE_SIZE;
+    gpio_base += PAGE_SIZE;
   }
 }
 

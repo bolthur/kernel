@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,7 +21,6 @@
 #define _LIB_STDLIB_H
 
 #include <stdint.h>
-#include <stdbool.h>
 #include <stddef.h>
 
 [[noreturn]] void abort( void );
@@ -29,6 +28,7 @@ void* aligned_alloc( size_t, size_t );
 void* calloc( size_t, size_t );
 void free( void* );
 void* malloc( size_t );
+void* realloc( void*, size_t );
 unsigned long int strtoul( const char*, char**, int );
 
 #endif

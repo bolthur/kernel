@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -42,29 +42,6 @@ IMPORT( initrd_startup_init )
 EXPORT( startup )
 startup:
   b reset
-  #if defined( BCM2709 ) || defined( BCM2710 )
-    b hang
-    b smc
-    b hang
-    b hang
-    b hang
-    b hang
-    b hang
-  #endif
-
-#if defined( BCM2709 ) || defined( BCM2710 )
-  hang:
-    b hang
-
-  smc:
-    // reset scr to secure mode
-    mov r1, #0
-    mcr p15, 0, r1, c1, c1, 0
-    // wait for instruction sync
-    isb
-    // return from smc handler
-    movs pc, lr
-#endif
 
 reset:
   // setup temporary stack
@@ -96,14 +73,28 @@ reset:
     bne 3f // branch if not HYP mode
     orr r3, #0x100 // mask Abort bit
     adr lr, 4f
+    // return from hyp mode
     msr spsr_cxsf, r3
     msr elr_hyp, lr
+    // reset hypervisor configuration register
+    mov r4, #0
+    mcr p15, 4, r4, c1, c1, 0
+    // modify cnthctl
+    mrc p15, 4, r4, c14, c1, 0
+    orr r4, r4, #3
+    mcr p15, 4, r4, c14, c1, 0
+    // barriers
+    dmb
+    isb
+    // return from hyp mode
     eret
     3: msr cpsr_c, r3
     4:
+      isb
       // setup temporary stack again
       ldr r4, =startup
       mov sp, r4
+      isb
   #endif
 
   // smp bit
@@ -130,33 +121,6 @@ reset:
 
   // save boot parameter data
   push { r0 - r2 }
-  // raspi >= 2b handling
-/*  #if defined( BCM2709 ) || defined( BCM2710 )
-    bl boot_serial_putc
-    // get vbar
-    mrc p15, 0, r1, c12, c0, 0
-    ldr r0, =startup
-    ldmia r0!,{ r2 - r9 }
-    stmia r1!,{ r2 - r9 }
-    ldmia r0!,{ r2 - r9 }
-    stmia r1!,{ r2 - r9 }
-    // clear data cache
-    mov r0, #0
-    mcr p15, 0, r0, c7, c10, 1
-    // ensure that it's written
-    dsb
-    // invalidate instruction cache
-    mov r0, #0
-    mcr p15, 0, r0, c7, c5, 0
-    // flush branch target cache
-    mov r0, #0
-    mcr p15, 0, r0, c7, c5, 6
-    // ensure actions to be done completely
-    dsb
-    isb
-    // secure monitor call to reset scr
-    smc #0
-  #endif*/
   // enable fpu
   bl fpu_enable
   // clear bss section

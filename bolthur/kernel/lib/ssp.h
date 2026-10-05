@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,8 +19,6 @@
 
 #ifndef _LIB_SSP_H
 #define _LIB_SSP_H
-
-#include <stdint.h>
 
 [[noreturn]] void __stack_chk_fail( void );
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -44,8 +44,6 @@ void vector_interrupt_handler( cpu_register_context_t* cpu ) {
   // nesting
   nested_interrupt++;
   assert( nested_interrupt < INTERRUPT_NESTED_MAX )
-  // get event origin
-  event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
   cpu = interrupt_get_context( cpu );
   // debug output
@@ -58,7 +56,7 @@ void vector_interrupt_handler( cpu_register_context_t* cpu ) {
   // handle possible hardware interrupt
   interrupt_handle_possible( cpu, false );
   // enqueue cleanup
-  event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
+  event_enqueue( EVENT_INTERRUPT_CLEANUP );
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "Leaving interrupt_handler\r\n" )

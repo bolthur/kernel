@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -24,7 +24,7 @@
 #include <unistd.h>
 #include "terminal.h"
 
-void render_char_to_surface( volatile uint8_t*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t );
-ssize_t render_terminal( terminal_t*, const char* );
+int render_terminal( terminal_t*, const char* );
+void render_whole_terminal( terminal_t* );
 
 #endif

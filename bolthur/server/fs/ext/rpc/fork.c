@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -32,27 +32,27 @@
  */
 void rpc_handle_fork(
   size_t type,
-  [[maybe_unused]]  pid_t origin,
+  [[maybe_unused]] pid_t origin,
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
   // dummy error response
   vfs_fork_response_t response = { .status = -EINVAL };
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     // return from rpc
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     // return
     return;
   }
   // get message and data size
   size_t data_size;
-  vfs_fork_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_fork_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     // set status
     response.status = -errno;
     // return from rpc
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     // return
     return;
   }
@@ -67,15 +67,15 @@ void rpc_handle_fork(
       // set status
       response.status = -errno;
       // return from rpc
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       // return
       return;
     }
   } );
   // return success
-  response.status = 0;
+  memset( &response, 0, sizeof( response ) );
   // return from rpc
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
   // free request
   free( request );
 }

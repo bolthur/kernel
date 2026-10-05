@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -26,5 +26,6 @@
 #define isunicode( c ) ( ( ( c ) & 0xc0 ) == 0xc0 )
 
 uint16_t utf8_decode( const char*, size_t* );
+uint16_t* utf8_decode_string( const char*, size_t* );
 
 #endif

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,6 +19,7 @@
 
 #include <libgen.h>
 #include "node.h"
+#include "global.h"
 
 /**
  * @fn int mountpoint_cmp(struct mountpoint_node*, struct mountpoint_node*)
@@ -55,7 +56,7 @@ bool mountpoint_node_setup( void ) {
  * @fn mountpoint_node_t mountpoint_node_extract*(const char*)
  * @brief Extract mount point node by name
  *
- * @param name
+ * @param path
  * @return
  */
 mountpoint_node_t* mountpoint_node_extract( const char* path ) {
@@ -63,7 +64,7 @@ mountpoint_node_t* mountpoint_node_extract( const char* path ) {
   mountpoint_node_t* node = malloc( sizeof( *node ) );
   // handle error
   if ( ! node ) {
-    return NULL;
+    return nullptr;
   }
   // clear out node
   memset( node, 0, sizeof( *node ) );
@@ -71,7 +72,7 @@ mountpoint_node_t* mountpoint_node_extract( const char* path ) {
   node->name = strdup( path );
   if ( ! node->name ) {
     free( node );
-    return NULL;
+    return nullptr;
   }
 
   // local duplicate for path
@@ -79,12 +80,12 @@ mountpoint_node_t* mountpoint_node_extract( const char* path ) {
   if ( ! p ) {
     free( node->name );
     free( node );
-    return NULL;
+    return nullptr;
   }
   // set loop path and found
   char* loop_path = p;
-  char* previous_loop = NULL;
-  mountpoint_node_t* found = NULL;
+  char* previous_loop = nullptr;
+  mountpoint_node_t* found = nullptr;
   // try to get mount point
   while ( ! found && *loop_path ) {
     // lookup
@@ -199,10 +200,12 @@ bool mountpoint_node_add( const char* path, pid_t handler, struct stat* st ) {
  * @brief Simple method to dump mount point nodes
  */
 void mountpoint_node_dump( void ) {
-  EARLY_STARTUP_PRINT( "mountpoint node tree dump\r\n" )
-  mountpoint_node_tree_each(&management_tree, mountpoint_node, n, {
-      EARLY_STARTUP_PRINT("%s\r\n", n->name);
-  });
+  #if defined( VFS_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "mountpoint node tree dump\r\n" )
+    mountpoint_node_tree_each(&management_tree, mountpoint_node, n, {
+        EARLY_STARTUP_PRINT("%s\r\n", n->name);
+    });
+  #endif
 }
 
 /**

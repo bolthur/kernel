@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,6 +18,7 @@
  */
 
 #include <errno.h>
+#include "../cache.h"
 #include "../syscall.h"
 #if defined( PRINT_SYSCALL )
   #include "../lib/inttypes.h"
@@ -47,7 +48,7 @@
  */
 void syscall_memory_acquire( void* context ) {
   // get parameter
-  auto void* addr = ( void* )syscall_get_parameter( context, 0 );
+  auto addr = ( void* )syscall_get_parameter( context, 0 );
   size_t len = ( size_t )syscall_get_parameter( context, 1 );
   int protection = ( int )syscall_get_parameter( context, 2 );
   int flag = ( int )syscall_get_parameter( context, 3 );
@@ -101,11 +102,11 @@ void syscall_memory_acquire( void* context ) {
   if ( ( flag & MEMORY_FLAG_PHYS ) && ! ( flag & MEMORY_FLAG_BUS ) ) {
     // set phys to given address
     phys = ( uintptr_t )addr;
-    // overwrite address with NULL
-    uint64_t offset = phys - ROUND_DOWN_TO_FULL_PAGE( addr );
+    // calculate and subtract offset
+    const uint64_t offset = phys - ROUND_DOWN_TO_FULL_PAGE( addr );
     phys -= offset;
-    // overwrite address with NULL
-    addr = NULL;
+    // overwrite address with found
+    addr = nullptr;
     // check if already used
     if ( phys_is_range_used( phys, len ) ) {
       // debug output
@@ -125,8 +126,8 @@ void syscall_memory_acquire( void* context ) {
   if ( addr ) {
     start = ( uintptr_t )addr;
     // get min and max address of context
-    uintptr_t min = virt_get_context_min_address( virtual_context );
-    uintptr_t max = virt_get_context_max_address( virtual_context );
+    const uintptr_t min = virt_get_context_min_address( virtual_context );
+    const uintptr_t max = virt_get_context_max_address( virtual_context );
     // ensure that address is in context
     if ( min > start || max <= start || max <= start + len ) {
       syscall_populate_error( context, ( size_t )-ENOMEM );
@@ -433,6 +434,9 @@ void syscall_memory_shared_detach( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_memory_shared_detach( %zu )\r\n", id )
   #endif
+  // drain possible cached stuff by performing complete flush and data cache invalidation
+  cache_invalidate_save();
+  virt_flush_complete();
   // try to detach
   if ( ! shared_memory_detach( task_thread_current_thread->process, id ) ) {
     syscall_populate_error( context, ( size_t )-EIO );
@@ -456,7 +460,7 @@ void syscall_memory_shared_size( void* context ) {
     DEBUG_OUTPUT( "syscall_memory_shared_size( %zu )\r\n", id )
   #endif
   // try to get size
-  size_t len = shared_memory_size( task_thread_current_thread->process, id );
+  const size_t len = shared_memory_size( task_thread_current_thread->process, id );
   if ( 0 == len ) {
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
@@ -486,8 +490,8 @@ void syscall_memory_translate_physical( void* context ) {
     ->process
     ->virtual_context;
   // get min and max address of context
-  uintptr_t min = virt_get_context_min_address( virtual_context );
-  uintptr_t max = virt_get_context_max_address( virtual_context );
+  const uintptr_t min = virt_get_context_min_address( virtual_context );
+  const uintptr_t max = virt_get_context_max_address( virtual_context );
   // ensure that address is in context
   if (
     min > address
@@ -502,7 +506,7 @@ void syscall_memory_translate_physical( void* context ) {
     return;
   }
   // get mapped address
-  uint64_t phys = virt_get_mapped_address_in_context( virtual_context, address );
+  const uint64_t phys = virt_get_mapped_address_in_context( virtual_context, address );
   // populate success
   syscall_populate_success( context, ( uintptr_t )phys + offset  );
 }

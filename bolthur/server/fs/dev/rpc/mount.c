@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -49,12 +49,12 @@ void rpc_handle_mount_async(
     return;
   }
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     return;
   }
   // fetch response
   size_t data_size;
-  vfs_mount_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_mount_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! response ) {
     return;
   }
@@ -87,22 +87,22 @@ void rpc_handle_mount(
   vfs_mount_response_t response = { .result = -ENOMEM };
   response.result = -EINVAL;
   // handle no data
-  if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  if ( ! data_info ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   size_t data_size;
-  vfs_mount_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_mount_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   device_handle_t* handle = handle_get_by_path( request->source );
   // handle error
   if ( ! handle ) {
     response.result = -ENOENT;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -118,12 +118,12 @@ void rpc_handle_mount(
     sizeof( *request ),
     origin,
     data_info,
-    NULL,
+    nullptr,
     false
   );
   if ( errno ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }

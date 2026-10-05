@@ -8,11 +8,12 @@ libraspi_la_SOURCES = \
   mailbox/property.c \
   mm/phys.c \
   mm/virt.c \
+  timer/stub.S \
+  timer/timer.c \
   boot.c \
   interrupt.c \
   peripheral.c \
   serial.c \
-  timer.c \
   tty.c
 if IS32
   libraspi_la_SOURCES += \

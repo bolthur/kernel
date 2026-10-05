@@ -2,9 +2,11 @@
 bin_PROGRAMS = ext
 ext_LDADD = \
   $(BFS_LIBS) \
-  ${abs_top_builddir}/../library/handle/libhandle.la
+  ${abs_top_builddir}/../library/handle/libhandle.la \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
 ext_DEPENDENCIES = \
-  ${abs_top_builddir}/../library/handle/libhandle.la
+  ${abs_top_builddir}/../library/handle/libhandle.la \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
 ext_CFLAGS = \
   -DPROGRAM_NAME=\"fs/ext\" \
   $(BFS_CFLAGS)

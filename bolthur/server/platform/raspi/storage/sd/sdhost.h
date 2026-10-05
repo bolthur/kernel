@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,13 +20,9 @@
 #ifndef _SDHOST_H
 #define _SDHOST_H
 
-#include <stdbool.h>
 #include <stdint.h>
-#include "../../libiomem.h"
-#include "../../libperipheral.h"
 
 //#define SDHOST_ENABLE_DEBUG 1
-//#define SDHOST_ENABLE_DMA 1
 
 typedef enum {
   SDHOST_RESPONSE_OK = 0,

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -26,8 +26,8 @@
 #include "../../mmio.h"
 #include "../../rpc.h"
 #include "../../delay.h"
-#include "../../../libiomem.h"
-#include "../../../libperipheral.h"
+#include "../../../../../../library/platform/raspi/iomem/libiomem.h"
+#include "../../../../../../library/platform/raspi/iomem/libperipheral.h"
 
 /**
  * @fn void rpc_handle_gpio_set_pull(size_t, pid_t, size_t, size_t)
@@ -47,34 +47,34 @@ void rpc_handle_gpio_set_pull(
   vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // handle no data
   error.status = -EINVAL;
-  if( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+  if ( ! data_info ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   iomem_gpio_pull_t* pull_request;
   // handle invalid data size
   if ( data_size - sizeof( vfs_ioctl_perform_request_t ) != sizeof( *pull_request ) ) {
     error.status = -EINVAL;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     free( request );
     return;
   }
   // allocate space for pull_request
   pull_request = ( iomem_gpio_pull_t* )request->container;
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "gpio pull: pin = %d, pull = %x\r\n",
       pull_request->pin, pull_request->pull
@@ -100,8 +100,8 @@ void rpc_handle_gpio_set_pull(
   mmio_write( PERIPHERAL_GPIO_GPPUD, 0 );
   mmio_write( address, 0 );
   // set status to 0
-  error.status = 0;
-  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+  memset( &error, 0, sizeof( error ) );
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
   // free pull_request
   free( request );
 }

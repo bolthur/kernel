@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,8 +20,43 @@
 #ifndef _ARCH_ARM_BARRIER_H
 #define _ARCH_ARM_BARRIER_H
 
-void barrier_data_mem( void );
-void barrier_data_sync( void );
-void barrier_instruction_sync( void );
+/**
+ * @fn void barrier_data_mem(void)
+ * @brief Data memory barrier invalidation
+ */
+[[maybe_unused]] __no_stack_protector __attribute__((always_inline)) static inline void barrier_data_mem( void ) {
+  #if defined( ARCH_ARM_V6 )
+    __asm__ __volatile__ ( "mcr p15, #0, %[zero], c7, c10, #5" : : [ zero ] "r" ( 0 ) : "memory" );
+  #elif defined( ARCH_ARM_V7 )
+    __asm__( "dmb" ::: "memory" );
+  #elif defined( ARCH_ARM_v8 )
+  #endif
+}
+
+/**
+ * @fn void barrier_data_sync(void)
+ * @brief Data sync barrier invalidation
+ */
+[[maybe_unused]] __no_stack_protector __attribute__((always_inline)) static inline void barrier_data_sync( void ) {
+  #if defined( ARCH_ARM_V6 )
+    __asm__ __volatile__ ( "mcr p15, #0, %[zero], c7, c10, #4" : : [ zero ] "r" ( 0 ) : "memory" );
+  #elif defined( ARCH_ARM_V7 )
+    __asm__( "dsb" ::: "memory" );
+  #elif defined( ARCH_ARM_v8 )
+  #endif
+}
+
+/**
+ * @fn void barrier_instruction_sync(void)
+ * @brief Instruction synchronization invalidation
+ */
+[[maybe_unused]] __no_stack_protector __attribute__((always_inline)) static inline void barrier_instruction_sync( void ) {
+  #if defined( ARCH_ARM_V6 )
+  __asm__ __volatile__ ( "mcr p15, #0, %[zero], c7, c5, #4" : : [ zero ] "r" ( 0 ) : "memory" );
+  #elif defined( ARCH_ARM_V7 )
+    __asm__( "isb" ::: "memory" );
+  #elif defined( ARCH_ARM_v8 )
+  #endif
+}
 
 #endif

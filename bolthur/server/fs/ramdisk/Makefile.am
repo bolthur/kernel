@@ -2,7 +2,10 @@
 AM_CFLAGS = -DPROGRAM_NAME=\"fs/ramdisk\"
 
 bin_PROGRAMS = ramdisk
-ramdisk_LDADD = -ltar
+ramdisk_LDADD = -ltar \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
+ramdisk_DEPENDENCIES = \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
 ramdisk_SOURCES = \
   rpc/add.c \
   rpc/close.c \

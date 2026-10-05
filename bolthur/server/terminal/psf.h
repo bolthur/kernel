@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,7 +21,6 @@
 #define _PSF_H
 
 #include <stdint.h>
-#include <stdbool.h>
 
 // v1 magic
 #define PSF1_MAGIC0 0x36
@@ -85,11 +84,14 @@ extern uint8_t* font_buffer;
 extern size_t font_buffer_size;
 
 bool psf_init( void );
+void psf_destroy( void );
+bool psf_initialized( void );
 uint32_t psf_glyph_size( void );
 uint32_t psf_glyph_height( void );
 uint32_t psf_glyph_width( void );
 uint32_t psf_glyph_total( void );
 uint8_t* psf_char_to_glyph( uint32_t );
 uint32_t psf_unicode_table_offset( void );
+void psf_render_char( volatile uint8_t*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t );
 
 #endif

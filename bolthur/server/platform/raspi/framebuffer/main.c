@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,10 +22,11 @@
 #include <stdint.h>
 #include <sys/bolthur.h>
 #include <inttypes.h>
-#include "../../../libhelper.h"
 #include "../../../libframebuffer.h"
 #include "framebuffer.h"
 #include "rpc.h"
+#include "global.h"
+#include "../../../../library/vfs/dev.h"
 
 /**
  * @fn int main(int, char*[])
@@ -36,14 +37,20 @@
  * @return
  */
 int main( int argc, char* argv[] ) {
-  EARLY_STARTUP_PRINT( "Setup framebuffer\r\n" )
+  #if defined( FRAMEBUFFER_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Setup framebuffer\r\n" )
+  #endif
   // validate argument count
   if ( 2 != argc ) {
-    EARLY_STARTUP_PRINT( "Usage: framebuffer <bootargs>\r\n" )
+    #if defined( FRAMEBUFFER_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Usage: framebuffer <bootargs>\r\n" )
+    #endif
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "argc = %d\r\n", argc )
+  #if defined( FRAMEBUFFER_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "argc = %d\r\n", argc )
+  #endif
 
   // initialize rpc
   if ( ! rpc_init() ) {
@@ -55,24 +62,30 @@ int main( int argc, char* argv[] ) {
   }
 
   // enable rpc
-  EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
+  #if defined( FRAMEBUFFER_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
+  #endif
   _syscall_rpc_set_ready( true );
 
   // device info array
-  uint32_t device_info[] = {
+  constexpr uint32_t device_info[] = {
     FRAMEBUFFER_GET_RESOLUTION,
     FRAMEBUFFER_CLEAR,
     FRAMEBUFFER_SURFACE_RENDER,
     FRAMEBUFFER_SURFACE_ALLOCATE,
   };
   // add device file
-  if ( !dev_add_file( "/dev/framebuffer", device_info, 4 ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+  if ( ! vfs_dev_add_file( "/dev/framebuffer", device_info, 4, nullptr ) ) {
+    #if defined( FRAMEBUFFER_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    #endif
     return -1;
   }
 
   // wait for rpc
-  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  #if defined( FRAMEBUFFER_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  #endif
   bolthur_rpc_wait_block();
   return 0;
 }

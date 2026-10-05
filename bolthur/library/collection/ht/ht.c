@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2018 - 2025 bolthur project.
+* Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -47,37 +47,37 @@ static uint64_t hash_key( const char* key ) {
  * @param key key to set
  * @param value value to set
  * @param plength length
- * @return inserted key or NULL
+ * @return inserted key or nullptr
  */
 static const char* ht_set_entry(
   ht_entry_t* entries,
-  size_t capacity,
+  const size_t capacity,
   const char* key,
   void* value,
   size_t* plength
 ) {
   // handle invalid entries
   if ( ! entries ) {
-    return NULL;
+    return nullptr;
   }
   // create hash from key
   const uint64_t hash = hash_key( key );
   // get base index
-  size_t index = ( size_t )( hash & ( uint64_t )( capacity - 1 ) );
+  size_t ht_index = ( size_t )( hash & ( uint64_t )( capacity - 1 ) );
   // loop while entries index key is valid
-  while ( entries[index].key ) {
+  while ( entries[ht_index].key ) {
     // handle match of entry with key
-    if ( strcmp( key, entries[index].key ) == 0 ) {
+    if ( strcmp( key, entries[ht_index].key ) == 0 ) {
       // overwrite value
-      entries[index].value = value;
+      entries[ht_index].value = value;
       // return current key
-      return entries[index].key;
+      return entries[ht_index].key;
     }
     // increment index
-    index++;
+    ht_index++;
     // handle capacity reached by resetting index
-    if ( index >= capacity ) {
-      index = 0;
+    if ( ht_index >= capacity ) {
+      ht_index = 0;
     }
   }
   // handle length set
@@ -86,14 +86,14 @@ static const char* ht_set_entry(
     key = strdup( key );
     // handle failure
     if ( ! key ) {
-      return NULL;
+      return nullptr;
     }
     // increment length
     ( *plength )++;
   }
   // populate key and value of found index
-  entries[index].key = key;
-  entries[index].value = value;
+  entries[ht_index].key = key;
+  entries[ht_index].value = value;
   // return key
   return key;
 }
@@ -124,7 +124,7 @@ static bool ht_expand( ht_t* table ) {
     if ( table->entries[ i ].key ) {
       // call set entry without increment of length
       ht_set_entry( new_entries, new_capacity, table->entries[ i ].key,
-        table->entries[ i ].value, NULL );
+        table->entries[ i ].value, nullptr );
     }
   }
   // free existing entries
@@ -139,15 +139,15 @@ static bool ht_expand( ht_t* table ) {
 /**
  * @fn ht_t* ht_create(void)
  * @brief Method to create hash table
- * @return Created hash table or null
+ * @return Created hash table or nullptr
  */
 ht_t* ht_create( void ) {
   // allocate space for hash table structure
   ht_t* table = malloc( sizeof( ht_t ) );
   // handle error
   if ( ! table ) {
-    // return null
-    return NULL;
+    // return nullptr
+    return nullptr;
   }
   // prefill length and capacity
   table->length = 0;
@@ -158,8 +158,8 @@ ht_t* ht_create( void ) {
   if ( ! table->entries ) {
     // free table again
     free( table );
-    // return null
-    return NULL;
+    // return nullptr
+    return nullptr;
   }
   // return allocated table
   return table;
@@ -190,33 +190,33 @@ void ht_destroy( ht_t* table ) {
  * @brief Method to get entry from table
  * @param table table to lookup
  * @param key key to lookup
- * @return found value or NULL
+ * @return found value or nullptr
  */
 void* ht_get( const ht_t* table, const char* key ) {
   // handle no table or no key
   if ( ! table || ! key ) {
-    return NULL;
+    return nullptr;
   }
   // create hash from key
   const uint64_t hash = hash_key( key );
   // get base index
-  size_t index = ( size_t )( hash & ( uint64_t )( table->capacity - 1 ) );
+  size_t ht_index = ( size_t )( hash & ( uint64_t )( table->capacity - 1 ) );
   // loop while entries index key is valid
-  while ( table->entries[ index ].key ) {
+  while ( table->entries[ ht_index ].key ) {
     // handle match
-    if ( strcmp( key, table->entries[ index ].key ) == 0 ) {
+    if ( strcmp( key, table->entries[ ht_index ].key ) == 0 ) {
       // return set value
-      return table->entries[ index ].value;
+      return table->entries[ ht_index ].value;
     }
     // increment index
-    index++;
+    ht_index++;
     // reset index if greater than capacity
-    if ( index >= table->capacity ) {
-      index = 0;
+    if ( ht_index >= table->capacity ) {
+      ht_index = 0;
     }
   }
-  // return null if not found
-  return NULL;
+  // return nullptr if not found
+  return nullptr;
 }
 
 /**
@@ -225,16 +225,16 @@ void* ht_get( const ht_t* table, const char* key ) {
  * @param table table to update
  * @param key key to set
  * @param value value to set
- * @return added key or NULL
+ * @return added key or nullptr
  */
 const char* ht_set( ht_t* table, const char* key, void* value ) {
   // handle invalid
   if ( ! value || ! table || ! key ) {
-    return NULL;
+    return nullptr;
   }
   // expand hash table if necessary
   if ( table->length >= table->capacity / 2 && ! ht_expand( table ) ) {
-    return NULL;
+    return nullptr;
   }
   // set entry and update it
   return ht_set_entry( table->entries, table->capacity, key, value, &table->length );
@@ -254,23 +254,23 @@ void ht_unset( ht_t* table, const char* key ) {
   // create hash from key
   const uint64_t hash = hash_key( key );
   // get base index
-  size_t index = ( size_t )( hash & ( uint64_t )( table->capacity - 1 ) );
+  size_t ht_index = ( size_t )( hash & ( uint64_t )( table->capacity - 1 ) );
   // loop while entries index key is valid
-  while ( table->entries[ index ].key ) {
+  while ( table->entries[ ht_index ].key ) {
     // handle match
-    if ( strcmp( key, table->entries[ index ].key ) == 0 ) {
+    if ( strcmp( key, table->entries[ ht_index ].key ) == 0 ) {
       // free up key
-      free( ( void* )table->entries[ index ].key );
-      table->entries[ index ].key = NULL;
+      free( ( void* )table->entries[ ht_index ].key );
+      table->entries[ ht_index ].key = nullptr;
       table->length--;
       // return early
       return;
     }
     // increment index
-    index++;
+    ht_index++;
     // reset index if greater than capacity
-    if ( index >= table->capacity ) {
-      index = 0;
+    if ( ht_index >= table->capacity ) {
+      ht_index = 0;
     }
   }
 }

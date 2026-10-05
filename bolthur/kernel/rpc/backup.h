@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,32 +20,55 @@
 #ifndef _RPC_BACKUP_H
 #define _RPC_BACKUP_H
 
-#include <stdbool.h>
 #include "../../library/collection/list/list.h"
 #include "../task/process.h"
 #include "../task/thread.h"
 
-typedef struct {
+typedef struct __aligned( 64 ) rpc_backup {
+  /** cpu context */
   void* context;
+  /** rpc data id */
   size_t data_id;
+  /** rpc type */
   size_t type;
+  /** thread used */
   task_thread_t* thread;
+  /** thread state */
   task_thread_state_t thread_state;
+  /** thread state data */
   task_state_data_t thread_state_data;
+  /** source thread */
   task_thread_t* source;
+  /** thread state to use */
+  task_thread_state_t state_to_use;
+  /** flag whether backup has been prepared */
   bool prepared;
+  /** active flag */
   bool active;
+  /** synchronous flag */
   bool sync;
+  /** origin data id */
   size_t origin_data_id;
-  void* rpc_info;
   // necessary for nested rpc to return sync on end
+  /** synchronous return on end */
   bool sync_return_on_end;
+  /** synchronous return blocked data id */
   size_t sync_return_blocked_data_id;
+  /** synchronous return data id */
   size_t sync_return_data_id;
+  /** interrupt flag */
+  bool is_interrupt;
+  /** timer flag */
+  bool is_timer;
+  /** squeezed in rpc */
+  bool squeezed_in;
+  /** list item of this backup */
+  list_item_t* list_item;
+  /** pointer to possible next backup */
+  struct rpc_backup* next;
 } rpc_backup_t;
 
-rpc_backup_t* rpc_backup_get_active( task_thread_t*, size_t );
-rpc_backup_t* rpc_backup_create( task_thread_t*, task_process_t*, size_t, void*, size_t, task_thread_t*, bool, size_t, bool );
+rpc_backup_t* rpc_backup_create( task_thread_t*, const task_process_t*, size_t, const void*, size_t, task_thread_t*, bool, size_t, bool, bool, bool );
 void rpc_backup_destroy( rpc_backup_t* );
 
 #endif

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -38,5 +38,5 @@ char* strchr( const char* str, int delimiter ) {
     str++;
   }
   // no match
-  return NULL;
+  return nullptr;
 }

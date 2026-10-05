@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -44,5 +44,5 @@ void* memchr( const void* buf, int c, size_t n ) {
   }
 
   // nothing found
-  return NULL;
+  return nullptr;
 }

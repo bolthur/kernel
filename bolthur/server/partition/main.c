@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -26,8 +26,10 @@
 #include "partition.h"
 #include "handler.h"
 #include "mount.h"
-#include "../libhelper.h"
+#include "global.h"
 #include "../libpartition.h"
+#include "../../library/vfs/dev.h"
+#include "../../library/vfs/handler.h"
 
 /**
  * @fn int main(int, char*[])
@@ -38,49 +40,83 @@
  * @return
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
-  STARTUP_PRINT( "generic fs server starting up!\r\n" )
-  STARTUP_PRINT( "%d / %d\r\n", getpid(), getppid() )
+  #if defined( PARTITION_ENABLE_OUTPUT )
+    STARTUP_PRINT( "generic fs server starting up!\r\n" )
+    STARTUP_PRINT( "%d / %d\r\n", getpid(), getppid() )
+  #endif
   // initialize partition search tree
   if ( ! partition_setup() ) {
-    STARTUP_PRINT( "Unable to setup partition search tree!\r\n" )
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to setup partition search tree!\r\n" )
+    #endif
     return -1;
   }
   // initialize mount search tree
   if ( ! mount_setup() ) {
-    STARTUP_PRINT( "Unable to setup partition search tree!\r\n" )
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to setup partition search tree!\r\n" )
+    #endif
     return -1;
   }
   // initialize handler search tree
   if ( ! handler_setup() ) {
-    STARTUP_PRINT( "Unable to setup handler search tree!\r\n" )
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to setup handler search tree!\r\n" )
+    #endif
     return -1;
   }
   // register rpc handler
-  STARTUP_PRINT( "bind rpc handler!\r\n" )
+  #if defined( PARTITION_ENABLE_OUTPUT )
+    STARTUP_PRINT( "bind rpc handler!\r\n" )
+  #endif
   if ( ! rpc_init() ) {
-    STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
+    #endif
+    return -1;
+  }
+  const pid_t mount_pid = vfs_get_file_handler( MOUNT_DEVICE );
+  if ( -1 == mount_pid ) {
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to query mount device pid\r\n" )
+    #endif
+    return -1;
+  }
+  // push to valid origin
+  if ( ! bolthur_rpc_origin_push_valid( mount_pid ) ) {
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to push mount pid to valid origin list!\r\n" )
+    #endif
     return -1;
   }
   // enable rpc
-  STARTUP_PRINT( "Set rpc ready flag\r\n" )
+  #if defined( PARTITION_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Set rpc ready flag\r\n" )
+  #endif
   _syscall_rpc_set_ready( true );
   // register watcher for folder /dev/storage
   watch_path_register( "/dev/storage" );
   if ( errno ) {
-    STARTUP_PRINT( "ERROR: Unable to register watcher: %s!\r\n", strerror( errno ) )
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT( "ERROR: Unable to register watcher: %s!\r\n", strerror( errno ) )
+    #endif
     return -1;
   }
   // device info array
-  uint32_t device_info[] = {
+  constexpr uint32_t device_info[] = {
     PARTITION_REGISTER_HANDLER,
     PARTITION_RELEASE_HANDLER,
   };
   // add device file
-  if ( !dev_add_file( "/dev/partition", device_info, 2 ) ) {
-    STARTUP_PRINT( "Unable to add dev fs\r\n" )
+  if ( ! vfs_dev_add_file( "/dev/partition", device_info, 2, nullptr ) ) {
+    #if defined( PARTITION_ENABLE_OUTPUT )
+      STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    #endif
     return -1;
   }
   // wait for rpc
-  STARTUP_PRINT( "Wait for rpc\r\n" )
+  #if defined( PARTITION_ENABLE_OUTPUT )
+    STARTUP_PRINT( "Wait for rpc\r\n" )
+  #endif
   bolthur_rpc_wait_block();
 }

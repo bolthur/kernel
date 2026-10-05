@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <libgen.h>
 #include "handler.h"
+#include "global.h"
 
 // define tree
 HANDLER_TREE_DEFINE(
@@ -72,7 +73,7 @@ handler_node_t* handler_extract( const char* name, bool create ) {
   handler_node_t* node = malloc( sizeof( *node ) );
   // handle error
   if ( ! node ) {
-    return NULL;
+    return nullptr;
   }
   // clear out node
   memset( node, 0, sizeof( *node ) );
@@ -80,7 +81,7 @@ handler_node_t* handler_extract( const char* name, bool create ) {
   node->name = strdup( name );
   if ( ! node->name ) {
     free( node );
-    return NULL;
+    return nullptr;
   }
   // lookup for node
   handler_node_t* found = handler_node_tree_find( &management_tree, node );
@@ -89,12 +90,12 @@ handler_node_t* handler_extract( const char* name, bool create ) {
     if ( ! create ) {
       free( node->name );
       free( node );
-      return NULL;
+      return nullptr;
     }
     if ( handler_node_tree_insert( &management_tree, node ) ) {
       free( node->name );
       free( node );
-      return NULL;
+      return nullptr;
     }
     return handler_node_tree_find( &management_tree, node );
   }
@@ -163,8 +164,10 @@ int handler_remove( const char* filesystem ) {
  * @brief Simple method to dump mount point nodes
  */
 void handler_dump( void ) {
-  STARTUP_PRINT( "mountpoint node tree dump\r\n" )
-  handler_tree_each(&management_tree, handler_node, n, {
-      STARTUP_PRINT("%s\r\n", n->name);
-  });
+  #if defined( PARTITION_ENABLE_OUTPUT )
+    STARTUP_PRINT( "mountpoint node tree dump\r\n" )
+    handler_tree_each(&management_tree, handler_node, n, {
+        STARTUP_PRINT("%s\r\n", n->name);
+    });
+  #endif
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,27 +20,29 @@
 #ifndef _TASK_QUEUE_H
 #define _TASK_QUEUE_H
 
-#include <stddef.h>
-#include "../../library/collection/avl/avl.h"
-#include "../../library/collection/list/list.h"
 #include "thread.h"
-#include "process.h"
+#include "../../library/collection/avl/avl.h"
 
-typedef struct task_priority_queue {
-  avl_node_t node;
-  size_t priority;
+typedef struct {
+  /** ready threads for scheduling */
+  avl_tree_t* thread_scheduling_tree;
+  /** blocked thread list */
+  list_manager_t* thread_wait_queue;
+  /** current thread count */
+  uint32_t thread_count;
+  /** min vruntime */
+  uint64_t min_vruntime;
+} queue_manager_t;
 
-  task_thread_t* last_handled;
-  task_thread_t* current;
-
-  list_manager_t* thread_list;
-} task_priority_queue_t;
-
-#define TASK_QUEUE_GET_PRIORITY( n ) \
-  ( task_priority_queue_t* )( ( uint8_t* )n - offsetof( task_priority_queue_t, node ) )
-
-avl_tree_t* task_queue_init( void );
-task_priority_queue_t* task_queue_get_queue( task_manager_t*, size_t );
-void task_process_queue_reset( void );
+bool task_queue_init( void );
+void task_queue_destroy( void );
+task_thread_t* task_queue_dequeue( void );
+task_thread_t* task_queue_peek( void );
+void task_queue_dequeue_specific( task_thread_t* );
+void task_queue_enqueue( task_thread_t* );
+void task_queue_enqueue_blocked( task_thread_t* );
+void task_queue_dequeue_blocked( task_thread_t* );
+list_item_t* task_queue_get_first_blocked( void );
+void task_queue_update_min_vruntime( task_thread_t* );
 
 #endif

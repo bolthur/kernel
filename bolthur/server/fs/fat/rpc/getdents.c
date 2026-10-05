@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -24,6 +24,7 @@
 #include <sys/dirent.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../types.h"
 #include "../../../../library/handle/process.h"
 #include "../../../../library/handle/handle.h"
@@ -54,25 +55,27 @@ void rpc_handle_getdents(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  STARTUP_PRINT( "getdents stuff\r\n" )
+  #if defined( FAT_ENABLE_OUTPUT )
+    STARTUP_PRINT( "getdents stuff\r\n" )
+  #endif
   vfs_getdents_response_t dummy_response = { .result = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), NULL, 0 );
+    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), nullptr, 0 );
     return;
   }
   // handle no data
-  if( ! data_info ) {
-    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), NULL, 0 );
+  if ( ! data_info ) {
+    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), nullptr, 0 );
     return;
   }
   // fetch rpc data
   size_t data_size;
-  vfs_getdents_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_getdents_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   // handle error
   if ( ! request ) {
     dummy_response.result = -errno;
-    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), NULL, 0 );
+    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), nullptr, 0 );
     return;
   }
 
@@ -81,14 +84,14 @@ void rpc_handle_getdents(
   int result = handle_get( &node, request->origin, request->fd );
   if ( 0 > result ) {
     dummy_response.result = result;
-    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), NULL, 0 );
+    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), nullptr, 0 );
     free( request );
     return;
   }
   handle_container_t* container = node->data;
   if ( container->type != HANDLE_TYPE_FOLDER ) {
     dummy_response.result = -EINVAL;
-    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), NULL, 0 );
+    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -98,7 +101,7 @@ void rpc_handle_getdents(
   vfs_getdents_response_t* response = malloc( response_size );
   if ( ! response ) {
     dummy_response.result = -ENOMEM;
-    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), NULL, 0 );
+    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -113,7 +116,7 @@ void rpc_handle_getdents(
   if ( EOK != result ) {
     free( response );
     dummy_response.result = -result;
-    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), NULL, 0 );
+    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -136,7 +139,7 @@ void rpc_handle_getdents(
       if ( EOK != result ) {
         free( response );
         dummy_response.result = -result;
-        bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), NULL, 0 );
+        bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), nullptr, 0 );
         free( request );
         return;
       }
@@ -148,7 +151,7 @@ void rpc_handle_getdents(
   if ( EOK != result ) {
     free( response );
     dummy_response.result = -result;
-    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), NULL, 0 );
+    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -156,7 +159,7 @@ void rpc_handle_getdents(
   // set success and return
   response->offset = offset;
   response->len = ( ssize_t )read_count;
-  bolthur_rpc_return( type, response, response_size, NULL, 0 );
+  bolthur_rpc_return( type, response, response_size, nullptr, 0 );
   free( response );
   free( request );
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../global.h"
 #include "../handle.h"
 #include "../watch.h"
 #include "../ioctl/handler.h"
@@ -45,32 +46,32 @@ void rpc_handle_add(
   vfs_add_response_t response = { .status = -EINVAL, .handler = 0 };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // handle no data
-  if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  if ( ! data_info ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   size_t data_size;
-  vfs_add_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_add_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     response.status = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // handle invalid type
   if ( ! S_ISCHR( request->info.st_mode ) ) {
     response.status = -EINVAL;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
   char* pathdup = strdup( request->file_path );
   if ( ! pathdup ) {
     response.status = -ENOMEM;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -80,7 +81,7 @@ void rpc_handle_add(
   watch_node_t* node = watch_extract( dir, false );
   if ( ! node && errno ) {
     response.status = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     free( pathdup );
     return;
@@ -90,7 +91,7 @@ void rpc_handle_add(
   if ( handle ) {
     response.status = VFS_ADD_ALREADY_EXIST;
     response.handler = handle->process;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     free( pathdup );
     return;
@@ -98,7 +99,7 @@ void rpc_handle_add(
   // try to add
   if ( ! handle_add( request->file_path, request->info, request->handler ) ) {
     response.status = VFS_ADD_ERROR;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     free( pathdup );
     return;
@@ -127,16 +128,18 @@ void rpc_handle_add(
     watch_tree_each(node->pid, watch_pid, n, {
       // notify if process and handler differ
       if ( n->process != request->handler ) {
-        EARLY_STARTUP_PRINT( "try notify %d: %s\r\n", n->process, request->file_path )
+        //EARLY_STARTUP_PRINT( "try notify %d: %s\r\n", n->process, request->file_path )
         watch_path_notify( request->file_path, n->process );
       }
      });
   }
-  EARLY_STARTUP_PRINT( "Added %s\r\n", request->file_path )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Added %s\r\n", request->file_path )
+  #endif
   // return success
   response.status = VFS_ADD_SUCCESS;
   response.handler = request->handler;
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
   free( request );
   free( pathdup );
 }

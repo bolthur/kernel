@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,6 +22,6 @@
 /**
  * @brief Yield processor abstraction
  */
-inline void yield( void ) {
+void yield( void ) {
   __asm__ __volatile__( "yield" ::: "memory" );
 }

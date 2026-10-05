@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,9 +20,7 @@
 #include <libgen.h>
 #include <errno.h>
 #include <sys/bolthur.h>
-#include "../../mailbox.h"
 #include "../../rpc.h"
-#include "../../../libiomem.h"
 
 /**
  * @fn void rpc_handle_gpio_unlock(size_t, pid_t, size_t, size_t)
@@ -40,5 +38,5 @@ void rpc_handle_gpio_unlock(
   [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
-  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _LIBEMMC_H
-#define _LIBEMMC_H
+#ifndef _PLATFORM_RASPI_LIBEMMC_H
+#define _PLATFORM_RASPI_LIBEMMC_H
 
 // command register
 #define EMMC_CMDTM_CMD_TYPE_NORMAL ( 0 << 22 )

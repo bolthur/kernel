@@ -8,7 +8,10 @@ boot_LDADD = \
   $(CONFINI_LIBS) \
   $(ZLIB_LIBS) \
   -ltar \
-  -lfdt
+  -lfdt \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
+boot_DEPENDENCIES = \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
 boot_SOURCES = \
   init/stage1.c \
   init/stage2.c \

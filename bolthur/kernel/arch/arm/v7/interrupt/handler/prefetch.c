@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -61,7 +61,7 @@ void vector_prefetch_abort_handler( cpu_register_context_t* cpu ) {
     DEBUG_OUTPUT( "cpu = %p\r\n", cpu )
   #endif
   // get event origin
-  event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
+  [[maybe_unused]] const event_origin_t origin = event_determine_origin( cpu );
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "origin = %d\r\n", origin )
@@ -89,7 +89,7 @@ void vector_prefetch_abort_handler( cpu_register_context_t* cpu ) {
   // special debug exception handling
   #if defined( REMOTE_DEBUG )
     if ( debug_is_debug_exception() ) {
-      event_enqueue( EVENT_DEBUG, origin );
+      event_enqueue( EVENT_DEBUG );
     } else {
       PANIC( "prefetch abort" )
     }
@@ -97,7 +97,7 @@ void vector_prefetch_abort_handler( cpu_register_context_t* cpu ) {
     PANIC( "prefetch abort!" )
   #endif
   // enqueue cleanup
-  event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
+  event_enqueue( EVENT_INTERRUPT_CLEANUP );
   // decrement nested counter
   nested_prefetch_abort--;
 }

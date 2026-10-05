@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,10 +23,6 @@
 #include "../../../mm/virt.h"
 #include "../../../debug/debug.h"
 
-#define U64_BLOCK_SIZE sizeof( uint64_t )
-#define BUFFER_UNALIGNED(val) ( ( uintptr_t )val & ( U64_BLOCK_SIZE - 1 ) )
-#define DETECT_NULL_ENDING(x) ( ( x - 0x0101010101010101) & ~x & 0x8080808080808080 )
-
 /**
  * @fn size_t strlen(const char*)
  * @brief Get string length
@@ -40,22 +36,7 @@ size_t strlen( const char* str ) {
   if ( ! str ) {
     return 0;
   }
-  // loop until alignment
-  while( BUFFER_UNALIGNED( str ) ) {
-    // handle end reached
-    if ( !*str ) {
-      return ( size_t )( str - start );
-    }
-    // increment
-    str++;
-  }
-  // use 64bit for checks
-  uint64_t* aligned = ( uint64_t* )str;
-  while ( ! DETECT_NULL_ENDING( *aligned ) ) {
-    aligned++;
-  }
-  // update str
-  str = ( const char* )aligned;
+  // loop until null termination
   while ( *str ) {
     str++;
   }
@@ -71,48 +52,19 @@ size_t strlen( const char* str ) {
  * @return
  */
 size_t strlen_unsafe( const char* str ) {
-  // handle null / invalid address
+  // handle invalid address
   if ( ! str ) {
     return 0;
   }
   // variables
   uintptr_t last_check = ROUND_DOWN_TO_FULL_PAGE( str );
-  const char* next_check = ( const char* )( last_check + PAGE_SIZE );
+  auto next_check = ( char* )( last_check + PAGE_SIZE );
   const char* start = str;
   // loop until end is reached or some memory is not mapped
   do {
     // check page size
     if ( ! virt_is_mapped_range( last_check, PAGE_SIZE ) ) {
       return 0;
-    }
-    // loop until alignment
-    while( BUFFER_UNALIGNED( str ) && str < next_check ) {
-      // handle end reached
-      if ( !*str ) {
-        return ( size_t )( str - start );
-      }
-      // increment
-      str++;
-    }
-    // handle page boundary reached
-    if ( str == next_check ) {
-      last_check = ( uintptr_t )next_check;
-      next_check = ( const char* )( last_check + PAGE_SIZE );
-      continue;
-    }
-    // use 64bit for checks
-    uint64_t* aligned = ( uint64_t* )str;
-    uint64_t* aligned_end = ( uint64_t* )next_check;
-    while ( ! DETECT_NULL_ENDING( *aligned ) && aligned < aligned_end ) {
-      aligned++;
-    }
-    // update str
-    str = ( const char* )aligned;
-    // handle page boundary reached
-    if ( str == next_check ) {
-      last_check = ( uintptr_t )next_check;
-      next_check = ( const char* )( last_check + PAGE_SIZE );
-      continue;
     }
     // continue unaligned check
     while ( *str && str < next_check ) {
@@ -121,7 +73,7 @@ size_t strlen_unsafe( const char* str ) {
     // handle page boundary reached
     if ( str == next_check ) {
       last_check = ( uintptr_t )next_check;
-      next_check = ( const char* )( last_check + PAGE_SIZE );
+      next_check = ( char* )( last_check + PAGE_SIZE );
       continue;
     }
     // return difference

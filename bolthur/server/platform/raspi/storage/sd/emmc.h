@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,10 +20,7 @@
 #ifndef _EMMC_H
 #define _EMMC_H
 
-#include <stdbool.h>
 #include <stdint.h>
-#include "../../libiomem.h"
-#include "../../libperipheral.h"
 
 //#define EMMC_ENABLE_DEBUG 1
 

@@ -3,7 +3,7 @@ AC_PREREQ([2.71])
 
 AC_INIT([bolthur-server], [0.1.0-dev], [https://github.com/bolthur/kernel/issues], [bolthur-server], [https://github.com/bolthur/kernel])
 
-AC_COPYRIGHT([Copyright (C) 2018 - 2025 bolthur project])
+AC_COPYRIGHT([Copyright (C) 2018 - 2026 bolthur project])
 
 AC_CONFIG_AUX_DIR([_aux/config])
 AC_CONFIG_MACRO_DIR([../../build-aux/m4])
@@ -51,6 +51,24 @@ AC_ARG_WITH(
   [with_debug_debug_symbols=yes]
 )
 
+AC_ARG_WITH(
+  [ubsan],
+  AS_HELP_STRING(
+    [--with-ubsan],
+    [compile with ubsan enabled]
+  ),
+  [with_ubsan_enabled=yes]
+)
+
+AC_ARG_WITH(
+  [asan],
+  AS_HELP_STRING(
+    [--with-asan],
+    [compile with asan enabled]
+  ),
+  [with_asan_enabled=yes]
+)
+
 # enable output and enable remote debugging together is not allowed
 AS_IF([test "x$enable_debug" == "xyes" && test "x$enable_release" == "xyes"], [
   AC_MSG_ERROR([Enabled debug and release are not possible at the same time])
@@ -60,6 +78,7 @@ AS_IF([test "x$enable_debug" == "xyes" && test "x$enable_release" == "xyes"], [
 PKG_CHECK_MODULES([CONFINI], [libconfini >= 1.16.4])
 PKG_CHECK_MODULES([ZLIB], [zlib >= 1.2.12])
 PKG_CHECK_MODULES([BFS], [bfs >= 0.1.0])
+PKG_CHECK_MODULES([FREETYPE], [freetype2 >= 2.14.3])
 
 # check necessary programs
 BOLTHUR_PROG_READLINK
@@ -77,6 +96,9 @@ AC_PROG_CC
 AM_PROG_AS
 BOLTHUR_PROG_OBJCOPY
 BOLTHUR_PROG_STRIP
+
+AC_CHECK_TOOL([AR], [gcc-ar])
+AC_CHECK_TOOL([RANLIB], [gcc-ranlib])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -162,6 +184,7 @@ AC_CONFIG_FILES([
   usb/Makefile
   usb/device/Makefile
   usb/device/hid/Makefile
+  usb/device/hid/hid/Makefile
   usb/device/hid/keyboard/Makefile
   usb/device/hid/mouse/Makefile
   usb/device/hub/Makefile

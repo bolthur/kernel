@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -27,8 +27,8 @@
 #include "../../mmio.h"
 #include "../../rpc.h"
 #include "../../delay.h"
-#include "../../../libiomem.h"
-#include "../../../libperipheral.h"
+#include "../../../../../../library/platform/raspi/iomem/libiomem.h"
+#include "../../../../../../library/platform/raspi/iomem/libperipheral.h"
 
 /**
  * @fn void rpc_handle_gpio_event(size_t, pid_t, size_t, size_t)
@@ -48,27 +48,27 @@ void rpc_handle_gpio_event(
   vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // handle no data
   error.status = -EINVAL;
-  if( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+  if ( ! data_info ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   iomem_gpio_event_t* event_request;
   // handle invalid data size
   if ( data_size - sizeof( vfs_ioctl_perform_request_t ) != sizeof( *event_request ) ) {
     error.status = -EINVAL;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     free( request );
     return;
   }
@@ -80,14 +80,14 @@ void rpc_handle_gpio_event(
   response = malloc( response_size );
   if ( ! response ) {
     error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     free( request );
     return;
   }
   // clear event_request
   memset( response, 0, response_size );
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "gpio event: pin = %d, value = %#"PRIx32"\r\n",
       event_request->pin, event_request->value
@@ -104,7 +104,7 @@ void rpc_handle_gpio_event(
   // read data from event detect status
   uint32_t value = mmio_read( address );
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "mask = %#"PRIx32", value before = %#"PRIx32"\r\n",
       ( uint32_t )( 1 << event_request->pin ),
@@ -113,7 +113,7 @@ void rpc_handle_gpio_event(
   #endif
   value &= ( 1 << event_request->pin );
   // some debug output
-  #if defined( RPC_ENABLE_DEBUG )
+  #if defined( RPC_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT(
       "mask = %#"PRIx32", value after = %#"PRIx32"\r\n",
       ( uint32_t )( 1 << event_request->pin ),
@@ -125,7 +125,7 @@ void rpc_handle_gpio_event(
   // copy over to response container
   memcpy( response->container, event_request, ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) );
   // return data and finish with free
-  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, 0 );
   free( request );
   free( response );
 }

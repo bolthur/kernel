@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -92,6 +92,11 @@ struct ubsan_invalid_value_data {
   ubsan_type_descriptor_t* type;
 };
 
+struct ubsan_invalid_builtin_data {
+  ubsan_source_location_t location;
+  uint8_t type_check_kind;
+};
+
 void __ubsan_handle_type_mismatch( ubsan_type_mismatch_data_t*, uintptr_t );
 void __ubsan_handle_type_mismatch_v1( ubsan_type_mismatch_data_v1_t*, uintptr_t );
 void __ubsan_handle_pointer_overflow( ubsan_pointer_overflow_data_t*, uint64_t, uint64_t );
@@ -103,5 +108,7 @@ void __ubsan_handle_shift_out_of_bounds( ubsan_shift_out_of_bounds_data_t*, uint
 void __ubsan_handle_out_of_bounds( ubsan_out_of_bounds_data_t*, uint64_t );
 void __ubsan_handle_load_invalid_value( ubsan_invalid_value_data_t*, uint64_t );
 void __ubsan_handle_negate_overflow( ubsan_overflow_data_t*, uint64_t );
+void __ubsan_handle_invalid_builtin( struct ubsan_invalid_builtin_data* );
+void __ubsan_handle_invalid_builtin_abort( struct ubsan_invalid_builtin_data* );
 
 #endif

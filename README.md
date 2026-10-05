@@ -1,7 +1,7 @@
 # kernel
 
 bolthur/kernel project.
-_Copyright (C) 2018 - 2025 bolthur project_
+_Copyright (C) 2018 - 2026 bolthur project_
 
 ## Supported platforms
 
@@ -52,8 +52,8 @@ autoreconf -iv
 mkdir build
 cd build
 ### configure with one of the following commands
-../configure --host arm-raspbi2b_r1-bolthur-eabi --enable-device=raspi2b_r1 --enable-debug --enable-output
-../configure --host arm-raspi0_1-bolthur-eabi --enable-device=raspi0_1 --enable-debug --enable-output
+../configure --host=arm-raspi2b_r1-bolthur-eabi --enable-device=raspi2b_r1 --enable-output --enable-silent-rules --with-debug-symbols --with-asan --with-ubsan
+../configure --host=arm-raspi0_1-bolthur-eabi --enable-device=raspi0_1 --enable-output --enable-silent-rules --with-debug-symbols --with-asan --with-ubsan
 ```
 
 Possible additional parameters to `--host` and `--enable-device`:
@@ -108,13 +108,13 @@ Emulation of the kernel project with qemu during development may be done at all 
 
 ```bash
 # raspberry pi zero kernel emulation
-qemu-system-arm -M raspi0 -cpu arm1176 -m 512M -no-reboot -serial stdio -kernel ./bolthur/kernel/target/raspi/kernel_qemu.img -initrd ../build-aux/platform/raspi/initrd -dtb ../config/dts/raspi/bcm2708-raspi-zero.dtb -drive file=../build-aux/platform/raspi/sdcard.img,format=raw -append "root=/dev/storage/sd1 rootfstype=ext2" -usb -device usb-mouse -device usb-kbd -s -S
+qemu-system-arm -M raspi0 -cpu arm1176 -m 512M -no-reboot -serial stdio -kernel ./bolthur/kernel/target/raspi/kernel_qemu.img -initrd ../build-aux/platform/raspi/initrd -dtb ../config/dts/raspi/bcm2708-raspi-zero.dtb -drive file=../build-aux/platform/raspi/sdcard.img,format=raw -append "root=/dev/storage/sd1 rootfstype=ext2 fbwidth=1280 fbheight=1024" -usb -device usb-mouse -device usb-kbd -device usb-net -s -S
 
 # raspberry pi 2B rev 1 kernel emulation
-qemu-system-arm -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./bolthur/kernel/target/raspi/kernel7_qemu.img -initrd ../build-aux/platform/raspi/initrd -dtb ../config/dts/raspi/bcm2709-raspi-2-b.dtb -drive file=../build-aux/platform/raspi/sdcard.img,format=raw -append "bcm2708_fb.fbwidth=1024 bcm2708_fb.fbheight=768 root=/dev/storage/sd1 rootfstype=ext2" -usb -device usb-mouse -device usb-kbd -s -S
+qemu-system-arm -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./bolthur/kernel/target/raspi/kernel7_qemu.img -initrd ../build-aux/platform/raspi/initrd -dtb ../config/dts/raspi/bcm2709-raspi-2-b.dtb -drive file=../build-aux/platform/raspi/sdcard.img,format=raw -append "root=/dev/storage/sd1 rootfstype=ext2 fbwidth=1280 fbheight=1024" -usb -device usb-mouse -device usb-kbd -device usb-net -s -S
 
 # raspberry pi 3B kernel emulation
-qemu-system-aarch64 -M raspi3b -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./bolthur/kernel/target/raspi/kernel8_qemu.img -initrd ../build-aux/platform/raspi/initrd -dtb ../config/dts/raspi/bcm2710-raspi-3-b.dtb -drive file=../build-aux/platform/raspi/sdcard.img,format=raw -append "root=/dev/storage/sd1 rootfstype=ext2" -usb -device usb-mouse -device usb-kbd -s -S
+qemu-system-aarch64 -M raspi3b -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./bolthur/kernel/target/raspi/kernel8_qemu.img -initrd ../build-aux/platform/raspi/initrd -dtb ../config/dts/raspi/bcm2710-raspi-3-b.dtb -drive file=../build-aux/platform/raspi/sdcard.img,format=raw -append "root=/dev/storage/sd1 rootfstype=ext2 fbwidth=1280 fbheight=1024" -usb -device usb-mouse -device usb-kbd -device usb-net -s -S
 ```
 
 ### Debugging
@@ -132,3 +132,20 @@ The files can be specified by using the parameter `-x`.
 ```
 
 When starting remote debugging, you need to specify the target, e.g. `target /dev/ttyUSB0` to connect to the running instance. Furthermore, you need to configure the project with option `--enable-debug`.
+
+### Flash image to sd card
+
+To flash the build image to sdcard you first have to find out the device on your linux machine. Afterwards following command needs to be executed.
+
+```bash
+# flash image with dd to sdcard with sda device as example
+sudo dd if=../build-aux/platform/raspi/sdcard.img of=/dev/sda bs=4M status=progress conv=fsync
+# ensure writing to sdcard is done with sync
+sync 
+```
+
+### Users
+
+Following users are pre generated with image generation:
+- `user` with password `user`
+- `root` with password `root`

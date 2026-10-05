@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,7 +23,10 @@
 #include <sys/mman.h>
 #include "sd.h"
 // from iomem
-#include "../../libiomem.h"
+#include "../../../../../library/platform/raspi/iomem/libiomem.h"
+
+/*#undef RASPI
+#define RASPI 3*/
 
 static sd_device_t* device;
 
@@ -36,21 +39,21 @@ static sd_device_t* device;
 bool sd_init( void ) {
   // debug output
   #if defined( SD_ENABLE_DEBUG )
-    STARTUP_PRINT( "Initialize sd interface\r\n" )
+    EARLY_STARTUP_PRINT( "Initialize sd interface\r\n" )
   #endif
 
   // allocate structure
   if ( ! device ) {
     // debug output
     #if defined( SD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Allocating device structure\r\n" )
+      EARLY_STARTUP_PRINT( "Allocating device structure\r\n" )
     #endif
     // allocate device structure
     device = malloc( sizeof( sd_device_t ) );
     if ( ! device ) {
       // debug output
       #if defined( SD_ENABLE_DEBUG )
-        STARTUP_PRINT( "Unable to allocate device structure\r\n" )
+        EARLY_STARTUP_PRINT( "Unable to allocate device structure\r\n" )
       #endif
       // return error
       return false;
@@ -60,7 +63,7 @@ bool sd_init( void ) {
 
   // debug output
   #if defined( SD_ENABLE_DEBUG )
-    STARTUP_PRINT( "Initialize subsystem\r\n" )
+    EARLY_STARTUP_PRINT( "Initialize subsystem\r\n" )
   #endif
   // raspi before 3 use emmc
   #if 3 > RASPI
@@ -68,7 +71,7 @@ bool sd_init( void ) {
     if ( EMMC_RESPONSE_OK != response ) {
       // debug output
       #if defined( SD_ENABLE_DEBUG )
-        STARTUP_PRINT( "Unable to init emmc\r\n" )
+        EARLY_STARTUP_PRINT( "Unable to init emmc\r\n" )
       #endif
       // cache last error
       device->last_error = response;
@@ -77,11 +80,11 @@ bool sd_init( void ) {
     }
   // raspi 3 use sdhost
   #elif 3 == RASPI
-    sdhost_response_t response = sdhost_init();
+    const sdhost_response_t response = sdhost_init();
     if ( SDHOST_RESPONSE_OK != response ) {
       // debug output
       #if defined( SD_ENABLE_DEBUG )
-        STARTUP_PRINT( "Unable to init sdhost\r\n" )
+        EARLY_STARTUP_PRINT( "Unable to init sdhost\r\n" )
       #endif
       // cache last error
       device->last_error = response;
@@ -105,14 +108,14 @@ bool sd_init( void ) {
 const char* sd_last_error( void ) {
   // debug output
   #if defined( SD_ENABLE_DEBUG )
-    STARTUP_PRINT( "sd last error request\r\n" )
+    EARLY_STARTUP_PRINT( "sd last error request\r\n" )
   #endif
   if ( ! device || 0 == device->last_error ) {
-    return NULL;
+    return nullptr;
   }
   // debug output
   #if defined( SD_ENABLE_DEBUG )
-    STARTUP_PRINT( "return last error\r\n" )
+    EARLY_STARTUP_PRINT( "return last error\r\n" )
   #endif
   // raspi before 3 use emmc
   #if 3 > RASPI
@@ -139,20 +142,20 @@ const char* sd_last_error( void ) {
  */
 bool sd_transfer_block(
   uint32_t* buffer,
-  size_t buffer_size,
-  uint32_t block_number,
-  sd_operation_t operation,
-  size_t shm_id
+  const size_t buffer_size,
+  const uint32_t block_number,
+  const sd_operation_t operation,
+  const size_t shm_id
 ) {
   // debug output
   #if defined( SD_ENABLE_DEBUG )
-    STARTUP_PRINT( "sd transfer block\r\n" )
+    EARLY_STARTUP_PRINT( "sd transfer block\r\n" )
   #endif
   // handle not initialized
   if ( ! device ) {
     // debug output
     #if defined( SD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Interface not yet initialized\r\n" )
+      EARLY_STARTUP_PRINT( "Interface not yet initialized\r\n" )
     #endif
     // return false
     return false;
@@ -173,7 +176,7 @@ bool sd_transfer_block(
     ) ) {
       // debug output
       #if defined( SD_ENABLE_DEBUG )
-        STARTUP_PRINT( "emmc transfer block failed\r\n" )
+        EARLY_STARTUP_PRINT( "emmc transfer block failed\r\n" )
       #endif
       // set error to 0
       device->last_error = response;
@@ -194,7 +197,7 @@ bool sd_transfer_block(
     ) ) {
       // debug output
       #if defined( SD_ENABLE_DEBUG )
-        STARTUP_PRINT( "sdhost transfer block failed\r\n" )
+        EARLY_STARTUP_PRINT( "sdhost transfer block failed\r\n" )
       #endif
       // set error to 0
       device->last_error = response;
@@ -218,13 +221,13 @@ bool sd_transfer_block(
 uint32_t sd_device_block_size( void ) {
   // debug output
   #if defined( SD_ENABLE_DEBUG )
-    STARTUP_PRINT( "sd device block size request\r\n" )
+    EARLY_STARTUP_PRINT( "sd device block size request\r\n" )
   #endif
   // handle not initialized
   if ( ! device ) {
     // debug output
     #if defined( SD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Interface not yet initialized\r\n" )
+      EARLY_STARTUP_PRINT( "Interface not yet initialized\r\n" )
     #endif
     // return false
     return 0;
@@ -254,7 +257,7 @@ uint32_t sd_device_block_size( void ) {
 bool sd_read_block( uint32_t* buffer, size_t buffer_size, off_t sector, size_t shm_id ) {
   // debug output
   #if defined( SD_ENABLE_DEBUG )
-    STARTUP_PRINT( "Read a block into buffer\r\n" )
+    EARLY_STARTUP_PRINT( "Read a block into buffer\r\n" )
   #endif
   return sd_transfer_block(
     buffer,
@@ -278,7 +281,7 @@ bool sd_read_block( uint32_t* buffer, size_t buffer_size, off_t sector, size_t s
 bool sd_write_block( uint32_t* buffer, size_t buffer_size, off_t sector, size_t shm_id ) {
   // debug output
   #if defined( SD_ENABLE_DEBUG )
-    STARTUP_PRINT( "Write a block from buffer\r\n" )
+    EARLY_STARTUP_PRINT( "Write a block from buffer\r\n" )
   #endif
   return sd_transfer_block(
     buffer,

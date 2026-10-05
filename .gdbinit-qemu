@@ -2,7 +2,9 @@
 set architecture armv7
 file build/bolthur/kernel/target/raspi/kernel7_qemu.sym
 #add-symbol-file build/bolthur/server/platform/raspi/iomem/iomem
-target remote | qemu-system-arm -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -kernel build/bolthur/kernel/target/raspi/kernel7_qemu.img -initrd build-aux/platform/raspi/initrd -dtb config/dts/raspi/bcm2836-raspi-2-b.dtb -drive file=build-aux/platform/raspi/sdcard.img,format=raw -gdb stdio -S
+target remote | qemu-system-arm -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -kernel build/bolthur/kernel/target/raspi/kernel7_qemu.img -initrd build-aux/platform/raspi/initrd -dtb config/dts/raspi/bcm2709-raspi-2-b.dtb -drive file=build-aux/platform/raspi/sdcard.img,format=raw -append "root=/dev/storage/sd1 rootfstype=ext2 fbwidth=1024 fbheight=768" -usb -device usb-hub -device usb-kbd -gdb stdio -S
 display /10i $pc
-#break _vector_undefined_instruction_handler
+break _vector_interrupt_entry_privileged
+break _vector_interrupt_exit_privileged
+break arch_halt
 #c

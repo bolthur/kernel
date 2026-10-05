@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,7 +20,6 @@
 #ifndef _DEBUG_DISASM_H
 #define _DEBUG_DISASM_H
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #define DEBUG_DISASM_MAX_INSTRUCTION 2

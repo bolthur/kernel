@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,14 +23,89 @@
 #include <unistd.h>
 #include <sys/bolthur.h>
 #include <sys/mount.h>
+#include <libgen.h>
+#include <errno.h>
 #include "rpc.h"
 #include "handle.h"
+#include "global.h"
 #include "ioctl/handler.h"
-#include "../../libhelper.h"
 #include "../../libdev.h"
-#include "../../../library/collection/list/list.h"
+#include "../../../library/vfs/dev.h"
 #include "dev.h"
 #include "watch.h"
+
+/**
+ * @fn int add_folder_file(mode_t, const char*, pid_t, struct stat, const size_t*, size_t)
+ * @brief Wrapper to add folder / file to dev
+ * @param mode
+ * @param path
+ * @param handler
+ * @param info
+ * @param device_info
+ * @param device_size
+ * @return
+ */
+int add_folder_file(
+  const mode_t mode,
+  const char* path,
+  const pid_t handler,
+  const struct stat info,
+  const size_t* device_info,
+  const size_t device_size
+) {
+  // handle invalid type
+  if ( ! S_ISCHR( mode ) ) {
+    return EINVAL;
+  }
+  char* pathdup = strdup( path );
+  if ( ! pathdup ) {
+    return ENOMEM;
+  }
+  // extract base name
+  const char* dir = dirname( pathdup );
+  // check for notification
+  watch_node_t* node = watch_extract( dir, false );
+  if ( ! node && errno ) {
+    free( pathdup );
+    return errno;
+  }
+  // check if already existing
+  const device_handle_t* handle = handle_get_by_path( path );
+  if ( handle ) {
+    free( pathdup );
+    return EALREADY;
+  }
+  // try to add
+  if ( ! handle_add( path, info, handler ) ) {
+    free( pathdup );
+    return EAGAIN;
+  }
+  // handle device info stuff if is device
+  if ( S_ISCHR( mode ) && device_size ) {
+    for ( size_t idx = 0; idx < device_size; idx++ ) {
+      while ( true ) {
+        if ( ! ioctl_push_command( device_info[ idx ], handler ) ) {
+          continue;
+        }
+        break;
+      }
+    }
+  }
+  // notification
+  if ( node ) {
+    watch_tree_each(node->pid, watch_pid, n, {
+      // notify if process and handler differ
+      if ( n->process != handler ) {
+        watch_path_notify( path, n->process );
+      }
+     });
+  }
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Added %s\r\n", path )
+  #endif
+  free( pathdup );
+  return 0;
+}
 
 /**
  * @fn int main(int, char*[])
@@ -41,34 +116,52 @@
  * @return
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
-  EARLY_STARTUP_PRINT( "dev starting up!\r\n" )
-  EARLY_STARTUP_PRINT( "%d / %d\r\n", getpid(), getppid() )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "dev starting up!\r\n" )
+    EARLY_STARTUP_PRINT( "%d / %d\r\n", getpid(), getppid() )
+    EARLY_STARTUP_PRINT( "setup handling!\r\n" )
+  #endif
   // setup handle tree
-  EARLY_STARTUP_PRINT( "setup handling!\r\n" )
   if ( ! handle_init() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup handle structures!\r\n" )
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to setup handle structures!\r\n" )
+    #endif
     return -1;
   }
   // setup watch stuff
-  EARLY_STARTUP_PRINT( "setup watch handling!\r\n" )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "setup watch handling!\r\n" )
+  #endif
   if ( ! watch_setup() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup watch infrastructure!\r\n" )
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to setup watch infrastructure!\r\n" )
+    #endif
     return -1;
   }
   // register rpc handler
-  EARLY_STARTUP_PRINT( "bind rpc handler!\r\n" )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "bind rpc handler!\r\n" )
+  #endif
   if ( ! rpc_init() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
+    #endif
     return -1;
   }
   // setup ioctl
-  EARLY_STARTUP_PRINT( "setup ioctl!\r\n" )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "setup ioctl!\r\n" )
+  #endif
   if ( ! ioctl_handler_init() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup ioctl!\r\n" )
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to setup ioctl!\r\n" )
+    #endif
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "trying to mount!\r\n" )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "trying to mount!\r\n" )
+  #endif
   // try to mount /dev
   int result = mount(
     "",
@@ -78,45 +171,77 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     ""
   );
   if ( 0 != result ) {
-    EARLY_STARTUP_PRINT(
-      "Mount of special \"%s\" with type \"%s\" failed: \"%s\"\r\n",
-      MOUNT_POINT_DESTINATION,
-      MOUNT_POINT_FILESYSTEM,
-      strerror( errno )
-    )
+    #if defined( DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT(
+        "Mount of special \"%s\" with type \"%s\" failed: \"%s\"\r\n",
+        MOUNT_POINT_DESTINATION,
+        MOUNT_POINT_FILESYSTEM,
+        strerror( errno )
+      )
+    #endif
     // exit
     return -1;
   }
 
   // enable rpc
-  EARLY_STARTUP_PRINT( "Set rpc ready flag\r\n" )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Set rpc ready flag\r\n" )
+  #endif
   _syscall_rpc_set_ready( true );
 
   // device info data
-  uint32_t device_info[] = { DEV_START, DEV_KILL, };
+  constexpr size_t device_info[] = { DEV_START, DEV_KILL, };
+  const pid_t handler = getpid();
 
   // add manager subfolder
-  if ( !dev_add_folder( "/dev/manager", NULL, 0 ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add manager subfolder\r\n" )
-    return -1;
+  result = add_folder_file( S_IFCHR, "/dev/manager", handler, (struct stat){
+    .st_mode = S_IFCHR, }, nullptr, 0 );
+  if ( 0 != result ) {
+    #if defined (DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add folder / file: %s\r\n", strerror( result ) )
+    #endif
+    exit( -1 );
   }
   // add storage subfolder
-  if ( !dev_add_folder( "/dev/storage", NULL, 0 ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add storage subfolder\r\n" )
-    return -1;
+  result = add_folder_file( S_IFCHR, "/dev/storage", handler, (struct stat){
+    .st_mode = S_IFCHR, }, nullptr, 0 );
+  if ( 0 != result ) {
+    #if defined (DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add folder / file: %s\r\n", strerror( result ) )
+    #endif
+    exit( -1 );
   }
   // add usb subfolder
-  if ( ! dev_add_folder( "/dev/usb", NULL, 0 ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add USB subfolder\r\n" )
-    return -1;
+  result = add_folder_file( S_IFCHR, "/dev/usb", handler, (struct stat){
+    .st_mode = S_IFCHR, }, nullptr, 0 );
+  if ( 0 != result ) {
+    #if defined (DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add folder / file: %s\r\n", strerror( result ) )
+    #endif
+    exit( -1 );
+  }
+  // add usb server subfolder
+  result = add_folder_file( S_IFCHR, "/dev/usb/server", handler, (struct stat){
+    .st_mode = S_IFCHR, }, nullptr, 0 );
+  if ( 0 != result ) {
+    #if defined (DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add folder / file: %s\r\n", strerror( result ) )
+    #endif
+    exit( -1 );
   }
   // add device file
-  if ( !dev_add_file( "/dev/manager/device", device_info, 2 ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add storage subfolder\r\n" )
-    return -1;
+  result = add_folder_file( S_IFCHR, "/dev/manager/device", handler, (struct stat){
+    .st_mode = S_IFCHR, }, device_info, 2 );
+  if ( 0 != result ) {
+    #if defined (DEV_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to add folder / file: %s\r\n", strerror( result ) )
+    #endif
+    exit( -1 );
   }
 
   // wait for rpc
-  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  #if defined( DEV_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  #endif
   bolthur_rpc_wait_block();
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -32,6 +32,11 @@ void arch_init( void ) {
  * @fn void arch_halt(void)
  * @brief Halt and wait for interrupt
  */
+__no_stack_protector
 void arch_halt( void ) {
-  __asm__ __volatile__( "wfi" ::: "cc", "memory" );
+  __asm__ __volatile__(
+    "cpsie iaf\n"
+    "wfi\n"
+    "cpsid iaf\n"
+    ::: "cc", "memory" );
 }
