@@ -40,7 +40,7 @@ int call_child_detached(
   void* original_request,
   const size_t original_request_size,
   const pid_t origin,
-  const size_t data_info,
+  const uint64_t data_info,
   usbd_deallocate_context_t* ctx
 ) {
   // get handler for attaching root hub

@@ -25,7 +25,7 @@
 #include "../../../libauthentication.h"
 
 /**
- * @fn void rpc_custom_handle_request(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_custom_handle_request(size_t, pid_t, uint64_t, uint64_t)
  * @brief Request authentication change for process
  *
  * @param type
@@ -38,8 +38,8 @@
 void rpc_custom_handle_reload(
   [[maybe_unused]] size_t type,
   [[maybe_unused]] pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+  uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   #if defined( AUTHENTICATION_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "AUTHENTICATION RELOAD IOCTL\r\n" )

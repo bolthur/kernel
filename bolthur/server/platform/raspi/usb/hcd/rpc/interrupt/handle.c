@@ -99,7 +99,7 @@ static void wait_for_next_microframe( uint32_t micro_frames_to_wait ) {
 }
 
 /**
- * @fn void rpc_interrupt_handle(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_interrupt_handle(size_t, pid_t, uint64_t, uint64_t)
  * @brief Interrupt handler
  * @param type message type
  * @param origin origin of the message
@@ -109,8 +109,8 @@ static void wait_for_next_microframe( uint32_t micro_frames_to_wait ) {
 void rpc_interrupt_handle(
   [[maybe_unused]] size_t type,
   [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
-  [[maybe_unused]] size_t response_info
+  [[maybe_unused]] uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Interrupt handler called\r\n" )

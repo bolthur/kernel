@@ -93,7 +93,7 @@ typedef struct channel_queue_entry {
   /** transferred data */
   uint32_t transferred;
   /** response info */
-  size_t response_info;
+  uint64_t response_info;
   /** origin */
   pid_t origin;
   /** channel prepared flag */
@@ -105,7 +105,7 @@ typedef struct channel_queue_entry {
   /** message size */
   size_t message_size;
   /** registered timer */
-  size_t timer;
+  uint64_t timer;
   /** error */
   libusb_transfer_error_t error;
   /** transfer status */
@@ -117,7 +117,7 @@ typedef struct channel_queue_entry {
   /** last tick count */
   uint64_t last_tick_count;
   /** poll timer */
-  size_t poll_timer_id;
+  uint64_t poll_timer_id;
   /** channel data state */
   dwhci_channel_state_t channel_data_state;
   /** polling timeout */
@@ -182,7 +182,7 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* );
 response_t dwhci_channel_send_cancel( channel_queue_entry_t* );
 response_t dwhci_channel_send_cancel_done( channel_queue_entry_t* );
 response_t dwhci_channel_async_continue( channel_queue_entry_t* );
-response_t dwhci_channel_send_async( usb_control_message_t*, size_t, const usbd_control_message_t*, size_t );
+response_t dwhci_channel_send_async( usb_control_message_t*, size_t, const usbd_control_message_t*, uint64_t );
 response_t dwhci_channel_poll_async_data( channel_queue_entry_t* );
 response_t dwhci_channel_poll_async_ack( channel_queue_entry_t* );
 response_t dwhci_channel_poll_async_done( channel_queue_entry_t* );

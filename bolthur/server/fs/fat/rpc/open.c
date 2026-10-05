@@ -41,7 +41,7 @@
 #include <bfs/fat/fs.h>
 
 /**
- * @fn void rpc_handle_open(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_open(size_t, pid_t, uint64_t, uint64_t)
  * @brief Handle open request
  *
  * @param type
@@ -54,8 +54,8 @@
 void rpc_handle_open(
   size_t type,
   pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+  uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   #if defined( FAT_ENABLE_OUTPUT )
     STARTUP_PRINT( "open\r\n" )

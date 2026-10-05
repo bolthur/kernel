@@ -88,6 +88,7 @@ struct iomem_mmio_entry {
   uint32_t offset;
   // value ( usage depending on action type )
   uint32_t value;
+  uint64_t value64;
   // shift type and shift bits to be applied
   mmio_shift_t shift_type;
   uint32_t shift_value;
@@ -112,7 +113,7 @@ typedef struct iomem_mmio_entry iomem_mmio_entry_t;
 typedef struct iomem_mmio_entry iomem_mmio_entry_array_t[];
 
 typedef struct {
-  size_t shm_id;
+  uint64_t shm_id;
   size_t length;
 } iomem_mmio_perform_t;
 

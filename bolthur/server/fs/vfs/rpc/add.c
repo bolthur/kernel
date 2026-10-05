@@ -27,7 +27,7 @@
 #include "../ioctl/handler.h"
 
 /**
- * @fn void rpc_handle_add_async(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_add_async(size_t, pid_t, uint64_t, uint64_t)
  * @brief Internal helper to continue asynchronous started open
  *
  * @param type
@@ -38,8 +38,8 @@
 void rpc_handle_add_async(
   size_t type,
   [[maybe_unused]] pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   vfs_add_response_t response = { .status = -EINVAL, .handler = 0 };
   // get matching async data
@@ -100,7 +100,7 @@ void rpc_handle_add_async(
 }
 
 /**
- * @fn void rpc_handle_add(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_add(size_t, pid_t, uint64_t, uint64_t)
  * @brief handle add request
  *
  * @param type
@@ -116,8 +116,8 @@ void rpc_handle_add_async(
 void rpc_handle_add(
   size_t type,
   pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   // handle async return in case response info is set
   if ( response_info && bolthur_rpc_has_async( type, response_info ) ) {

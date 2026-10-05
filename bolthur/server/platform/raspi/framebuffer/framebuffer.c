@@ -411,7 +411,7 @@ void framebuffer_flip( void ) {
 }
 
 /**
- * @fn void framebuffer_handle_resolution(size_t, pid_t, size_t, size_t)
+ * @fn void framebuffer_handle_resolution(size_t, pid_t, uint64_t, uint64_t)
  * @brief Handle resolution request currently only get
  *
  * @param type
@@ -424,8 +424,8 @@ void framebuffer_flip( void ) {
 void framebuffer_handle_resolution(
   [[maybe_unused]] size_t type,
   pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+  uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
@@ -470,7 +470,7 @@ void framebuffer_handle_resolution(
 }
 
 /**
- * @fn void framebuffer_handle_clear(size_t, pid_t, size_t, size_t)
+ * @fn void framebuffer_handle_clear(size_t, pid_t, uint64_t, uint64_t)
  * @brief Handle clear request
  *
  * @param type
@@ -481,8 +481,8 @@ void framebuffer_handle_resolution(
 void framebuffer_handle_clear(
   [[maybe_unused]] size_t type,
   pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+  uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
@@ -508,7 +508,7 @@ void framebuffer_handle_clear(
 }
 
 /**
- * @fn void framebuffer_handle_surface_render(size_t, pid_t, size_t, size_t)
+ * @fn void framebuffer_handle_surface_render(size_t, pid_t, uint64_t, uint64_t)
  * @brief RPC callback for rendering a surface
  *
  * @param type
@@ -519,8 +519,8 @@ void framebuffer_handle_clear(
 void framebuffer_handle_surface_render(
   [[maybe_unused]] size_t type,
   pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+  uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
@@ -564,7 +564,7 @@ void framebuffer_handle_surface_render(
 }
 
 /**
- * @fn void framebuffer_handle_surface_allocate(size_t, pid_t, size_t, size_t)
+ * @fn void framebuffer_handle_surface_allocate(size_t, pid_t, uint64_t, uint64_t)
  * @brief RPC callback for allocate a surface
  *
  * @param type
@@ -575,8 +575,8 @@ void framebuffer_handle_surface_render(
 void framebuffer_handle_surface_allocate(
   [[maybe_unused]] size_t type,
   pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+  uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
@@ -602,7 +602,7 @@ void framebuffer_handle_surface_allocate(
   const uint32_t allocate_pitch = info->width * ( info->depth / CHAR_BIT );
   const size_t memory_size = allocate_pitch * info->height;
   // request shared memory
-  const size_t shm_id = _syscall_memory_shared_create( memory_size );
+  const uint64_t shm_id = _syscall_memory_shared_create( memory_size );
   if ( errno ) {
     error.status = -errno;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );

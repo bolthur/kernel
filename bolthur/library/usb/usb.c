@@ -143,7 +143,7 @@ int usb_control_message_async(
   #endif
   // allocate shared memory
   const size_t data_size = sizeof ( usb_control_message_t ) + buffer_length + 1;
-  const size_t shm_id = _syscall_memory_shared_create( data_size );
+  const uint64_t shm_id = _syscall_memory_shared_create( data_size );
   // handle error
   if ( errno ) {
     const int e = errno;
@@ -221,7 +221,7 @@ int usb_control_message_async(
   // copy over data
   memcpy( rpc_request->container, control_request, sizeof( *control_request ) );
   // raise rpc and wait for return
-  const size_t response_id = bolthur_rpc_raise(
+  const uint64_t response_id = bolthur_rpc_raise(
     RPC_VFS_IOCTL,
     VFS_DAEMON_ID,
     rpc_request,
@@ -284,7 +284,7 @@ int usb_control_message(
   #endif
   // allocate shared memory
   const size_t data_size = sizeof ( usb_control_message_t ) + buffer_length + 1;
-  const size_t shm_id = _syscall_memory_shared_create( data_size );
+  const uint64_t shm_id = _syscall_memory_shared_create( data_size );
   // handle error
   if ( errno ) {
     const int e = errno;
@@ -477,7 +477,7 @@ int usb_get_descriptor(
   #endif
   // allocate shared memory
   const size_t data_size = sizeof ( usb_descriptor_message_t ) + buffer_length + 1;
-  const size_t shm_id = _syscall_memory_shared_create( data_size );
+  const uint64_t shm_id = _syscall_memory_shared_create( data_size );
   // handle error
   if ( errno ) {
     const int e = errno;
@@ -585,7 +585,7 @@ int usb_attach_device(
   const rpc_handler_t callback,
   void* context,
   const pid_t origin,
-  const size_t data_info
+  const uint64_t data_info
 ) {
   // debug message
   #if defined( LIBUSB_ENABLE_DEBUG )
@@ -634,10 +634,10 @@ int usb_attach_device(
   memcpy( rpc_request->container, request, sizeof( *request ) );
   // debug output
   #if defined( LIBUSB_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "origin = %d, data_info = %zu\r\n", origin, data_info )
+    EARLY_STARTUP_PRINT( "origin = %d, data_info = %"PRIu64"\r\n", origin, data_info )
   #endif
   // raise rpc and wait for return
-  const size_t response_id = bolthur_rpc_raise(
+  const uint64_t response_id = bolthur_rpc_raise(
     RPC_VFS_IOCTL,
     VFS_DAEMON_ID,
     rpc_request,
@@ -673,7 +673,7 @@ int usb_attach_device(
 }
 
 /**
- * @fn int usb_detach_device(uint32_t, const rpc_handler_t, void*, pid_t, size_t)
+ * @fn int usb_detach_device(uint32_t, const rpc_handler_t, void*, pid_t, uint64_t)
  * @brief Usb detach device by number
  * @param device_number
  * @param callback
@@ -687,7 +687,7 @@ int usb_detach_device(
   const rpc_handler_t callback,
   void* context,
   const pid_t origin,
-  const size_t data_info
+  const uint64_t data_info
 ) {
   // debug message
   #if defined( LIBUSB_ENABLE_DEBUG )
@@ -731,9 +731,9 @@ int usb_detach_device(
   rpc_request->type = IOCTL_RDWR;
   // copy over data
   memcpy( rpc_request->container, request, sizeof( *request ) );
-  EARLY_STARTUP_PRINT( "origin = %d, data_info = %zu\r\n", origin, data_info )
+  EARLY_STARTUP_PRINT( "origin = %d, data_info = %"PRIu64"\r\n", origin, data_info )
   // raise rpc and wait for return
-  const size_t response_id = bolthur_rpc_raise(
+  const uint64_t response_id = bolthur_rpc_raise(
     RPC_VFS_IOCTL,
     VFS_DAEMON_ID,
     rpc_request,
@@ -976,7 +976,7 @@ int usb_get_configuration( const uint32_t device_number, void** target_buffer ) 
     STARTUP_PRINT( "firing usb get configuration\r\n" )
   #endif
   // allocate shared memory
-  const size_t shm_id = _syscall_memory_shared_create( 0x1000 );
+  const uint64_t shm_id = _syscall_memory_shared_create( 0x1000 );
   // handle error
   if ( errno ) {
     const int e = errno;
@@ -1213,7 +1213,7 @@ int usb_interrupt_poll_async(
   #endif
   // allocate shared memory
   const size_t data_size = sizeof ( usb_interrupt_poll_t ) + buffer_length + 1;
-  const size_t shm_id = _syscall_memory_shared_create( data_size );
+  const uint64_t shm_id = _syscall_memory_shared_create( data_size );
   // handle error
   if ( errno ) {
     const int e = errno;
@@ -1363,7 +1363,7 @@ int usb_get_string( const uint32_t device_number, const uint8_t string_index, ch
     STARTUP_PRINT( "firing async usb poll interrupt message\r\n" )
   #endif
   // allocate shared memory
-  const size_t shm_id = _syscall_memory_shared_create( 0x100 );
+  const uint64_t shm_id = _syscall_memory_shared_create( 0x100 );
   // handle error
   if ( errno ) {
     const int e = errno;

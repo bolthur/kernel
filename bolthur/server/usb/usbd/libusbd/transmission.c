@@ -24,7 +24,7 @@
 #include "../../../libhcd.h"
 
 /**
- * @fn int usbd_stop_transmission(const libusb_device_t*, usbd_stop_transmission_t*, rpc_handler_t, pid_t, size_t, void*, size_t);
+ * @fn int usbd_stop_transmission(const libusb_device_t*, usbd_stop_transmission_t*, rpc_handler_t, pid_t, uint64_t, void*, size_t);
  * @brief Wrapper to perform usbd control message
  * @param dev device information
  * @param message stop message
@@ -40,7 +40,7 @@ int usbd_stop_transmission(
   usbd_stop_transmission_t* message,
   const rpc_handler_t callback,
   const pid_t origin,
-  const size_t data_info,
+  const uint64_t data_info,
   void* original_request,
   const size_t original_request_size
 ) {

@@ -19,6 +19,7 @@
 
 // system includes
 #include <errno.h>
+#include <assert.h>
 #include <sys/bolthur.h>
 #include <sys/ioctl.h>
 #include <sys/_default_fcntl.h>
@@ -32,20 +33,14 @@
 // shared includes
 #include "../../libhcd.h"
 // library includes
-#include <assert.h>
-
 #include "delay.h"
 #include "mmio.h"
 #include "timer.h"
 #include "../../../../libusbd.h"
-#include "../../../../../kernel/timer.h"
 #include "../../../../../library/platform/raspi/iomem/libiomem.h"
-#include "../../../../../library/platform/raspi/iomem/libperipheral.h"
 #include "../../../../../library/platform/raspi/iomem/libmailbox.h"
-#include "../../../../../library/platform/raspi/iomem/sequence.h"
 #include "../../../../../library/platform/raspi/iomem/mailbox.h"
 #include "../../../../../library/usb/usb.h"
-#include "../../iomem/barrier.h"
 
 /**
  * @brief file descriptor for iomem operations
@@ -1216,7 +1211,7 @@ response_t dwhci_channel_send_async(
   usb_control_message_t* data,
   const size_t data_size,
   const usbd_control_message_t* message,
-  const size_t response_info
+  const uint64_t response_info
 ) {
   // debug output
   #if defined( DWHCI_ENABLE_DEBUG )

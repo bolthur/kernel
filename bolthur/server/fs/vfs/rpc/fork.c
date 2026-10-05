@@ -30,7 +30,7 @@
 #include "../../../../library/handle/handle.h"
 
 /**
- * @fn void rpc_handle_fork_table(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_fork_table(size_t, pid_t, uint64_t, uint64_t)
  * @brief Handle ongoing fork
  * @param type
  * @param origin
@@ -40,8 +40,8 @@
 static void rpc_handle_fork_table(
   [[maybe_unused]] size_t type,
   pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   // response object
   vfs_fork_response_t response = { .status = -EINVAL };
@@ -154,7 +154,7 @@ static void rpc_handle_fork_table(
 }
 
 /**
- * @fn void rpc_handle_fork_fork(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_fork_fork(size_t, pid_t, uint64_t, uint64_t)
  * @brief Handle remaining fork in vfs
  *
  * @param type
@@ -165,8 +165,8 @@ static void rpc_handle_fork_table(
 static void rpc_handle_fork_fork(
   [[maybe_unused]] size_t type,
   [[maybe_unused]] pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   // dummy error response
   vfs_fork_response_t response = { .status = -EINVAL };
@@ -290,7 +290,7 @@ static void rpc_handle_fork_fork(
 }
 
 /**
- * @fn void rpc_handle_fork_stat(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_fork_stat(size_t, pid_t, uint64_t, uint64_t)
  * @brief Handle fork stat response
  *
  * @param type
@@ -301,8 +301,8 @@ static void rpc_handle_fork_fork(
 static void rpc_handle_fork_stat(
   [[maybe_unused]] size_t type,
   [[maybe_unused]] pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   // dummy error response
   vfs_fork_response_t response = { .status = -EINVAL };
@@ -357,7 +357,7 @@ static void rpc_handle_fork_stat(
 }
 
 /**
- * @fn void rpc_handle_fork(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_fork(size_t, pid_t, uint64_t, uint64_t)
  * @brief handle fork request
  *
  * @param type
@@ -370,8 +370,8 @@ static void rpc_handle_fork_stat(
 void rpc_handle_fork(
   size_t type,
   pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+  uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   // dummy error response
   vfs_fork_response_t response = { .status = -EINVAL };

@@ -28,7 +28,7 @@
 #include "../../../../../../../kernel/debug/breakpoint.h"
 #include "../../../../../../../library/usb/usb.h"
 
-static void continue_check_change( size_t, pid_t, size_t, size_t );
+static void continue_check_change( size_t, pid_t, uint64_t, uint64_t );
 
 /**
  * @fn bool perform_check(hub_check_change_context_t*)
@@ -137,7 +137,7 @@ static bool perform_check( hub_check_change_context_t* ctx ) {
       ( ( usb_generic_check_for_change_t* )request->container )->device_number =
         ctx->hub->children[ port ];
       // raise async
-      const size_t result = bolthur_rpc_raise(
+      const uint64_t result = bolthur_rpc_raise(
         GENERIC_CHECK_FOR_CHANGE,
         getpid(),
         request,
@@ -169,7 +169,7 @@ static bool perform_check( hub_check_change_context_t* ctx ) {
 }
 
 /**
- * @fn void continue_check_change(size_t, pid_t, size_t, size_t)
+ * @fn void continue_check_change(size_t, pid_t, uint64_t, uint64_t)
  * @brief Helper to continue check for change
  * @param type message type
  * @param origin origin of the message
@@ -179,8 +179,8 @@ static bool perform_check( hub_check_change_context_t* ctx ) {
 static void continue_check_change(
   [[maybe_unused]] size_t type,
   const pid_t origin,
-  const size_t data_info,
-  [[maybe_unused]] size_t response_info
+  const uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   vfs_ioctl_perform_response_t response = { .status = -EINVAL, };
   // peek matching async data without destroy for call chain
@@ -254,7 +254,7 @@ static void continue_check_change(
 }
 
 /**
- * @fn void rpc_hub_check_change(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_hub_check_change(size_t, pid_t, uint64_t, uint64_t)
  * @brief Register rpc handler check change
  * @param type message type
  * @param origin origin of the message
@@ -264,8 +264,8 @@ static void continue_check_change(
 void rpc_hub_check_change(
   [[maybe_unused]] size_t type,
   const pid_t origin,
-  const size_t data_info,
-  [[maybe_unused]] size_t response_info
+  const uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   vfs_ioctl_perform_response_t response = { .status = -EINVAL, };
   // handle no data

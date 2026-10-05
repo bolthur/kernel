@@ -42,7 +42,7 @@ void vfs_add(
   msg->handler = getpid();
   const size_t size_to_use = size ? size : sizeof( *msg );
   // response id
-  size_t response_id = 0;
+  uint64_t response_id = 0;
   // try to send until it worked
   while ( true ) {
     // wait for response

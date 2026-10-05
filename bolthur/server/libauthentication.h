@@ -26,11 +26,11 @@
 #include <sys/bolthur.h>
 
 #define AUTHENTICATE_REQUEST RPC_CUSTOM_START
-#define AUTHENTICATE_FETCH AUTHENTICATE_REQUEST + 1
-#define AUTHENTICATE_RELOAD AUTHENTICATE_FETCH + 1
+#define AUTHENTICATE_FETCH ( AUTHENTICATE_REQUEST + 1 )
+#define AUTHENTICATE_RELOAD ( AUTHENTICATE_FETCH + 1 )
 
 typedef struct {
-  size_t shm_id;
+  uint64_t shm_id;
   pid_t process;
 } authentication_request_request_t;
 

@@ -45,7 +45,7 @@ typedef struct {
   /** origin modified in call chain */
   pid_t origin;
   /** data info modified in call chain */
-  size_t data_info;
+  uint64_t data_info;
   /** handler to be called on finish */
   rpc_handler_t handler;
   /** device */
@@ -79,7 +79,7 @@ typedef struct {
   uint8_t recipient;
   rpc_handler_t callback;
   pid_t origin;
-  size_t data_info;
+  uint64_t data_info;
   void* original_request;
   size_t original_request_size;
   void* context;
@@ -166,7 +166,7 @@ typedef struct {
   /** origin process id */
   pid_t origin;
   /** data id */
-  size_t data_info;
+  uint64_t data_info;
   /** original request */
   void* request;
   /** request size */
@@ -211,15 +211,15 @@ int usbd_address_set( libusb_device_t*, uint8_t, rpc_handler_t, usbd_attach_cont
 int usbd_allocate_device( libusb_device_t**, bool );
 void usbd_destroy_device( libusb_device_t* );
 // attach
-int usbd_attach_device( libusb_device_t*, rpc_handler_t, pid_t, size_t, const void*, size_t );
+int usbd_attach_device( libusb_device_t*, rpc_handler_t, pid_t, uint64_t, const void*, size_t );
 // configuration
 int usbd_configuration_set( libusb_device_t*, uint8_t, rpc_handler_t, usbd_configure_context_t* );
 // context
-int usbd_context_attach_create( rpc_handler_t, pid_t, size_t, const void*, size_t, uint8_t, uint8_t, libusb_device_t*, usbd_attach_context_t**);
+int usbd_context_attach_create( rpc_handler_t, pid_t, uint64_t, const void*, size_t, uint8_t, uint8_t, libusb_device_t*, usbd_attach_context_t**);
 void usbd_context_attach_destroy( usbd_attach_context_t*, bool );
 int usbd_context_descriptor_create( rpc_handler_t, void*, usbd_descriptor_context_t** );
 void usbd_context_descriptor_destroy( usbd_descriptor_context_t* );
-int usbd_context_get_descriptor_create( libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, void*, size_t, uint8_t, rpc_handler_t, pid_t, size_t, void*, size_t, void*, usbd_get_descriptor_context_t** );
+int usbd_context_get_descriptor_create( libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, void*, size_t, uint8_t, rpc_handler_t, pid_t, uint64_t, void*, size_t, void*, usbd_get_descriptor_context_t** );
 void usbd_context_get_descriptor_destroy( usbd_get_descriptor_context_t* );
 int usbd_context_address_create( rpc_handler_t, void*, uint8_t, usbd_address_context_t** );
 void usbd_context_address_destroy( usbd_address_context_t* );
@@ -231,20 +231,20 @@ int usbd_context_control_create( rpc_handler_t, void*, usbd_control_context_t**)
 void usbd_context_control_destroy( usbd_control_context_t* );
 int usbd_context_deallocate_create( rpc_handler_t, libusb_device_t*, void*, usbd_deallocate_context_t** );
 void usbd_context_deallocate_destroy( usbd_deallocate_context_t* );
-int usbd_context_read_string_create( rpc_handler_t, libusb_device_t*, uint8_t, uint16_t, void*, size_t, void*, size_t, pid_t, size_t, usbd_read_string_context_t** );
+int usbd_context_read_string_create( rpc_handler_t, libusb_device_t*, uint8_t, uint16_t, void*, size_t, void*, size_t, pid_t, uint64_t, usbd_read_string_context_t** );
 void usbd_context_read_string_destroy( usbd_read_string_context_t* );
 int usbd_context_get_string_create( rpc_handler_t, void*, size_t, usbd_read_lang_context_t*, usbd_get_string_context_t** );
 void usbd_context_get_string_destroy( usbd_get_string_context_t* );
 int usbd_context_read_lang_create( void*, size_t, uint8_t, uint16_t, rpc_handler_t, usbd_read_string_context_t*, usbd_read_lang_context_t** );
 void usbd_context_read_lang_destroy( usbd_read_lang_context_t* );
 // control
-int usbd_control_message_async( const libusb_device_t*, libusb_pipe_address_t, const void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t, pid_t, size_t, void*, size_t, void*, size_t );
+int usbd_control_message_async( const libusb_device_t*, libusb_pipe_address_t, const void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t, pid_t, uint64_t, void*, size_t, void*, size_t );
 // deallocate
-void usbd_deallocate_device( libusb_device_t*, rpc_handler_t, void*, size_t, pid_t, size_t, void* );
+void usbd_deallocate_device( libusb_device_t*, rpc_handler_t, void*, size_t, pid_t, uint64_t, void* );
 // description
 const char* usbd_description_get( const libusb_device_t* );
 // descriptor
-int usbd_descriptor_get_async( libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, const void*, size_t, uint8_t, rpc_handler_t, pid_t, size_t, void*, size_t, void*, size_t );
+int usbd_descriptor_get_async( libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, const void*, size_t, uint8_t, rpc_handler_t, pid_t, uint64_t, void*, size_t, void*, size_t );
 int usbd_descriptor_read_device( libusb_device_t*, rpc_handler_t, usbd_attach_context_t*, bool );
 // device
 int usbd_device_configure( libusb_device_t*, uint8_t, rpc_handler_t, usbd_attach_context_t* );
@@ -257,17 +257,17 @@ int usbd_handler_get( libusb_interface_class_t, pid_t* );
 // init
 int usbd_init( void );
 // interrupt
-int usbd_interrupt_poll( const libusb_device_t*, libusb_pipe_address_t, usb_interrupt_poll_t*, usbd_interrupt_message_t*, rpc_handler_t, pid_t, size_t, void*, size_t );
+int usbd_interrupt_poll( const libusb_device_t*, libusb_pipe_address_t, usb_interrupt_poll_t*, usbd_interrupt_message_t*, rpc_handler_t, pid_t, uint64_t, void*, size_t );
 // roothub
 libusb_device_t* usbd_roothub_get( void );
-int usbd_roothub_attach( rpc_handler_t, pid_t, size_t );
+int usbd_roothub_attach( rpc_handler_t, pid_t, uint64_t );
 int usbd_roothub_fire_attach( void );
 // string
 int usbd_string_get( const libusb_device_t*, uint8_t, uint16_t, void*, size_t, usbd_read_lang_context_t*, rpc_handler_t );
 int usbd_string_read_lang( const libusb_device_t*, uint8_t, uint16_t, void*, size_t, usbd_read_string_context_t*, rpc_handler_t );
-int usbd_string_read( libusb_device_t*, uint8_t, void*, size_t, void*, size_t, rpc_handler_t, pid_t, size_t );
+int usbd_string_read( libusb_device_t*, uint8_t, void*, size_t, void*, size_t, rpc_handler_t, pid_t, uint64_t );
 // transmission
-int usbd_stop_transmission( const libusb_device_t*, usbd_stop_transmission_t*, rpc_handler_t, pid_t, size_t, void*, size_t );
+int usbd_stop_transmission( const libusb_device_t*, usbd_stop_transmission_t*, rpc_handler_t, pid_t, uint64_t, void*, size_t );
 
 // global variables from init
 extern int fd_hcd;

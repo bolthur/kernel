@@ -27,7 +27,7 @@
 #include "../../../../../../../library/usb/usb.h"
 
 /**
- * @fn void rpc_keyboard_key(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_keyboard_key(size_t, pid_t, uint64_t, uint64_t)
  * @brief Key rpc handler callback
  * @param type
  * @param origin
@@ -37,8 +37,8 @@
 void rpc_mouse_mouse(
   [[maybe_unused]] size_t type,
   const pid_t origin,
-  const size_t data_info,
-  [[maybe_unused]] size_t response_info
+  const uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
@@ -173,7 +173,7 @@ void rpc_mouse_mouse(
     rpc_request->command = MOUSE_NOTIFY_HANDLER;
     rpc_request->type = IOCTL_RDWR;
     // raise rpc with cleanup
-    const size_t response_id = bolthur_rpc_raise(
+    const uint64_t response_id = bolthur_rpc_raise(
       RPC_VFS_IOCTL,
       VFS_DAEMON_ID,
       rpc_request,

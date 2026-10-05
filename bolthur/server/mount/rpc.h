@@ -23,7 +23,7 @@
 #include <sys/bolthur.h>
 
 bool rpc_init( void );
-void rpc_handle_mount( size_t, pid_t, size_t, size_t );
-void rpc_handle_umount( size_t, pid_t, size_t, size_t );
+void rpc_handle_mount( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_umount( size_t, pid_t, uint64_t, uint64_t );
 
 #endif

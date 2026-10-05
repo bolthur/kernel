@@ -26,7 +26,7 @@
 
 typedef struct queue_node {
   size_t return_type;
-  size_t response_info;
+  uint64_t response_info;
   vfs_read_request_t* request;
   size_t read_amount;
   handler_node_t* handler;
@@ -37,7 +37,7 @@ typedef TAILQ_HEAD( queue_head, queue_node ) queue_head_t;
 
 // generic stuff
 bool queue_setup( void );
-bool queue_push( size_t, size_t, vfs_read_request_t*, handler_node_t* );
+bool queue_push( size_t, uint64_t, vfs_read_request_t*, handler_node_t* );
 void queue_handle( const char*, const char* );
 void queue_cleanup( const console_t* );
 

@@ -21,13 +21,13 @@
 #include "timer.h"
 
 /**
- * @fn size_t timer_acquire(uint32_t)
+ * @fn uint64_t timer_acquire(uint32_t)
  * @brief Acquire timer with delay of milliseconds
  * @param milliseconds milliseconds to wait
  * @return timer id
  * @exception EAGAIN in case timer was not possible to acquire
  */
-size_t timer_acquire( const uint32_t milliseconds ) {
+uint64_t timer_acquire( const uint32_t milliseconds ) {
   // get clock frequency
   const size_t frequency = _syscall_timer_frequency();
   // translate into seconds

@@ -1087,7 +1087,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
     return EMMC_RESPONSE_MEMORY;
   }
   // create shared memory
-  size_t shm_id = 0;
+  uint64_t shm_id = 0;
   void* shm_addr = nullptr;
   if ( is_data && 0 < device->block_count ) {
     if ( device->shm_id ) {
@@ -1202,7 +1202,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
       ? EMMC_INTERRUPT_READ_RDY : EMMC_INTERRUPT_WRITE_RDY;
     sequence[ idx ].type = interrupt == EMMC_INTERRUPT_READ_RDY ?
       IOMEM_MMIO_ACTION_DMA_READ_DEV : IOMEM_MMIO_ACTION_DMA_WRITE_DEV;
-    sequence[ idx ].value = shm_id;
+    sequence[ idx ].value64 = shm_id;
     sequence[ idx ].offset = PERIPHERAL_EMMC_DATA;
     sequence[ idx ].dma_copy_size = device->block_count * device->block_size;
     sequence[ idx ].dma_permap = LIBDMA_TI_PERMAP_EMMC;

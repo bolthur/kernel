@@ -23,6 +23,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-size_t timer_acquire( uint32_t );
+uint64_t timer_acquire( uint32_t );
 
 #endif //_TIMER_H

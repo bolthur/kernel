@@ -24,7 +24,7 @@
 #include <sys/bolthur.h>
 
 bool rpc_init( void );
-void rpc_custom_bootstrap( size_t, pid_t, size_t, size_t );
-void rpc_default_ioctl( size_t, pid_t, size_t, size_t );
+void rpc_custom_bootstrap( size_t, pid_t,uint64_t, uint64_t );
+void rpc_default_ioctl( size_t, pid_t,uint64_t, uint64_t );
 
 #endif

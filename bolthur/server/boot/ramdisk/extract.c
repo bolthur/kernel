@@ -38,7 +38,7 @@ void* ramdisk_extract(
   const uintptr_t address,
   const size_t size,
   const size_t extract_size,
-  size_t* shared_id
+  uint64_t* shared_id
 ) {
   // decompress
   z_stream stream = { 0 };

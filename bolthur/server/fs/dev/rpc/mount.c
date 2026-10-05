@@ -26,7 +26,7 @@
 #include "../handle.h"
 
 /**
- * @fn void rpc_handle_mount_async(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_mount_async(size_t, pid_t, uint64_t, uint64_t)
  * @brief Internal helper to continue asynchronous started mount point
  *
  * @param type
@@ -37,8 +37,8 @@
 void rpc_handle_mount_async(
   size_t type,
   [[maybe_unused]] pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   // get matching async data
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
@@ -63,7 +63,7 @@ void rpc_handle_mount_async(
 }
 
 /**
- * @fn void rpc_handle_mount(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_mount(size_t, pid_t, uint64_t, uint64_t)
  * @brief Handle mount point request
  *
  * @param type
@@ -76,8 +76,8 @@ void rpc_handle_mount_async(
 void rpc_handle_mount(
   size_t type,
   pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   // handle async return in case response info is set
   if ( response_info && bolthur_rpc_has_async( type, response_info ) ) {

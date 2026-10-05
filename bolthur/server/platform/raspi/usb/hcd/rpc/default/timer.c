@@ -21,7 +21,7 @@
 #include "../../dwhci.h"
 
 /**
- * @fn void rpc_default_timer(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_default_timer(size_t, pid_t, uint64_t, uint64_t)
  * @brief Default handler for timer
  * @param type
  * @param origin
@@ -31,8 +31,8 @@
 void rpc_default_timer(
   [[maybe_unused]] size_t type,
   [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
-  size_t response_info
+  [[maybe_unused]] uint64_t data_info,
+  uint64_t response_info
 ) {
   // clear timer if set
   if ( response_info ) {

@@ -23,7 +23,7 @@
 #include "../../../../library/usb/usb.h"
 
 /**
- * @fn void set_configuration_finished(size_t, pid_t, size_t, size_t)
+ * @fn void set_configuration_finished(size_t, pid_t, uint64_t, uint64_t)
  * @brief Callback for set descriptor
  * @param type
  * @param origin
@@ -33,8 +33,8 @@
 static void set_configuration_finished(
   size_t type,
   pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_OUTPUT )
