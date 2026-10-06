@@ -30,10 +30,10 @@
 #include <sys/bolthur.h>
 #include "util.h"
 #include "sdhost.h"
+#include "constants.h"
 // from iomem
 #include "../../libsdhost.h"
 #include "../../../../../library/platform/raspi/iomem/libdma.h"
-#include "../../../../../library/platform/raspi/iomem/libperipheral.h"
 #include "../../../../../library/platform/raspi/iomem/libiomem.h"
 #include "../../../../../library/platform/raspi/iomem/libmailbox.h"
 #include "../../../../../library/platform/raspi/iomem/mailbox.h"

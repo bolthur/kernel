@@ -34,11 +34,12 @@
 #include <sys/bolthur.h>
 #include "emmc.h"
 #include "util.h"
+#include "constants.h"
+#include "mmio.h"
 // from iomem
 #include "../../libemmc.h"
 #include "../../../../../library/platform/raspi/iomem/libdma.h"
 #include "../../../../../library/platform/raspi/iomem/libiomem.h"
-#include "../../../../../library/platform/raspi/iomem/libperipheral.h"
 #include "../../../../../library/platform/raspi/iomem/libmailbox.h"
 #include "../../../../../library/platform/raspi/iomem/mailbox.h"
 #include "../../../../../library/platform/raspi/iomem/sequence.h"

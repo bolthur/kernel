@@ -24,10 +24,10 @@
 // initial setup of peripheral base
 #if defined( BCM2709 ) || defined( BCM2710 )
   #define PERIPHERAL_BASE 0x3F000000
-  #define PERIPHERAL_SIZE 0x980000 // map everything except dwhci which starts at the mentioned offset
+  #define PERIPHERAL_SIZE 0xFFFFFF
 #else
   #define PERIPHERAL_BASE 0x20000000
-  #define PERIPHERAL_SIZE 0x980000 // map everything except dwhci which starts at the mentioned offset
+  #define PERIPHERAL_SIZE 0xFFFFFF
 #endif
 
 void* mmio_start = nullptr;
@@ -56,6 +56,10 @@ bool mmio_setup( void ) {
   // set mmio start address
   mmio_start = tmp;
   mmio_end = ( void* )( ( uintptr_t )tmp + PERIPHERAL_SIZE );
+  // unmap sdhost, emmc and hcd again
+  munmap( ( void* )( PERIPHERAL_BASE + 0x202000 ), 0x1000 );
+  munmap( ( void* )( PERIPHERAL_BASE + 0x300000 ), 0x1000 );
+  munmap( ( void* )( PERIPHERAL_BASE + 0x980000 ), 0x1000 );
   // return success
   return true;
 }

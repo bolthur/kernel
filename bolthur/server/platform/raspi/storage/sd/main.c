@@ -26,6 +26,7 @@
 #include "rpc.h"
 #include "sd.h"
 #include "global.h"
+#include "mmio.h"
 #include "../../../../libmbr.h"
 #include "../../../../../library/vfs/add.h"
 
@@ -41,6 +42,16 @@ uint8_t* mbr_data = nullptr;
  * @return
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
+  // setup mmio
+  #if defined( SD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Setup mmio access\r\n" )
+  #endif
+  if ( ! mmio_init() ) {
+    #if defined( SD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to map necessary peripherals\r\n" )
+    #endif
+    return -1;
+  }
   // allocate space for mbr
   mbr_size = sizeof( uint8_t ) * 512;
   mbr_data = malloc( mbr_size );
@@ -67,7 +78,6 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     free( mbr_data );
     return -1;
   }
-
   // register rpc
   #if defined( SD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
@@ -79,7 +89,6 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     free( mbr_data );
     return -1;
   }
-
   // try to read mbr from card
   #if defined( SD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Parsing mbr with partition information\r\n" )
@@ -90,7 +99,6 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     #endif
     return -1;
   }
-
   const uint16_t* signature = ( uint16_t* )( mbr_data + PARTITION_TABLE_SIGNATURE_OFFSET );
   #if defined( SD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Signature within mbr: %#"PRIx16"\r\n", *signature )
@@ -144,7 +152,6 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   vfs_add( msg, 0, 0, nullptr );
   // free again
   free( msg );
-
   // wait for rpc
   #if defined( SD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
