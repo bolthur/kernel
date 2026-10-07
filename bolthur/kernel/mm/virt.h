@@ -27,6 +27,7 @@
 typedef struct task_process task_process_t;
 
 #define VIRT_PAGE_PER_ENTRY ( sizeof( uint32_t ) * CHAR_BIT )
+#define VIRT_ALL_PAGES_OF_INDEX_USED 0xFFFFFFFF
 #define VIRT_PAGE_INDEX( address, min ) ( ( address - min ) / PAGE_PER_ENTRY )
 #define VIRT_PAGE_OFFSET( address, min ) ( ( address - min ) % PAGE_PER_ENTRY )
 
@@ -95,7 +96,7 @@ uintptr_t virt_get_context_max_address( const virt_context_t* );
 uint32_t virt_get_supported_modes( void );
 bool virt_set_context( virt_context_t* );
 void virt_flush_complete( void );
-void virt_flush_address( virt_context_t*, uintptr_t );
+void virt_flush_address( virt_context_t*, uintptr_t, size_t );
 bool virt_prepare_temporary( virt_context_t* );
 
 bool virt_is_mapped_in_context_range( virt_context_t*, uintptr_t, size_t );

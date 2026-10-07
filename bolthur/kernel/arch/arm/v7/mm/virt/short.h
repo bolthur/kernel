@@ -57,7 +57,7 @@ bool v7_short_destroy_context( virt_context_t*, bool );
 
 void v7_short_prepare( void );
 void v7_short_flush_complete( void );
-void v7_short_flush_address( uintptr_t );
+void v7_short_flush_address( uintptr_t, size_t );
 bool v7_short_is_mapped_in_context( virt_context_t*, uintptr_t );
 uint64_t v7_short_get_mapped_address_in_context( virt_context_t*, uintptr_t );
 uintptr_t v7_short_prefetch_fault_address( void );

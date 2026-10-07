@@ -25,7 +25,6 @@
 #include "../../../../../cache.h"
 #include "../../../../../mm/phys.h"
 #include "../../../../../mm/shared.h"
-#include "../../../../../task/process.h"
 #if defined( PRINT_MM_VIRT )
   #include "../../../../../lib/inttypes.h"
   #include "../../../../../debug/debug.h"
@@ -47,9 +46,14 @@
 #define TEMPORARY_SPACE_SIZE 0xFFFFFF
 
 /**
- * @brief Amount of mapped temporary tables
+ * @brief temporary area bitmap
  */
-static uint32_t mapped_temporary_tables = 0;
+static uint32_t* temporary_map_bitmap = nullptr;
+
+/**
+ * @brief Size of the temporary map bitmap
+ */
+static uint32_t temporary_map_bitmap_size = 0;
 
 /**
  * @brief Initial middle directory for context
@@ -130,7 +134,7 @@ __bootstrap void v7_long_startup_setup( void ) {
 
 /**
  * @fn void v7_long_startup_map(uint64_t, uintptr_t)
- * @brief Method to perform identity nap
+ * @brief Method to perform identity map
  *
  * @param phys physical address
  * @param virt virtual address
@@ -225,10 +229,9 @@ static uintptr_t map_temporary( uint64_t start, const size_t size ) {
     DEBUG_OUTPUT( "start = %#"PRIx64"\r\n", start )
   #endif
   // determine offset and subtract start
-  uint32_t offset = start % PAGE_SIZE;
+  const uint32_t offset = start % PAGE_SIZE;
   start -= offset;
-  uint32_t current_table = 0;
-  uint32_t table_idx_offset = LD_VIRTUAL_TABLE_INDEX( TEMPORARY_SPACE_START );
+  constexpr uint32_t table_idx_offset = LD_VIRTUAL_TABLE_INDEX( TEMPORARY_SPACE_START );
   // minimum: 1 page
   if ( 1 > page_amount ) {
     page_amount++;
@@ -243,40 +246,28 @@ static uintptr_t map_temporary( uint64_t start, const size_t size ) {
     )
   #endif
   // Find free area
-  for (
-    uintptr_t table = TEMPORARY_SPACE_START;
-    table < TEMPORARY_SPACE_START + ( PAGE_SIZE * mapped_temporary_tables ) && !stop;
-    table += PAGE_SIZE, ++current_table
-  ) {
-    // get table
-    auto const p = ( ld_page_table_t* )table;
-    for ( uint32_t idx = 0; idx < 512; idx++ ) {
-      // Not free, reset
-      if ( 0 != p->page[ idx ].raw ) {
+  for ( size_t tmb_idx = 0; tmb_idx < temporary_map_bitmap_size && !stop; tmb_idx++ ) {
+    // skip completely used entries
+    if ( VIRT_ALL_PAGES_OF_INDEX_USED == temporary_map_bitmap[ tmb_idx ] ) {
+      continue;
+    }
+    // loop through bits per entry
+    for ( size_t tmb_offset = 0; tmb_offset < PAGE_PER_ENTRY && !stop; tmb_offset++ ) {
+      // not free? => reset counter and continue
+      if ( temporary_map_bitmap[ tmb_idx ] & ( uint32_t )( 1U << tmb_offset ) ) {
         found_amount = 0;
         start_address = 0;
         continue;
       }
       // set address if found is 0
       if ( 0 == found_amount ) {
-        #if defined( PRINT_MM_VIRT )
-          DEBUG_OUTPUT(
-            "TEMPORARY_SPACE_START = %#x, current_table * PAGE_SIZE * 512 = %#"PRIx32", ( PAGE_SIZE * idx ) = %#"PRIx32"\r\n",
-            TEMPORARY_SPACE_START, current_table * PAGE_SIZE * 512, PAGE_SIZE * idx )
-        #endif
-        start_address = TEMPORARY_SPACE_START + (
-            current_table * PAGE_SIZE * 512
-          ) + ( PAGE_SIZE * idx );
-        #if defined( PRINT_MM_VIRT )
-          DEBUG_OUTPUT( "start_address = %#x\r\n", start_address )
-        #endif
+        start_address = TEMPORARY_SPACE_START + ( tmb_idx * PAGE_SIZE * PAGE_PER_ENTRY + tmb_offset * PAGE_SIZE );
       }
       // increase found amount
       found_amount += 1;
       // reached necessary amount? => stop loop
       if ( found_amount == page_amount ) {
         stop = true;
-        break;
       }
     }
   }
@@ -329,11 +320,16 @@ static uintptr_t map_temporary( uint64_t start, const size_t size ) {
         tbl->page[ page_idx ].raw
       )
     #endif
-    // flush address
-    virt_flush_address( virt_current_kernel_context, addr );
+    // mark as used
+    const uintptr_t tmb_frame = ( addr - TEMPORARY_SPACE_START ) / PAGE_SIZE;
+    const uint32_t tmb_index = PAGE_INDEX( tmb_frame );
+    const uint32_t tmb_offset = PAGE_OFFSET( tmb_frame );
+    temporary_map_bitmap[ tmb_index ] |= 1U << tmb_offset;
     // increase physical address
     start += PAGE_SIZE;
   }
+  // flush address
+  virt_flush_address( virt_current_kernel_context, start_address, page_amount * PAGE_SIZE );
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
@@ -376,6 +372,7 @@ static void unmap_temporary( uintptr_t addr, const size_t size ) {
   #endif
   // calculate end
   uintptr_t end = addr + page_amount * PAGE_SIZE;
+  const uintptr_t start_address = addr;
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "end = %#"PRIxPTR"\r\n", end )
@@ -392,51 +389,47 @@ static void unmap_temporary( uintptr_t addr, const size_t size ) {
     #endif
     // unmap
     tbl->page[ page_idx ].raw = 0;
-    // flush address
-    virt_flush_address( virt_current_kernel_context, addr );
+    // mark as unused
+    const uintptr_t tmb_frame = ( addr - TEMPORARY_SPACE_START ) / PAGE_SIZE;
+    const uint32_t tmb_index = PAGE_INDEX( tmb_frame );
+    const uint32_t tmb_offset = PAGE_OFFSET( tmb_frame );
+    temporary_map_bitmap[ tmb_index ] &= ~( 1U << tmb_offset );
     // next page size
     addr += PAGE_SIZE;
   }
+  // flush address
+  virt_flush_address( virt_current_kernel_context, start_address, page_amount * PAGE_SIZE );
 }
 
 /**
  * @fn uint64_t get_temporary_mapping(uintptr_t)
  * @brief Helper to get temporary mapping
- *
  * @param addr address to get mapping of
  * @return
  */
 static uint64_t get_temporary_mapping( uintptr_t addr ) {
   // determine offset and subtract start
-  size_t offset = addr % PAGE_SIZE;
+  const size_t offset = addr % PAGE_SIZE;
   addr -= offset;
-
   // stop here if not initialized
   if ( true != virt_init_get() ) {
     return INVALID_ADDRESS;
   }
-
   // determine table index offset
   uint32_t table_idx_offset = LD_VIRTUAL_TABLE_INDEX( TEMPORARY_SPACE_START );
-
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "table_idx_offset = %"PRIu32"\r\n", table_idx_offset )
   #endif
-
-  uint32_t table_idx = LD_VIRTUAL_TABLE_INDEX( addr ) - table_idx_offset;
-  uint32_t page_idx = LD_VIRTUAL_PAGE_INDEX( addr );
-
+  const uint32_t table_idx = LD_VIRTUAL_TABLE_INDEX( addr ) - table_idx_offset;
+  const uint32_t page_idx = LD_VIRTUAL_PAGE_INDEX( addr );
   // get table
-  ld_page_table_t* tbl = ( ld_page_table_t* )(
-    TEMPORARY_SPACE_START + table_idx * PAGE_SIZE
-  );
-
+  auto const tbl = ( ld_page_table_t* )( TEMPORARY_SPACE_START + table_idx * PAGE_SIZE );
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "tbl = %p\r\n", tbl )
   #endif
-
+  // return physical address
   return LD_PHYSICAL_PAGE_ADDRESS( tbl->page[ page_idx ].raw );
 }
 
@@ -757,7 +750,7 @@ bool v7_long_map(
     DEBUG_OUTPUT( "flush context\r\n" )
   #endif
   // flush context if running
-  virt_flush_address( ctx, vaddr );
+  virt_flush_address( ctx, vaddr, PAGE_SIZE );
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
@@ -826,7 +819,6 @@ uintptr_t v7_long_map_temporary( const uint64_t paddr, const size_t size ) {
  * @return
  */
 uintptr_t v7_long_map_temporary_range( const uint64_t* paddr, const size_t size ) {
-
   // find free space to map
   uint32_t page_amount = ( uint32_t )( size / PAGE_SIZE );
   uint32_t found_amount = 0;
@@ -834,68 +826,37 @@ uintptr_t v7_long_map_temporary_range( const uint64_t* paddr, const size_t size 
   bool stop = false;
   // stop here if not initialized
   if ( true != virt_init_get() ) {
-    // loop and map one to one
-    for ( size_t i = 0; i < size / PAGE_SIZE; i++ ) {
-      virt_startup_map( paddr[ i ], ( uintptr_t )paddr[ i ] );
-    }
-    // return start address
-    return ( uintptr_t )paddr[ 0 ];
+    return 0;
   }
-  // debug output
-  #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "start = %#"PRIx64"\r\n", start )
-  #endif
   // current table and table index offset
-  uint32_t current_table = 0;
   constexpr uint32_t table_idx_offset = LD_VIRTUAL_TABLE_INDEX( TEMPORARY_SPACE_START );
   // minimum: 1 page
   if ( 1 > page_amount ) {
     page_amount++;
   }
-  // debug output
-  #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT(
-      "start = %#"PRIx64", page_amount = %"PRIu32", offset = %#"PRIx32"\r\n",
-      start,
-      page_amount,
-      offset
-    )
-  #endif
   // Find free area
-  for (
-    uintptr_t table = TEMPORARY_SPACE_START;
-    table < TEMPORARY_SPACE_START + ( PAGE_SIZE * mapped_temporary_tables ) && !stop;
-    table += PAGE_SIZE, ++current_table
-  ) {
-    // get table
-    auto const p = ( ld_page_table_t* )table;
-    for ( uint32_t idx = 0; idx < 512; idx++ ) {
-      // Not free, reset
-      if ( 0 != p->page[ idx ].raw ) {
+  for ( size_t tmb_idx = 0; tmb_idx < temporary_map_bitmap_size && !stop; tmb_idx++ ) {
+    // skip completely used entries
+    if ( VIRT_ALL_PAGES_OF_INDEX_USED == temporary_map_bitmap[ tmb_idx ] ) {
+      continue;
+    }
+    // loop through bits per entry
+    for ( size_t tmb_offset = 0; tmb_offset < PAGE_PER_ENTRY && !stop; tmb_offset++ ) {
+      // not free? => reset counter and continue
+      if ( temporary_map_bitmap[ tmb_idx ] & ( uint32_t )( 1U << tmb_offset ) ) {
         found_amount = 0;
         start_address = 0;
         continue;
       }
       // set address if found is 0
       if ( 0 == found_amount ) {
-        #if defined( PRINT_MM_VIRT )
-          DEBUG_OUTPUT(
-            "TEMPORARY_SPACE_START = %#x, current_table * PAGE_SIZE * 512 = %#"PRIx32", ( PAGE_SIZE * idx ) = %#"PRIx32"\r\n",
-            TEMPORARY_SPACE_START, current_table * PAGE_SIZE * 512, PAGE_SIZE * idx )
-        #endif
-        start_address = TEMPORARY_SPACE_START + (
-            current_table * PAGE_SIZE * 512
-          ) + ( PAGE_SIZE * idx );
-        #if defined( PRINT_MM_VIRT )
-          DEBUG_OUTPUT( "start_address = %#x\r\n", start_address )
-        #endif
+        start_address = TEMPORARY_SPACE_START + ( tmb_idx * PAGE_SIZE * PAGE_PER_ENTRY + tmb_offset * PAGE_SIZE );
       }
       // increase found amount
       found_amount += 1;
       // reached necessary amount? => stop loop
       if ( found_amount == page_amount ) {
         stop = true;
-        break;
       }
     }
   }
@@ -947,16 +908,14 @@ uintptr_t v7_long_map_temporary_range( const uint64_t* paddr, const size_t size 
         tbl->page[ page_idx ].raw
       )
     #endif
-    // flush address
-    virt_flush_address( virt_current_kernel_context, addr );
+    // mark as used
+    const uintptr_t tmb_frame = ( addr - TEMPORARY_SPACE_START ) / PAGE_SIZE;
+    const uint32_t tmb_index = PAGE_INDEX( tmb_frame );
+    const uint32_t tmb_offset = PAGE_OFFSET( tmb_frame );
+    temporary_map_bitmap[ tmb_index ] |= 1U << tmb_offset;
   }
-  // debug output
-  #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT(
-      "ret = %#"PRIxPTR"\r\n",
-      ( uintptr_t )( start_address + offset )
-    )
-  #endif
+  // flush address
+  virt_flush_address( virt_current_kernel_context, start_address, page_amount * PAGE_SIZE );
   // return address
   return start_address;
 }
@@ -970,7 +929,7 @@ uintptr_t v7_long_map_temporary_range( const uint64_t* paddr, const size_t size 
  * @param free_phys flag to free also physical memory
  * @return
  */
-bool v7_long_unmap( virt_context_t* ctx, uintptr_t vaddr, const bool free_phys ) {
+bool v7_long_unmap( virt_context_t* ctx, const uintptr_t vaddr, const bool free_phys ) {
   // get page index
   const uint32_t page_idx = LD_VIRTUAL_PAGE_INDEX( vaddr );
   // get physical table
@@ -1011,7 +970,7 @@ bool v7_long_unmap( virt_context_t* ctx, uintptr_t vaddr, const bool free_phys )
   // unmap temporary
   unmap_temporary( ( uintptr_t )table, PAGE_SIZE );
   // flush context if running
-  virt_flush_address( ctx, vaddr );
+  virt_flush_address( ctx, vaddr, PAGE_SIZE );
 
   const uintptr_t min = virt_get_context_min_address( ctx );
   const uintptr_t frame = ( vaddr - min ) / PAGE_SIZE;
@@ -1167,14 +1126,18 @@ void v7_long_flush_complete( void ) {
 }
 
 /**
- * @fn void v7_long_flush_address(uintptr_t)
+ * @fn void v7_long_flush_address(uintptr_t, size_t)
  * @brief Flush address in long mode
- *
  * @param addr virtual address to flush
+ * @param size memory amount
  */
-void v7_long_flush_address( uintptr_t addr ) {
+void v7_long_flush_address( uintptr_t addr, size_t size ) {
   // flush specific address
-  __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 1" :: "r"( addr ) );
+  const uintptr_t end_address = addr + size;
+  while ( addr < end_address ) {
+    __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 1" :: "r"( addr ) : "memory" );
+    addr += PAGE_SIZE;
+  }
   // invalidate branch prediction
   cache_flush_branch_target();
   // data and instruction barrier
@@ -1197,14 +1160,20 @@ bool v7_long_prepare_temporary( virt_context_t* ctx ) {
   ) {
     return false;
   }
-
+  // allocate bitmap
+  temporary_map_bitmap_size = ( TEMPORARY_SPACE_START + TEMPORARY_SPACE_SIZE + 1 ) / PAGE_SIZE / VIRT_PAGE_PER_ENTRY;
+  temporary_map_bitmap = aligned_alloc( sizeof( *temporary_map_bitmap ), sizeof( uint32_t ) * temporary_map_bitmap_size );
+  if ( ! temporary_map_bitmap ) {
+    return false;
+  }
+  // clear out space
+  memset( temporary_map_bitmap, 0, sizeof( uint32_t ) * temporary_map_bitmap_size );
   // last physical table address
   uint64_t table_physical = 0;
-  mapped_temporary_tables = 0;
   // mapped virtual table address
   uintptr_t table_virtual = TEMPORARY_SPACE_START;
-  uintptr_t end = TEMPORARY_SPACE_START + TEMPORARY_SPACE_SIZE;
-
+  constexpr uintptr_t end = TEMPORARY_SPACE_START + TEMPORARY_SPACE_SIZE;
+  // loop until end
   for ( uintptr_t v = TEMPORARY_SPACE_START; v < end; v += PAGE_SIZE ) {
     // create table if not created
     uint64_t table = v7_long_create_table( ctx, v, 0 );
@@ -1222,6 +1191,11 @@ bool v7_long_prepare_temporary( virt_context_t* ctx ) {
         VIRT_MEMORY_TYPE_DEVICE_STRONG,
         VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
       );
+      // mark as used
+      const uintptr_t frame = ( table_virtual - TEMPORARY_SPACE_START ) / PAGE_SIZE;
+      const uint32_t index = PAGE_INDEX( frame );
+      const uint32_t offset = PAGE_OFFSET( frame );
+      temporary_map_bitmap[ index ] |= 1U << offset;
       // debug output
       #if defined( PRINT_MM_VIRT )
         DEBUG_OUTPUT(
@@ -1239,14 +1213,9 @@ bool v7_long_prepare_temporary( virt_context_t* ctx ) {
       #endif
       // increase virtual and set last physical
       table_virtual += PAGE_SIZE;
-      mapped_temporary_tables++;
       table_physical = table;
     }
   }
-  // debug output
-  #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "mapped_temporary_tables = %"PRIu32"\r\n", mapped_temporary_tables )
-  #endif
   return true;
 }
 
