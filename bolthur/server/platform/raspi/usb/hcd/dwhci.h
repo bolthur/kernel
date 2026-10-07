@@ -121,11 +121,11 @@ typedef struct channel_queue_entry {
   /** channel data state */
   dwhci_channel_state_t channel_data_state;
   /** polling timeout */
-  size_t poll_timeout;
+  uint64_t poll_timeout;
   /** setup timeout */
-  size_t setup_timeout;
+  uint64_t setup_timeout;
   /** timer frequency */
-  size_t timer_frequency;
+  uint64_t timer_frequency;
   /** ssplit frame number */
   uint32_t start_frame_num;
   /** previous csplit frame number */

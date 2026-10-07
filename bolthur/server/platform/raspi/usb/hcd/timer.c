@@ -27,11 +27,11 @@
  * @return timer id
  * @exception EAGAIN in case timer was not possible to acquire
  */
-uint64_t timer_acquire( const uint32_t milliseconds ) {
+uint64_t timer_acquire( const uint64_t milliseconds ) {
   // get clock frequency
   const size_t frequency = _syscall_timer_frequency();
   // translate into seconds
-  const uint64_t ticks = ( ( uint64_t ) milliseconds * frequency + 999 ) / 1000;
+  const uint64_t ticks = ( milliseconds * frequency + 999 ) / 1000;
   // calculate timeout
   const uint64_t timeout = _syscall_timer_tick_count() + ticks;
   // register timer

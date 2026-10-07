@@ -1278,9 +1278,9 @@ response_t dwhci_channel_send_async(
     return result;
   }
   // kickstart timeout if set
-  if ( data->timeout ) {
+  if ( entry->setup_timeout ) {
     // acquire timeout
-    entry->timer = timer_acquire( data->timeout );
+    entry->timer = timer_acquire( entry->setup_timeout );
     // handle error
     if ( errno ) {
       // debug output
@@ -1360,7 +1360,7 @@ response_t dwhci_channel_poll_async_data( channel_queue_entry_t* entry ) {
     return result;
   }
   // acquire timeout
-  entry->timer = timer_acquire( entry_data->timeout );
+  entry->timer = timer_acquire( entry->poll_timeout );
   // handle error
   if ( errno ) {
     // debug output
@@ -1490,13 +1490,15 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
   entry->buffer_size_to_transfer = entry_data->buffer_length;
   memset( entry->buffer, 0, entry_data->buffer_length );
   // check interval
-  size_t wait_time = 0;
+  uint64_t wait_time = 0;
   if ( entry->last_tick_count > 0 ) {
     // get current tick count
     const uint64_t current_tick_count = _syscall_timer_tick_count();
-    // calculate difference and finally passed milliseconds
+    // calculate difference
     const uint64_t difference = current_tick_count - entry->last_tick_count;
-    const size_t passed_milliseconds = ( size_t )( ( ( double )difference / ( double )entry->timer_frequency ) * 1000.0 );
+    // calculate passed milliseconds
+    const uint64_t passed_milliseconds = ( difference * 1000ULL ) / entry->timer_frequency;
+    // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "passed_milliseconds = %zu\r\n", passed_milliseconds )
       EARLY_STARTUP_PRINT( "difference = %zu\r\n", difference )

@@ -181,6 +181,7 @@ void rpc_interrupt_handle(
       // write back to mark them as handled
       mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_INT( channel ), cipt );
 
+      bool error = false;
       #if defined( DWHCI_ENABLE_DEBUG )
         libusb_transfer_error_t previous = entry->previous_transfer_status;
       #endif
@@ -206,12 +207,14 @@ void rpc_interrupt_handle(
           EARLY_STARTUP_PRINT( "AHB Error for channel %"PRIu32"\r\n", channel )
         #endif
         entry->error |= LIBUSB_TRANSFER_ERROR_AHB_ERROR;
+        error = true;
       }
       if ( cipt & HCD_CHANNEL_INTERRUPT_STALL ) {
         #if defined( DWHCI_ENABLE_DEBUG )
           EARLY_STARTUP_PRINT( "Stall for channel %"PRIu32"\r\n", channel )
         #endif
         entry->error |= LIBUSB_TRANSFER_ERROR_STALL;
+        error = true;
       }
       if ( cipt & HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT ) {
         #if defined( DWHCI_ENABLE_DEBUG )
@@ -235,42 +238,49 @@ void rpc_interrupt_handle(
           EARLY_STARTUP_PRINT( "Transaction error for channel %"PRIu32"\r\n", channel )
         #endif
         entry->error |= LIBUSB_TRANSFER_ERROR_TRANSACTION;
+        error = true;
       }
       if ( cipt & HCD_CHANNEL_INTERRUPT_BABBLE_ERROR ) {
         #if defined( DWHCI_ENABLE_DEBUG )
           EARLY_STARTUP_PRINT( "Babble error for channel %"PRIu32"\r\n", channel )
         #endif
         entry->error |= LIBUSB_TRANSFER_ERROR_BABBLE;
+        error = true;
       }
       if ( cipt & HCD_CHANNEL_INTERRUPT_FRAME_OVERRUN ) {
         #if defined( DWHCI_ENABLE_DEBUG )
           EARLY_STARTUP_PRINT( "Frame overrun for channel %"PRIu32"\r\n", channel )
         #endif
         entry->error |= LIBUSB_TRANSFER_ERROR_FRAME_OVERRUN;
+        error = true;
       }
       if ( cipt & HCD_CHANNEL_INTERRUPT_DATA_TOGGLE_ERROR ) {
         #if defined( DWHCI_ENABLE_DEBUG )
           EARLY_STARTUP_PRINT( "Data toggle error for channel %"PRIu32"\r\n", channel )
         #endif
         entry->error |= LIBUSB_TRANSFER_ERROR_DATA_TOGGLE;
+        error = true;
       }
       if ( cipt & HCD_CHANNEL_INTERRUPT_BUFFER_NOT_AVAILABLE ) {
         #if defined( DWHCI_ENABLE_DEBUG )
           EARLY_STARTUP_PRINT( "Buffer not available for channel %"PRIu32"\r\n", channel )
         #endif
         entry->error |= LIBUSB_TRANSFER_ERROR_BUFFER_NOT_AVAILABLE;
+        error = true;
       }
       if ( cipt & HCD_CHANNEL_INTERRUPT_EXCESSIVE_TRANSMISSION ) {
         #if defined( DWHCI_ENABLE_DEBUG )
           EARLY_STARTUP_PRINT( "Excessive transmission for channel %"PRIu32"\r\n", channel )
         #endif
         entry->error |= LIBUSB_TRANSFER_ERROR_BUFFER_EXCESSIVE_TRANSMISSION;
+        error = true;
       }
       if ( cipt & HCD_CHANNEL_INTERRUPT_FRAME_LIST_ROLLOVER ) {
         #if defined( DWHCI_ENABLE_DEBUG )
           EARLY_STARTUP_PRINT( "Rollover for channel %"PRIu32"\r\n", channel )
         #endif
         entry->error |= LIBUSB_TRANSFER_ERROR_LIST_ROLLOVER;
+        error = true;
       }
       // extract transfer size
       const uint32_t transfer_size = mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_XFER_SIZE( channel ) );
@@ -356,21 +366,22 @@ void rpc_interrupt_handle(
       bool split_transaction_timeout_reached = false;
       // handle csplit for interrupt polling
       if (
-        DWHCI_SPLIT_PHASE_CSPLIT == entry->split_phase
-        && DWHCI_QUEUE_POLL_STATUS_DATA == entry->status
-        && ! split_complete
-        && ! transfer_complete
-        && ! channel_nack
+        DWHCI_SPLIT_PHASE_CSPLIT == entry->split_phase // handle split phase csplit
+        && DWHCI_QUEUE_POLL_STATUS_DATA == entry->status // ... for data polling
+        && ! split_complete // ... no split complete
+        && ! transfer_complete // ... no transfer complete
+        && ! channel_nack // ... and no nack
+        && ! error // ... and no other error
       ) {
-        // reset error
-        entry->error = 0;
         // calculate difference and finally passed milliseconds
         const uint64_t tick = _syscall_timer_tick_count();
         const uint64_t difference = tick - entry->last_tick_count;
-        const uint64_t passed_milliseconds = ( uint64_t )( ( ( double )difference / ( double )entry->timer_frequency ) * 1000.0 );
+        const uint64_t passed_milliseconds = ( difference * 1000ULL ) / entry->timer_frequency;
         // handle smaller
         split_transaction_timeout_reached = passed_milliseconds >= entry->poll_timeout;
         if ( ! split_transaction_timeout_reached ) {
+          // reset error
+          entry->error = 0;
           // read out split ctrl, set complete split and write it back
           uint32_t split_control = mmio_read( PERIPHERAL_DWHCI_HOST_CHAN_SPLIT_CTRL( channel ) );
           split_control |= HCD_DWHCI_CHAN_SPLIT_CONTROL_COMPLETE_SPLIT( 1 );
@@ -398,15 +409,6 @@ void rpc_interrupt_handle(
             | HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT
             | HCD_CHANNEL_INTERRUPT_NOT_YET
           );
-          // handle possible wait for next microframe
-          entry->current_frame_num = mmio_read( PERIPHERAL_DWHCI_HOST_FRM_NUM );
-          const uint32_t ssplit_frame = ( entry->start_frame_num >> 3 ) & 0x7FF;
-          const uint32_t ssplit_uframe = entry->start_frame_num & 0x7;
-          const uint32_t csplit_frame = ( entry->current_frame_num >> 3 ) & 0x7FF;
-          const uint32_t csplit_uframe = entry->current_frame_num & 0x7;
-          if ( ssplit_frame == csplit_frame && ssplit_uframe == csplit_uframe ) {
-            wait_for_next_microframe( 1 );
-          }
           // calculate target frame
           const uint32_t frame_number = mmio_read( PERIPHERAL_DWHCI_HOST_FRM_NUM );
           const uint32_t current_frame = ( frame_number >> 3 ) & 0x7FF;
@@ -453,6 +455,31 @@ void rpc_interrupt_handle(
           // skip rest
           continue;
         }
+        #if defined( DWHCI_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT(
+            "SSPLIT: HFNUM = %#"PRIx32" frame=%"PRIu32" uframe=%"PRIu32"\r\n",
+            entry->start_frame_num,
+            (entry->start_frame_num >> 3) & 0x7FF,
+            entry->start_frame_num & 0x7
+          )
+          EARLY_STARTUP_PRINT(
+            "RPC ENTRY: HFNUM = %#"PRIx32" frame=%"PRIu32" uframe=%"PRIu32"\r\n",
+            frame_num_entry,
+            (frame_num_entry >> 3) & 0x7FF,
+            frame_num_entry & 0x7
+          )
+          EARLY_STARTUP_PRINT(
+            "CSPLIT: HFNUM = %#"PRIx32" frame=%"PRIu32" uframe=%"PRIu32"\r\n",
+            entry->current_frame_num,
+            (entry->current_frame_num >> 3) & 0x7FF,
+            entry->current_frame_num & 0x7
+          )
+          // print interrupt
+          EARLY_STARTUP_PRINT( "cipt = %#"PRIx32"\r\n", cipt )
+          EARLY_STARTUP_PRINT( "entry->channel = %"PRIu32"\r\n", channel )
+          EARLY_STARTUP_PRINT( "Timeout reached, cancelling current poll: %"PRIu64" >= %"PRIu64"\r\n",
+            passed_milliseconds, entry->poll_timeout)
+        #endif
         // continue with poll cancel
         entry->status = DWHCI_QUEUE_POLL_STATUS_CANCEL;
       }
@@ -521,7 +548,7 @@ void rpc_interrupt_handle(
           // treat poll cancellation as finished
           || (
             DWHCI_QUEUE_POLL_STATUS_CANCEL == entry->status
-            && ! split_transaction_timeout_reached
+            && split_transaction_timeout_reached
           )
           // data / ack cancellation retry handling
           || DWHCI_QUEUE_CHANNEL_STATUS_DATA_CANCEL_RETRY == entry->status
