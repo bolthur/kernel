@@ -363,7 +363,6 @@ void rpc_interrupt_handle(
         entry->buffer_size_to_transfer = 0;
       }
 
-      bool split_transaction_timeout_reached = false;
       // handle csplit for interrupt polling
       if (
         DWHCI_SPLIT_PHASE_CSPLIT == entry->split_phase // handle split phase csplit
@@ -378,8 +377,7 @@ void rpc_interrupt_handle(
         const uint64_t difference = tick - entry->last_tick_count;
         const uint64_t passed_milliseconds = ( difference * 1000ULL ) / entry->timer_frequency;
         // handle smaller
-        split_transaction_timeout_reached = passed_milliseconds >= entry->poll_timeout;
-        if ( ! split_transaction_timeout_reached ) {
+        if ( passed_milliseconds < entry->poll_timeout ) {
           // reset error
           entry->error = 0;
           // read out split ctrl, set complete split and write it back
@@ -546,10 +544,7 @@ void rpc_interrupt_handle(
           // treat cancellation as finished
           ) || DWHCI_QUEUE_CANCEL == entry->status
           // treat poll cancellation as finished
-          || (
-            DWHCI_QUEUE_POLL_STATUS_CANCEL == entry->status
-            && split_transaction_timeout_reached
-          )
+          || DWHCI_QUEUE_POLL_STATUS_CANCEL == entry->status
           // data / ack cancellation retry handling
           || DWHCI_QUEUE_CHANNEL_STATUS_DATA_CANCEL_RETRY == entry->status
           || DWHCI_QUEUE_CHANNEL_STATUS_ACK_CANCEL_RETRY == entry->status

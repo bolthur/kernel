@@ -17,6 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <inttypes.h>
 #include "../../rpc.h"
 #include "../../dwhci.h"
 
@@ -67,11 +68,14 @@ void rpc_default_timer(
   } else {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Timeout reached\r\n" )
+      EARLY_STARTUP_PRINT( "Timeout reached, status = %d / %d\r\n", entry->status, DWHCI_QUEUE_POLL_STATUS_DATA )
     #endif
     // switch status and cancel channel
-    entry->status = DWHCI_QUEUE_POLL_STATUS_DATA == entry->status
-      ? DWHCI_QUEUE_POLL_STATUS_CANCEL : DWHCI_QUEUE_CANCEL;
+    if ( DWHCI_QUEUE_POLL_STATUS_DATA == entry->status ) {
+      entry->status = DWHCI_QUEUE_POLL_STATUS_CANCEL;
+    } else {
+      entry->status = DWHCI_QUEUE_CANCEL;
+    }
   }
   // start cancellation / continue
   const response_t response = dwhci_channel_async_continue( entry );

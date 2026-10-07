@@ -647,6 +647,9 @@ response_t dwhci_channel_send_async_stop_channel( channel_queue_entry_t* entry, 
       characteristic |= HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 );
       mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ), characteristic );
     } else {
+      #if defined( DWHCI_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "entry->status = %d\r\n", entry->status )
+      #endif
       if ( DWHCI_QUEUE_POLL_STATUS_CANCEL == entry->status ) {
         #if defined( DWHCI_ENABLE_DEBUG )
           EARLY_STARTUP_PRINT( "Nothing to cancel, faking a nack" )
@@ -1074,7 +1077,7 @@ response_t dwhci_channel_send_cancel( channel_queue_entry_t* entry ) {
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to stop channel\r\n")
+      EARLY_STARTUP_PRINT( "Unable to stop channel: %d\r\n", result )
     #endif
     // return result
     return result;
@@ -1358,17 +1361,6 @@ response_t dwhci_channel_poll_async_data( channel_queue_entry_t* entry ) {
     #endif
     // return result
     return result;
-  }
-  // acquire timeout
-  entry->timer = timer_acquire( entry->poll_timeout );
-  // handle error
-  if ( errno ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to acquire timeout\r\n" )
-    #endif
-    // return error
-    return HCD_RESPONSE_ERROR_IO;
   }
   // start send data packet
   return dwhci_channel_send_async_start_channel( entry );

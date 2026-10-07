@@ -21,7 +21,7 @@
 #include "timer.h"
 
 /**
- * @fn uint64_t timer_acquire(uint32_t)
+ * @fn uint64_t timer_acquire(uint64_t)
  * @brief Acquire timer with delay of milliseconds
  * @param milliseconds milliseconds to wait
  * @return timer id
