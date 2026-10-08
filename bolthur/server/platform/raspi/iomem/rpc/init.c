@@ -75,6 +75,13 @@ bool rpc_init( void ) {
     #endif
     return false;
   }
+  bolthur_rpc_bind( IOMEM_RPC_GPIO_RAISE, rpc_handle_gpio_raise, true );
+  if ( errno ) {
+    #if defined( IOMEM_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to register handler gpio raise!\r\n" )
+    #endif
+    return false;
+  }
   bolthur_rpc_bind( IOMEM_RPC_GPIO_SET_DETECT, rpc_handle_gpio_set_detect, true );
   if ( errno ) {
     #if defined( IOMEM_ENABLE_OUTPUT )

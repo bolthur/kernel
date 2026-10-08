@@ -17,27 +17,26 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <time.h>
+#include <inttypes.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/bolthur.h>
-#include "../generic.h"
-#include "../mailbox.h"
-#include "../property.h"
-#include "../rpc.h"
-#include "../../../../../library/platform/raspi/iomem/libmailbox.h"
-#include "../do_string.h"
+#include "../../mmio.h"
+#include "../../rpc.h"
+#include "../../../../../../library/platform/raspi/iomem/libiomem.h"
+#include "../../../../../../library/platform/raspi/iomem/libperipheral.h"
 
 /**
- * @fn void rpc_handle_mailbox(size_t, pid_t, uint64_t, uint64_t)
- * @brief handle request
+ * @fn void rpc_handle_gpio_raise(size_t, pid_t, uint64_t, uint64_t)
+ * @brief GPIO raise rpc
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
  */
-void rpc_handle_mailbox(
+void rpc_handle_gpio_raise(
   [[maybe_unused]] size_t type,
   pid_t origin,
   uint64_t data_info,
@@ -62,53 +61,38 @@ void rpc_handle_mailbox(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
-  // allocate space for request
-  const int32_t* mailbox_request = ( int32_t* )request->container;
-  const size_t copy_size = data_size - sizeof( vfs_ioctl_perform_request_t );
-  // handle more than allowed
-  if ( copy_size > PAGE_SIZE ) {
-    error.status = -ENOMEM;
+  iomem_gpio_raise_t* raise_request;
+  // handle invalid data size
+  if ( data_size - sizeof( vfs_ioctl_perform_request_t ) != sizeof( *raise_request ) ) {
+    error.status = -EINVAL;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     free( request );
     return;
   }
-  // allocate space for response
-  vfs_ioctl_perform_response_t* response;
-  const size_t response_size = copy_size + sizeof( *response );
-  response = malloc( response_size );
-  if ( ! response ) {
-    error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
-    free( request );
-    return;
+  // allocate space for pull_request
+  raise_request = ( iomem_gpio_raise_t* )request->container;
+  // determine address depending on pin and raise
+  uintptr_t address;
+  // determine address and adjust pin
+  if ( raise_request->pin < 32 ) {
+    if ( raise_request->raise ) {
+      address = PERIPHERAL_GPIO_GPSET0;
+    } else {
+      address = PERIPHERAL_GPIO_GPCLR0;
+    }
+  } else {
+    if ( raise_request->raise ) {
+      address = PERIPHERAL_GPIO_GPSET1;
+    } else {
+      address = PERIPHERAL_GPIO_GPCLR1;
+    }
+    raise_request->pin -= 32;
   }
-  const int32_t count = ( int32_t )( copy_size / sizeof( int32_t ) );
-  // clear request
-  memset( response, 0, response_size );
-  // copy stuff to property buffer
-  do_memcpy( property_buffer, mailbox_request, copy_size );
-  // overwrite current property index with last one ( count - 1 )
-  property_index = count - 1;
-  // process request
-  const uint32_t result = property_process();
-  // handle error
-  if ( MAILBOX_ERROR == result ) {
-    error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
-    free( request );
-    free( response );
-    return;
-  }
-  // copy response into original request
-  do_memcpy( response->container, property_buffer, copy_size );
-  // return data and finish with free
-  bolthur_rpc_return(
-    RPC_VFS_IOCTL,
-    response,
-    response_size,
-    nullptr,
-    0
-  );
+  // write pin bit
+  mmio_write( address, 1 << raise_request->pin );
+  // set status to 0
+  memset( &error, 0, sizeof( error ) );
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+  // free pull_request
   free( request );
-  free( response );
 }

@@ -14,6 +14,7 @@ iomem_SOURCES = \
   rpc/gpio/function.c \
   rpc/gpio/lock.c \
   rpc/gpio/pull.c \
+  rpc/gpio/raise.c \
   rpc/gpio/status.c \
   rpc/gpio/unlock.c \
   rpc/mmio/lock.c \

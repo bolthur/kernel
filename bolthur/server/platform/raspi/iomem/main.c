@@ -108,9 +108,10 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     IOMEM_RPC_GPIO_EVENT,
     IOMEM_RPC_GPIO_LOCK,
     IOMEM_RPC_GPIO_UNLOCK,
+    IOMEM_RPC_GPIO_RAISE,
   };
   // add device file
-  if ( ! vfs_dev_add_file( IOMEM_DEVICE_PATH, device_info, 11, nullptr ) ) {
+  if ( ! vfs_dev_add_file( IOMEM_DEVICE_PATH, device_info, 12, nullptr ) ) {
     #if defined( IOMEM_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     #endif

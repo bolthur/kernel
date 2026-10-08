@@ -67,7 +67,7 @@ bool sd_init( void ) {
   #endif
   // raspi before 3 use emmc
   #if 3 > RASPI
-    emmc_response_t response = emmc_init();
+    const emmc_response_t response = emmc_init();
     if ( EMMC_RESPONSE_OK != response ) {
       // debug output
       #if defined( SD_ENABLE_DEBUG )

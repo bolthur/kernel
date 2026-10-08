@@ -33,6 +33,7 @@ void rpc_handle_mmio_lock( size_t, pid_t, uint64_t, uint64_t );
 void rpc_handle_mmio_unlock( size_t, pid_t, uint64_t, uint64_t );
 void rpc_handle_gpio_set_function( size_t, pid_t, uint64_t, uint64_t );
 void rpc_handle_gpio_set_pull( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_gpio_raise( size_t, pid_t, uint64_t, uint64_t );
 void rpc_handle_gpio_set_detect( size_t, pid_t, uint64_t, uint64_t );
 void rpc_handle_gpio_status( size_t, pid_t, uint64_t, uint64_t );
 void rpc_handle_gpio_event( size_t, pid_t, uint64_t, uint64_t );

@@ -35,7 +35,6 @@
 static void* mmio_start = nullptr;
 
 bool mmio_init( void ) {
-  EARLY_STARTUP_PRINT( "PERIPHERAL_BASE = %#x\r\n", PERIPHERAL_BASE )
   // map whole mmio area
   void* tmp = mmap(
     #if defined( RASPI3 )

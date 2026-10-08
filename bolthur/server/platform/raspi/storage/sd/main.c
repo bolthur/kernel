@@ -27,6 +27,7 @@
 #include "sd.h"
 #include "global.h"
 #include "mmio.h"
+#include "led.h"
 #include "../../../../libmbr.h"
 #include "../../../../../library/vfs/add.h"
 
@@ -74,6 +75,17 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   if( ! sd_init() ) {
     #if defined( SD_ENABLE_OUTPUT )
       EARLY_STARTUP_PRINT( "Error while initializing sd interface: %s\r\n", sd_last_error() )
+    #endif
+    free( mbr_data );
+    return -1;
+  }
+  // setup status led
+  #if defined( SD_ENABLE_OUTPUT )
+    EARLY_STARTUP_PRINT( "Setup status LED\r\n" )
+  #endif
+  if ( ! led_init_status() ) {
+    #if defined( SD_ENABLE_OUTPUT )
+      EARLY_STARTUP_PRINT( "Error while initializing status led\r\n" )
     #endif
     free( mbr_data );
     return -1;
