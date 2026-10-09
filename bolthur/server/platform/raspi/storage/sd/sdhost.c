@@ -31,13 +31,15 @@
 #include "util.h"
 #include "sdhost.h"
 #include "constants.h"
+#include "mmio.h"
+#include "led.h"
 // from iomem
+#include "delay.h"
 #include "../../libsdhost.h"
-#include "../../../../../library/platform/raspi/iomem/libdma.h"
 #include "../../../../../library/platform/raspi/iomem/libiomem.h"
 #include "../../../../../library/platform/raspi/iomem/libmailbox.h"
 #include "../../../../../library/platform/raspi/iomem/mailbox.h"
-#include "../../../../../library/platform/raspi/iomem/sequence.h"
+#include "../../usb/hcd/delay.h"
 
 /*
  * Add and use interrupt routine. This interrupt is listed in a more complete
@@ -199,52 +201,23 @@ static sdhost_message_entry_t sdhost_error_message[] = {
 /**
  * @fn sdhost_response_t enable_interrupt(void)
  * @brief Helper to enable interrupts
- *
- * @param is_data
  * @return
  */
 static sdhost_response_t enable_interrupt( void ) {
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 2, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Error allocating sequence: %s\r\n", strerror( errno ) )
-    #endif
-    // return error
-    return SDHOST_RESPONSE_MEMORY;
-  }
-  uint32_t all_interrupts = ( uint32_t )~(
+  const uint32_t interrupts = mmio_read( PERIPHERAL_SDHOST_HOST_CONFIG ) & ~(
     SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_DATA
     | SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BLOCK
     | SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BUSY
   );
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ_AND;
-  sequence[ 0 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
-  sequence[ 0 ].value = all_interrupts;
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 1 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
-  sequence[ 1 ].value = SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BUSY;
-  // perform request
-  if ( -1 == iomem_execute_sequence( device->fd_iomem, sequence, sequence_size ) ) {
-    // debug output
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Change transfer width in control0 failed\r\n" )
-    #endif
-    // free
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return SDHOST_RESPONSE_IO;
-  }
-  // free
-  iomem_release_mmio_sequence( sequence );
+  mmio_write( PERIPHERAL_SDHOST_HOST_CONFIG, interrupts
+    | SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BUSY
+    | SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_DATA );
   return SDHOST_RESPONSE_OK;
 }
 
 /**
  * @fn sdhost_response_t init_gpio(void)
  * @brief Perform necessary gpio setup
- *
  * @return
  */
 static sdhost_response_t init_gpio( void ) {
@@ -555,43 +528,15 @@ static sdhost_response_t init_gpio( void ) {
 /**
  * @fn sdhost_response_t interrupt_mark_handled(uint32_t)
  * @brief Mark interrupts as handled
- *
  * @param mask
  * @return
  */
-static sdhost_response_t interrupt_mark_handled( uint32_t mask ) {
+static sdhost_response_t interrupt_mark_handled( const uint32_t mask ) {
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Mark interrupts handled\r\n" )
   #endif
-  // allocate sequence
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 1, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
-    #endif
-    // return error
-    return SDHOST_RESPONSE_MEMORY;
-  }
-  // overwrite interrupt register
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 0 ].offset = PERIPHERAL_SDHOST_HOST_STATUS;
-  sequence[ 0 ].value = mask;
-  // perform request
-  const int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_size );
-  // free sequence
-  iomem_release_mmio_sequence( sequence );
-  // handle ioctl error
-  if ( -1 == result ) {
-    // debug output
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Mark interrupt as handled sequence failed\r\n" )
-    #endif
-    // return error
-    return SDHOST_RESPONSE_IO;
-  }
+  mmio_write( PERIPHERAL_SDHOST_HOST_STATUS, mask );
   // return success
   return SDHOST_RESPONSE_OK;
 }
@@ -599,7 +544,6 @@ static sdhost_response_t interrupt_mark_handled( uint32_t mask ) {
 /**
  * @fn sdhost_response_t get_interrupt_status(uint32_t*)
  * @brief Helper to fetch interrupt status from register
- *
  * @param destination
  * @return
  */
@@ -608,39 +552,11 @@ static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Fetch interrupt status\r\n" )
   #endif
-  // allocate sequence
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 1, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Allocate sequence failed\r\n" )
-    #endif
-    // return error
-    return SDHOST_RESPONSE_MEMORY;
-  }
-  // read interrupt register
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 0 ].offset = PERIPHERAL_SDHOST_HOST_STATUS;
-  // perform request
-  const int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_size );
-  // handle ioctl error
-  if ( -1 == result ) {
-    // debug output
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Get interrupt status sequence failed\r\n" )
-    #endif
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return SDHOST_RESPONSE_IO;
-  }
+  const uint32_t interrupt = mmio_read( PERIPHERAL_SDHOST_HOST_STATUS );
   // set "return" value
   if ( destination ) {
-    *destination = sequence[ 0 ].value;
+    *destination = interrupt;
   }
-  // free sequence
-  iomem_release_mmio_sequence( sequence );
   // return success
   return SDHOST_RESPONSE_OK;
 }
@@ -648,49 +564,19 @@ static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
 /**
  * @fn sdhost_response_t get_debug_status(uint32_t*)
  * @brief Helper to query debug register content
- *
  * @param destination
  * @return
  */
-[[maybe_unused]] static sdhost_response_t get_debug_status( uint32_t* destination ) {
+static sdhost_response_t get_debug_status( uint32_t* destination ) {
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Fetch debug register\r\n" )
   #endif
-  // allocate sequence
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence(
-    1, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Allocate sequence failed\r\n" )
-    #endif
-    // return error
-    return SDHOST_RESPONSE_MEMORY;
-  }
-  // read interrupt register
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 0 ].offset = PERIPHERAL_SDHOST_DEBUG;
-  // perform request
-  const int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_size );
-  // handle ioctl error
-  if ( -1 == result ) {
-    // debug output
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Get interrupt status sequence failed\r\n" )
-    #endif
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return SDHOST_RESPONSE_IO;
-  }
+  const uint32_t status = mmio_read( PERIPHERAL_SDHOST_DEBUG );
   // set "return" value
   if ( destination ) {
-    *destination = sequence[ 0 ].value;
+    *destination = status;
   }
-  // free sequence
-  iomem_release_mmio_sequence( sequence );
   // return success
   return SDHOST_RESPONSE_OK;
 }
@@ -698,19 +584,16 @@ static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
 /**
  * @fn sdhost_response_t finish_sd_data_command(uint32_t)
  * @brief Helper finishes data command by reading until everything is done
- *
  * @param command
  * @return
  */
-static sdhost_response_t finish_sd_data_command( uint32_t command ) {
+static sdhost_response_t finish_sd_data_command( const uint32_t command ) {
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Finish sd data command\r\n" )
   #endif
-  size_t block_size = device->block_size;
-  size_t offset = sizeof( uint32_t );
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence;
+  const size_t block_size = device->block_size;
+  constexpr size_t offset = sizeof( uint32_t );
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
@@ -732,65 +615,158 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
     return SDHOST_RESPONSE_UNKNOWN;
   }
   // is read flag
-  bool is_read = command & SDHOST_COMMAND_FLAG_READ;
-  bool is_write = command & SDHOST_COMMAND_FLAG_WRITE;
+  const bool is_read = command & SDHOST_COMMAND_FLAG_READ;
+  const bool is_write = command & SDHOST_COMMAND_FLAG_WRITE;
+  // handle read
+  if ( is_read ) {
+    size_t necessary_word = ( device->block_size * device->block_count ) / sizeof( uint32_t );
+    uint32_t* buffer = nullptr;
+    if ( device->buffer ) {
+      buffer = device->buffer;
+    } else if ( device->shm_id ) {
+      buffer = _syscall_memory_shared_attach( device->shm_id, 0 );
+      if ( errno ) {
+        #if defined( SDHOST_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "Unable to acquire shared memory\r\n" )
+        #endif
+        return SDHOST_RESPONSE_MEMORY;
+      }
+    }
+    assert( buffer );
+    while ( necessary_word ) {
+      // burst word count
+      const size_t burst_word_count = necessary_word > SDHOST_DATA_FIFO_PIO_BURST
+        ? SDHOST_DATA_FIFO_PIO_BURST : necessary_word;
+      const uint32_t debug_register = mmio_read( PERIPHERAL_SDHOST_DEBUG );
+      // determine word count depending on read
+      size_t word_count = SDHOST_DEBUG_FIFO_FILL( debug_register );
+      if ( word_count < burst_word_count ) {
+        const uint32_t fsm_state = debug_register & SDHOST_DEBUG_FIFO_FILL_MASK;
+        // handle possible read / write error
+        if (
+          SDHOST_DEBUG_FSM_READDATA != fsm_state
+          && SDHOST_DEBUG_FSM_READWAIT != fsm_state
+          && SDHOST_DEBUG_FSM_READCRC != fsm_state
+        ) {
+          const uint32_t host_status = mmio_read( PERIPHERAL_SDHOST_HOST_STATUS );
+          // handle error
+          if ( host_status & SDHOST_HOST_STATUS_MASK_ERROR_ALL ) {
+            return SDHOST_RESPONSE_IO;
+          }
+        }
+        // skip until enough words are there
+        continue;
+      } else if (word_count > necessary_word) {
+        word_count = necessary_word;
+      }
+      // subtract from total
+      necessary_word -= word_count;
+      for ( size_t idx = 0; idx < word_count; idx++ ) {
+        uint32_t val = mmio_read( PERIPHERAL_SDHOST_DATAPORT );
+        memcpy( buffer++, &val, sizeof( uint32_t ) );
+      }
+    }
+    if ( device->shm_id ) {
+      _syscall_memory_shared_detach( device->shm_id );
+      if ( errno ) {
+        #if defined( SDHOST_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "Unable to acquire shared memory\r\n" )
+        #endif
+        return SDHOST_RESPONSE_MEMORY;
+      }
+    }
+  }
+  if ( is_write ) {
+    // calculate necessary word count
+    size_t necessary_word = ( device->block_size * device->block_count ) / sizeof( uint32_t );
+    const uint32_t* buffer = nullptr;
+    if ( device->buffer ) {
+      buffer = device->buffer;
+    } else if ( device->shm_id ) {
+      buffer = _syscall_memory_shared_attach( device->shm_id, 0 );
+      if ( errno ) {
+        #if defined( SDHOST_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "Unable to acquire shared memory\r\n" )
+        #endif
+        return SDHOST_RESPONSE_MEMORY;
+      }
+    }
+    assert( buffer );
+    while ( necessary_word ) {
+      // burst word count
+      const size_t burst_word_count = necessary_word > SDHOST_DATA_FIFO_PIO_BURST
+        ? SDHOST_DATA_FIFO_PIO_BURST : necessary_word;
+      const uint32_t debug_register = mmio_read( PERIPHERAL_SDHOST_DEBUG );
+      // determine word count depending on read
+      size_t word_count = SDHOST_FIFO_SIZE - SDHOST_DEBUG_FIFO_FILL( debug_register );
+      if ( word_count < burst_word_count ) {
+        const uint32_t fsm_state = debug_register & SDHOST_DEBUG_FIFO_FILL_MASK;
+        // handle possible read / write error
+        if (
+          SDHOST_DEBUG_FSM_WRITEDATA != fsm_state
+          && SDHOST_DEBUG_FSM_WRITEWAIT1 != fsm_state
+          && SDHOST_DEBUG_FSM_WRITEWAIT2 != fsm_state
+          && SDHOST_DEBUG_FSM_WRITECRC != fsm_state
+          && SDHOST_DEBUG_FSM_WRITESTART1 != fsm_state
+          && SDHOST_DEBUG_FSM_WRITESTART2 != fsm_state
+        ) {
+          const uint32_t host_status = mmio_read( PERIPHERAL_SDHOST_HOST_STATUS );
+          // handle error
+          if ( host_status & SDHOST_HOST_STATUS_MASK_ERROR_ALL ) {
+            return SDHOST_RESPONSE_IO;
+          }
+        }
+        // skip until enough words are there
+        continue;
+      } else if (word_count > necessary_word) {
+        word_count = necessary_word;
+      }
+      // subtract from total
+      necessary_word -= word_count;
+      for ( size_t idx = 0; idx < word_count; idx++ ) {
+        mmio_write( PERIPHERAL_SDHOST_DATAPORT, *buffer );
+        buffer++;
+      }
+    }
+    if ( device->shm_id ) {
+      _syscall_memory_shared_detach( device->shm_id );
+      if ( errno ) {
+        #if defined( SDHOST_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "Unable to acquire shared memory\r\n" )
+        #endif
+        return SDHOST_RESPONSE_MEMORY;
+      }
+    }
+  }
   // handle stop command
   if ( device->block_count > 1 && ( is_read || is_write ) ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Sending stop transmission finally\r\n" )
     #endif
-    // allocate sequence
-    sequence = iomem_prepare_mmio_sequence( 3, &sequence_size );
-    // handle error
-    if ( ! sequence ) {
-      // debug output
-      #if defined( SDHOST_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Unable to allocate sequence\r\n" )
-      #endif
-      // return error
-      return SDHOST_RESPONSE_MEMORY;
-    }
     // set argument
-    sequence[ 0 ].type = IOMEM_MMIO_ACTION_WRITE;
-    sequence[ 0 ].offset = PERIPHERAL_SDHOST_ARGUMENT;
-    sequence[ 0 ].value = 0;
+    mmio_write( PERIPHERAL_SDHOST_ARGUMENT, 0 );
     // set command
-    sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE;
-    sequence[ 1 ].offset = PERIPHERAL_SDHOST_COMMAND;
-    sequence[ 1 ].value = sdhost_command_list[ SDHOST_CMD_STOP_TRANSMISSION ]
-     | SDHOST_COMMAND_FLAG_ENABLE;
-    // wait while stop command is executing
-    sequence[ 2 ].type = IOMEM_MMIO_ACTION_LOOP_TRUE;
-    sequence[ 2 ].offset = PERIPHERAL_SDHOST_COMMAND;
-    sequence[ 2 ].loop_and = SDHOST_COMMAND_FLAG_ENABLE;
-    sequence[ 2 ].loop_max_iteration = 50000;
-    sequence[ 2 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-    sequence[ 2 ].sleep = 10;
-    sequence[ 2 ].failure_condition = IOMEM_MMIO_FAILURE_CONDITION_ON;
-    sequence[ 2 ].failure_value = SDHOST_COMMAND_FLAG_FAILED;
-    // perform request
-    if ( -1 == iomem_execute_sequence( device->fd_iomem, sequence, sequence_size ) ) {
-      // debug output
-      #if defined( SDHOST_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Issue data read sequence failed\r\n" )
-      #endif
-      // free
-      iomem_release_mmio_sequence( sequence );
-      // return error
-      return SDHOST_RESPONSE_IO;
-    }
-    // check for timeout
-    if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ 2 ].abort_type ) {
+    constexpr uint32_t timeout = 50000;
+    bool timeout_result;
+    mmio_write( PERIPHERAL_SDHOST_COMMAND, sdhost_command_list[ SDHOST_CMD_STOP_TRANSMISSION ] | SDHOST_COMMAND_FLAG_ENABLE );
+    DELAY_ITERATION_FAILURE(
+      PERIPHERAL_SDHOST_COMMAND,
+      SDHOST_COMMAND_FLAG_ENABLE,
+      SDHOST_COMMAND_FLAG_FAILED,
+      timeout,
+      10,
+      timeout_result
+    )
+    // handle timeout
+    if ( timeout_result ) {
       // debug output
       #if defined( SDHOST_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Wait for cmd done timed out\r\n" )
       #endif
       // load last interrupt
-      while ( SDHOST_RESPONSE_OK != get_interrupt_status(
-        &device->last_interrupt
-      ) ) {
-        usleep( 10 );
+      while ( SDHOST_RESPONSE_OK != get_interrupt_status( &device->last_interrupt ) ) {
+        delay_us( 10 );
       }
       /// FIXME: SET LAST ERROR CORRECTLY
       device->last_error = device->last_interrupt;
@@ -799,18 +775,12 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
         EARLY_STARTUP_PRINT( "last error: %#"PRIx32"\r\n", device->last_error )
       #endif
       // mask interrupts again
-      while ( SDHOST_RESPONSE_OK != interrupt_mark_handled(
-        SDHOST_HOST_STATUS_MASK_ERROR_ALL
-      ) ) {
-        usleep( 10 );
+      while ( SDHOST_RESPONSE_OK != interrupt_mark_handled( SDHOST_HOST_STATUS_MASK_ERROR_ALL ) ) {
+        delay_us( 10 );
       }
-      // free
-      iomem_release_mmio_sequence( sequence );
       // return failure
       return SDHOST_RESPONSE_TIMEOUT;
     }
-    // free
-    iomem_release_mmio_sequence( sequence );
   }
   // return success
   return SDHOST_RESPONSE_OK;
@@ -819,35 +789,17 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
 /**
  * @fn sdhost_response_t issue_sd_command(uint32_t, uint32_t)
  * @brief Issue sd command
- *
  * @param command
  * @param argument
  * @return
  */
-static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
+static sdhost_response_t issue_sd_command( const uint32_t command, const uint32_t argument ) {
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Issue SD command\r\n" )
   #endif
-  bool is_data = ( command & SDHOST_COMMAND_FLAG_READ )
-    || ( command & SDHOST_COMMAND_FLAG_WRITE );
-  bool response_busy = command & SDHOST_COMMAND_FLAG_BUSY;
-
-  // sequence size
-  size_t sequence_entry_count = 12;
-  if ( response_busy ) {
-    sequence_entry_count += 2;
-  }
-  if ( is_data ) {
-    sequence_entry_count++;
-  }
-  // debug output
-  #if defined( SDHOST_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT(
-      "sequence_entry_count = %zu\r\n",
-      sequence_entry_count
-    )
-  #endif
+  const bool is_data = ( command & SDHOST_COMMAND_FLAG_READ ) || ( command & SDHOST_COMMAND_FLAG_WRITE );
+  const bool response_busy = command & SDHOST_COMMAND_FLAG_BUSY;
   // Block count limit due to BLKSIZECNT limit to 16 bit "register"
   if( device->block_count > 0xFFFF ) {
     // debug output
@@ -860,319 +812,117 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
     // return error;
     return SDHOST_RESPONSE_MEMORY;
   }
-  // allocate sequence
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence(
-    sequence_entry_count,
-    &sequence_size
-  );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to allocate sequence\r\n" )
-    #endif
-    // return error
-    return SDHOST_RESPONSE_MEMORY;
-  }
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "sequence_size = %zx\r\n", sequence_size )
+    EARLY_STARTUP_PRINT( "Looping while command is enabled\r\n" )
   #endif
-
-  // debug output
-  #if defined( SDHOST_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Filling command sequence for execution\r\n" )
-  #endif
-  uint32_t idx = 0;
-  uint32_t timeout = 50000;
-  // fill sequence to execute
+  constexpr uint32_t timeout = 50000;
+  bool timeout_result = false;
   // wait for command finished
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_LOOP_TRUE;
-  sequence[ idx ].offset = PERIPHERAL_SDHOST_COMMAND;
-  sequence[ idx ].loop_and = SDHOST_COMMAND_FLAG_ENABLE;
-  sequence[ idx ].loop_max_iteration = timeout;
-  sequence[ idx ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ idx ].sleep = 10;
-  sequence[ idx ].failure_condition = IOMEM_MMIO_FAILURE_CONDITION_ON;
-  sequence[ idx ].failure_value = SDHOST_COMMAND_FLAG_FAILED;
-  idx++;
-  // read host status and push back ( clears error flags if set )
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ idx ].offset = PERIPHERAL_SDHOST_HOST_STATUS;
-  idx++;
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_WRITE_PREVIOUS_READ;
-  sequence[ idx ].offset = PERIPHERAL_SDHOST_HOST_STATUS;
-  idx++;
-  // set block size
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ idx ].value = device->block_size;
-  sequence[ idx ].offset = PERIPHERAL_SDHOST_BLOCKSIZE;
-  idx++;
-  // set block count
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ idx ].value = device->block_count;
-  sequence[ idx ].offset = PERIPHERAL_SDHOST_BLOCKCOUNT;
-  idx++;
-  // set argument
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ idx ].offset = PERIPHERAL_SDHOST_ARGUMENT;
-  sequence[ idx ].value = argument;
-  idx++;
-  // set command
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ idx ].offset = PERIPHERAL_SDHOST_COMMAND;
-  sequence[ idx ].value = command | SDHOST_COMMAND_FLAG_ENABLE;
-  idx++;
-  // wait while command is executing
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_LOOP_TRUE;
-  sequence[ idx ].offset = PERIPHERAL_SDHOST_COMMAND;
-  sequence[ idx ].loop_and = SDHOST_COMMAND_FLAG_ENABLE;
-  sequence[ idx ].loop_max_iteration = timeout;
-  sequence[ idx ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ idx ].sleep = 10;
-  sequence[ idx ].failure_condition = IOMEM_MMIO_FAILURE_CONDITION_ON;
-  sequence[ idx ].failure_value = SDHOST_COMMAND_FLAG_FAILED;
-  idx++;
-  // read resp0
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ idx ].offset = PERIPHERAL_SDHOST_RESPONSE0;
-  idx++;
-  // read resp1
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ idx ].offset = PERIPHERAL_SDHOST_RESPONSE1;
-  idx++;
-  // read resp2
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ idx ].offset = PERIPHERAL_SDHOST_RESPONSE2;
-  idx++;
-  // read resp3
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ idx ].offset = PERIPHERAL_SDHOST_RESPONSE3;
-  // wait for transfer complete for data or if it's a busy command
-  // create shared memory
-  uint64_t shm_id = 0;
-  void* shm_addr = nullptr;
-  // setup dma if enabled
-  if ( is_data && 0 < device->block_count ) {
-    if ( device->shm_id ) {
-      // debug output
-      #if defined( SDHOST_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Using shared memory set in device\r\n" )
-      #endif
-      shm_id = device->shm_id;
-    } else {
-      // debug output
-      #if defined( SDHOST_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Creating shared memory\r\n" )
-      #endif
-      shm_id = _syscall_memory_shared_create(
-        device->block_count * device->block_size);
-      if ( errno ) {
-        // debug output
-        #if defined( SDHOST_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Request shared area failed\r\n" )
-        #endif
-        // release sequence
-        iomem_release_mmio_sequence( sequence );
-        // return error
-        return SDHOST_RESPONSE_UNKNOWN;
-      }
-      // attach it
-      shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
-      if ( errno ) {
-        // debug output
-        #if defined( SDHOST_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Request shared area failed\r\n" )
-        #endif
-        // release sequence
-        iomem_release_mmio_sequence( sequence );
-        // return error
-        return SDHOST_RESPONSE_MEMORY;
-      }
-      // clear out space
-      memset( shm_addr, 0, device->block_count * device->block_size );
-    }
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT(command & SDHOST_COMMAND_FLAG_READ
-        ? "Perform DMA read\r\n"
-        : "Perform DMA write\r\n" )
-    #endif
-    idx++;
-    const uint32_t copy_size = device->block_count * device->block_size;
-    sequence[ idx ].type = ( command & SDHOST_COMMAND_FLAG_READ )
-      ? IOMEM_MMIO_ACTION_DMA_READ_DEV
-      : IOMEM_MMIO_ACTION_DMA_WRITE_DEV;
-    sequence[ idx ].value64 = shm_id;
-    sequence[ idx ].offset = PERIPHERAL_SDHOST_DATAPORT;
-    sequence[ idx ].dma_copy_size = copy_size;
-    sequence[ idx ].dma_permap = LIBDMA_TI_PERMAP_SDHOST;
-    sequence[ idx ].dma_burst_length = 0; // set burst length to single transfer on DREQ
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "dma_copy_size = %"PRIu32"\r\n", sequence[ idx ].dma_copy_size )
-    #endif
-  }
-  // wait for transfer complete for data or if it's a busy command
-  if ( response_busy ) {
-    // hack for cppcheck
-    idx++;
-    // wait until data is done
-    sequence[ idx ].type = IOMEM_MMIO_ACTION_LOOP_FALSE;
-    sequence[ idx ].offset = PERIPHERAL_SDHOST_HOST_STATUS;
-    sequence[ idx ].loop_and = SDHOST_HOST_STATUS_INT_BUSY
-      | SDHOST_HOST_STATUS_INT_SDIO;
-    sequence[ idx ].loop_max_iteration = timeout;
-    sequence[ idx ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-    sequence[ idx ].sleep = 10;
-    idx++;
-    // clear interrupt
-    sequence[ idx ].type = IOMEM_MMIO_ACTION_WRITE;
-    sequence[ idx ].value = SDHOST_HOST_STATUS_MASK_ERROR_ALL
-      | SDHOST_HOST_STATUS_INT_BUSY
-      | SDHOST_HOST_STATUS_INT_SDIO;
-    sequence[ idx ].offset = PERIPHERAL_SDHOST_HOST_STATUS;
-  }
-
-  // perform request
-  if ( -1 == iomem_execute_sequence( device->fd_iomem, sequence, sequence_size ) ) {
-    // debug output
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Issue SD Command sequence failed\r\n" )
-    #endif
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return SDHOST_RESPONSE_IO;
-  }
-  // test for command wait timeout
-  idx = 0;
-  if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ idx ].abort_type ) {
+  DELAY_ITERATION_FAILURE(
+    PERIPHERAL_SDHOST_COMMAND,
+    SDHOST_COMMAND_FLAG_ENABLE,
+    SDHOST_COMMAND_FLAG_FAILED,
+    timeout,
+    10,
+    timeout_result
+  )
+  if ( timeout_result ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Wait for cmd ready timed out\r\n" )
     #endif
     // load last interrupt
-    while ( SDHOST_RESPONSE_OK != get_interrupt_status(
-      &device->last_interrupt
-    ) ) {
-      usleep( 10 );
+    while ( SDHOST_RESPONSE_OK != get_interrupt_status( &device->last_interrupt ) ) {
+      delay_us( 10 );
     }
     /// FIXME: SET LAST ERROR CORRECTLY
     device->last_error = device->last_interrupt;
     // mask interrupts again
-    while ( SDHOST_RESPONSE_OK != interrupt_mark_handled(
-      SDHOST_HOST_STATUS_MASK_ERROR_ALL
-    ) ) {
-      usleep( 10 );
+    while ( SDHOST_RESPONSE_OK != interrupt_mark_handled( SDHOST_HOST_STATUS_MASK_ERROR_ALL ) ) {
+      delay_us( 10 );
     }
-    iomem_release_mmio_sequence( sequence );
     // return failure
     return SDHOST_RESPONSE_TIMEOUT;
   }
-  // test for command loop timeout
-  idx = 7;
-  if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ idx ].abort_type ) {
+  // debug output
+  #if defined( SDHOST_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Preparing command for execution\r\n" )
+  #endif
+  // read host status and push back ( clears error flags if set )
+  mmio_write( PERIPHERAL_SDHOST_HOST_STATUS, mmio_read( PERIPHERAL_SDHOST_HOST_STATUS ) );
+  // set block size
+  mmio_write( PERIPHERAL_SDHOST_BLOCKSIZE, device->block_size );
+  // set block count
+  mmio_write( PERIPHERAL_SDHOST_BLOCKCOUNT, device->block_count );
+  // set argument
+  mmio_write( PERIPHERAL_SDHOST_ARGUMENT, argument );
+  // set command
+  #if defined( SDHOST_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Setting command to %"PRIx32" / %"PRIx32"\r\n", command, command | SDHOST_COMMAND_FLAG_ENABLE )
+  #endif
+  mmio_write( PERIPHERAL_SDHOST_COMMAND, command | SDHOST_COMMAND_FLAG_ENABLE );
+  // debug output
+  #if defined( SDHOST_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Waiting until command is handled\r\n" )
+  #endif
+  // wait while command is executing
+  DELAY_ITERATION_FAILURE(
+    PERIPHERAL_SDHOST_COMMAND,
+    SDHOST_COMMAND_FLAG_ENABLE,
+    SDHOST_COMMAND_FLAG_FAILED,
+    timeout,
+    10,
+    timeout_result
+  )
+  if ( timeout_result ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Wait for cmd done timed out\r\n" )
     #endif
     // load last interrupt
-    while ( SDHOST_RESPONSE_OK != get_interrupt_status(
-      &device->last_interrupt
-    ) ) {
-      usleep( 10 );
+    while ( SDHOST_RESPONSE_OK != get_interrupt_status( &device->last_interrupt ) ) {
+      delay_us( 10 );
     }
     /// FIXME: SET LAST ERROR CORRECTLY
     device->last_error = device->last_interrupt;
     // mask interrupts again
-    while ( SDHOST_RESPONSE_OK != interrupt_mark_handled(
-      SDHOST_HOST_STATUS_MASK_ERROR_ALL
-    ) ) {
-      usleep( 10 );
+    while ( SDHOST_RESPONSE_OK != interrupt_mark_handled( SDHOST_HOST_STATUS_MASK_ERROR_ALL ) ) {
+      delay_us( 10 );
     }
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
     // return failure
     return SDHOST_RESPONSE_TIMEOUT;
   }
-
-  // debug output
-  #if defined( SDHOST_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Saving possible response information\r\n" )
-  #endif
-  // fill last response
-  idx++;
-  if ( ! ( command & SDHOST_COMMAND_FLAG_RESPONSE_NONE ) ) {
-    // debug output
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Save response\r\n" )
-    #endif
-    if ( ! ( command & SDHOST_COMMAND_FLAG_RESPONSE_LONG ) ) {
-      // debug output
-      #if defined( SDHOST_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Normal response starting at %"PRIu32"\r\n", idx )
-      #endif
-      device->last_response[ 0 ] = sequence[ idx ].value;
-      device->last_response[ 1 ] = 0;
-      device->last_response[ 2 ] = 0;
-      device->last_response[ 3 ] = 0;
-    } else {
-      // debug output
-      #if defined( SDHOST_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Long response starting at %"PRIu32"\r\n", idx )
-      #endif
-      device->last_response[ 0 ] = sequence[ idx ].value;
-      device->last_response[ 1 ] = sequence[ idx + 1 ].value;
-      device->last_response[ 2 ] = sequence[ idx + 2 ].value;
-      device->last_response[ 3 ] = sequence[ idx + 3 ].value;
-    }
-  }
-
-  if ( is_data && 0 < device->block_count ) {
-    idx = 12;
-    if ( IOMEM_MMIO_ABORT_TYPE_DMA == sequence[ idx ].abort_type ) {
-      // debug output
-      #if defined( SDHOST_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "dma copy timed out\r\n" )
-      #endif
-      iomem_release_mmio_sequence( sequence );
-      // return failure
-      return SDHOST_RESPONSE_IO;
-    }
-    // debug output
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Amount of reads: 1 dma read\r\n" )
-    #endif
-    // copy over from shared to block count
-    if ( shm_addr ) {
-      memcpy( device->buffer, shm_addr, device->block_count * device->block_size );
-      // release shared memory again
-      _syscall_memory_shared_detach( shm_id );
-      if ( errno ) {
-        // debug output
-        #if defined( SDHOST_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "detach shared area failed\r\n" )
-        #endif
-        iomem_release_mmio_sequence( sequence );
-        // return failure
-        return SDHOST_RESPONSE_IO;
-      }
-    }
-    idx++;
-  } else {
-    idx = 12;
-  }
-  // check for timeout
+  // read resp0
+  const uint32_t resp0 = mmio_read( PERIPHERAL_SDHOST_RESPONSE0 );
+  // read resp1
+  const uint32_t resp1 = mmio_read( PERIPHERAL_SDHOST_RESPONSE1 );
+  // read resp2
+  const uint32_t resp2 = mmio_read( PERIPHERAL_SDHOST_RESPONSE2 );
+  // read resp3
+  const uint32_t resp3 = mmio_read( PERIPHERAL_SDHOST_RESPONSE3 );
+  // wait for transfer complete for data or if it's a busy command
   if ( response_busy ) {
-    if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ idx ].abort_type ) {
+      // debug output
+    #if defined( SDHOST_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Waiting for busy interrupt\r\n" )
+    #endif
+    // wait while command is executing
+    DELAY_ITERATION_FALSE(
+      PERIPHERAL_SDHOST_HOST_STATUS,
+      ( SDHOST_HOST_STATUS_INT_BUSY | SDHOST_HOST_STATUS_INT_SDIO ),
+      timeout,
+      10,
+      timeout_result
+    )
+    if ( timeout_result ) {
       // debug output
       #if defined( SDHOST_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Wait for busy done timed out\r\n" )
       #endif
       // load last interrupt
-      while ( SDHOST_RESPONSE_OK != get_interrupt_status(
-        &device->last_interrupt
-      ) ) {
-        usleep( 10 );
+      while ( SDHOST_RESPONSE_OK != get_interrupt_status( &device->last_interrupt ) ) {
+        delay_us( 10 );
       }
       /// FIXME: SET LAST ERROR CORRECTLY
       device->last_error = device->last_interrupt;
@@ -1181,18 +931,38 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
         EARLY_STARTUP_PRINT( "last error: %#"PRIx32"\r\n", device->last_error )
       #endif
       // mask interrupts again
-      while ( SDHOST_RESPONSE_OK != interrupt_mark_handled(
-        SDHOST_HOST_STATUS_MASK_ERROR_ALL
-      ) ) {
-        usleep( 10 );
+      while ( SDHOST_RESPONSE_OK != interrupt_mark_handled( SDHOST_HOST_STATUS_MASK_ERROR_ALL ) ) {
+        delay_us( 10 );
       }
-      // free sequence
-      iomem_release_mmio_sequence( sequence );
       // return failure
       return SDHOST_RESPONSE_TIMEOUT;
     }
+    mmio_write( PERIPHERAL_SDHOST_HOST_STATUS, SDHOST_HOST_STATUS_MASK_ERROR_ALL
+      | SDHOST_HOST_STATUS_INT_BUSY
+      | SDHOST_HOST_STATUS_INT_SDIO );
   }
-
+  // debug output
+  #if defined( SDHOST_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Saving possible response information\r\n" )
+  #endif
+  // fill last response
+  if ( ! ( command & SDHOST_COMMAND_FLAG_RESPONSE_NONE ) ) {
+    // debug output
+    #if defined( SDHOST_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Save response\r\n" )
+    #endif
+    if ( ! ( command & SDHOST_COMMAND_FLAG_RESPONSE_LONG ) ) {
+      device->last_response[ 0 ] = resp0;
+      device->last_response[ 1 ] = 0;
+      device->last_response[ 2 ] = 0;
+      device->last_response[ 3 ] = 0;
+    } else {
+      device->last_response[ 0 ] = resp0;
+      device->last_response[ 1 ] = resp1;
+      device->last_response[ 2 ] = resp2;
+      device->last_response[ 3 ] = resp3;
+    }
+  }
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
@@ -1201,8 +971,6 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
       device->block_count
     );
   #endif
-  // free sequence
-  iomem_release_mmio_sequence( sequence );
   // finish sd data command
   if ( is_data ) {
     // debug output
@@ -1331,7 +1099,6 @@ static void handle_interrupt( void ) {
 /**
  * @fn sdhost_response_t sd_command(uint32_t, uint32_t)
  * @brief Send SD command
- *
  * @param command
  * @param argument
  * @return
@@ -1340,17 +1107,18 @@ static sdhost_response_t sd_command( uint32_t command, uint32_t argument ) {
   sdhost_response_t response;
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Execute SD command\r\n" )
+    EARLY_STARTUP_PRINT( "Execute SD command %"PRIu32" / %"PRIx32"\r\n",
+      command, argument )
   #endif
   // mark all interrupts as handled
   handle_interrupt();
   // check if previous command finished
   uint32_t debug_result;
-  int result = get_debug_status( &debug_result );
+  const sdhost_response_t result = get_debug_status( &debug_result );
   if ( SDHOST_RESPONSE_OK != result ) {
     return result;
   }
-  uint32_t fsm = debug_result & SDHOST_DEBUG_FSM_MASK;
+  const uint32_t fsm = debug_result & SDHOST_DEBUG_FSM_MASK;
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "EDM: %#"PRIx32", fsm: %#"PRIx32"\r\n",
       debug_result, fsm )
@@ -1467,7 +1235,6 @@ static sdhost_response_t sd_command( uint32_t command, uint32_t argument ) {
 /**
  * @fn sdhost_response_t clock_frequency(uint32_t)
  * @brief Change clock frequency
- *
  * @param frequency
  * @return
  */
@@ -1477,28 +1244,12 @@ static sdhost_response_t clock_frequency( uint32_t frequency ) {
     EARLY_STARTUP_PRINT( "Clock frequency change request\r\n" )
     EARLY_STARTUP_PRINT( "frequency = %#"PRIx32"\r\n", frequency )
   #endif
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence;
   // if to small set to max val of divisor
   if ( 100000 > frequency ) {
-    // allocate sequence
-    sequence = iomem_prepare_mmio_sequence( 1, &sequence_size );
-    if ( ! sequence ) {
-      // debug output
-      #if defined( SDHOST_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Error while allocating sequence\r\n" )
-      #endif
-      // return error
-      return SDHOST_RESPONSE_MEMORY;
-    }
-    // prepare sequence
-    // set divisor
-    sequence[ 0 ].type = IOMEM_MMIO_ACTION_WRITE;
-    sequence[ 0 ].offset = PERIPHERAL_SDHOST_CLOCKDIVISOR;
-    sequence[ 0 ].value = SDHOST_CLOCKDIVISOR_MAXVAL;
+    mmio_write( PERIPHERAL_SDHOST_CLOCKDIVISOR, SDHOST_CLOCKDIVISOR_MAXVAL );
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "divisor = %#"PRIx32"\r\n", sequence[ 0 ].value )
+      EARLY_STARTUP_PRINT( "divisor = %#x\r\n", SDHOST_CLOCKDIVISOR_MAXVAL )
     #endif
   // calculate divisor
   } else {
@@ -1518,47 +1269,16 @@ static sdhost_response_t clock_frequency( uint32_t frequency ) {
     }
     // recalculate frequency for timeout
     frequency = device->max_clock / ( divisor + 2 );
-    // allocate sequence
-    sequence = iomem_prepare_mmio_sequence( 2, &sequence_size );
-    if ( ! sequence ) {
-      // debug output
-      #if defined( SDHOST_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Error while allocating sequence\r\n" )
-      #endif
-      // return error
-      return SDHOST_RESPONSE_MEMORY;
-    }
-    // prepare sequence
     // set divisor
-    sequence[ 0 ].type = IOMEM_MMIO_ACTION_WRITE;
-    sequence[ 0 ].offset = PERIPHERAL_SDHOST_CLOCKDIVISOR;
-    sequence[ 0 ].value = divisor;
+    mmio_write( PERIPHERAL_SDHOST_CLOCKDIVISOR, divisor );
     // set timeout
-    sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE;
-    sequence[ 1 ].offset = PERIPHERAL_SDHOST_TIMEOUTCOUNTER;
-    sequence[ 1 ].value = frequency / 2;
+    mmio_write( PERIPHERAL_SDHOST_TIMEOUTCOUNTER, frequency / 2 );
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT(
-        "divisor = %#"PRIx32", timeout = %#"PRIx32"\r\n",
-        sequence[ 0 ].value,
-        sequence[ 1 ].value
-      )
+      EARLY_STARTUP_PRINT( "divisor = %#"PRIx32", timeout = %#"PRIx32"\r\n", divisor, frequency )
     #endif
   }
-  // handle ioctl error
-  if ( -1 == iomem_execute_sequence( device->fd_iomem, sequence, sequence_size ) ) {
-    // debug output
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Change clock sequence failed\r\n" )
-    #endif
-    // free
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return SDHOST_RESPONSE_IO;
-  }
-  // free sequence
-  iomem_release_mmio_sequence( sequence );
+  delay_ms( 1000 );
   // return success
   return SDHOST_RESPONSE_OK;
 }
@@ -1566,7 +1286,6 @@ static sdhost_response_t clock_frequency( uint32_t frequency ) {
 /**
  * @fn sdhost_response_t max_clock_frequency(void)
  * @brief Helper to get max clock frequency
- *
  * @return
  */
 static sdhost_response_t max_clock_frequency( void ) {
@@ -1603,7 +1322,7 @@ static sdhost_response_t max_clock_frequency( void ) {
   // end tag
   request[ 7 ] = 0;
   // perform request
-  int result = ioctl(
+  const int result = ioctl(
     device->fd_iomem,
     IOCTL_BUILD_REQUEST(
       IOMEM_RPC_MAILBOX,
@@ -1649,7 +1368,6 @@ static sdhost_response_t max_clock_frequency( void ) {
 /**
  * @fn sdhost_response_t reset(void)
  * @brief Reset controller
- *
  * @return
  */
 static sdhost_response_t reset( void ) {
@@ -1657,8 +1375,6 @@ static sdhost_response_t reset( void ) {
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Reset sdhost controller\r\n" )
   #endif
-  size_t sequence_size;
-
   // fetch max clock
   sdhost_response_t response = max_clock_frequency();
   if ( SDHOST_RESPONSE_OK != response ) {
@@ -1669,112 +1385,46 @@ static sdhost_response_t reset( void ) {
     // return error
     return response;
   }
-
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence(19, &sequence_size);
-  if ( ! sequence ) {
-    // debug output
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Error while allocating sequence\r\n" )
-    #endif
-    // return error
-    return SDHOST_RESPONSE_MEMORY;
-  }
   // cache sdhost debug value
-  uint32_t sdhost_debug_value =
+  constexpr uint32_t sdhost_debug_value =
     ( SDHOST_DEBUG_THRESHOLD_MASK << SDHOST_DEBUG_THRESHOLD_READ_SHIFT )
     | ( SDHOST_DEBUG_THRESHOLD_MASK << SDHOST_DEBUG_THRESHOLD_WRITE_SHIFT );
-  // prepare sequence
   // power off
-  sequence[  0 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[  0 ].offset = PERIPHERAL_SDHOST_POWER;
-  sequence[  0 ].value = 0;
+  mmio_write( PERIPHERAL_SDHOST_POWER, 0 );
   // reset command and argument
-  sequence[  1 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[  1 ].offset = PERIPHERAL_SDHOST_COMMAND;
-  sequence[  1 ].value = 0;
-  sequence[  2 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[  2 ].offset = PERIPHERAL_SDHOST_ARGUMENT;
-  sequence[  2 ].value = 0;
+  mmio_write( PERIPHERAL_SDHOST_COMMAND, 0 );
+  mmio_write( PERIPHERAL_SDHOST_ARGUMENT, 0 );
   // set timeout counter
-  sequence[  3 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[  3 ].offset = PERIPHERAL_SDHOST_TIMEOUTCOUNTER;
-  sequence[  3 ].value = SDHOST_TIMEOUT_DEFAULT;
+  mmio_write( PERIPHERAL_SDHOST_TIMEOUTCOUNTER, SDHOST_TIMEOUT_DEFAULT );
   // clock divisor
-  sequence[  4 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[  4 ].offset = PERIPHERAL_SDHOST_CLOCKDIVISOR;
-  sequence[  4 ].value = 0;
+  mmio_write( PERIPHERAL_SDHOST_CLOCKDIVISOR, 0 );
   // host status and config
-  sequence[  5 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[  5 ].offset = PERIPHERAL_SDHOST_HOST_STATUS;
-  sequence[  5 ].value = 0x7F8;
-  sequence[  6 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[  6 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
-  sequence[  6 ].value = 0;
+  mmio_write( PERIPHERAL_SDHOST_HOST_STATUS, 0x7F8 );
+  mmio_write( PERIPHERAL_SDHOST_HOST_CONFIG, 0 );
   // block size and count
-  sequence[  7 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[  7 ].offset = PERIPHERAL_SDHOST_BLOCKSIZE;
-  sequence[  7 ].value = 0;
-  sequence[  8 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[  8 ].offset = PERIPHERAL_SDHOST_BLOCKCOUNT;
-  sequence[  8 ].value = 0;
+  mmio_write( PERIPHERAL_SDHOST_BLOCKSIZE, 0 );
+  mmio_write( PERIPHERAL_SDHOST_BLOCKCOUNT, 0 );
   // remove current read / write threshold setting
-  sequence[  9 ].type = IOMEM_MMIO_ACTION_READ_AND;
-  sequence[  9 ].offset = PERIPHERAL_SDHOST_DEBUG;
-  sequence[  9 ].value = ~sdhost_debug_value;
+  const uint32_t debug = mmio_read( PERIPHERAL_SDHOST_DEBUG ) & ~sdhost_debug_value;
   // set read / write threshold setting
-  sequence[ 10 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 10 ].offset = PERIPHERAL_SDHOST_DEBUG;
-  sequence[ 10 ].value =
+  mmio_write( PERIPHERAL_SDHOST_DEBUG, debug | (
     ( SDHOST_DEBUG_THRESHOLD_VALUE << SDHOST_DEBUG_THRESHOLD_READ_SHIFT )
-    | ( SDHOST_DEBUG_THRESHOLD_VALUE << SDHOST_DEBUG_THRESHOLD_WRITE_SHIFT );
+    | ( SDHOST_DEBUG_THRESHOLD_VALUE << SDHOST_DEBUG_THRESHOLD_WRITE_SHIFT )
+  ) );
   // sleep some time
-  sequence[ 11 ].type = IOMEM_MMIO_ACTION_SLEEP;
-  sequence[ 11 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ 11 ].sleep = 300;
+  delay_ms( 10 );
   // power on again
-  sequence[ 12 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 12 ].offset = PERIPHERAL_SDHOST_POWER;
-  sequence[ 12 ].value = 1;
+  mmio_write( PERIPHERAL_SDHOST_POWER, 1 );
   // sleep some time
-  sequence[ 13 ].type = IOMEM_MMIO_ACTION_SLEEP;
-  sequence[ 13 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ 13 ].sleep = 300;
+  delay_ms( 10 );
   // set initial host config
-  sequence[ 14 ].type = IOMEM_MMIO_ACTION_READ_AND;
-  sequence[ 14 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
-  sequence[ 14 ].value = ( uint32_t )~SDHOST_HOST_CONFIG_EXTBUS_4BIT;
-  sequence[ 15 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 15 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
-  sequence[ 15 ].value = SDHOST_HOST_CONFIG_SLOW_CARD
-    | SDHOST_HOST_CONFIG_INTBUS_WIDE;
-  // sleep some time
-  sequence[ 16 ].type = IOMEM_MMIO_ACTION_SLEEP;
-  sequence[ 16 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ 16 ].sleep = 300;
-  // read host status
-  sequence[ 17 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 17 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
-  // enable all possible interrupts
-  sequence[ 18 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 18 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
-  sequence[ 18 ].value = SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BUSY;
-  // handle ioctl error
-  if ( -1 == iomem_execute_sequence( device->fd_iomem, sequence, sequence_size ) ) {
-    // debug output
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Reset sequence failed\r\n" )
-    #endif
-    // free
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return SDHOST_RESPONSE_IO;
-  }
-  // free sequence
-  iomem_release_mmio_sequence( sequence );
+  const uint32_t host_config = mmio_read( PERIPHERAL_SDHOST_HOST_CONFIG ) & ~SDHOST_HOST_CONFIG_EXTBUS_4BIT;
+  mmio_write( PERIPHERAL_SDHOST_HOST_CONFIG, host_config
+    | SDHOST_HOST_CONFIG_SLOW_CARD
+    | SDHOST_HOST_CONFIG_INTBUS_WIDE
+    | SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BUSY );
   // setup clock frequency
-  if ( SDHOST_RESPONSE_OK != ( response = clock_frequency(
-    SDHOST_CLOCK_FREQUENCY_LOW
-  ) ) ) {
+  if ( SDHOST_RESPONSE_OK != ( response = clock_frequency( SDHOST_CLOCK_FREQUENCY_LOW ) ) ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to setup initial clock frequency\r\n" )
@@ -1797,7 +1447,6 @@ static sdhost_response_t reset( void ) {
   device->last_argument = 0;
   memset( device->last_response, 0, sizeof( uint32_t ) * 4 );
   device->last_interrupt = 0;
-
   // return go idle state command result
   return sd_command( SDHOST_CMD_GO_IDLE_STATE, 0 );
 }
@@ -1805,7 +1454,6 @@ static sdhost_response_t reset( void ) {
 /**
  * @fn sdhost_response_t init_sd(void)
  * @brief Perform sd card init
- *
  * @return
  */
 static sdhost_response_t init_sd( void ) {
@@ -1895,7 +1543,7 @@ static sdhost_response_t init_sd( void ) {
       EARLY_STARTUP_PRINT( "Card is busy, retry after sleep\r\n" )
     #endif
     // reached here, so card is busy, and we'll try it after sleep again
-    usleep( 500000 );
+    delay_ms( 500 );
   } while ( card_busy );
   // return success
   return SDHOST_RESPONSE_OK;
@@ -1904,7 +1552,6 @@ static sdhost_response_t init_sd( void ) {
 /**
  * @fn sdhost_response_t sdhost_init(void)
  * @brief Initialize undocumented sdhost
- *
  * @return
  */
 sdhost_response_t sdhost_init( void ) {
@@ -2068,7 +1715,7 @@ sdhost_response_t sdhost_init( void ) {
   // change clock to normal
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Change clock frequency to max\r\n" )
+    EARLY_STARTUP_PRINT( "Change clock frequency to normal\r\n" )
   #endif
   // get card id
   if ( SDHOST_RESPONSE_OK != ( response = clock_frequency(
@@ -2118,7 +1765,7 @@ sdhost_response_t sdhost_init( void ) {
       return response;
     }
     // extract rca
-    uint16_t rca = ( uint16_t )( ( device->last_response[ 0 ] >> 16 ) & 0xFFFF );
+    const uint16_t rca = ( uint16_t )( ( device->last_response[ 0 ] >> 16 ) & 0xFFFF );
     // handle successful return
     if ( 0 < rca ) {
       // save rca
@@ -2131,7 +1778,7 @@ sdhost_response_t sdhost_init( void ) {
       break;
     }
     // sleep and try again
-    usleep( 2000 );
+    delay_ms( 2 );
   }
 
   // debug output
@@ -2140,7 +1787,7 @@ sdhost_response_t sdhost_init( void ) {
   #endif
   // select card ( cmd7 )
   if ( SDHOST_RESPONSE_OK != (
-    response = sd_command( SDHOST_CMD_SELECT_CARD, device->card_rca << 16 )
+    response = sd_command( SDHOST_CMD_SELECT_CARD, ( uint32_t )( device->card_rca << 16 ) )
   ) ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
@@ -2155,7 +1802,7 @@ sdhost_response_t sdhost_init( void ) {
     EARLY_STARTUP_PRINT( "Check card selection status\r\n" )
   #endif
   // handle invalid status
-  uint32_t status = ( device->last_response[ 0 ] >> 9 ) & 0xf;
+  const uint32_t status = ( device->last_response[ 0 ] >> 9 ) & 0xf;
   if ( 3 != status && 4 != status ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
@@ -2190,35 +1837,7 @@ sdhost_response_t sdhost_init( void ) {
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Populate block size register\r\n" )
   #endif
-  // set block size in register
-  size_t sequence_count;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence(
-    1, &sequence_count
-  );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Error allocating sequence: %s\r\n", strerror( errno ) )
-    #endif
-    // return error
-    return SDHOST_RESPONSE_MEMORY;
-  }
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 0 ].offset = PERIPHERAL_SDHOST_BLOCKSIZE;
-  sequence[ 0 ].value = 512;
-  // perform request
-  if ( -1 == iomem_execute_sequence( device->fd_iomem, sequence, sequence_count ) ) {
-    // debug output
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Populating block size count register failed\r\n" )
-    #endif
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return SDHOST_RESPONSE_IO;
-  }
-  // free sequence
-  iomem_release_mmio_sequence( sequence );
+  mmio_write( PERIPHERAL_SDHOST_BLOCKSIZE, 512 );
 
   // prepare for getting card scr
   device->block_size = 8;
@@ -2245,12 +1864,12 @@ sdhost_response_t sdhost_init( void ) {
   // default: unknown
   device->card_version = SDHOST_CARD_VERSION_UNKNOWN;
   // get big endian scr0 and convert
-  uint32_t scr0 = be32toh( device->card_scr[ 0 ] );
+  const uint32_t scr0 = be32toh( device->card_scr[ 0 ] );
   // load spec fields
-  uint32_t sd_spec = ( scr0 >> ( 56 - 32 ) ) & 0xF;
-  uint32_t sd_spec3 = ( scr0 >> ( 47 - 32 ) ) & 0x1;
-  uint32_t sd_spec4 = ( scr0 >> ( 42 - 32 ) ) & 0x1;
-  uint32_t sd_specX = ( scr0 >> ( 41 - 32 ) ) & 0xF;
+  const uint32_t sd_spec = ( scr0 >> ( 56 - 32 ) ) & 0xF;
+  const uint32_t sd_spec3 = ( scr0 >> ( 47 - 32 ) ) & 0x1;
+  const uint32_t sd_spec4 = ( scr0 >> ( 42 - 32 ) ) & 0x1;
+  const uint32_t sd_specX = ( scr0 >> ( 41 - 32 ) ) & 0xF;
   device->card_bus_width = ( scr0 >> ( 48 - 32 ) ) & 0xF;
   if ( 0 == sd_spec ) {
     device->card_version = SDHOST_CARD_VERSION_1;
@@ -2284,8 +1903,8 @@ sdhost_response_t sdhost_init( void ) {
     )
     EARLY_STARTUP_PRINT(
       "scr: 0x%08"PRIx32"%08"PRIx32"\r\n",
-      be32toh( device->card_scr[ 0 ] ),
-      be32toh( device->card_scr[ 1 ] )
+      ( uint32_t )be32toh( device->card_scr[ 0 ] ),
+      ( uint32_t )be32toh( device->card_scr[ 1 ] )
     )
     EARLY_STARTUP_PRINT(
       "card version: %"PRIu32", bus width: %"PRIu32"\r\n",
@@ -2315,38 +1934,11 @@ sdhost_response_t sdhost_init( void ) {
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Finalize host status\r\n" )
   #endif
-  // allocate sequence to change the bit mode for host
-  sequence = iomem_prepare_mmio_sequence( 2, &sequence_count );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Error allocating sequence: %s\r\n", strerror( errno ) )
-    #endif
-    // return error
-    return SDHOST_RESPONSE_MEMORY;
-  }
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 0 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 1 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
-  sequence[ 1 ].value = SDHOST_HOST_CONFIG_INTBUS_WIDE
-    | SDHOST_HOST_CONFIG_SLOW_CARD;
+  uint32_t flags = SDHOST_HOST_CONFIG_INTBUS_WIDE | SDHOST_HOST_CONFIG_SLOW_CARD;
   if ( device->card_bus_width & 0x4 ) {
-    sequence[ 1 ].value |= SDHOST_HOST_CONFIG_EXTBUS_4BIT;
+    flags |= SDHOST_HOST_CONFIG_EXTBUS_4BIT;
   }
-  // perform request
-  if ( -1 == iomem_execute_sequence( device->fd_iomem, sequence, sequence_count ) ) {
-    // debug output
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Change host status failed\r\n" )
-    #endif
-    // free
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return SDHOST_RESPONSE_IO;
-  }
-  // free
-  iomem_release_mmio_sequence( sequence );
+  mmio_write( PERIPHERAL_SDHOST_HOST_STATUS, mmio_read( PERIPHERAL_SDHOST_HOST_STATUS ) | flags );
 
   // enable interrupts
   if ( SDHOST_RESPONSE_OK != ( response = enable_interrupt() ) ) {
@@ -2371,7 +1963,6 @@ sdhost_response_t sdhost_init( void ) {
 /**
  * @fn const char sdhost_error*(sdhost_response_t)
  * @brief Translate sdhost error num to string
- *
  * @param num
  * @return
  */
@@ -2379,7 +1970,7 @@ const char* sdhost_error( sdhost_response_t num ) {
   // static buffer
   static char buffer[ 1024 ];
   // set total length to length - 1 to leave space for 0 termination
-  size_t total_length = sizeof( buffer ) - 1;
+  const size_t total_length = sizeof( buffer ) - 1;
   // handle no error
   if ( 0 == num ) {
     strncpy( buffer, "no error", total_length );
@@ -2417,7 +2008,6 @@ const char* sdhost_error( sdhost_response_t num ) {
 /**
  * @fn sdhost_response_t sdhost_transfer_block(uint32_t*, size_t, uint32_t, sdhost_operation_t, size_t)
  * @brief Transfer block from / to sd card
- *
  * @param buffer
  * @param buffer_size
  * @param block_number
@@ -2427,10 +2017,10 @@ const char* sdhost_error( sdhost_response_t num ) {
  */
 sdhost_response_t sdhost_transfer_block(
   uint32_t* buffer,
-  size_t buffer_size,
+  const size_t buffer_size,
   uint32_t block_number,
-  sdhost_operation_t operation,
-  size_t shm_id
+  const sdhost_operation_t operation,
+  const size_t shm_id
 ) {
   sdhost_response_t response;
   // debug output
@@ -2698,6 +2288,9 @@ sdhost_response_t sdhost_transfer_block(
       EARLY_STARTUP_PRINT( "SDHOST_CMD_READ_SINGLE_BLOCK = %d\r\n", SDHOST_CMD_READ_SINGLE_BLOCK )
     #endif
   }
+  // set activity led
+  led_set_activity( LED_ACTIVITY_LED_ON );
+  // current try and success flag
   uint32_t current_try;
   bool success = false;
   // send command with 3 retries
@@ -2729,6 +2322,8 @@ sdhost_response_t sdhost_transfer_block(
       )
     #endif
   }
+  // set activity led
+  led_set_activity( LED_ACTIVITY_LED_OFF );
   // detect failure
   if ( 4 == current_try && ! success ) {
     // debug output
@@ -2745,7 +2340,6 @@ sdhost_response_t sdhost_transfer_block(
 /**
  * @fn uint32_t sdhost_device_block_size(void)
  * @brief Wrapper to get device block size
- *
  * @return
  */
 uint32_t sdhost_device_block_size( void ) {

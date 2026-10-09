@@ -88,7 +88,7 @@ void rpc_handle_mailbox(
   // copy stuff to property buffer
   do_memcpy( property_buffer, mailbox_request, copy_size );
   // overwrite current property index with last one ( count - 1 )
-  property_index = count - 1;
+  property_index = count;
   // process request
   const uint32_t result = property_process();
   // handle error

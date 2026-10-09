@@ -66,7 +66,7 @@ bool property_setup( void ) {
   // push it to property buffer
   property_buffer = ( int32_t* )tmp_buffer;
   // get physical address
-  const uintptr_t translated = _syscall_memory_translate_bus( ( uintptr_t )property_buffer, PAGE_SIZE );
+  const uintptr_t translated = _syscall_memory_translate_physical( ( uintptr_t )property_buffer );
   if ( errno ) {
     return false;
   }

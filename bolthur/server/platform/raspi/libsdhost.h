@@ -21,24 +21,24 @@
 #define _PLATFORM_RASPI_LIBSDHOST_H
 
 // command register
-#define SDHOST_COMMAND_FLAG_ENABLE ( 1 << 15 )
-#define SDHOST_COMMAND_FLAG_FAILED ( 1 << 14 )
-#define SDHOST_COMMAND_FLAG_BUSY ( 1 << 11 )
-#define SDHOST_COMMAND_FLAG_RESPONSE_NONE ( 1 << 10 )
-#define SDHOST_COMMAND_FLAG_RESPONSE_LONG ( 1 << 9 )
-#define SDHOST_COMMAND_FLAG_WRITE ( 1 << 7 )
-#define SDHOST_COMMAND_FLAG_READ ( 1 << 6 )
+#define SDHOST_COMMAND_FLAG_ENABLE ( 1U << 15 )
+#define SDHOST_COMMAND_FLAG_FAILED ( 1U << 14 )
+#define SDHOST_COMMAND_FLAG_BUSY ( 1U << 11 )
+#define SDHOST_COMMAND_FLAG_RESPONSE_NONE ( 1U << 10 )
+#define SDHOST_COMMAND_FLAG_RESPONSE_LONG ( 1U << 9 )
+#define SDHOST_COMMAND_FLAG_WRITE ( 1U << 7 )
+#define SDHOST_COMMAND_FLAG_READ ( 1U << 6 )
 #define SDHOST_COMMAND_FLAG_COMMAND_MASK 0x3F
 // host status
-#define SDHOST_HOST_STATUS_HAVEDATA ( 1 << 0 )
-#define SDHOST_HOST_STATUS_ERROR_FIFO ( 1 << 3 )
-#define SDHOST_HOST_STATUS_ERROR_CRC7 ( 1 << 4 )
-#define SDHOST_HOST_STATUS_ERROR_CRC16 ( 1 << 5 )
-#define SDHOST_HOST_STATUS_TIMEOUT_CMD ( 1 << 6 )
-#define SDHOST_HOST_STATUS_TIMEOUT_DATA ( 1 << 7 )
-#define SDHOST_HOST_STATUS_INT_SDIO ( 1 << 8 )
-#define SDHOST_HOST_STATUS_INT_BLOCK ( 1 << 9 )
-#define SDHOST_HOST_STATUS_INT_BUSY ( 1 << 10 )
+#define SDHOST_HOST_STATUS_HAVEDATA ( 1U << 0 )
+#define SDHOST_HOST_STATUS_ERROR_FIFO ( 1U << 3 )
+#define SDHOST_HOST_STATUS_ERROR_CRC7 ( 1U << 4 )
+#define SDHOST_HOST_STATUS_ERROR_CRC16 ( 1U << 5 )
+#define SDHOST_HOST_STATUS_TIMEOUT_CMD ( 1U << 6 )
+#define SDHOST_HOST_STATUS_TIMEOUT_DATA ( 1U << 7 )
+#define SDHOST_HOST_STATUS_INT_SDIO ( 1U << 8 )
+#define SDHOST_HOST_STATUS_INT_BLOCK ( 1U << 9 )
+#define SDHOST_HOST_STATUS_INT_BUSY ( 1U << 10 )
 
 #define SDHOST_HOST_STATUS_RESET 0xFFFF
 
@@ -52,21 +52,20 @@
   SDHOST_HOST_STATUS_MASK_ERROR_DATA \
   | SDHOST_HOST_STATUS_TIMEOUT_CMD )
 
-
 // host config
-#define SDHOST_HOST_CONFIG_INTBUS_WIDE ( 1 << 1 )
-#define SDHOST_HOST_CONFIG_EXTBUS_4BIT ( 1 << 2 )
-#define SDHOST_HOST_CONFIG_SLOW_CARD ( 1 << 3 )
-#define SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_DATA ( 1 << 4 )
-#define SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_SDIO ( 1 << 5 )
-#define SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BLOCK ( 1 << 8 )
-#define SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BUSY ( 1 << 10 )
+#define SDHOST_HOST_CONFIG_INTBUS_WIDE ( 1U << 1 )
+#define SDHOST_HOST_CONFIG_EXTBUS_4BIT ( 1U << 2 )
+#define SDHOST_HOST_CONFIG_SLOW_CARD ( 1U << 3 )
+#define SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_DATA ( 1U << 4 )
+#define SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_SDIO ( 1U << 5 )
+#define SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BLOCK ( 1U << 8 )
+#define SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BUSY ( 1U << 10 )
 // clock divisor
-#define SDHOST_CLOCKDIVISOR_MAXVAL 0x07FF
+#define SDHOST_CLOCKDIVISOR_MAXVAL 0x7FF
 // debug register
-#define SDHOST_DEBUG_FORCE_DATA_MODE ( 1 << 19 )
-#define SDHOST_DEBUG_CLOCK_PULSE ( 1 << 20 )
-#define SDHOST_DEBUG_BYPASS ( 1 << 21 )
+#define SDHOST_DEBUG_FORCE_DATA_MODE ( 1U << 19 )
+#define SDHOST_DEBUG_CLOCK_PULSE ( 1U << 20 )
+#define SDHOST_DEBUG_BYPASS ( 1U << 21 )
 
 #define SDHOST_DEBUG_THRESHOLD_WRITE_SHIFT 9
 #define SDHOST_DEBUG_THRESHOLD_READ_SHIFT 14
@@ -173,32 +172,32 @@
 #define SDHOST_APP_CMD_SEND_SCR SDHOST_CMD_TO_APP_CMD( 51 )
 
 // ocr bit set
-#define SDHOST_OCR_MEM_READY ( 1 << 31 ) // memory power-up status bit
-#define SDHOST_OCR_HCS ( 1 << 30 ) // SD only
-#define SDHOST_OCR_ACCESS_MODE_MASK ( 3 << 29 ) // MMC only
-#define SDHOST_OCR_ACCESS_MODE_BYTE ( 0 << 29 ) // MMC only
-#define SDHOST_OCR_ACCESS_MODE_SECTOR ( 2 << 29 ) // MMC only
-#define SDHOST_OCR_S18A ( 1 << 24 )
-#define SDHOST_OCR_3_5V_3_6V ( 1 << 23 )
-#define SDHOST_OCR_3_4V_3_5V ( 1 << 22 )
-#define SDHOST_OCR_3_3V_3_4V ( 1 << 21 )
-#define SDHOST_OCR_3_2V_3_3V ( 1 << 20 )
-#define SDHOST_OCR_3_1V_3_2V ( 1 << 19 )
-#define SDHOST_OCR_3_0V_3_1V ( 1 << 18 )
-#define SDHOST_OCR_2_9V_3_0V ( 1 << 17 )
-#define SDHOST_OCR_2_8V_2_9V ( 1 << 16 )
-#define SDHOST_OCR_2_7V_2_8V ( 1 << 15 )
-#define SDHOST_OCR_2_6V_2_7V ( 1 << 14 )
-#define SDHOST_OCR_2_5V_2_6V ( 1 << 13 )
-#define SDHOST_OCR_2_4V_2_5V ( 1 << 12 )
-#define SDHOST_OCR_2_3V_2_4V ( 1 << 11 )
-#define SDHOST_OCR_2_2V_2_3V ( 1 << 10 )
-#define SDHOST_OCR_2_1V_2_2V ( 1 << 9 )
-#define SDHOST_OCR_2_0V_2_1V ( 1 << 8 )
-#define SDHOST_OCR_1_9V_2_0V ( 1 << 7 )
-#define SDHOST_OCR_1_8V_1_9V ( 1 << 6 )
-#define SDHOST_OCR_1_7V_1_8V ( 1 << 5 )
-#define SDHOST_OCR_1_6V_1_7V ( 1 << 4 )
+#define SDHOST_OCR_MEM_READY ( 1U << 31 ) // memory power-up status bit
+#define SDHOST_OCR_HCS ( 1U << 30 ) // SD only
+#define SDHOST_OCR_ACCESS_MODE_MASK ( 3U << 29 ) // MMC only
+#define SDHOST_OCR_ACCESS_MODE_BYTE ( 0U << 29 ) // MMC only
+#define SDHOST_OCR_ACCESS_MODE_SECTOR ( 2U << 29 ) // MMC only
+#define SDHOST_OCR_S18A ( 1U << 24 )
+#define SDHOST_OCR_3_5V_3_6V ( 1U << 23 )
+#define SDHOST_OCR_3_4V_3_5V ( 1U << 22 )
+#define SDHOST_OCR_3_3V_3_4V ( 1U << 21 )
+#define SDHOST_OCR_3_2V_3_3V ( 1U << 20 )
+#define SDHOST_OCR_3_1V_3_2V ( 1U << 19 )
+#define SDHOST_OCR_3_0V_3_1V ( 1U << 18 )
+#define SDHOST_OCR_2_9V_3_0V ( 1U << 17 )
+#define SDHOST_OCR_2_8V_2_9V ( 1U << 16 )
+#define SDHOST_OCR_2_7V_2_8V ( 1U << 15 )
+#define SDHOST_OCR_2_6V_2_7V ( 1U << 14 )
+#define SDHOST_OCR_2_5V_2_6V ( 1U << 13 )
+#define SDHOST_OCR_2_4V_2_5V ( 1U << 12 )
+#define SDHOST_OCR_2_3V_2_4V ( 1U << 11 )
+#define SDHOST_OCR_2_2V_2_3V ( 1U << 10 )
+#define SDHOST_OCR_2_1V_2_2V ( 1U << 9 )
+#define SDHOST_OCR_2_0V_2_1V ( 1U << 8 )
+#define SDHOST_OCR_1_9V_2_0V ( 1U << 7 )
+#define SDHOST_OCR_1_8V_1_9V ( 1U << 6 )
+#define SDHOST_OCR_1_7V_1_8V ( 1U << 5 )
+#define SDHOST_OCR_1_6V_1_7V ( 1U << 4 )
 
 // sd card versions
 #define SDHOST_CARD_VERSION_UNKNOWN 0

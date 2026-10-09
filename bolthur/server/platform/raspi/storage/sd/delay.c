@@ -25,12 +25,36 @@
  * @param us
  */
 void delay_us( const uint64_t us ) {
-  const uint64_t frequency = _syscall_timer_frequency();
-  const uint64_t ticks = ( frequency * us + 999999ULL ) / 1000000ULL;
-  const uint64_t start = _syscall_timer_tick_count();
-  while ( ( _syscall_timer_tick_count() - start ) < ticks ) {
-    __asm__ volatile ("nop");
+  const uint64_t ticks = _syscall_timer_tick_count() + ( ( _syscall_timer_frequency() * us + 999999ULL ) / 1000000ULL );
+  while ( _syscall_timer_tick_count() < ticks ) {
+    __asm__ __volatile__ ( "nop" : : : "memory" );
   }
+}
+
+static void custom_nanosleep( const struct timespec* rqtp ) {
+  // get clock frequency
+  size_t frequency = _syscall_timer_frequency();
+  // calculate second timeout
+  uint64_t timeout = ( uint64_t )( rqtp->tv_sec * frequency );
+  // add nanosecond offset
+  timeout += ( uint64_t )( ( double )rqtp->tv_nsec * ( double )frequency / 1000000000.0 );
+  // add tick count to get an end time
+  timeout += _syscall_timer_tick_count();
+  // loop until timeout is reached
+  while ( _syscall_timer_tick_count() < timeout ) {
+    __asm__ __volatile__( "nop" );
+  }
+}
+
+void delay_ms( uint64_t sleep_value ) {
+  // variables
+  struct timespec ts;
+  // change to long
+  long sleep_value_time = ( long )sleep_value;
+  // prepare timespec structure
+  ts.tv_sec = sleep_value_time / 1000;
+  ts.tv_nsec = ( sleep_value_time % 1000 ) * 1000000;
+  custom_nanosleep( &ts );
 }
 
 /**

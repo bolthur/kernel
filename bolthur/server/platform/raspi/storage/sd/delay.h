@@ -21,22 +21,67 @@
 #define _DELAY_H
 
 void delay_us( uint64_t );
+void delay_ms( uint64_t );
 uint64_t delay_us_target( uint64_t );
 
-#define DELAY_WAIT_TIMEOUT( condition, usec, result ) \
+#define DELAY_ITERATION( reg, condition, max_iteration, msec, result ) \
   { \
-    bool loop = true; \
-    do { \
-      result = true; \
-      uint64_t target = delay_us_target( usec ); \
-      do { \
-        if ( condition ) { \
-          result = false; \
-          loop = false; \
-          break; \
-        } \
-      } while ( _syscall_timer_tick_count() < target ); \
-    } while ( loop ); \
+    result = false; \
+    uint32_t iteration = max_iteration; \
+    while ( mmio_read( reg ) & condition ) { \
+      if ( ! iteration-- ) { \
+        result = true; \
+        break; \
+      } \
+      delay_ms( msec ); \
+    } \
+  }
+
+#define DELAY_ITERATION_FALSE( reg, condition, max_iteration, msec, result ) \
+  { \
+    result = false; \
+    uint32_t iteration = max_iteration; \
+    while ( ! ( mmio_read( reg ) & condition ) ) { \
+      if ( ! iteration-- ) { \
+        result = true; \
+        break; \
+      } \
+      delay_ms( msec ); \
+    } \
+  }
+
+#define DELAY_ITERATION_FAILURE( reg, condition, failure, max_iteration, msec, result ) \
+  { \
+    result = false; \
+    uint32_t iteration = max_iteration; \
+    while ( mmio_read( reg ) & condition ) { \
+      if ( mmio_read( reg ) & failure ) { \
+        result = true; \
+        break; \
+      } \
+      if ( ! iteration-- ) { \
+        result = true; \
+        break; \
+      } \
+      delay_ms( msec ); \
+    } \
+  }
+
+#define DELAY_ITERATION_FAILURE_FALSE( reg, condition, failure, max_iteration, msec, result ) \
+  { \
+    result = false; \
+    uint32_t iteration = max_iteration; \
+    while ( ! ( mmio_read( reg ) & condition ) ) { \
+      if ( mmio_read( reg ) & failure ) { \
+        result = true; \
+        break; \
+      } \
+      if ( ! iteration-- ) { \
+        result = true; \
+        break; \
+      } \
+      delay_ms( msec ); \
+    } \
   }
 
 #endif //_DELAY_H

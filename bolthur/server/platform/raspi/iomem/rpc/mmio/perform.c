@@ -27,11 +27,9 @@
 #include "../../mmio.h"
 #include "../../rpc.h"
 #include "../../delay.h"
-#include "../../../libsdhost.h"
 #include "../../dma.h"
 #include "../../generic.h"
 #include "../../../../../../library/platform/raspi/iomem/libiomem.h"
-#include "../../../../../../library/platform/raspi/iomem/libperipheral.h"
 #include "../../../../../../library/util/min.h"
 #if defined( RPC_ENABLE_OUTPUT )
   #include <inttypes.h>

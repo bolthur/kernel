@@ -22,16 +22,6 @@
 
 //#define EMMC_ENABLE_DEBUG 1
 
-/**
- * @brief Standard timeout in useconds
- */
-#define EMMC_STANDARD_TIMEOUT 500000
-
-/**
- * @brief Timeout for read / write operations
- */
-#define EMMC_READ_WRITE_TIMEOUT 2000000
-
 typedef enum {
   EMMC_RESPONSE_OK = 0,
   EMMC_RESPONSE_MEMORY,

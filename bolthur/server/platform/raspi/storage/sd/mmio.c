@@ -23,6 +23,9 @@
 #include "barrier.h"
 #include "constants.h"
 
+/*#undef RASPI
+#define RASPI 3*/
+
 // initial setup of peripheral base
 #if defined( BCM2709 ) || defined( BCM2710 )
   #define PERIPHERAL_BASE 0x3F000000
@@ -37,7 +40,7 @@ static void* mmio_start = nullptr;
 bool mmio_init( void ) {
   // map whole mmio area
   void* tmp = mmap(
-    #if defined( RASPI3 )
+    #if 3 == RASPI
       ( void* )( PERIPHERAL_BASE + PERIPHERAL_SDHOST_OFFSET ),
     #else
       ( void* )( PERIPHERAL_BASE + PERIPHERAL_EMMC_OFFSET ),
@@ -65,7 +68,7 @@ bool mmio_init( void ) {
  * @param address
  * @return
  */
-uint32_t mmio_read(const uintptr_t address ) {
+uint32_t mmio_read( const uintptr_t address ) {
   // determine read begin and end address since address contains only an offset
   auto volatile const read_begin = ( void* )( ( uintptr_t )mmio_start + address );
   const uint32_t value = *( volatile uint32_t* )read_begin;
@@ -81,7 +84,7 @@ uint32_t mmio_read(const uintptr_t address ) {
  * @param address
  * @param data
  */
-void mmio_write(const uintptr_t address, const uint32_t data ) {
+void mmio_write( const uintptr_t address, const uint32_t data ) {
   // determine write begin and end address since address contains only an offset
   auto volatile const write_begin = ( void* )( ( uintptr_t )mmio_start + address );
   // barrier, write and barrier
