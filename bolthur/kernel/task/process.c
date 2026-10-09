@@ -135,8 +135,12 @@ static void task_process_free( task_process_t* proc ) {
     assert( shared_memory_cleanup_process( proc ) )
     // destroy context
     assert( virt_destroy_context( proc->virtual_context, false ) )
+    // destroy mailbox
+    if ( proc->rpc_mailbox ) {
+      free( proc->rpc_mailbox );
+    }
     // unset rpc mailbox stuff
-    proc->rpc_mailbox = 0;
+    proc->rpc_mailbox = nullptr;
     proc->rpc_mailbox_virt = 0;
   }
   // set to nullptr
@@ -455,13 +459,32 @@ task_process_t* task_process_fork( const task_thread_t* thread_calling ) {
     return nullptr;
   }
   // erase mailbox if existing
+  forked->rpc_mailbox_size = proc->rpc_mailbox_size;
   if ( proc->rpc_mailbox_virt && proc->rpc_mailbox ) {
     #if defined( PRINT_PROCESS )
       DEBUG_OUTPUT( "Clearing mailbox stuff\r\n" )
     #endif
-    // get mailbox and mailbox virtual
-    forked->rpc_mailbox = virt_get_mapped_address_in_context( forked->virtual_context, proc->rpc_mailbox_virt );
+    // calculate pages
+    const uint32_t mailbox_pages = forked->rpc_mailbox_size / PAGE_SIZE;
+    // allocate physical array
+    forked->rpc_mailbox = malloc( sizeof( uint64_t ) * mailbox_pages );
+    if ( ! forked->rpc_mailbox ) {
+      task_process_free( forked );
+      return nullptr;
+    }
+    // populate mailbox physical
+    for ( size_t i = 0; i < mailbox_pages; i++ ) {
+      forked->rpc_mailbox[ i ] = virt_get_mapped_address_in_context(
+        forked->virtual_context, proc->rpc_mailbox_virt + i * PAGE_SIZE );
+    }
     forked->rpc_mailbox_virt = proc->rpc_mailbox_virt;
+    const uintptr_t tmp = virt_map_temporary_range( forked->rpc_mailbox, forked->rpc_mailbox_size );
+    if ( ! tmp ) {
+      task_process_free( forked );
+      return nullptr;
+    }
+    memset( ( void* )tmp, 0, forked->rpc_mailbox_size );
+    virt_unmap_temporary( tmp, forked->rpc_mailbox_size );
   }
   // copy rpc handler and rpc ready flag
   forked->rpc_handler = proc->rpc_handler;
@@ -577,22 +600,21 @@ bool task_process_prepare_init( task_process_t* proc ) {
     return false;
   }
   // Get file address and size
-  uintptr_t ramdisk_file = ( uintptr_t )tar_file( ramdisk );
-  size_t ramdisk_file_size = tar_size( ramdisk );
+  const uintptr_t ramdisk_file = ( uintptr_t )tar_file( ramdisk );
+  const size_t ramdisk_file_size = tar_size( ramdisk );
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "ramdisk file name %s\r\n", ramdisk->file_name )
     DEBUG_OUTPUT( "File size: %#zx\r\n", ramdisk_file_size )
   #endif
   // round up size
-  size_t rounded_ramdisk_file_size = ROUND_UP_TO_FULL_PAGE( ramdisk_file_size );
+  const size_t rounded_ramdisk_file_size = ROUND_UP_TO_FULL_PAGE( ramdisk_file_size );
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "rounded size: %#zx\r\n", rounded_ramdisk_file_size )
   #endif
   // get physical area
-  uint64_t phys_address_ramdisk = phys_find_free_page_range(
-    PAGE_SIZE,
+  uint64_t* phys_address_ramdisk = phys_find_free_page_range_random(
     rounded_ramdisk_file_size,
     PHYS_MEMORY_TYPE_NORMAL
   );
@@ -600,16 +622,16 @@ bool task_process_prepare_init( task_process_t* proc ) {
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "phys address: %#llx\r\n", phys_address_ramdisk )
   #endif
-  if( INVALID_ADDRESS == phys_address_ramdisk ) {
+  if( ! phys_address_ramdisk ) {
     return false;
   }
   // map temporary
-  uintptr_t ramdisk_tmp = virt_map_temporary(
+  const uintptr_t ramdisk_tmp = virt_map_temporary_range(
     phys_address_ramdisk,
     rounded_ramdisk_file_size
   );
   if ( !ramdisk_tmp ) {
-    phys_free_page_range( phys_address_ramdisk, rounded_ramdisk_file_size );
+    phys_free_page_range_random( phys_address_ramdisk, rounded_ramdisk_file_size );
     return false;
   }
   // copy over content
@@ -617,13 +639,13 @@ bool task_process_prepare_init( task_process_t* proc ) {
   // unmap again
   virt_unmap_temporary( ramdisk_tmp, ( size_t )rounded_ramdisk_file_size );
   // find free page range
-  uintptr_t proc_ramdisk_start = virt_find_free_page_range(
+  const uintptr_t proc_ramdisk_start = virt_find_free_page_range(
     proc->virtual_context,
     rounded_ramdisk_file_size,
     0
   );
   if ( ! proc_ramdisk_start ) {
-    phys_free_page_range( phys_address_ramdisk, rounded_ramdisk_file_size );
+    phys_free_page_range_random( phys_address_ramdisk, rounded_ramdisk_file_size );
     return false;
   }
   // map ramdisk
@@ -635,9 +657,11 @@ bool task_process_prepare_init( task_process_t* proc ) {
     VIRT_MEMORY_TYPE_NORMAL,
     VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
   ) ) {
-    phys_free_page_range( phys_address_ramdisk, rounded_ramdisk_file_size );
+    phys_free_page_range_random( phys_address_ramdisk, rounded_ramdisk_file_size );
     return false;
   }
+  // free up array since everything was mapped
+  free( phys_address_ramdisk );
 
   char str_ramdisk[ 20 ];
   char str_ramdisk_size[ 20 ];
@@ -653,11 +677,10 @@ bool task_process_prepare_init( task_process_t* proc ) {
   // empty env for init
   char* env[] = { nullptr, };
   // arch related
-  uintptr_t proc_additional_start = task_process_prepare_init_arch( proc );
+  const uintptr_t proc_additional_start = task_process_prepare_init_arch( proc );
   if ( proc_additional_start ) {
     char str_additional[ 20 ];
     sprintf( str_additional, "%#"PRIxPTR"\0", proc_additional_start );
-
     char* arg[] = {
       "daemon:/init", str_ramdisk, str_ramdisk_size, str_additional, nullptr, };
     assert( task_thread_push_arguments( thread, arg, env ) )

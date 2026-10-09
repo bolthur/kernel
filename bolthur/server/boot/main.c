@@ -39,7 +39,7 @@ uintptr_t ramdisk_compressed;
 size_t ramdisk_compressed_size;
 uintptr_t ramdisk_decompressed;
 size_t ramdisk_decompressed_size;
-size_t ramdisk_shared_id;
+uint64_t ramdisk_shared_id;
 size_t ramdisk_read_offset = 0;
 pid_t own_pid = 0;
 TAR *disk = nullptr;

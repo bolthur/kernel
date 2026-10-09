@@ -95,7 +95,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
       continue;
     }
     // allocate shared memory
-    const size_t shm_id = _syscall_memory_shared_create( sizeof( authentication_request_request_data_t ) );
+    const uint64_t shm_id = _syscall_memory_shared_create( sizeof( authentication_request_request_data_t ) );
     if ( errno ) {
       printf( "Login failed\r\n" );
       fflush( stdout );

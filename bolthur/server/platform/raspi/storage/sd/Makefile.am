@@ -12,8 +12,12 @@ sd_SOURCES = \
   rpc/init.c \
   rpc/read.c \
   rpc/write.c \
+  barrier.c \
+  delay.c \
   emmc.c \
+  led.c \
   main.c \
+  mmio.c \
   sd.c \
   sdhost.c \
   util.c

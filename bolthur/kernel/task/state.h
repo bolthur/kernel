@@ -35,7 +35,7 @@ typedef enum {
 } task_thread_state_t;
 
 typedef union task_state_data {
-  size_t data_size;
+  uint64_t data_size;
   void* data_ptr;
 } task_state_data_t;
 

@@ -40,7 +40,7 @@ static int fstat_handler( int file, struct stat* st, pid_t* handler ) {
   // copy stuff to message
   request->handle = file;
   // raise rpc and wait for return
-  const size_t response_id = bolthur_rpc_raise(
+  const uint64_t response_id = bolthur_rpc_raise(
     RPC_VFS_STAT,
     VFS_DAEMON_ID,
     request,
@@ -83,7 +83,7 @@ static int fstat_handler( int file, struct stat* st, pid_t* handler ) {
 }
 
 /**
- * @fn void rpc_handle_mount(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_mount(size_t, pid_t, uint64_t, uint64_t)
  * @brief Handle mount point request
  *
  * @param type
@@ -96,8 +96,8 @@ static int fstat_handler( int file, struct stat* st, pid_t* handler ) {
 void rpc_handle_mount(
   size_t type,
   [[maybe_unused]] pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+  uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   #if defined( MOUNT_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "mount mounting\r\n" )
@@ -236,7 +236,7 @@ void rpc_handle_mount(
   }
 
   // perform sync rpc
-  size_t response_id = bolthur_rpc_raise(
+  uint64_t response_id = bolthur_rpc_raise(
     type,
     source_handler,
     request,

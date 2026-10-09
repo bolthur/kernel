@@ -30,10 +30,10 @@
 #include <sys/bolthur.h>
 #include "util.h"
 #include "sdhost.h"
+#include "constants.h"
 // from iomem
 #include "../../libsdhost.h"
 #include "../../../../../library/platform/raspi/iomem/libdma.h"
-#include "../../../../../library/platform/raspi/iomem/libperipheral.h"
 #include "../../../../../library/platform/raspi/iomem/libiomem.h"
 #include "../../../../../library/platform/raspi/iomem/libmailbox.h"
 #include "../../../../../library/platform/raspi/iomem/mailbox.h"
@@ -950,7 +950,7 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
   sequence[ idx ].offset = PERIPHERAL_SDHOST_RESPONSE3;
   // wait for transfer complete for data or if it's a busy command
   // create shared memory
-  size_t shm_id = 0;
+  uint64_t shm_id = 0;
   void* shm_addr = nullptr;
   // setup dma if enabled
   if ( is_data && 0 < device->block_count ) {
@@ -1002,7 +1002,7 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
     sequence[ idx ].type = ( command & SDHOST_COMMAND_FLAG_READ )
       ? IOMEM_MMIO_ACTION_DMA_READ_DEV
       : IOMEM_MMIO_ACTION_DMA_WRITE_DEV;
-    sequence[ idx ].value = shm_id;
+    sequence[ idx ].value64 = shm_id;
     sequence[ idx ].offset = PERIPHERAL_SDHOST_DATAPORT;
     sequence[ idx ].dma_copy_size = copy_size;
     sequence[ idx ].dma_permap = LIBDMA_TI_PERMAP_SDHOST;

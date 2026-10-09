@@ -25,18 +25,18 @@
 
 bool rpc_init( void );
 
-void rpc_handle_close( size_t, pid_t, size_t, size_t );
-void rpc_handle_exec( size_t, pid_t, size_t, size_t );
-void rpc_handle_exit( size_t, pid_t, size_t, size_t );
-void rpc_handle_fork( size_t, pid_t, size_t, size_t );
-void rpc_handle_open( size_t, pid_t, size_t, size_t );
-void rpc_handle_read( size_t, pid_t, size_t, size_t );
-void rpc_handle_write( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_console_add( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_input( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_console_select( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_get_active( size_t, pid_t, size_t, size_t );
-void rpc_termios_get( size_t, pid_t, size_t, size_t );
-void rpc_termios_set( size_t, pid_t, size_t, size_t );
+void rpc_handle_close( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_exec( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_exit( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_fork( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_open( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_read( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_write( size_t, pid_t, uint64_t, uint64_t );
+void rpc_custom_handle_console_add( size_t, pid_t, uint64_t, uint64_t );
+void rpc_custom_handle_input( size_t, pid_t, uint64_t, uint64_t );
+void rpc_custom_handle_console_select( size_t, pid_t, uint64_t, uint64_t );
+void rpc_custom_handle_get_active( size_t, pid_t, uint64_t, uint64_t );
+void rpc_termios_get( size_t, pid_t, uint64_t, uint64_t );
+void rpc_termios_set( size_t, pid_t, uint64_t, uint64_t );
 
 #endif

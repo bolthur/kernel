@@ -25,16 +25,17 @@
 #include "libgpio.h"
 
 #define IOMEM_RPC_MAILBOX RPC_CUSTOM_START
-#define IOMEM_RPC_MMIO_PERFORM IOMEM_RPC_MAILBOX + 1
-#define IOMEM_RPC_MMIO_LOCK IOMEM_RPC_MMIO_PERFORM + 1
-#define IOMEM_RPC_MMIO_UNLOCK IOMEM_RPC_MMIO_LOCK + 1
-#define IOMEM_RPC_GPIO_SET_FUNCTION IOMEM_RPC_MMIO_UNLOCK + 1
-#define IOMEM_RPC_GPIO_SET_PULL IOMEM_RPC_GPIO_SET_FUNCTION + 1
-#define IOMEM_RPC_GPIO_SET_DETECT IOMEM_RPC_GPIO_SET_PULL + 1
-#define IOMEM_RPC_GPIO_STATUS IOMEM_RPC_GPIO_SET_DETECT + 1
-#define IOMEM_RPC_GPIO_EVENT IOMEM_RPC_GPIO_STATUS + 1
-#define IOMEM_RPC_GPIO_LOCK IOMEM_RPC_GPIO_EVENT + 1
-#define IOMEM_RPC_GPIO_UNLOCK IOMEM_RPC_GPIO_LOCK + 1
+#define IOMEM_RPC_MMIO_PERFORM ( IOMEM_RPC_MAILBOX + 1 )
+#define IOMEM_RPC_MMIO_LOCK ( IOMEM_RPC_MMIO_PERFORM + 1 )
+#define IOMEM_RPC_MMIO_UNLOCK ( IOMEM_RPC_MMIO_LOCK + 1 )
+#define IOMEM_RPC_GPIO_SET_FUNCTION ( IOMEM_RPC_MMIO_UNLOCK + 1 )
+#define IOMEM_RPC_GPIO_SET_PULL ( IOMEM_RPC_GPIO_SET_FUNCTION + 1 )
+#define IOMEM_RPC_GPIO_SET_DETECT ( IOMEM_RPC_GPIO_SET_PULL + 1 )
+#define IOMEM_RPC_GPIO_STATUS ( IOMEM_RPC_GPIO_SET_DETECT + 1 )
+#define IOMEM_RPC_GPIO_EVENT ( IOMEM_RPC_GPIO_STATUS + 1 )
+#define IOMEM_RPC_GPIO_LOCK ( IOMEM_RPC_GPIO_EVENT + 1 )
+#define IOMEM_RPC_GPIO_UNLOCK ( IOMEM_RPC_GPIO_LOCK + 1 )
+#define IOMEM_RPC_GPIO_RAISE ( IOMEM_RPC_GPIO_UNLOCK + 1 )
 
 #define IOMEM_DEVICE_PATH "/dev/iomem"
 
@@ -88,6 +89,7 @@ struct iomem_mmio_entry {
   uint32_t offset;
   // value ( usage depending on action type )
   uint32_t value;
+  uint64_t value64;
   // shift type and shift bits to be applied
   mmio_shift_t shift_type;
   uint32_t shift_value;
@@ -112,7 +114,7 @@ typedef struct iomem_mmio_entry iomem_mmio_entry_t;
 typedef struct iomem_mmio_entry iomem_mmio_entry_array_t[];
 
 typedef struct {
-  size_t shm_id;
+  uint64_t shm_id;
   size_t length;
 } iomem_mmio_perform_t;
 
@@ -141,5 +143,10 @@ typedef struct {
   iomem_gpio_enum_pin_t pin;
   uint32_t value;
 } iomem_gpio_event_t;
+
+typedef struct iomem_gpio_raise {
+  iomem_gpio_enum_pin_t pin;
+  bool raise;
+} iomem_gpio_raise_t;
 
 #endif

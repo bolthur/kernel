@@ -19,6 +19,7 @@
 
 // system includes
 #include <errno.h>
+#include <assert.h>
 #include <sys/bolthur.h>
 #include <sys/ioctl.h>
 #include <sys/_default_fcntl.h>
@@ -32,20 +33,14 @@
 // shared includes
 #include "../../libhcd.h"
 // library includes
-#include <assert.h>
-
 #include "delay.h"
 #include "mmio.h"
 #include "timer.h"
 #include "../../../../libusbd.h"
-#include "../../../../../kernel/timer.h"
 #include "../../../../../library/platform/raspi/iomem/libiomem.h"
-#include "../../../../../library/platform/raspi/iomem/libperipheral.h"
 #include "../../../../../library/platform/raspi/iomem/libmailbox.h"
-#include "../../../../../library/platform/raspi/iomem/sequence.h"
 #include "../../../../../library/platform/raspi/iomem/mailbox.h"
 #include "../../../../../library/usb/usb.h"
-#include "../../iomem/barrier.h"
 
 /**
  * @brief file descriptor for iomem operations
@@ -652,6 +647,9 @@ response_t dwhci_channel_send_async_stop_channel( channel_queue_entry_t* entry, 
       characteristic |= HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 );
       mmio_write( PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ), characteristic );
     } else {
+      #if defined( DWHCI_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "entry->status = %d\r\n", entry->status )
+      #endif
       if ( DWHCI_QUEUE_POLL_STATUS_CANCEL == entry->status ) {
         #if defined( DWHCI_ENABLE_DEBUG )
           EARLY_STARTUP_PRINT( "Nothing to cancel, faking a nack" )
@@ -1079,7 +1077,7 @@ response_t dwhci_channel_send_cancel( channel_queue_entry_t* entry ) {
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to stop channel\r\n")
+      EARLY_STARTUP_PRINT( "Unable to stop channel: %d\r\n", result )
     #endif
     // return result
     return result;
@@ -1216,7 +1214,7 @@ response_t dwhci_channel_send_async(
   usb_control_message_t* data,
   const size_t data_size,
   const usbd_control_message_t* message,
-  const size_t response_info
+  const uint64_t response_info
 ) {
   // debug output
   #if defined( DWHCI_ENABLE_DEBUG )
@@ -1283,9 +1281,9 @@ response_t dwhci_channel_send_async(
     return result;
   }
   // kickstart timeout if set
-  if ( data->timeout ) {
+  if ( entry->setup_timeout ) {
     // acquire timeout
-    entry->timer = timer_acquire( data->timeout );
+    entry->timer = timer_acquire( entry->setup_timeout );
     // handle error
     if ( errno ) {
       // debug output
@@ -1363,17 +1361,6 @@ response_t dwhci_channel_poll_async_data( channel_queue_entry_t* entry ) {
     #endif
     // return result
     return result;
-  }
-  // acquire timeout
-  entry->timer = timer_acquire( entry_data->timeout );
-  // handle error
-  if ( errno ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to acquire timeout\r\n" )
-    #endif
-    // return error
-    return HCD_RESPONSE_ERROR_IO;
   }
   // start send data packet
   return dwhci_channel_send_async_start_channel( entry );
@@ -1495,13 +1482,15 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
   entry->buffer_size_to_transfer = entry_data->buffer_length;
   memset( entry->buffer, 0, entry_data->buffer_length );
   // check interval
-  size_t wait_time = 0;
+  uint64_t wait_time = 0;
   if ( entry->last_tick_count > 0 ) {
     // get current tick count
     const uint64_t current_tick_count = _syscall_timer_tick_count();
-    // calculate difference and finally passed milliseconds
+    // calculate difference
     const uint64_t difference = current_tick_count - entry->last_tick_count;
-    const size_t passed_milliseconds = ( size_t )( ( ( double )difference / ( double )entry->timer_frequency ) * 1000.0 );
+    // calculate passed milliseconds
+    const uint64_t passed_milliseconds = ( difference * 1000ULL ) / entry->timer_frequency;
+    // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "passed_milliseconds = %zu\r\n", passed_milliseconds )
       EARLY_STARTUP_PRINT( "difference = %zu\r\n", difference )

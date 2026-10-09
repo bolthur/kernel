@@ -30,7 +30,7 @@
 #endif
 
 /**
- * @fn rpc_backup_t* rpc_backup_create(task_thread_t*, const task_process_t*, size_t, const void*, size_t, task_thread_t*, bool, size_t, bool, bool, bool)
+ * @fn rpc_backup_t* rpc_backup_create(task_thread_t*, const task_process_t*, size_t, const void*, size_t, task_thread_t*, bool, uint64_t, bool, bool, bool)
  * @brief Helper to create rpc backup
  * @param source
  * @param target
@@ -53,7 +53,7 @@ rpc_backup_t* rpc_backup_create(
   const size_t data_size,
   task_thread_t* target_thread,
   const bool sync,
-  const size_t origin_data_id,
+  const uint64_t origin_data_id,
   const bool disable_data,
   const bool is_interrupt,
   const bool is_timer

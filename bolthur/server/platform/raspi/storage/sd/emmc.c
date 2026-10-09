@@ -31,14 +31,17 @@
 #include <errno.h>
 #include <sys/fcntl.h>
 #include <sys/ioctl.h>
+#include <sys/mman.h>
 #include <sys/bolthur.h>
 #include "emmc.h"
 #include "util.h"
+#include "constants.h"
+#include "mmio.h"
 // from iomem
+#include "delay.h"
+#include "led.h"
 #include "../../libemmc.h"
-#include "../../../../../library/platform/raspi/iomem/libdma.h"
 #include "../../../../../library/platform/raspi/iomem/libiomem.h"
-#include "../../../../../library/platform/raspi/iomem/libperipheral.h"
 #include "../../../../../library/platform/raspi/iomem/libmailbox.h"
 #include "../../../../../library/platform/raspi/iomem/mailbox.h"
 #include "../../../../../library/platform/raspi/iomem/sequence.h"
@@ -229,7 +232,7 @@ static emmc_response_t controller_shutdown( void ) {
   // end tag
   request[ 7 ] = 0;
   // perform request
-  const int result = iomem_execute_sequence( device->fd_iomem, request, request_size );
+  const int result = iomem_execute_mailbox( device->fd_iomem, request, request_size );
   // handle ioctl error
   if ( -1 == result ) {
     iomem_mailbox_release( request );
@@ -308,15 +311,7 @@ static emmc_response_t controller_startup( void ) {
   // end tag
   request[ 7 ] = 0;
   // perform request
-  const int result = ioctl(
-    device->fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MAILBOX,
-      request_size,
-      IOCTL_RDWR
-    ),
-    request
-  );
+  const int result = iomem_execute_mailbox( device->fd_iomem, request, request_size );
   // handle ioctl error
   if ( -1 == result ) {
     iomem_mailbox_release( request );
@@ -728,31 +723,7 @@ static emmc_response_t gather_version_info( void ) {
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Fetching host version information\r\n" )
   #endif
-  // fetch host version
-  size_t sequence_size;
-  iomem_mmio_entry_t* host_version_sequence = iomem_prepare_mmio_sequence(
-    1, &sequence_size );
-  if ( ! host_version_sequence ) {
-    return EMMC_RESPONSE_MEMORY;
-  }
-  // fill sequence
-  host_version_sequence->type = IOMEM_MMIO_ACTION_READ;
-  host_version_sequence->offset = PERIPHERAL_EMMC_SLOTISR_VER;
-  // handle ioctl error
-  if ( -1 == iomem_execute_sequence( device->fd_iomem, host_version_sequence, sequence_size ) ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "mmio rpc failed\r\n" )
-    #endif
-    // free
-    iomem_release_mmio_sequence( host_version_sequence );
-    // return error
-    return EMMC_RESPONSE_IO;
-  }
-  // cache value
-  const uint32_t version_value = host_version_sequence[ 0 ].value;
-  // free sequence
-  iomem_release_mmio_sequence( host_version_sequence );
+  const uint32_t version_value = mmio_read( PERIPHERAL_EMMC_SLOTISR_VER );
   // populate properties
   device->version_vendor = SLOTISR_VER_VENDOR( version_value );
   device->version_host_controller = SLOTISR_VER_SDVERSION( version_value );
@@ -870,92 +841,40 @@ static emmc_response_t clock_frequency( const uint32_t frequency ) {
       "Disable clock, write clock divisor and wait for clock to become stable\r\n"
     )
   #endif
-  // allocate sequence
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 10, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
-    #endif
-    // return error
-    return EMMC_RESPONSE_MEMORY;
-  }
-  // update clock frequency sequence
+  // sleep values
+  constexpr long milliseconds = 20;
+  constexpr struct timespec ts = {
+    .tv_sec = milliseconds / 1000,
+    .tv_nsec = ( milliseconds % 1000 ) * 1000000
+  };
   // wait until possible read/write finished
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_LOOP_TRUE;
-  sequence[ 0 ].offset = PERIPHERAL_EMMC_STATUS;
-  sequence[ 0 ].loop_and = EMMC_STATUS_CMD_INHIBIT | EMMC_STATUS_DAT_INHIBIT;
-  sequence[ 0 ].loop_max_iteration = 10000;
-  sequence[ 0 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ 0 ].sleep = 10;
+  while ( mmio_read( PERIPHERAL_EMMC_STATUS ) & ( EMMC_STATUS_CMD_INHIBIT | EMMC_STATUS_DAT_INHIBIT ) ) {
+    nanosleep( &ts, nullptr );
+  }
   // disable clock and interrupts
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 1 ].offset = PERIPHERAL_EMMC_CONTROL1;
-  sequence[ 2 ].type = IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ;
-  sequence[ 2 ].value = ( uint32_t )( ( int ) ~EMMC_CONTROL1_CLK_EN | ( int ) ~EMMC_CONTROL1_CLK_INTLEN );
-  sequence[ 2 ].offset = PERIPHERAL_EMMC_CONTROL1;
-  sequence[ 3 ].type = IOMEM_MMIO_ACTION_SLEEP;
-  sequence[ 3 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ 3 ].sleep = 10;
-  // read control1 and write clock divisor
-  sequence[ 4 ].type = IOMEM_MMIO_ACTION_READ_AND;
-  sequence[ 4 ].offset = PERIPHERAL_EMMC_CONTROL1;
-  sequence[ 4 ].value = 0xFFFF003F;
-  sequence[ 5 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 5 ].offset = PERIPHERAL_EMMC_CONTROL1;
-  sequence[ 5 ].value = divisor;
-  sequence[ 6 ].type = IOMEM_MMIO_ACTION_SLEEP;
-  sequence[ 6 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ 6 ].sleep = 10;
-  // enable clock
-  sequence[ 7 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 7 ].offset = PERIPHERAL_EMMC_CONTROL1;
-  sequence[ 8 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 8 ].offset = PERIPHERAL_EMMC_CONTROL1;
-  sequence[ 8 ].value = EMMC_CONTROL1_CLK_EN;
+  uint32_t control = mmio_read( PERIPHERAL_EMMC_CONTROL1 );
+  control &= ~EMMC_CONTROL1_CLK_EN;
+  control &= ~EMMC_CONTROL1_CLK_INTLEN;
+  mmio_write( PERIPHERAL_EMMC_CONTROL1, control );
+  // delay 20 milliseconds
+  nanosleep( &ts, nullptr );
+  // read control again and write divisor
+  control = mmio_read( PERIPHERAL_EMMC_CONTROL1 ) & 0xFFFF003F;
+  control |= divisor;
+  control |= EMMC_CONTROL1_CLK_INTLEN;
+  mmio_write( PERIPHERAL_EMMC_CONTROL1, control );
+  // delay 20 milliseconds
+  nanosleep( &ts, nullptr );
   // wait until clock is stable
-  sequence[ 9 ].type = IOMEM_MMIO_ACTION_LOOP_FALSE;
-  sequence[ 9 ].offset = PERIPHERAL_EMMC_CONTROL1;
-  sequence[ 9 ].loop_and = EMMC_CONTROL1_CLK_STABLE;
-  sequence[ 9 ].loop_max_iteration = 10000;
-  sequence[ 9 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ 9 ].sleep = 10;
-  // perform request
-  if ( -1 == iomem_execute_sequence( device->fd_iomem, sequence, sequence_size ) ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Clock frequency change sequence failed\r\n" )
-    #endif
-    // free
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return EMMC_RESPONSE_IO;
+  while ( ! ( mmio_read( PERIPHERAL_EMMC_CONTROL1 ) & EMMC_CONTROL1_CLK_STABLE ) ) {
+    nanosleep( &ts, nullptr );
   }
-  // check for command wait timeout
-  if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ 0 ].abort_type ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Wait for cmd done timed out\r\n" )
-    #endif
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
-    // return failure
-    return EMMC_RESPONSE_TIMEOUT;
-  }
-  // check for clock wait timeout
-  if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ 9 ].abort_type ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Wait for clock ready timed out\r\n" )
-    #endif
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
-    // return failure
-    return EMMC_RESPONSE_TIMEOUT;
-  }
-  // free sequence
-  iomem_release_mmio_sequence( sequence );
+  // enable clock
+  control = mmio_read( PERIPHERAL_EMMC_CONTROL1 );
+  control |= EMMC_CONTROL1_CLK_EN;
+  mmio_write( PERIPHERAL_EMMC_CONTROL1, control );
+  // delay 20 milliseconds
+  nanosleep( &ts, nullptr );
   // return success
   return EMMC_RESPONSE_OK;
 }
@@ -967,93 +886,43 @@ static emmc_response_t clock_frequency( const uint32_t frequency ) {
  * @param mask
  * @return
  */
-static emmc_response_t interrupt_mark_handled( uint32_t mask ) {
+static emmc_response_t interrupt_mark_handled( const uint32_t mask ) {
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Mark interrupts handled\r\n" )
   #endif
-  // allocate sequence
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 1, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
-    #endif
-    // return error
-    return EMMC_RESPONSE_MEMORY;
-  }
-  // overwrite interrupt register
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 0 ].offset = PERIPHERAL_EMMC_INTERRUPT;
-  sequence[ 0 ].value = mask;
-  // perform request
-  const int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_size );
-  // free sequence
-  iomem_release_mmio_sequence( sequence );
-  // handle ioctl error
-  if ( -1 == result ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Mark interrupt as handled sequence failed\r\n" )
-    #endif
-    // return error
-    return EMMC_RESPONSE_IO;
-  }
+  // mark as handled
+  mmio_write( PERIPHERAL_EMMC_INTERRUPT, mask );
   // return success
   return EMMC_RESPONSE_OK;
 }
 
 /**
- * @fn emmc_response_t issue_sd_command(uint32_t, uint32_t)
+ * @fn emmc_response_t issue_sd_command(uint32_t, uint32_t, uint64_t)
  * @brief Issue sd command
- *
  * @param command
  * @param argument
+ * @param timeout
  * @return
  */
-static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
+static emmc_response_t issue_sd_command( uint32_t command, const uint32_t argument, [[maybe_unused]] const uint64_t timeout ) {
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Issue SD command\r\n" )
   #endif
   // some flags
-  bool response_busy = ( command & EMMC_CMDTM_CMD_RSPNS_TYPE_MASK ) == EMMC_CMDTM_CMD_RSPNS_TYPE_48B;
-  bool type_abort = ( command & EMMC_CMDTM_CMD_TYPE_MASK ) == EMMC_CMDTM_CMD_TYPE_ABORT;
-  bool is_data = command & EMMC_CMDTM_CMD_ISDATA;
-  uint32_t timeout = 50000;
-  // sequence size
-  size_t sequence_entry_count = 10;
+  const bool response_busy = ( command & EMMC_CMDTM_CMD_RSPNS_TYPE_MASK ) == EMMC_CMDTM_CMD_RSPNS_TYPE_48B;
+  const bool type_abort = ( command & EMMC_CMDTM_CMD_TYPE_MASK ) == EMMC_CMDTM_CMD_TYPE_ABORT;
+  const bool is_data = command & EMMC_CMDTM_CMD_ISDATA;
+  const uint32_t interrupt = ( command & EMMC_CMDTM_CMD_TM_DAT_DIR_CH )
+    ? EMMC_INTERRUPT_READ_RDY : EMMC_INTERRUPT_WRITE_RDY;
+  const bool is_write = interrupt == EMMC_INTERRUPT_WRITE_RDY;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
       "device->block_size = %"PRIu32", device->block_count = %"PRIu32"\r\n",
       device->block_size,
       device->block_count
-    )
-  #endif
-  // data command
-  if ( is_data && 0 < device->block_count ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Extending entry count by data block count\r\n" )
-      EARLY_STARTUP_PRINT(
-        "device->block_size = %"PRIu32", device->block_count = %"PRIu32"\r\n",
-        device->block_size,
-        device->block_count
-      )
-    #endif
-    // space for read / write from dma
-    sequence_entry_count++;
-  }
-  if ( response_busy || is_data ) {
-      sequence_entry_count += 2;
-  }
-  // debug output
-  #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT(
-      "sequence_entry_count = %zu\r\n",
-      sequence_entry_count
     )
   #endif
   // Block count limit due to BLKSIZECNT limit to 16 bit "register"
@@ -1068,303 +937,218 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
     // return error;
     return EMMC_RESPONSE_MEMORY;
   }
-  // debug output
-  #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Allocating space for sequence\r\n" )
-  #endif
-  // allocate sequence
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence(
-    sequence_entry_count,
-    &sequence_size
-  );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Allocate command sequence failed" )
-    #endif
-    // return error
-    return EMMC_RESPONSE_MEMORY;
-  }
-  // create shared memory
-  size_t shm_id = 0;
-  void* shm_addr = nullptr;
+  // allocate dma buffer
+  const size_t buffer_size = device->block_count * device->block_size;
+  void* buffer = nullptr;
+  uintptr_t phys = 0;
   if ( is_data && 0 < device->block_count ) {
-    if ( device->shm_id ) {
+    buffer = mmap( nullptr, buffer_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_BUS | MAP_DEVICE , -1, 0 );
+    if ( MAP_FAILED == buffer ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Using shared memory set in device\r\n" )
+        EARLY_STARTUP_PRINT( "Unable to allocate buffer\r\n" )
       #endif
-      shm_id = device->shm_id;
-    } else {
-      // debug output
-      #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Creating shared memory\r\n" )
-      #endif
-      shm_id = _syscall_memory_shared_create(
-        device->block_count * device->block_size );
-      if ( errno ) {
-        iomem_release_mmio_sequence( sequence );
+      // return error
+      return EMMC_RESPONSE_MEMORY;
+    }
+    // clear out space
+    memset( buffer, 0, buffer_size );
+    // get physical address
+    phys = _syscall_memory_translate_bus( ( uintptr_t )buffer, buffer_size );
+    // handle copy from buffer
+    if ( is_write ) {
+      if ( device->buffer ) {
         // debug output
         #if defined( EMMC_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Request shared area failed\r\n" )
+          EARLY_STARTUP_PRINT( "Copying from internal buffer to passed buffer\r\n" )
         #endif
-        // return error
-        return EMMC_RESPONSE_UNKNOWN;
-      }
-      // attach it
-      shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
-      if ( errno ) {
-        iomem_release_mmio_sequence( sequence );
+        // copy data
+        memcpy( buffer, device->buffer, buffer_size );
+      } else if ( device->shm_id ) {
         // debug output
         #if defined( EMMC_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Request shared area failed\r\n" )
+          EARLY_STARTUP_PRINT( "Copying from internal buffer to shared memory\r\n" )
         #endif
-        // return error
-        return EMMC_RESPONSE_MEMORY;
+        // attach shared memory
+        const void* shm_addr = _syscall_memory_shared_attach( device->shm_id, 0 );
+        if ( errno ) {
+          munmap( buffer, buffer_size );
+          return EMMC_RESPONSE_IO;
+        }
+        // copy data
+        memcpy( buffer, shm_addr, buffer_size );
+        // detach shared
+        _syscall_memory_shared_detach( device->shm_id );
       }
-      // clear out space
-      memset( shm_addr, 0, device->block_count * device->block_size );
     }
   }
-
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Update command if necessary\r\n" )
   #endif
-  // set status compare depending on type
-  uint32_t status_compare = EMMC_STATUS_CMD_INHIBIT;
+  // debug output
+  #if defined( EMMC_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Waiting for command ready\r\n" )
+  #endif
+  while ( mmio_read( PERIPHERAL_EMMC_STATUS ) & EMMC_STATUS_CMD_INHIBIT ) {
+    delay_us( 10000 );
+  }
+  // when busy and not an abort command => wait for data line to be free
   if ( response_busy && ! type_abort ) {
-    status_compare |= EMMC_STATUS_DAT_INHIBIT;
-  }
-  // debug output
-  #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Filling command sequence for execution\r\n" )
-  #endif
-  uint32_t idx = 0;
-  // fill sequence to execute
-  // wait for command ready ( waits until status flags are unset )
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_LOOP_TRUE;
-  sequence[ idx ].offset = PERIPHERAL_EMMC_STATUS;
-  sequence[ idx ].loop_and = status_compare;
-  sequence[ idx ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ idx ].sleep = 10;
-  idx++;
-  // set block size count
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ idx ].value = device->block_size | ( device->block_count << 16 );
-  sequence[ idx ].offset = PERIPHERAL_EMMC_BLKSIZECNT;
-  idx++;
-  // set argument 1
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ idx ].value = argument;
-  sequence[ idx ].offset = PERIPHERAL_EMMC_ARG1;
-  idx++;
-  // set command
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ idx ].value = command;
-  sequence[ idx ].offset = PERIPHERAL_EMMC_CMDTM;
-  idx++;
-  // wait until command is executed / failed
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_LOOP_FALSE;
-  sequence[ idx ].offset = PERIPHERAL_EMMC_INTERRUPT;
-  sequence[ idx ].loop_and = EMMC_INTERRUPT_CMD_DONE;
-  sequence[ idx ].loop_max_iteration = timeout;
-  sequence[ idx ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ idx ].sleep = 10;
-  sequence[ idx ].failure_condition = IOMEM_MMIO_FAILURE_CONDITION_ON;
-  sequence[ idx ].failure_value = EMMC_INTERRUPT_ERR;
-  idx++;
-  // clear interrupt
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ idx ].value = EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_CMD_DONE;
-  sequence[ idx ].offset = PERIPHERAL_EMMC_INTERRUPT;
-  idx++;
-  // read resp0
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ idx ].offset = PERIPHERAL_EMMC_RESP0;
-  idx++;
-  // read resp1
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ idx ].offset = PERIPHERAL_EMMC_RESP1;
-  idx++;
-  // read resp2
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ idx ].offset = PERIPHERAL_EMMC_RESP2;
-  idx++;
-  // read resp3
-  sequence[ idx ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ idx ].offset = PERIPHERAL_EMMC_RESP3;
-  idx++;
-  // setup dma if enabled
-  if ( is_data && 0 < device->block_count && shm_id ) {
-    uint32_t interrupt = ( command & EMMC_CMDTM_CMD_TM_DAT_DIR_CH )
-      ? EMMC_INTERRUPT_READ_RDY : EMMC_INTERRUPT_WRITE_RDY;
-    sequence[ idx ].type = interrupt == EMMC_INTERRUPT_READ_RDY ?
-      IOMEM_MMIO_ACTION_DMA_READ_DEV : IOMEM_MMIO_ACTION_DMA_WRITE_DEV;
-    sequence[ idx ].value = shm_id;
-    sequence[ idx ].offset = PERIPHERAL_EMMC_DATA;
-    sequence[ idx ].dma_copy_size = device->block_count * device->block_size;
-    sequence[ idx ].dma_permap = LIBDMA_TI_PERMAP_EMMC;
-    sequence[ idx ].loop_max_iteration = timeout;
-    sequence[ idx ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-    sequence[ idx ].sleep = 10;
-    idx++;
-  }
-  // wait for transfer complete for data or if it's a busy command
-  if ( response_busy || is_data ) {
-    // wait until data is done
-    sequence[ idx ].type = IOMEM_MMIO_ACTION_LOOP_FALSE;
-    sequence[ idx ].offset = PERIPHERAL_EMMC_INTERRUPT;
-    sequence[ idx ].loop_and = EMMC_INTERRUPT_DATA_DONE;
-    sequence[ idx ].loop_max_iteration = timeout;
-    sequence[ idx ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-    sequence[ idx ].sleep = 10;
-    idx++;
-    // clear interrupt
-    sequence[ idx ].type = IOMEM_MMIO_ACTION_WRITE;
-    sequence[ idx ].offset = PERIPHERAL_EMMC_INTERRUPT;
-    sequence[ idx ].value = EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_DATA_DONE;
-  }
-  // debug output
-  #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Executing command sequence with ioctl\r\n" )
-  #endif
-  // perform request
-  int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_size );
-  // handle ioctl error
-  if ( -1 == result ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Issue SD Command sequence failed\r\n" )
+      EARLY_STARTUP_PRINT( "Waiting for data ready\r\n" )
     #endif
-    return EMMC_RESPONSE_IO;
-  }
-  // debug output
-  #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Checking responses of command sequence\r\n" )
-  #endif
-  // test for command loop timeout
-  idx = 4;
-  if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ idx ].abort_type ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Wait for cmd done timed out\r\n" )
-    #endif
-    // save last interrupt and specific error
-    device->last_interrupt = sequence[ idx ].value;
-    device->last_error = sequence[ idx ].value & EMMC_INTERRUPT_MASK;
-    // mask interrupts again
-    while ( EMMC_RESPONSE_OK != interrupt_mark_handled(
-      EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_CMD_DONE
-    ) ) {
-      __asm__ __volatile__( "nop" );
+    while ( mmio_read( PERIPHERAL_EMMC_STATUS ) & EMMC_STATUS_DAT_INHIBIT ) {
+      delay_us( 10000 );
     }
-    iomem_release_mmio_sequence( sequence );
-    // return failure
-    return EMMC_RESPONSE_TIMEOUT;
   }
-
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Saving possible response information\r\n" )
+    EARLY_STARTUP_PRINT( "Set block size count\r\n" )
   #endif
-  // fill last responseEMMC_INTERRUPT_MASK
-  idx += 2;
+  // set block size count
+  mmio_write( PERIPHERAL_EMMC_BLKSIZECNT, device->block_size | ( device->block_count << 16 ) );
+  // debug output
+  #if defined( EMMC_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Set argument\r\n" )
+  #endif
+  // set argument 1
+  mmio_write( PERIPHERAL_EMMC_ARG1, argument );
+  // set argument 2 in case it's a data transfer
+  if ( is_data && 0 < device->block_count && false ) {
+    // debug output
+    #if defined( EMMC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Setting physical address for dma engine\r\n" )
+    #endif
+    // assert physical address
+    assert( phys );
+    // set arg2 of emmc
+    mmio_write( PERIPHERAL_EMMC_ARG2, ( uint32_t )phys );
+    #if defined( EMMC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "command = %"PRIx32"\r\n", command )
+    #endif
+    // set transfer mode register
+    command |= EMMC_CMDTM_CMD_TM_DMA_ENABLE;
+    #if defined( EMMC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "command = %"PRIx32"\r\n", command )
+    #endif
+  }
+  // debug output
+  #if defined( EMMC_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "set command\r\n" )
+  #endif
+  // set command
+  mmio_write( PERIPHERAL_EMMC_CMDTM, command );
+  // debug output
+  #if defined( EMMC_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Waiting for command done\r\n" )
+  #endif
+  while ( ! ( mmio_read( PERIPHERAL_EMMC_INTERRUPT ) & EMMC_INTERRUPT_CMD_DONE ) ) {
+    delay_us( 5000 );
+  }
+  // clear interrupt
+  mmio_write( PERIPHERAL_EMMC_INTERRUPT, EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_CMD_DONE );
+  // read resp0
+  const uint32_t resp0 = mmio_read( PERIPHERAL_EMMC_RESP0 );
+  // read resp1
+  const uint32_t resp1 = mmio_read( PERIPHERAL_EMMC_RESP1 );
+  // read resp2
+  const uint32_t resp2 = mmio_read( PERIPHERAL_EMMC_RESP2 );
+  // read resp3
+  const uint32_t resp3 = mmio_read( PERIPHERAL_EMMC_RESP3 );
 
   // handle command response type
   switch ( command & EMMC_CMDTM_CMD_RSPNS_TYPE_MASK ) {
     case EMMC_CMDTM_CMD_RSPNS_TYPE_48:
     case EMMC_CMDTM_CMD_RSPNS_TYPE_48B:
-      device->last_response[ 0 ] = sequence[ idx ].value;
+      device->last_response[ 0 ] = resp0;
       break;
-
     case EMMC_CMDTM_CMD_RSPNS_TYPE_136:
-      device->last_response[ 0 ] = sequence[ idx ].value;
-      device->last_response[ 1 ] = sequence[ idx + 1 ].value;
-      device->last_response[ 2 ] = sequence[ idx + 2 ].value;
-      device->last_response[ 3 ] = sequence[ idx + 3 ].value;
+      device->last_response[ 0 ] = resp0;
+      device->last_response[ 1 ] = resp1;
+      device->last_response[ 2 ] = resp2;
+      device->last_response[ 3 ] = resp3;
       break;
-
     default:
       #if defined( EMMC_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "command & EMMC_CMDTM_CMD_RSPNS_TYPE_MASK = %#"PRIx32"\r\n",
           command & EMMC_CMDTM_CMD_RSPNS_TYPE_MASK )
       #endif
   }
-  // now we're beyond the resp readings
-  idx += 4;
-  if ( is_data && 0 < device->block_count && shm_id ) {
-    if ( IOMEM_MMIO_ABORT_TYPE_DMA == sequence[ idx ].abort_type ) {
-      // debug output
-      #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "dma copy timed out\r\n" )
-      #endif
-      iomem_release_mmio_sequence( sequence );
-      // return failure
-      return EMMC_RESPONSE_IO;
+  // handle non dma transfer
+  if ( is_data && 0 < device->block_count && buffer ) {
+    #if defined( EMMC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Polling data manually\r\n" )
+    #endif
+    uint32_t current_block = 0;
+    auto current_buffer_address = ( uint32_t* )buffer;
+    while ( current_block < device->block_count ) {
+      while ( ! ( mmio_read( PERIPHERAL_EMMC_INTERRUPT ) & ( interrupt | 0x8000 ) ) ) {
+        delay_us( 5000 );
+      }
+      // clear interrupts
+      mmio_write( PERIPHERAL_EMMC_INTERRUPT, mmio_read( PERIPHERAL_EMMC_INTERRUPT ) );
+      // copy byte wise
+      size_t current_byte_no = 0;
+      while ( current_byte_no < device->block_size ) {
+        if ( is_write ) {
+          mmio_write( PERIPHERAL_EMMC_DATA, *current_buffer_address );
+        } else {
+          *current_buffer_address = mmio_read( PERIPHERAL_EMMC_DATA );
+        }
+        current_byte_no += 4;
+        current_buffer_address++;
+      }
+      current_block++;
     }
+  }
+  // wait for transfer complete for data or if it's a busy command
+  if ( response_busy || is_data ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Amount of reads: 1 dma read\r\n" )
+      EARLY_STARTUP_PRINT( "Waiting for command data done\r\n" )
     #endif
-    // copy over from shared to block count
-    if ( shm_addr && device->buffer ) {
+    // wait until data is done
+    while ( ! ( mmio_read( PERIPHERAL_EMMC_INTERRUPT ) & EMMC_INTERRUPT_DATA_DONE ) ) {
+      delay_us( 5000 );
+    }
+    #if defined( EMMC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "PERIPHERAL_EMMC_INTERRUPT = %#"PRIx32"\r\n", mmio_read( PERIPHERAL_EMMC_INTERRUPT ) )
+    #endif
+    // clear interrupt
+    mmio_write( PERIPHERAL_EMMC_INTERRUPT, mmio_read( PERIPHERAL_EMMC_INTERRUPT ) );
+  }
+  // handle copy to buffer
+  if ( is_data && 0 < device->block_count && ! is_write ) {
+    if ( device->buffer ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Copying from shared too buffer\r\n" )
+        EARLY_STARTUP_PRINT( "Copying from internal buffer to passed buffer\r\n" )
       #endif
-      memcpy( device->buffer, shm_addr, device->block_count * device->block_size );
-      // release shared memory again
-      _syscall_memory_shared_detach( shm_id );
+      // copy data
+      memcpy( device->buffer, buffer, buffer_size );
+    } else if ( device->shm_id ) {
+      // debug output
+      #if defined( EMMC_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Copying from internal buffer to shared memory\r\n" )
+      #endif
+      // attach shared memory
+      void* shm_addr = _syscall_memory_shared_attach( device->shm_id, 0 );
       if ( errno ) {
-        // debug output
-        #if defined( EMMC_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "detach shared area failed\r\n" )
-        #endif
-        iomem_release_mmio_sequence( sequence );
-        // return failure
+        munmap( buffer, buffer_size );
         return EMMC_RESPONSE_IO;
       }
-    }
-    idx++;
-  }
-
-  // response busy or data transfer
-  if ( response_busy || is_data ) {
-    if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ idx ].abort_type ) {
-      // debug output
-      #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Handle possible data transfer timeout\r\n" )
-      #endif
-      // mask done and timeout done
-      uint32_t mask_done = EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_DATA_DONE;
-      uint32_t timeout_done = ( EMMC_INTERRUPT_DTO_ERR | EMMC_INTERRUPT_DATA_DONE );
-      // transfer complete overwrites timeout
-      if (
-        EMMC_INTERRUPT_DATA_DONE != ( sequence[ idx ].value & mask_done )
-        && timeout_done != ( sequence[ idx ].value & mask_done )
-      ) {
-        // debug output
-        #if defined( EMMC_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "wait for final data done timed out\r\n" )
-        #endif
-        // save last interrupt and specific error
-        device->last_interrupt = sequence[ idx ].value;
-        device->last_error = sequence[ idx ].value & EMMC_INTERRUPT_MASK;
-        // mask interrupts again
-        while ( EMMC_RESPONSE_OK != interrupt_mark_handled(
-          EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_DATA_DONE
-        ) ) {
-          __asm__ __volatile__( "nop" );
-        }
-        iomem_release_mmio_sequence( sequence );
-        // return failure
-        return EMMC_RESPONSE_TIMEOUT;
-      }
+      // copy data
+      memcpy( shm_addr, buffer, buffer_size );
+      // detach shared
+      _syscall_memory_shared_detach( device->shm_id );
     }
   }
-  iomem_release_mmio_sequence( sequence );
+  // unmap buffer again
+  if ( buffer ) {
+    munmap( buffer, buffer_size );
+  }
   // return success
   return EMMC_RESPONSE_OK;
 }
@@ -1384,12 +1168,14 @@ static void handle_card_interrupt( void ) {
     #if defined( EMMC_ENABLE_DEBUG )
       const emmc_response_t response = issue_sd_command(
         emmc_command_list[ EMMC_CMD_SEND_STATUS ],
-        device->card_rca << 16
+        ( uint32_t )( device->card_rca << 16 ),
+        1000000
       );
     #else
       issue_sd_command(
         emmc_command_list[ EMMC_CMD_SEND_STATUS ],
-        device->card_rca << 16
+        ( uint32_t )( device->card_rca << 16 ),
+        1000000
       );
     #endif
     // debug output
@@ -1407,55 +1193,6 @@ static void handle_card_interrupt( void ) {
 }
 
 /**
- * @fn emmc_response_t get_interrupt_status(uint32_t*)
- * @brief Helper to fetch interrupt status from register
- *
- * @param destination
- * @return
- */
-static emmc_response_t get_interrupt_status( uint32_t* destination ) {
-  // debug output
-  #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Fetch interrupt status\r\n" )
-  #endif
-  // allocate sequence
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 1, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Allocate sequence failed\r\n" )
-    #endif
-    // return error
-    return EMMC_RESPONSE_MEMORY;
-  }
-  // read interrupt register
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 0 ].offset = PERIPHERAL_EMMC_INTERRUPT;
-  // perform request
-  const int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_size );
-  // handle ioctl error
-  if ( -1 == result ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Get interrupt status sequence failed\r\n" )
-    #endif
-    // free sequence
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return EMMC_RESPONSE_IO;
-  }
-  // set "return" value
-  if ( destination ) {
-    *destination = sequence[ 0 ].value;
-  }
-  // free sequence
-  iomem_release_mmio_sequence( sequence );
-  // return success
-  return EMMC_RESPONSE_OK;
-}
-
-/**
  * @fn emmc_response_t reset_command(void)
  * @brief Reset command
  *
@@ -1466,71 +1203,24 @@ static emmc_response_t reset_command( void ) {
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Reset command\r\n" )
   #endif
-  // allocate sequence
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 4, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence allocation failed\r\n" )
-    #endif
-    // return error
-    return EMMC_RESPONSE_MEMORY;
-  }
   // build request
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 0 ].offset = PERIPHERAL_EMMC_CONTROL1;
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 1 ].offset = PERIPHERAL_EMMC_CONTROL1;
-  sequence[ 1 ].value = EMMC_CONTROL1_SRST_CMD;
+  uint32_t control1 = mmio_read( PERIPHERAL_EMMC_CONTROL1 );
+  mmio_write( PERIPHERAL_EMMC_CONTROL1, control1 | EMMC_CONTROL1_SRST_CMD );
   // wait for flag is unset
-  sequence[ 2 ].type = IOMEM_MMIO_ACTION_LOOP_NOT_EQUAL;
-  sequence[ 2 ].offset = PERIPHERAL_EMMC_CONTROL1;
-  sequence[ 2 ].value = 0;
-  sequence[ 2 ].loop_and = EMMC_CONTROL1_SRST_CMD;
-  sequence[ 2 ].loop_max_iteration = 100000;
-  sequence[ 2 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ 2 ].sleep = 10;
+  while ( mmio_read( PERIPHERAL_EMMC_CONTROL1 ) & EMMC_CONTROL1_SRST_CMD ) {
+    delay_us( 5000 );
+  }
   // read again
-  sequence[ 3 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 3 ].offset = PERIPHERAL_EMMC_CONTROL1;
-  // perform request
-  const int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_size );
-  // handle ioctl error
-  if ( -1 == result ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Reset command sequence failed\r\n" )
-    #endif
-    // free
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return EMMC_RESPONSE_IO;
-  }
-  // handle timeout
-  if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ 2 ].abort_type ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Wait for command reset timed out\r\n" )
-    #endif
-    // free
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return EMMC_RESPONSE_TIMEOUT;
-  }
+  control1 = mmio_read( PERIPHERAL_EMMC_CONTROL1 );
   // check last read for reset was unset
-  if ( sequence[ 3 ].value & EMMC_CONTROL1_SRST_CMD ) {
+  if ( control1 & EMMC_CONTROL1_SRST_CMD ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Command reset failed\r\n" )
     #endif
-    // free
-    iomem_release_mmio_sequence( sequence );
     // return error
     return EMMC_RESPONSE_UNKNOWN;
   }
-  // free
-  iomem_release_mmio_sequence( sequence );
   // return success
   return EMMC_RESPONSE_OK;
 }
@@ -1546,71 +1236,24 @@ static emmc_response_t reset_data( void ) {
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Reset data\r\n" )
   #endif
-  // allocate sequence
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 4, &sequence_size );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence allocation failed\r\n" )
-    #endif
-    // return error
-    return EMMC_RESPONSE_MEMORY;
-  }
   // build request
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 0 ].offset = PERIPHERAL_EMMC_CONTROL1;
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 1 ].offset = PERIPHERAL_EMMC_CONTROL1;
-  sequence[ 1 ].value = EMMC_CONTROL1_SRST_DATA;
+  uint32_t control1 = mmio_read( PERIPHERAL_EMMC_CONTROL1 );
+  mmio_write( PERIPHERAL_EMMC_CONTROL1, control1 | EMMC_CONTROL1_SRST_DATA );
   // wait for flag is unset
-  sequence[ 2 ].type = IOMEM_MMIO_ACTION_LOOP_NOT_EQUAL;
-  sequence[ 2 ].offset = PERIPHERAL_EMMC_CONTROL1;
-  sequence[ 2 ].value = 0;
-  sequence[ 2 ].loop_and = EMMC_CONTROL1_SRST_DATA;
-  sequence[ 2 ].loop_max_iteration = 100000;
-  sequence[ 2 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ 2 ].sleep = 10;
+  while ( mmio_read( PERIPHERAL_EMMC_CONTROL1 ) & EMMC_CONTROL1_SRST_DATA ) {
+    delay_us( 5000 );
+  }
   // read again
-  sequence[ 3 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 3 ].offset = PERIPHERAL_EMMC_CONTROL1;
-  // perform request
-  const int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_size );
-  // handle ioctl error
-  if ( -1 == result ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Reset command sequence failed\r\n" )
-    #endif
-    // free
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return EMMC_RESPONSE_IO;
-  }
-  // handle timeout
-  if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ 2 ].abort_type ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Wait for command reset timed out\r\n" )
-    #endif
-    // free
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return EMMC_RESPONSE_TIMEOUT;
-  }
+  control1 = mmio_read( PERIPHERAL_EMMC_CONTROL1 );
   // check last read for reset was unset
-  if ( sequence[ 3 ].value & EMMC_CONTROL1_SRST_DATA ) {
+  if ( control1 & EMMC_CONTROL1_SRST_DATA ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Command reset failed\r\n" )
     #endif
-    // free
-    iomem_release_mmio_sequence( sequence );
     // return error
     return EMMC_RESPONSE_UNKNOWN;
   }
-  // free
-  iomem_release_mmio_sequence( sequence );
   // return success
   return EMMC_RESPONSE_OK;
 }
@@ -1625,8 +1268,6 @@ static void handle_interrupt( void ) {
     EARLY_STARTUP_PRINT( "Handling possible interrupts\r\n" )
   #endif
   // variable stuff
-  uint32_t interrupt;
-  emmc_response_t response;
   uint32_t reset_mask = 0;
 
   // debug output
@@ -1634,9 +1275,7 @@ static void handle_interrupt( void ) {
     EARLY_STARTUP_PRINT( "Fetch interrupt register\r\n" )
   #endif
   // get interrupt register
-  do {
-    response = get_interrupt_status( &interrupt );
-  } while ( EMMC_RESPONSE_OK != response );
+  uint32_t interrupt = mmio_read( PERIPHERAL_EMMC_INTERRUPT );
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "interrupt = %#"PRIx32"\r\n", interrupt )
@@ -1865,14 +1504,14 @@ static void handle_interrupt( void ) {
 }
 
 /**
- * @fn emmc_response_t sd_command(uint32_t, const uint32_t)
+ * @fn emmc_response_t sd_command(uint32_t, uint32_t, uint64_t)
  * @brief Issue sd command
- *
  * @param command
  * @param argument
+ * @param timeout
  * @return
  */
-static emmc_response_t sd_command( uint32_t command, const uint32_t argument ) {
+static emmc_response_t sd_command( uint32_t command, const uint32_t argument, const uint64_t timeout ) {
   emmc_response_t response;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
@@ -1923,7 +1562,8 @@ static emmc_response_t sd_command( uint32_t command, const uint32_t argument ) {
     // issue app command
     response = issue_sd_command(
       emmc_command_list[ EMMC_CMD_APP_CMD ],
-      app_cmd_argument
+      app_cmd_argument,
+      timeout
     );
     // handle error
     if ( response != EMMC_RESPONSE_OK ) {
@@ -1944,7 +1584,8 @@ static emmc_response_t sd_command( uint32_t command, const uint32_t argument ) {
     // issue command
     response = issue_sd_command(
       emmc_app_command_list[ command ],
-      argument
+      argument,
+      timeout
     );
     // handle error
     if ( response != EMMC_RESPONSE_OK ) {
@@ -1976,7 +1617,8 @@ static emmc_response_t sd_command( uint32_t command, const uint32_t argument ) {
     // issue command
     response = issue_sd_command(
       emmc_command_list[ command ],
-      argument
+      argument,
+      timeout
     );
     // handle error
     if ( response != EMMC_RESPONSE_OK ) {
@@ -2013,7 +1655,7 @@ static emmc_response_t init_sd( void ) {
     EARLY_STARTUP_PRINT( "Query voltage information\r\n" )
   #endif
   // send cmd8
-  response = sd_command( EMMC_CMD_SEND_IF_COND, 0x1AA );
+  response = sd_command( EMMC_CMD_SEND_IF_COND, 0x1AA, EMMC_STANDARD_TIMEOUT );
   // failure is okay here
   if (
     EMMC_RESPONSE_OK != response
@@ -2071,12 +1713,13 @@ static emmc_response_t init_sd( void ) {
     EARLY_STARTUP_PRINT( "v2_later = %d\r\n", v2_later ? 1 : 0 )
   #endif
 
+  /*
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Check for sdio card\r\n" )
   #endif
   // send cmd5, which returns only when card is a sdio card
-  response = sd_command( EMMC_CMD_IO_SEND_OP_COND, 0 );
+  response = sd_command( EMMC_CMD_IO_SEND_OP_COND, 0, EMMC_STANDARD_TIMEOUT );
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
@@ -2133,7 +1776,7 @@ static emmc_response_t init_sd( void ) {
       // return error
       return EMMC_RESPONSE_NOT_IMPLEMENTED;
     }
-  }
+  }*/
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
@@ -2141,7 +1784,7 @@ static emmc_response_t init_sd( void ) {
   #endif
   // call an inquiry ACMD41 (voltage window = 0) to get the OCR
   if ( EMMC_RESPONSE_OK != (
-    response = sd_command( EMMC_APP_CMD_SD_SEND_OP_COND, 0 )
+    response = sd_command( EMMC_APP_CMD_SD_SEND_OP_COND, 0, EMMC_STANDARD_TIMEOUT )
   ) ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -2171,7 +1814,8 @@ static emmc_response_t init_sd( void ) {
     // execute command
     response = sd_command(
       EMMC_APP_CMD_SD_SEND_OP_COND,
-      0x00FF8000 | flags
+      0x00FF8000 | flags,
+      EMMC_STANDARD_TIMEOUT
     );
     // handle error
     if ( EMMC_RESPONSE_OK != response && 0 != device->last_error ) {
@@ -2216,61 +1860,23 @@ static emmc_response_t init_sd( void ) {
  */
 static emmc_response_t reset( void ) {
   emmc_response_t response;
-  // allocate sequence
-  size_t sequence_size;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 7, &sequence_size );
-  if ( ! sequence ) {
-    return EMMC_RESPONSE_MEMORY;
-  }
-  // build sequence
+  // sleep values
+  constexpr long milliseconds = 10;
+  constexpr struct timespec ts = {
+    .tv_sec = milliseconds / 1000,
+    .tv_nsec = ( milliseconds % 1000 ) * 1000000
+  };
   // reset host controller and wait for completion
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 0 ].offset = PERIPHERAL_EMMC_CONTROL0;
-  sequence[ 0 ].value = 0;
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 1 ].offset = PERIPHERAL_EMMC_CONTROL1;
-  sequence[ 2 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 2 ].offset = PERIPHERAL_EMMC_CONTROL1;
-  sequence[ 2 ].value = EMMC_CONTROL1_SRST_HC;
-  sequence[ 3 ].type = IOMEM_MMIO_ACTION_LOOP_TRUE;
-  sequence[ 3 ].offset = PERIPHERAL_EMMC_CONTROL1;
-  sequence[ 3 ].loop_and = EMMC_CONTROL1_SRST_HC;
-  sequence[ 3 ].loop_max_iteration = 10000;
-  sequence[ 3 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ 3 ].sleep = 10;
+  mmio_write( PERIPHERAL_EMMC_CONTROL0, 0 );
+  uint32_t control1 = mmio_read( PERIPHERAL_EMMC_CONTROL1 ) & EMMC_CONTROL1_SRST_HC;
+  mmio_write( PERIPHERAL_EMMC_CONTROL1, control1 );
+  while ( mmio_read( PERIPHERAL_EMMC_CONTROL1 ) & EMMC_CONTROL1_SRST_HC ) {
+    nanosleep( &ts, nullptr );
+  }
   // enable internal clock and set max data timeout
-  sequence[ 4 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 4 ].offset = PERIPHERAL_EMMC_CONTROL1;
-  sequence[ 5 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 5 ].value = EMMC_CONTROL1_CLK_INTLEN | ( 0x7 << 16 );
-  sequence[ 5 ].offset = PERIPHERAL_EMMC_CONTROL1;
-  sequence[ 6 ].type = IOMEM_MMIO_ACTION_SLEEP;
-  sequence[ 6 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ 6 ].sleep = 10;
-  // perform request
-  if ( -1 == iomem_execute_sequence( device->fd_iomem, sequence, sequence_size ) ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "mmio rpc to reset circuit failed\r\n" )
-    #endif
-    // free
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return EMMC_RESPONSE_IO;
-  }
-  // check for timeout
-  if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ 3 ].abort_type ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Wait for EMMC_CONTROL1 to finish failed\r\n" )
-    #endif
-    // free
-    iomem_release_mmio_sequence( sequence );
-    // return timeout
-    return EMMC_RESPONSE_TIMEOUT;
-  }
-  // free sequence
-  iomem_release_mmio_sequence( sequence );
+  control1 = mmio_read( PERIPHERAL_EMMC_CONTROL1 );
+  mmio_write( PERIPHERAL_EMMC_CONTROL1, control1 | EMMC_CONTROL1_CLK_INTLEN | ( 0x7 << 16 ) );
+  nanosleep( &ts, nullptr );
   // change clock frequency
   if ( EMMC_RESPONSE_OK != ( response = clock_frequency( EMMC_CLOCK_FREQUENCY_LOW ) ) ) {
     // debug output
@@ -2280,32 +1886,9 @@ static emmc_response_t reset( void ) {
     // return error
     return response;
   }
-  // allocate sequence
-  sequence = iomem_prepare_mmio_sequence( 2, &sequence_size );
-  if ( ! sequence ) {
-    return EMMC_RESPONSE_MEMORY;
-  }
-  // build sequence
   // enable all interrupts
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 0 ].offset = PERIPHERAL_EMMC_IRPT_ENABLE;
-  sequence[ 0 ].value = 0xFFFFFFFF;
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 1 ].offset = PERIPHERAL_EMMC_IRPT_MASK;
-  sequence[ 1 ].value = 0xFFFFFFFF;
-  // perform request
-  if ( -1 == iomem_execute_sequence( device->fd_iomem, sequence, sequence_size ) ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "mmio rpc to enable interrupts failed\r\n" )
-    #endif
-    // free
-    iomem_release_mmio_sequence( sequence );
-    // return error
-    return EMMC_RESPONSE_IO;
-  }
-  // free sequence
-  iomem_release_mmio_sequence( sequence );
+  mmio_write( PERIPHERAL_EMMC_IRPT_ENABLE, 0xFFFFFFFF );
+  mmio_write( PERIPHERAL_EMMC_IRPT_MASK, 0xFFFFFFFF );
   // reset internal data structures
   device->card_ocr = 0;
   memset( device->card_cid, 0, sizeof( uint32_t ) * 4 );
@@ -2323,7 +1906,7 @@ static emmc_response_t reset( void ) {
   device->last_interrupt = 0;
   device->last_error = 0;
   // return go idle command
-  return sd_command( EMMC_CMD_GO_IDLE_STATE, 0 );
+  return sd_command( EMMC_CMD_GO_IDLE_STATE, 0, EMMC_STANDARD_TIMEOUT );
 }
 
 /**
@@ -2565,7 +2148,7 @@ emmc_response_t emmc_init( void ) {
   #endif
   // get card id
   if ( EMMC_RESPONSE_OK != (
-    response = sd_command( EMMC_CMD_ALL_SEND_CID, 0 )
+    response = sd_command( EMMC_CMD_ALL_SEND_CID, 0, EMMC_STANDARD_TIMEOUT )
   ) ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -2584,7 +2167,7 @@ emmc_response_t emmc_init( void ) {
   // send CMD3 to get rca
   while( true ) {
     // issue command
-    if ( EMMC_RESPONSE_OK != ( response = sd_command( EMMC_CMD_SEND_RELATIVE_ADDR, 0 ) ) ) {
+    if ( EMMC_RESPONSE_OK != ( response = sd_command( EMMC_CMD_SEND_RELATIVE_ADDR, 0, EMMC_STANDARD_TIMEOUT ) ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Enter data state failed\r\n" )
@@ -2674,7 +2257,7 @@ emmc_response_t emmc_init( void ) {
   #endif
   // select card ( cmd7 )
   if ( EMMC_RESPONSE_OK != (
-    response = sd_command( EMMC_CMD_SELECT_CARD, device->card_rca << 16 )
+    response = sd_command( EMMC_CMD_SELECT_CARD, ( uint32_t )( device->card_rca << 16 ), EMMC_STANDARD_TIMEOUT )
   ) ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -2707,7 +2290,7 @@ emmc_response_t emmc_init( void ) {
     #endif
     // set block length
     if ( EMMC_RESPONSE_OK != (
-      response = sd_command( EMMC_CMD_SET_BLOCKLEN, 512 )
+      response = sd_command( EMMC_CMD_SET_BLOCKLEN, 512, EMMC_STANDARD_TIMEOUT )
     ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
@@ -2725,37 +2308,8 @@ emmc_response_t emmc_init( void ) {
     EARLY_STARTUP_PRINT( "Populate block size register\r\n" )
   #endif
   // set block size in register
-  size_t sequence_count;
-  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence(
-    2, &sequence_count
-  );
-  if ( ! sequence ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Error allocating sequence: %s\r\n", strerror( errno ) )
-    #endif
-    // return error
-    return EMMC_RESPONSE_MEMORY;
-  }
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ_AND;
-  sequence[ 0 ].offset = PERIPHERAL_EMMC_BLKSIZECNT;
-  sequence[ 0 ].value = ( uint32_t )( ( int )~0xFFF );
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 1 ].offset = PERIPHERAL_EMMC_BLKSIZECNT;
-  sequence[ 1 ].value = 0x200;
-  // perform request
-  int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_count );
-  // free sequence
-  iomem_release_mmio_sequence( sequence );
-  // handle ioctl error
-  if ( -1 == result ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Populating block size count register failed\r\n" )
-    #endif
-    // return error
-    return EMMC_RESPONSE_IO;
-  }
+  const uint32_t block_size_count = mmio_read( PERIPHERAL_EMMC_BLKSIZECNT ) & ~0xFFFU;
+  mmio_write( PERIPHERAL_EMMC_BLKSIZECNT, block_size_count | 0x200 );
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
@@ -2767,7 +2321,7 @@ emmc_response_t emmc_init( void ) {
   device->buffer = device->card_scr;
   // load scr
   if ( EMMC_RESPONSE_OK != (
-    response = sd_command( EMMC_APP_CMD_SEND_SCR, 0 )
+    response = sd_command( EMMC_APP_CMD_SEND_SCR, 0, EMMC_STANDARD_TIMEOUT )
   ) ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -2825,8 +2379,8 @@ emmc_response_t emmc_init( void ) {
     )
     EARLY_STARTUP_PRINT(
       "scr: 0x%08"PRIx32"%08"PRIx32"\r\n",
-      be32toh( device->card_scr[ 0 ] ),
-      be32toh( device->card_scr[ 1 ] )
+      ( uint32_t )be32toh( device->card_scr[ 0 ] ),
+      ( uint32_t )be32toh( device->card_scr[ 1 ] )
     )
     EARLY_STARTUP_PRINT(
       "card version: %"PRIu32", bus width: %"PRIu32"\r\n",
@@ -2841,7 +2395,7 @@ emmc_response_t emmc_init( void ) {
       EARLY_STARTUP_PRINT( "Switch to 4-bit data mode\r\n" )
     #endif
     // send ACMD6 to change the card's bit mode
-    if ( EMMC_RESPONSE_OK != sd_command( EMMC_APP_CMD_SET_BUS_WIDTH, 0x2 ) ) {
+    if ( EMMC_RESPONSE_OK != sd_command( EMMC_APP_CMD_SET_BUS_WIDTH, 0x2, EMMC_STANDARD_TIMEOUT ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Bus width set failed\r\n" )
@@ -2851,33 +2405,8 @@ emmc_response_t emmc_init( void ) {
       #if defined( EMMC_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Change transfer width in control0 register\r\n" )
       #endif
-      // allocate sequence to change the bit mode for host
-      sequence = iomem_prepare_mmio_sequence( 2, &sequence_count );
-      if ( ! sequence ) {
-        // debug output
-        #if defined( EMMC_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Error allocating sequence: %s\r\n", strerror( errno ) )
-        #endif
-        // return error
-        return EMMC_RESPONSE_MEMORY;
-      }
-      sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
-      sequence[ 0 ].offset = PERIPHERAL_EMMC_CONTROL0;
-      sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-      sequence[ 1 ].offset = PERIPHERAL_EMMC_CONTROL0;
-      sequence[ 1 ].value = 0x2;
-      // perform request
-      result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_count );
-      // handle ioctl error
-      if ( -1 == result ) {
-        // debug output
-        #if defined( EMMC_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Change transfer width in control0 failed\r\n" )
-        #endif
-        iomem_release_mmio_sequence( sequence );
-        return EMMC_RESPONSE_IO;
-      }
-      iomem_release_mmio_sequence( sequence );
+      // change the bit mode for host
+      mmio_write( PERIPHERAL_EMMC_CONTROL0, mmio_read( PERIPHERAL_EMMC_CONTROL0 ) | 0x2 );
     }
   }
   // debug output
@@ -2908,6 +2437,7 @@ emmc_response_t emmc_transfer_block(
   const emmc_operation_t operation,
   const size_t shm_id
 ) {
+  // space for responses
   emmc_response_t response;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
@@ -2994,7 +2524,8 @@ emmc_response_t emmc_transfer_block(
   if ( EMMC_RESPONSE_OK != (
     response = sd_command(
       EMMC_CMD_SEND_STATUS,
-      ( uint32_t )device->card_rca << 16
+      ( uint32_t )device->card_rca << 16,
+      EMMC_STANDARD_TIMEOUT
     )
   ) ) {
     // debug output
@@ -3021,7 +2552,8 @@ emmc_response_t emmc_transfer_block(
     if ( EMMC_RESPONSE_OK != (
       response = sd_command(
         EMMC_CMD_SELECT_CARD,
-        ( uint32_t )device->card_rca << 16
+        ( uint32_t )device->card_rca << 16,
+        EMMC_STANDARD_TIMEOUT
       )
     ) ) {
       // debug output
@@ -3040,7 +2572,7 @@ emmc_response_t emmc_transfer_block(
       EARLY_STARTUP_PRINT( "Try to stop data transmission\r\n" )
     #endif
     if ( EMMC_RESPONSE_OK != (
-      response = sd_command( EMMC_CMD_STOP_TRANSMISSION, 0 )
+      response = sd_command( EMMC_CMD_STOP_TRANSMISSION, 0, EMMC_STANDARD_TIMEOUT )
     ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
@@ -3094,7 +2626,8 @@ emmc_response_t emmc_transfer_block(
     if ( EMMC_RESPONSE_OK != (
       response = sd_command(
          EMMC_CMD_SEND_STATUS,
-         ( uint32_t )device->card_rca << 16
+         ( uint32_t )device->card_rca << 16,
+         EMMC_STANDARD_TIMEOUT
        )
     ) ) {
       // debug output
@@ -3182,6 +2715,9 @@ emmc_response_t emmc_transfer_block(
       ? EMMC_CMD_READ_MULTIPLE_BLOCK
       : EMMC_CMD_READ_SINGLE_BLOCK;
   }
+  // set activity led
+  led_set_activity( LED_ACTIVITY_LED_ON );
+  // current try and success flag
   uint32_t current_try;
   bool success = false;
   // send command with 3 retries
@@ -3194,7 +2730,7 @@ emmc_response_t emmc_transfer_block(
       )
     #endif
     // try to execute command and handle success with break
-    if ( EMMC_RESPONSE_OK == ( response = sd_command( command, block_number ) ) ) {
+    if ( EMMC_RESPONSE_OK == ( response = sd_command( command, block_number, EMMC_READ_WRITE_TIMEOUT ) ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Command successfully sent\r\n" )
@@ -3213,6 +2749,8 @@ emmc_response_t emmc_transfer_block(
       )
     #endif
   }
+  // set activity led
+  led_set_activity( LED_ACTIVITY_LED_OFF );
   // detect failure
   if ( 4 == current_try && ! success ) {
     // debug output

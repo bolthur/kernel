@@ -32,8 +32,8 @@
 void rpc_interrupt_generic(
   [[maybe_unused]] size_t type,
   const pid_t origin,
-  const size_t data_info,
-  [[maybe_unused]] size_t response_info
+  const uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {

@@ -28,7 +28,7 @@
 #include "../../../../library/handle/handle.h"
 
 /**
- * @fn void rpc_handle_write_async(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_write_async(size_t, pid_t, uint64_t, uint64_t)
  * @brief Internal helper to continue asynchronous started write
  *
  * @param type
@@ -41,8 +41,8 @@
 void rpc_handle_write_async(
   size_t type,
   [[maybe_unused]] pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   vfs_write_response_t response = { .len = -EINVAL };
   // get matching async data
@@ -100,7 +100,7 @@ void rpc_handle_write_async(
 }
 
 /**
- * @fn void rpc_handle_write(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_write(size_t, pid_t, uint64_t, uint64_t)
  * @brief Handle write request
  *
  * @param type
@@ -111,8 +111,8 @@ void rpc_handle_write_async(
 void rpc_handle_write(
   size_t type,
   pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   // handle async return in case response info is set
   if ( response_info && bolthur_rpc_has_async( type, response_info ) ) {

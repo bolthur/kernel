@@ -122,7 +122,7 @@ static void cleanup_callback( avl_node_t* a ) {
  * @param id
  * @return
  */
-rpc_origin_source_t* rpc_generic_source_info( const size_t id ) {
+rpc_origin_source_t* rpc_generic_source_info( const uint64_t id ) {
   // try to find node by data
   avl_node_t* node = avl_find_by_data( origin_tree, id );
   if ( ! node ) {
@@ -179,27 +179,28 @@ bool rpc_generic_setup_mailbox( task_process_t* proc ) {
     DEBUG_OUTPUT( "proc->rpc_mailbox = %#"PRIx64", proc->rpc_mailbox_virt = %#"PRIxPTR", id = %d!\r\n", proc->rpc_mailbox, proc->rpc_mailbox_virt, proc->id )
   #endif
   // allocate mailbox if not allocated
-  if ( 0 == proc->rpc_mailbox ) {
+  if ( ! proc->rpc_mailbox ) {
     // allocate mailbox
-    proc->rpc_mailbox = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
+    proc->rpc_mailbox = phys_find_free_page_range_random( MAILBOX_SIZE, PHYS_MEMORY_TYPE_NORMAL );
     // handle allocation failed
-    if ( INVALID_ADDRESS == proc->rpc_mailbox ) {
+    if ( ! proc->rpc_mailbox ) {
       // debug output
       #if defined( PRINT_RPC )
         DEBUG_OUTPUT( "No space for mailbox found!\r\n" )
       #endif
       // reset rpc_mailbox
-      proc->rpc_mailbox = 0;
+      proc->rpc_mailbox = nullptr;
       // return failure
       return false;
     }
     // map page temporarily
-    const uintptr_t tmp_map = virt_map_temporary( proc->rpc_mailbox, PAGE_SIZE );
+    const uintptr_t tmp_map = virt_map_temporary_range( proc->rpc_mailbox, MAILBOX_SIZE );
     if ( 0 == tmp_map ) {
       // free mailbox again
-      phys_free_page( proc->rpc_mailbox );
+      phys_free_page_range_random( proc->rpc_mailbox, MAILBOX_SIZE );
       // reset rpc_mailbox
-      proc->rpc_mailbox = 0;
+      free( proc->rpc_mailbox );
+      proc->rpc_mailbox = nullptr;
       // debug output
       #if defined( PRINT_RPC )
         DEBUG_OUTPUT( "map temporary failed!\r\n" )
@@ -208,19 +209,21 @@ bool rpc_generic_setup_mailbox( task_process_t* proc ) {
       return false;
     }
     // clear memory
-    memset( ( void* )tmp_map, 0, PAGE_SIZE );
+    memset( ( void* )tmp_map, 0, MAILBOX_SIZE );
     // unmap again
-    virt_unmap_temporary( tmp_map, PAGE_SIZE );
+    virt_unmap_temporary( tmp_map, MAILBOX_SIZE );
     // set address
     const uintptr_t tmp_addr = ROUND_UP_TO_FULL_PAGE( task_thread_current_thread->entry );
     // find free space
-    proc->rpc_mailbox_virt = virt_find_free_page_range( proc->virtual_context, PAGE_SIZE, tmp_addr );
+    proc->rpc_mailbox_virt = virt_find_free_page_range( proc->virtual_context, MAILBOX_SIZE, tmp_addr );
+    proc->rpc_mailbox_size = MAILBOX_SIZE;
     // handle no address found
     if ( ! proc->rpc_mailbox_virt ) {
       // free mailbox again
-      phys_free_page( proc->rpc_mailbox );
+      phys_free_page_range_random( proc->rpc_mailbox, MAILBOX_SIZE );
       // reset rpc_mailbox
-      proc->rpc_mailbox = 0;
+      free( proc->rpc_mailbox );
+      proc->rpc_mailbox = nullptr;
       // debug output
       #if defined( PRINT_RPC )
         DEBUG_OUTPUT( "No start address found!\r\n" )
@@ -228,8 +231,8 @@ bool rpc_generic_setup_mailbox( task_process_t* proc ) {
       return false;
     }
     // mapping flags and type
-    uint32_t map_flag = VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE;
-    virt_memory_type_t map_type = VIRT_MEMORY_TYPE_NORMAL;
+    constexpr uint32_t map_flag = VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE;
+    constexpr virt_memory_type_t map_type = VIRT_MEMORY_TYPE_NORMAL;
     // debug output
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT(
@@ -239,7 +242,7 @@ bool rpc_generic_setup_mailbox( task_process_t* proc ) {
         proc->rpc_mailbox_virt,
         map_type,
         map_flag,
-        PAGE_SIZE,
+        MAILBOX_SIZE,
         proc->id
       )
     #endif
@@ -248,14 +251,15 @@ bool rpc_generic_setup_mailbox( task_process_t* proc ) {
       proc->virtual_context,
       proc->rpc_mailbox_virt,
       proc->rpc_mailbox,
-      PAGE_SIZE,
+      MAILBOX_SIZE,
       map_type,
       map_flag
     ) ) {
       // free mailbox again
-      phys_free_page( proc->rpc_mailbox );
+      phys_free_page_range_random( proc->rpc_mailbox, MAILBOX_SIZE );
       // reset rpc_mailbox
-      proc->rpc_mailbox = 0;
+      free( proc->rpc_mailbox );
+      proc->rpc_mailbox = nullptr;
       proc->rpc_mailbox_virt = 0;
       // debug output
       #if defined( PRINT_RPC )
@@ -278,21 +282,21 @@ void rpc_generic_destroy_mailbox( task_process_t* proc ) {
   // unmap virtual
   if ( proc->rpc_mailbox_virt ) {
     // unmap
-    virt_unmap_address_range( proc->virtual_context, proc->rpc_mailbox_virt, PAGE_SIZE, false );
+    virt_unmap_address_range( proc->virtual_context, proc->rpc_mailbox_virt, proc->rpc_mailbox_size, false );
     // reset virtual address
     proc->rpc_mailbox_virt = 0;
   }
   // handle physical
-  if ( INVALID_ADDRESS != proc->rpc_mailbox ) {
+  if ( proc->rpc_mailbox ) {
     // free up physical page
-    phys_free_page( proc->rpc_mailbox );
+    phys_free_page_range_random( proc->rpc_mailbox, proc->rpc_mailbox_size );
     // reset physical page
-    proc->rpc_mailbox = 0;
+    proc->rpc_mailbox = nullptr;
   }
 }
 
 /**
- * @fn rpc_backup_t* rpc_generic_raise(task_thread_t*, task_process_t*, const size_t, void*, size_t, task_thread_t*, const bool, const size_t, const bool, const bool, const bool)
+ * @fn rpc_backup_t* rpc_generic_raise(task_thread_t*, task_process_t*, const size_t, void*, size_t, task_thread_t*, const bool, const uint64_t, const bool, const bool, const bool)
  * @brief Raise a rpc in target from source
  * @param source
  * @param target
@@ -315,7 +319,7 @@ rpc_backup_t* rpc_generic_raise(
   const size_t length,
   task_thread_t* target_thread,
   const bool sync,
-  const size_t origin_data_id,
+  const uint64_t origin_data_id,
   const bool disable_data,
   const bool is_interrupt,
   const bool is_timer

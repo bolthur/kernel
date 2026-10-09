@@ -24,7 +24,7 @@
 #include "wrapper.h"
 
 /**
- * @fn int ioctl_wrapper(int, uint64_t, void*, rpc_handler_t, size_t, size_t, void*, size_t, void*);
+ * @fn int ioctl_wrapper(int, uint64_t, void*, rpc_handler_t, size_t, uint64_t, void*, size_t, void*);
  * @brief ioctl wrapper
  * @param file file handle
  * @param request request information
@@ -43,7 +43,7 @@ int ioctl_wrapper(
   void* data,
   const rpc_handler_t callback,
   const pid_t origin,
-  const size_t data_id,
+  const uint64_t data_id,
   void* original_request,
   const size_t original_request_size,
   void* context
@@ -88,7 +88,7 @@ int ioctl_wrapper(
     memcpy( rpc_request->container, data, data_size * sizeof( char ) );
   }
   // raise rpc and wait for return
-  const size_t response_id = bolthur_rpc_raise(
+  const uint64_t response_id = bolthur_rpc_raise(
     RPC_VFS_IOCTL,
     VFS_DAEMON_ID,
     rpc_request,

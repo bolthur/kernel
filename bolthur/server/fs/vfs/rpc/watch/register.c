@@ -27,7 +27,7 @@
 #include "../../global.h"
 
 /**
- * @fn void rpc_handle_watch_register_async(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_watch_register_async(size_t, pid_t, uint64_t, uint64_t)
  * @brief Continue watch register
  *
  * @param type
@@ -38,8 +38,8 @@
 void rpc_handle_watch_register_async(
   size_t type,
   [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
-  size_t response_info
+  [[maybe_unused]] uint64_t data_info,
+  uint64_t response_info
 ) {
   // get matching async data
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async( type, response_info );
@@ -63,7 +63,7 @@ void rpc_handle_watch_register_async(
 }
 
 /**
- * @fn void rpc_handle_watch_register(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_watch_register(size_t, pid_t, uint64_t, uint64_t)
  * @brief handle watch register
  *
  * @param type
@@ -74,8 +74,8 @@ void rpc_handle_watch_register_async(
 void rpc_handle_watch_register(
   size_t type,
   pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+  uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   // variables
   vfs_watch_register_response_t response = { .result = -EINVAL };

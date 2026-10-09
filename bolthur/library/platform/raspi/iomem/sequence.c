@@ -99,7 +99,7 @@ int iomem_execute_sequence( const int fd, void* data, const size_t size ) {
   // clear out
   memset( perform, 0, sizeof( *perform ) );
   // allocate shared area
-  const size_t shm_id = _syscall_memory_shared_create( size );
+  const uint64_t shm_id = _syscall_memory_shared_create( size );
   if ( errno ) {
     // error output
     #if defined( SEQUENCE_ERROR_OUTPUT )
@@ -176,7 +176,7 @@ int iomem_execute_sequence( const int fd, void* data, const size_t size ) {
  */
 int iomem_execute_sequence_static( const int fd, void* data, const size_t size ) {
   // allocate shared area
-  const size_t shm_id = _syscall_memory_shared_create( size );
+  const uint64_t shm_id = _syscall_memory_shared_create( size );
   if ( errno ) {
     // error output
     #if defined( SEQUENCE_ERROR_OUTPUT )

@@ -34,8 +34,8 @@
 static void descriptor_get_async_first_finished(
   size_t type,
   pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_OUTPUT )
@@ -166,7 +166,7 @@ static void descriptor_get_async_first_finished(
 }
 
 /**
- * @fn int usbd_descriptor_get_async(const libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, const void*, size_t, uint8_t, rpc_handler_t, pid_t, size_t, void*, size_t, void*, size_t)
+ * @fn int usbd_descriptor_get_async(const libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, const void*, size_t, uint8_t, rpc_handler_t, pid_t, uint64_t, void*, size_t, void*, size_t)
  * @brief Get usb descriptor
  * @param dev
  * @param type
@@ -194,7 +194,7 @@ int usbd_descriptor_get_async(
   const uint8_t recipient,
   const rpc_handler_t callback,
   const pid_t origin,
-  const size_t data_info,
+  const uint64_t data_info,
   void* original_request,
   const size_t original_request_size,
   void* context,
@@ -284,7 +284,7 @@ int usbd_descriptor_get_async(
 }
 
 /**
- * @fn void descriptor_read_device_finished(size_t, pid_t, size_t, size_t)
+ * @fn void descriptor_read_device_finished(size_t, pid_t, uint64_t, uint64_t)
  * @brief Callback read device finished
  * @param type
  * @param origin
@@ -294,8 +294,8 @@ int usbd_descriptor_get_async(
 static void descriptor_read_device_finished(
   size_t type,
   pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_OUTPUT )

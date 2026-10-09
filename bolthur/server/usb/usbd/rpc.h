@@ -24,35 +24,35 @@
 
 bool rpc_init( void );
 // generic
-void rpc_generic_add( size_t, pid_t, size_t, size_t );
-void rpc_generic_close( size_t, pid_t, size_t, size_t );
-void rpc_generic_exec( size_t, pid_t, size_t, size_t );
-void rpc_generic_exit( size_t, pid_t, size_t, size_t );
-void rpc_generic_fork( size_t, pid_t, size_t, size_t );
-void rpc_generic_ioctl( size_t, pid_t, size_t, size_t );
-void rpc_generic_open( size_t, pid_t, size_t, size_t );
-void rpc_generic_read( size_t, pid_t, size_t, size_t );
-void rpc_generic_remove( size_t, pid_t, size_t, size_t );
-void rpc_generic_seek( size_t, pid_t, size_t, size_t );
-void rpc_generic_stat( size_t, pid_t, size_t, size_t );
-void rpc_generic_write( size_t, pid_t, size_t, size_t );
+void rpc_generic_add( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_close( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_exec( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_exit( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_fork( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_ioctl( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_open( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_read( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_remove( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_seek( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_stat( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_write( size_t, pid_t, uint64_t, uint64_t );
 // specific
-void rpc_attach_device( size_t, pid_t, size_t, size_t );
-void rpc_attach_roothub( size_t, pid_t, size_t, size_t );
-void rpc_control_message( size_t, pid_t, size_t, size_t );
-void rpc_get_configuration( size_t, pid_t, size_t, size_t );
-void rpc_get_description( size_t, pid_t, size_t, size_t );
-void rpc_get_descriptor( size_t, pid_t, size_t, size_t );
-void rpc_get_endpoint( size_t, pid_t, size_t, size_t );
-void rpc_get_interface( size_t, pid_t, size_t, size_t );
-void rpc_get_roothub( size_t, pid_t, size_t, size_t );
-void rpc_get_status( size_t, pid_t, size_t, size_t );
-void rpc_get_string( size_t, pid_t, size_t, size_t );
-void rpc_handler_register( size_t, pid_t, size_t, size_t );
-void rpc_handler_unregister( size_t, pid_t, size_t, size_t );
-void rpc_interrupt_poll( size_t, pid_t, size_t, size_t );
-void rpc_interrupt_generic( size_t, pid_t, size_t, size_t );
-void rpc_stop_transmission( size_t, pid_t, size_t, size_t );
-void rpc_detach_device( size_t, pid_t, size_t, size_t );
+void rpc_attach_device( size_t, pid_t, uint64_t, uint64_t );
+void rpc_attach_roothub( size_t, pid_t, uint64_t, uint64_t );
+void rpc_control_message( size_t, pid_t, uint64_t, uint64_t );
+void rpc_get_configuration( size_t, pid_t, uint64_t, uint64_t );
+void rpc_get_description( size_t, pid_t, uint64_t, uint64_t );
+void rpc_get_descriptor( size_t, pid_t, uint64_t, uint64_t );
+void rpc_get_endpoint( size_t, pid_t, uint64_t, uint64_t );
+void rpc_get_interface( size_t, pid_t, uint64_t, uint64_t );
+void rpc_get_roothub( size_t, pid_t, uint64_t, uint64_t );
+void rpc_get_status( size_t, pid_t, uint64_t, uint64_t );
+void rpc_get_string( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handler_register( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handler_unregister( size_t, pid_t, uint64_t, uint64_t );
+void rpc_interrupt_poll( size_t, pid_t, uint64_t, uint64_t );
+void rpc_interrupt_generic( size_t, pid_t, uint64_t, uint64_t );
+void rpc_stop_transmission( size_t, pid_t, uint64_t, uint64_t );
+void rpc_detach_device( size_t, pid_t, uint64_t, uint64_t );
 
 #endif

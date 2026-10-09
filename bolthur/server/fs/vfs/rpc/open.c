@@ -135,7 +135,7 @@
 }
 
 /**
- * @fn void rpc_handle_open_async(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_open_async(size_t, pid_t, uint64_t, uint64_t)
  * @brief Open continue callback to continue after receiving stat information
  *
  * @param type
@@ -146,8 +146,8 @@
 void rpc_handle_open_async(
   [[maybe_unused]] size_t type,
   [[maybe_unused]] pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   vfs_open_response_t response = { .handle = -EINVAL };
   // get matching async data
@@ -207,7 +207,7 @@ void rpc_handle_open_async(
 }
 
 /**
- * @fn void rpc_handle_open(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_open(size_t, pid_t, uint64_t, uint64_t)
  * @brief Handle open request
  *
  * @param type
@@ -222,8 +222,8 @@ void rpc_handle_open_async(
 void rpc_handle_open(
   size_t type,
   pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+  uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   // variables
   vfs_open_response_t response = { .handle = -EINVAL };

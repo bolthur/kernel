@@ -22,6 +22,8 @@
 #include "../lib/string.h"
 #include "../lib/stdlib.h"
 #include "data.h"
+
+#include "../panic.h"
 #include "../mm/phys.h"
 #include "../mm/virt.h"
 #if defined( PRINT_RPC )
@@ -29,14 +31,13 @@
 #endif
 
 /**
- * @fn size_t rpc_data_queue_generate_id(void)
+ * @fn uint64_t rpc_data_queue_generate_id(void)
  * @brief Generates new rpc data queue id
- *
  * @return
  */
-size_t rpc_data_queue_generate_id( void ) {
-  static size_t id = 1;
-  return id++;
+uint64_t rpc_data_queue_generate_id( void ) {
+  static uint64_t id = 0;
+  return ++id;
 }
 
 /**
@@ -45,8 +46,8 @@ size_t rpc_data_queue_generate_id( void ) {
  *
  * @param proc
  */
-bool rpc_data_queue_ready( task_process_t* proc ) {
-  return proc->rpc_mailbox > 0 && proc->rpc_mailbox_virt > 0;
+bool rpc_data_queue_ready( const task_process_t* proc ) {
+  return proc->rpc_mailbox && proc->rpc_mailbox_virt > 0;
 }
 
 /**
@@ -61,7 +62,7 @@ static uintptr_t align_entry( const uintptr_t entry, const uintptr_t alignment )
 }
 
 /**
- * @fn int rpc_data_queue_add(pid_t, const char*, size_t, size_t*)
+ * @fn int rpc_data_queue_add(pid_t, const char*, size_t, uint64_t*)
  * @brief Method to add rpc data queue entry
  *
  * @param target
@@ -74,7 +75,7 @@ int rpc_data_queue_add(
   const pid_t target,
   const char* data,
   const size_t data_length,
-  size_t* rpc_data_queue_id
+  uint64_t* rpc_data_queue_id
 ) {
   // get process by pid
   task_process_t* target_process = task_process_get_by_id( target );
@@ -95,7 +96,7 @@ int rpc_data_queue_add(
     return EINVAL;
   }
   // prepare message_id
-  size_t message_id;
+  uint64_t message_id;
   if ( ! rpc_data_queue_id || 0 == *rpc_data_queue_id ) {
     message_id = rpc_data_queue_generate_id();
     // set message_id
@@ -121,7 +122,7 @@ int rpc_data_queue_add(
     mailbox = task_thread_current_thread->process->rpc_mailbox_virt;
   // map mailbox temporarily
   } else {
-    mailbox = virt_map_temporary( target_process->rpc_mailbox, PAGE_SIZE );
+    mailbox = virt_map_temporary_range( target_process->rpc_mailbox, target_process->rpc_mailbox_size );
     if ( ! mailbox ) {
       // debug output
       #if defined( PRINT_RPC )
@@ -133,12 +134,13 @@ int rpc_data_queue_add(
     // set mapped flag
     mapped = true;
   }
-  const uintptr_t mailbox_end = mailbox + PAGE_SIZE;
+  const uintptr_t mailbox_end = mailbox + target_process->rpc_mailbox_size;
   // set pointer to beginning
   auto entry = ( rpc_data_mailbox_entry_t* )mailbox;
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "===================================> %d <================================\r\n", target )
     DEBUG_OUTPUT( "Mailbox temporarily mapped to 0x%"PRIxPTR", looking for free space \r\n", mailbox )
+    DEBUG_OUTPUT( "mailbox = %"PRIxPTR", mailbox end = %"PRIxPTR"\r\n", mailbox, mailbox_end )
   #endif
   // loop while entry id is not matching
   while ( ( uintptr_t )entry + sizeof( rpc_data_mailbox_entry_t ) < mailbox_end ) {
@@ -152,7 +154,7 @@ int rpc_data_queue_add(
     if ( current_entry_end > mailbox_end || current_entry_end < ( uintptr_t )entry ) {
       // unmap mailbox again
       if ( mapped ) {
-        virt_unmap_temporary( mailbox, PAGE_SIZE );
+        virt_unmap_temporary( mailbox, target_process->rpc_mailbox_size );
       }
       // return fault
       return EFAULT;
@@ -172,7 +174,7 @@ int rpc_data_queue_add(
   if ( entry_end_address >= mailbox_end ) {
     // unmap
     if ( mapped ) {
-      virt_unmap_temporary( mailbox, PAGE_SIZE );
+      virt_unmap_temporary( mailbox, target_process->rpc_mailbox_size );
     }
     // debug output
     #if defined( PRINT_RPC )
@@ -196,7 +198,7 @@ int rpc_data_queue_add(
   #endif
   // unmap temporary again
   if ( mapped ) {
-    virt_unmap_temporary( mailbox, PAGE_SIZE );
+    virt_unmap_temporary( mailbox, target_process->rpc_mailbox_size );
   }
   // debug output
   #if defined( PRINT_RPC )

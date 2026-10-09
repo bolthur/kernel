@@ -56,7 +56,7 @@ bool property_setup( void ) {
     nullptr,
     PAGE_SIZE,
     PROT_READ | PROT_WRITE,
-    MAP_ANONYMOUS | MAP_DEVICE,
+    MAP_ANONYMOUS | MAP_DEVICE | MAP_BUS,
     -1,
     0
   );
@@ -66,7 +66,7 @@ bool property_setup( void ) {
   // push it to property buffer
   property_buffer = ( int32_t* )tmp_buffer;
   // get physical address
-  uintptr_t translated = _syscall_memory_translate_physical( ( uintptr_t )property_buffer );
+  const uintptr_t translated = _syscall_memory_translate_bus( ( uintptr_t )property_buffer, PAGE_SIZE );
   if ( errno ) {
     return false;
   }

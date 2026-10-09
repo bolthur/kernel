@@ -27,7 +27,7 @@
 #include  "../../../../library/util/min.h"
 
 /**
- * @fn void string_get_finished( size_t, pid_t, size_t, size_t )
+ * @fn void string_get_finished( size_t, pid_t, uint64_t, uint64_t )
  * @brief get string finished callback
  * @param type rpc type
  * @param origin origin rpc
@@ -37,8 +37,8 @@
 static void string_get_finished(
   size_t type,
   pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_OUTPUT )
@@ -126,8 +126,8 @@ int usbd_string_get(
 static void string_read_lang_read_finished(
   size_t type,
   pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_OUTPUT )
@@ -181,8 +181,8 @@ static void string_read_lang_read_finished(
 static void string_read_lang_length_finished(
   size_t type,
   pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_OUTPUT )
@@ -320,8 +320,8 @@ int usbd_string_read_lang(
 static void string_read_language_data_finished(
   size_t type,
   pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_OUTPUT )
@@ -394,8 +394,8 @@ static void string_read_language_data_finished(
 static void string_read_language_id_finished(
   [[maybe_unused]] size_t type,
   [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
-  size_t response_info
+  [[maybe_unused]] uint64_t data_info,
+  uint64_t response_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_OUTPUT )
@@ -481,7 +481,7 @@ int usbd_string_read(
   const size_t request_size,
   const rpc_handler_t handler,
   const pid_t origin,
-  const size_t data_info
+  const uint64_t data_info
 ) {
   // validate parameter
   if ( ! buffer || ! string_index || ! buffer_length ) {

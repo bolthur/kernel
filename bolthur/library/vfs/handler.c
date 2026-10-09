@@ -39,7 +39,7 @@ pid_t vfs_get_file_handler( const char* path ) {
   // copy stuff to message
   strncpy( request->file_path, path, PATH_MAX - 1 );
   // raise rpc and wait for return
-  const size_t response_id = bolthur_rpc_raise(
+  const uint64_t response_id = bolthur_rpc_raise(
     RPC_VFS_STAT,
     VFS_DAEMON_ID,
     request,

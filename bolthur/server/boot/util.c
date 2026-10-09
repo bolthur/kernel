@@ -48,7 +48,7 @@ pid_t util_execute_device_server(
     msg_size += sizeof( char );
   }
   // allocate shared memory
-  const size_t shm_id = _syscall_memory_shared_create( msg_size );
+  const uint64_t shm_id = _syscall_memory_shared_create( msg_size );
   // handle error
   if ( errno ) {
     // return error

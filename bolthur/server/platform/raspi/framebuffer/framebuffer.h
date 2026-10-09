@@ -34,7 +34,7 @@ typedef struct {
 
 typedef struct {
   size_t id;
-  size_t shm_id;
+  uint64_t shm_id;
   uint8_t* address;
   uint32_t width;
   uint32_t height;
@@ -46,10 +46,10 @@ bool framebuffer_init( const char* );
 bool framebuffer_register_rpc( void );
 void framebuffer_flip( void );
 
-void framebuffer_handle_resolution( size_t, pid_t, size_t, size_t );
-void framebuffer_handle_clear( size_t, pid_t, size_t, size_t );
-void framebuffer_handle_surface_render( size_t, pid_t, size_t, size_t );
-void framebuffer_handle_surface_allocate( size_t, pid_t, size_t, size_t );
+void framebuffer_handle_resolution( size_t, pid_t, uint64_t, uint64_t );
+void framebuffer_handle_clear( size_t, pid_t, uint64_t, uint64_t );
+void framebuffer_handle_surface_render( size_t, pid_t, uint64_t, uint64_t );
+void framebuffer_handle_surface_allocate( size_t, pid_t, uint64_t, uint64_t );
 
 extern framebuffer_rpc_t command_list[ 5 ];
 

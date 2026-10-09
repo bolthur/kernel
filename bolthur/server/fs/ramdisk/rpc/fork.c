@@ -24,7 +24,7 @@
 #include "../rpc.h"
 
 /**
- * @fn void rpc_handle_fork(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_fork(size_t, pid_t, uint64_t, uint64_t)
  * @brief handle ioctl request
  *
  * @param type
@@ -35,8 +35,8 @@
 void rpc_handle_fork(
   size_t type,
   [[maybe_unused]] pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+  uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   // dummy error response
   vfs_fork_response_t response = { .status = -EINVAL };

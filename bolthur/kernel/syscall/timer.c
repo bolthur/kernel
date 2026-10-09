@@ -57,25 +57,3 @@ void syscall_timer_frequency( void* context ) {
   #endif
   syscall_populate_success( context, timer_get_frequency() );
 }
-
-/**
- * @fn void syscall_timer_release(void*)
- * @brief Release given timer
- *
- * @param context
- */
-void syscall_timer_release( void* context ) {
-  // parameters
-  const size_t id = syscall_get_parameter( context, 0 );
-  // debug output
-  #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_timer_release( %zu )\r\n", id )
-  #endif
-  // remove registered timer by id
-  if ( ! timer_unregister_callback( id ) ) {
-    syscall_populate_error( context, ( size_t )-EAGAIN );
-    return;
-  }
-  // return success
-  syscall_populate_success( context, 0 );
-}

@@ -25,6 +25,6 @@
 
 //#define IOCTL_WRAPPER_ENABLE_DEBUG 1
 
-int ioctl_wrapper( int, uint64_t, void*, rpc_handler_t, pid_t, size_t, void*, size_t, void* );
+int ioctl_wrapper( int, uint64_t, void*, rpc_handler_t, pid_t, uint64_t, void*, size_t, void* );
 
 #endif

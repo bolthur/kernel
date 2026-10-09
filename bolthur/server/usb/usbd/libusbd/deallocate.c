@@ -23,7 +23,7 @@
 #include "../libusbd.h"
 
 /**
- * @fn void child_detach_finished(size_t, pid_t, size_t, size_t)
+ * @fn void child_detach_finished(size_t, pid_t, uint64_t, uint64_t)
  * @brief Child detach finished callback
  * @param type
  * @param origin
@@ -33,8 +33,8 @@
 static void child_detach_finished(
   size_t type,
   pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Child detach call finished\r\n" )
@@ -86,7 +86,7 @@ static void child_detach_finished(
 }
 
 /**
- * @fn void detach_finished(size_t, pid_t, size_t, size_t)
+ * @fn void detach_finished(size_t, pid_t, uint64_t, uint64_t)
  * @brief Semi-final callback for attach was finished
  * @param type
  * @param origin
@@ -96,8 +96,8 @@ static void child_detach_finished(
 static void detach_finished(
   size_t type,
   pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "Detach call finished\r\n" )
@@ -193,7 +193,7 @@ void usbd_deallocate_device(
   void* original_request,
   const size_t original_request_size,
   const pid_t origin,
-  const size_t data_info,
+  const uint64_t data_info,
   void* additional_context
 ) {
   // debug output

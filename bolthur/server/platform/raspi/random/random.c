@@ -80,7 +80,7 @@ __weak_symbol __attribute__((__optimize__("O0"))) int ioctl( int file, uint64_t 
     memcpy( rpc_request->container, data, data_size * sizeof( char ) );
   }
   // raise rpc and wait for return
-  const size_t response_id = bolthur_rpc_raise(
+  const uint64_t response_id = bolthur_rpc_raise(
     RPC_VFS_IOCTL,
     VFS_DAEMON_ID,
     rpc_request,

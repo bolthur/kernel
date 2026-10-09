@@ -21,7 +21,7 @@
 #include "../call.h"
 
 /**
- * @fn int call_detached(const libusb_device_t*, rpc_handler_t, void*, size_t, pid_t, size_t, usbd_deallocate_context_t*)
+ * @fn int call_detached(const libusb_device_t*, rpc_handler_t, void*, size_t, pid_t, uint64_t, usbd_deallocate_context_t*)
  * @brief Call detached wrapper
  * @param dev
  * @param callback
@@ -38,7 +38,7 @@ int call_detached(
   void* original_request,
   const size_t original_request_size,
   const pid_t origin,
-  const size_t data_info,
+  const uint64_t data_info,
   usbd_deallocate_context_t* ctx
 ) {
   // get handler for attaching root hub

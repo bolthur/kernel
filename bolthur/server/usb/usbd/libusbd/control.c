@@ -26,7 +26,7 @@
 #include "../../../libhcd.h"
 
 /**
- * @fn int usbd_control_message(const libusb_device_t*, libusb_pipe_address_t, const void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t, pid_t, size_t, void*, size_t, void*, size_t);
+ * @fn int usbd_control_message(const libusb_device_t*, libusb_pipe_address_t, const void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t, pid_t, uint64_t, void*, size_t, void*, size_t);
  * @brief Wrapper to perform async usbd control message
  * @param dev device to use for control message
  * @param usb_pipe pipe to use
@@ -52,7 +52,7 @@ int usbd_control_message_async(
   const size_t timeout,
   const rpc_handler_t callback,
   const pid_t origin,
-  const size_t data_info,
+  const uint64_t data_info,
   void* original_request,
   const size_t original_request_size,
   void* context,
@@ -64,7 +64,7 @@ int usbd_control_message_async(
   #endif
   // allocate shared memory
   const size_t data_size = sizeof ( usb_control_message_t ) + buffer_length + 1;
-  const size_t shm_id = _syscall_memory_shared_create( data_size );
+  const uint64_t shm_id = _syscall_memory_shared_create( data_size );
   // handle error
   if ( errno ) {
     const int e = errno;

@@ -23,13 +23,13 @@
 #include <sys/bolthur.h>
 
 bool rpc_init( void );
-void rpc_handle_ioctl( size_t, pid_t, size_t, size_t );
-void rpc_handle_mount( size_t, pid_t, size_t, size_t );
-void rpc_handle_mount_async( size_t, pid_t, size_t, size_t );
-void rpc_handle_watch_notify( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_kill( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_register( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_release( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_start( size_t, pid_t, size_t, size_t );
+void rpc_handle_ioctl( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_mount( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_mount_async( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_watch_notify( size_t, pid_t, uint64_t, uint64_t );
+void rpc_custom_handle_kill( size_t, pid_t, uint64_t, uint64_t );
+void rpc_custom_handle_register( size_t, pid_t, uint64_t, uint64_t );
+void rpc_custom_handle_release( size_t, pid_t, uint64_t, uint64_t );
+void rpc_custom_handle_start( size_t, pid_t, uint64_t, uint64_t );
 
 #endif

@@ -37,7 +37,7 @@ void vfs_remove(
     exit( -1 );
   }
   // response id
-  size_t response_id = 0;
+  uint64_t response_id = 0;
   // try to send until it worked
   while ( true ) {
     // wait for response

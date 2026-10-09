@@ -131,14 +131,14 @@ typedef struct {
 typedef struct {
   uint32_t device_number;
   uint8_t report;
-  size_t shm_id;
+  uint64_t shm_id;
 } hid_get_report_t;
 
 typedef struct {
   uint32_t device_number;
   uint8_t report_type;
   uint8_t report_id;
-  size_t shm_id;
+  uint64_t shm_id;
   size_t buffer_size;
 } hid_set_report_t;
 
@@ -162,7 +162,7 @@ typedef struct {
 } usbd_unregister_device_handler_t;
 
 typedef struct {
-  size_t shm_id;
+  uint64_t shm_id;
 } usbd_get_descriptor_t;
 
 typedef struct {
@@ -199,11 +199,11 @@ typedef struct {
 } usbd_get_description_t;
 
 typedef struct {
-  size_t shm_id;
+  uint64_t shm_id;
 } usbd_control_message_t;
 
 typedef struct {
-  size_t shm_id;
+  uint64_t shm_id;
 } usbd_interrupt_message_t;
 
 typedef struct {
@@ -268,7 +268,7 @@ typedef struct {
 typedef struct {
   uint32_t device_number;
   uint32_t configuration_length;
-  size_t shm_id;
+  uint64_t shm_id;
 } usbd_get_configuration_t;
 
 typedef struct {
@@ -283,7 +283,7 @@ typedef struct {
 typedef struct {
   uint32_t device_number;
   uint8_t string_index;
-  size_t shm_id;
+  uint64_t shm_id;
   size_t buffer_size;
 } usbd_get_string_t;
 

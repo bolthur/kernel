@@ -56,7 +56,7 @@ __attribute__((__malloc__(iomem_mailbox_release, 1))) void* iomem_prepare_mailbo
  * @param size data size
  * @return
  */
-int iomem_execute_mailbox( int fd, const void* data, size_t size ) {
+int iomem_execute_mailbox( const int fd, const void* data, const size_t size ) {
   // execute sequence
   const int result = ioctl(
     fd,

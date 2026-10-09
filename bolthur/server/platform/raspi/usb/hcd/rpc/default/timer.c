@@ -17,11 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <inttypes.h>
 #include "../../rpc.h"
 #include "../../dwhci.h"
 
 /**
- * @fn void rpc_default_timer(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_default_timer(size_t, pid_t, uint64_t, uint64_t)
  * @brief Default handler for timer
  * @param type
  * @param origin
@@ -31,8 +32,8 @@
 void rpc_default_timer(
   [[maybe_unused]] size_t type,
   [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
-  size_t response_info
+  [[maybe_unused]] uint64_t data_info,
+  uint64_t response_info
 ) {
   // clear timer if set
   if ( response_info ) {
@@ -67,11 +68,14 @@ void rpc_default_timer(
   } else {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Timeout reached\r\n" )
+      EARLY_STARTUP_PRINT( "Timeout reached, status = %d / %d\r\n", entry->status, DWHCI_QUEUE_POLL_STATUS_DATA )
     #endif
     // switch status and cancel channel
-    entry->status = DWHCI_QUEUE_POLL_STATUS_DATA == entry->status
-      ? DWHCI_QUEUE_POLL_STATUS_CANCEL : DWHCI_QUEUE_CANCEL;
+    if ( DWHCI_QUEUE_POLL_STATUS_DATA == entry->status ) {
+      entry->status = DWHCI_QUEUE_POLL_STATUS_CANCEL;
+    } else {
+      entry->status = DWHCI_QUEUE_CANCEL;
+    }
   }
   // start cancellation / continue
   const response_t response = dwhci_channel_async_continue( entry );

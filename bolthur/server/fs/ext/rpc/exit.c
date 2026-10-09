@@ -22,7 +22,7 @@
 #include "../../../../library/handle/handle.h"
 
 /**
- * @fn void rpc_handle_exit(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_exit(size_t, pid_t, uint64_t, uint64_t)
  * @brief handle exit request
  *
  * @param type
@@ -33,8 +33,8 @@
 void rpc_handle_exit(
   size_t type,
   [[maybe_unused]] pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+  uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   vfs_exit_response_t response = { .result = -EINVAL };
   // handle no data

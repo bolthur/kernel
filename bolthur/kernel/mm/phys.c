@@ -20,6 +20,7 @@
 #include <stddef.h>
 #include "../lib/assert.h"
 #include "../lib/inttypes.h"
+#include "../lib/stdlib.h"
 #if defined( PRINT_MM_PHYS )
   #include "../debug/debug.h"
   #include "../lib/inttypes.h"
@@ -222,6 +223,19 @@ void phys_free_page_range( uint64_t address, size_t amount ) {
 }
 
 /**
+ * @fn void phys_free_page_range_random(uint64_t*, size_t)
+ * @brief Wrapper to free random page range passed as array
+ * @param pages pages to free up
+ * @param size size to free
+ */
+void phys_free_page_range_random( const uint64_t* pages, const size_t size ) {
+  const size_t max_page_count = size / PAGE_SIZE;
+  for ( size_t i = 0; i < max_page_count; i++ ) {
+    phys_free_page( pages[ i ] );
+  }
+}
+
+/**
  * @fn void phys_free_page_range(uint64_t, size_t)
  * @brief Method to free phys page range
  *
@@ -273,6 +287,42 @@ void phys_use_page_range( uint64_t address, size_t amount ) {
 }
 
 /**
+ * @fn uint64_t* phys_find_free_page_range_random(size_t, phys_memory_type_t)
+ * @brief Method to find free page range
+ *
+ * @param memory_amount amount of memory to find free page range for
+ * @param type
+ * @return address of found memory
+ */
+uint64_t* phys_find_free_page_range_random( const size_t memory_amount, const phys_memory_type_t type ) {
+  const size_t page_amount = memory_amount / PAGE_SIZE;
+  // allocate array
+  uint64_t* pages = malloc( page_amount * sizeof( uint64_t ) );
+  // handle failure
+  if ( ! pages ) {
+    return nullptr;
+  }
+  // mark everything as invalid
+  for ( size_t i = 0; i < page_amount; i++ ) {
+    // allocate page
+    pages[ i ] = phys_find_free_page( PAGE_SIZE, type );
+    // handle invalid
+    if ( pages[ i ] == INVALID_ADDRESS ) {
+      // free previous allocated pages
+      for ( size_t j = 0; j < i; j++ ) {
+        phys_free_page( pages[ j ] );
+      }
+      // free pages array
+      free( pages );
+      // return nullptr
+      return nullptr;
+    }
+  }
+  // return array with pages
+  return pages;
+}
+
+/**
  * @fn uint64_t phys_find_free_page_range(size_t, size_t, phys_memory_type_t)
  * @brief Method to find free page range
  *
@@ -281,7 +331,7 @@ void phys_use_page_range( uint64_t address, size_t amount ) {
  * @param type
  * @return address of found memory
  */
-uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount, phys_memory_type_t type ) {
+uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount, const phys_memory_type_t type ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT(
@@ -295,7 +345,7 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount, phys
   memory_amount = ROUND_UP_TO_FULL_PAGE( memory_amount );
 
   // determine amount of pages
-  size_t page_amount = memory_amount / PAGE_SIZE;
+  const size_t page_amount = memory_amount / PAGE_SIZE;
   size_t found_amount = 0;
 
   // found address range
@@ -303,7 +353,7 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount, phys
   bool stop = false;
 
   size_t max_idx = phys_bitmap_length;
-  uint32_t* bitmap = phys_bitmap;
+  const uint32_t* bitmap = phys_bitmap;
   if ( PHYS_MEMORY_TYPE_DMA == type ) {
     max_idx = phys_dma_length;
     bitmap = phys_dma_bitmap;
@@ -388,7 +438,7 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount, phys
  * @param type
  * @return
  */
-uint64_t phys_find_free_page(const size_t alignment, const phys_memory_type_t type ) {
+uint64_t phys_find_free_page( const size_t alignment, const phys_memory_type_t type ) {
   return phys_find_free_page_range( alignment, PAGE_SIZE, type );
 }
 
@@ -398,7 +448,7 @@ uint64_t phys_find_free_page(const size_t alignment, const phys_memory_type_t ty
  *
  * @param address address to free
  */
-void phys_free_page(const uint64_t address ) {
+void phys_free_page( const uint64_t address ) {
   phys_free_page_range( address, PAGE_SIZE );
 }
 
