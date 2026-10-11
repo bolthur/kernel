@@ -63,16 +63,8 @@ static int32_t lookup_process( const list_item_t* a, const void* b ) {
 static void cleanup_process( list_item_t* a ) {
   // get blocks
   auto const item = ( const shared_memory_entry_mapped_t* )a->data;
-  // set start and end
-  uintptr_t start = item->start;
-  const uintptr_t end = start + item->size;
-  // loop until end and unmap
-  while ( start < end ) {
-    // unmap
-    virt_unmap_address( item->process->virtual_context, start, false );
-    // get next page
-    start += PAGE_SIZE;
-  }
+  // unmap address range
+  virt_unmap_address_range( item->process->virtual_context, item->start, item->size, false );
   // free item
   free( a->data );
   // free again list item
@@ -390,7 +382,7 @@ uintptr_t shared_memory_attach(
   }
   // debug output
   #if defined( PRINT_MM_SHARED )
-    DEBUG_OUTPUT( "Mapping start = %#x\r\n", virt )
+    DEBUG_OUTPUT( "Mapping start = %#x for %d\r\n", virt, task_thread_current_thread->process->id )
   #endif
   // handle error
   if ( ! virt ) {
@@ -425,12 +417,7 @@ uintptr_t shared_memory_attach(
         DEBUG_OUTPUT( "Error while mapping shared area into process\r\n" )
       #endif
       // unmap everything on error
-      uintptr_t start_inner = virt;
-      const uintptr_t end_inner = start + entry->size;
-      while ( start_inner < end_inner ) {
-        virt_unmap_address( process->virtual_context, start_inner, false );
-        start_inner += PAGE_SIZE;
-      }
+      virt_unmap_address_range( process->virtual_context, virt, start - virt, false );
       free( mapped );
       return 0;
     }
@@ -449,12 +436,7 @@ uintptr_t shared_memory_attach(
       DEBUG_OUTPUT( "Error while pushing mapping entry\r\n" )
     #endif
     // unmap everything on error
-     uintptr_t start_inner = virt;
-     const uintptr_t end_inner = start + entry->size;
-     while ( start_inner < end_inner ) {
-       virt_unmap_address( process->virtual_context, start_inner, false );
-       start_inner += PAGE_SIZE;
-     }
+    virt_unmap_address_range( process->virtual_context, virt, start - virt, false );
     free( mapped );
     return 0;
   }

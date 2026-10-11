@@ -49,8 +49,8 @@ void syscall_memory_acquire( void* context ) {
   // get parameter
   auto addr = ( void* )syscall_get_parameter( context, 0 );
   size_t len = ( size_t )syscall_get_parameter( context, 1 );
-  int protection = ( int )syscall_get_parameter( context, 2 );
-  int flag = ( int )syscall_get_parameter( context, 3 );
+  const int protection = ( int )syscall_get_parameter( context, 2 );
+  const int flag = ( int )syscall_get_parameter( context, 3 );
   // get context
   virt_context_t* virtual_context = task_thread_current_thread
     ->process
@@ -58,11 +58,12 @@ void syscall_memory_acquire( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
-      "syscall memory acquire( %p, %#zx, %d, %d )\r\n",
+      "syscall memory acquire( %p, %#zx, %d, %d ) from %d\r\n",
       addr,
       len,
       protection,
-      flag
+      flag,
+      task_thread_current_thread->process->id
     )
   #endif
 
@@ -144,9 +145,7 @@ void syscall_memory_acquire( void* context ) {
         task_thread_current_thread->entry, addr )
     #endif
     // set address
-    uintptr_t tmp_addr = ROUND_UP_TO_FULL_PAGE(
-      task_thread_current_thread->entry
-    );
+    const uintptr_t tmp_addr = ROUND_UP_TO_FULL_PAGE( task_thread_current_thread->entry );
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "entry = %#"PRIxPTR", address = %p\r\n", tmp_addr, addr )
@@ -254,7 +253,7 @@ void syscall_memory_acquire( void* context ) {
  */
 void syscall_memory_release( void* context ) {
   // get parameters
-  uintptr_t address = ( uintptr_t )syscall_get_parameter( context, 0 );
+  const uintptr_t address = ( uintptr_t )syscall_get_parameter( context, 0 );
   size_t len = ( size_t )syscall_get_parameter( context, 1 );
   constexpr bool unmap_phys = true;
   // context
@@ -365,7 +364,7 @@ void syscall_memory_release( void* context ) {
  */
 void syscall_memory_shared_create( void* context ) {
   // get parameter rounded to full page
-  size_t len = ROUND_UP_TO_FULL_PAGE(
+  const size_t len = ROUND_UP_TO_FULL_PAGE(
     ( size_t )syscall_get_parameter( context, 0 )
   );
   if ( 0 == len ) {
@@ -437,8 +436,8 @@ void syscall_memory_translate_physical( void* context ) {
  */
 void syscall_memory_translate_bus( void* context ) {
   // get parameters
-  uintptr_t address = ( uintptr_t )syscall_get_parameter( context, 0 );
-  size_t size = ( size_t )syscall_get_parameter( context, 1 );
+  const uintptr_t address = ( uintptr_t )syscall_get_parameter( context, 0 );
+  const size_t size = ( size_t )syscall_get_parameter( context, 1 );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_memory_translate_physical( %#"PRIxPTR", %#zu )\r\n", address, size )
@@ -465,13 +464,13 @@ void syscall_memory_translate_bus( void* context ) {
     return;
   }
   // get mapped address
-  uint64_t phys = virt_get_mapped_address_in_context( virtual_context, address );
+  const uint64_t phys = virt_get_mapped_address_in_context( virtual_context, address );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "phys = %#llx\r\n", phys )
   #endif
   // get dma start
-  uint64_t dma = phys_address_to_bus( phys, size );
+  const uint64_t dma = phys_address_to_bus( phys, size );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "dma = %#llx\r\n", dma )

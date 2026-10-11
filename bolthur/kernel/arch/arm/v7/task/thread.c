@@ -217,7 +217,7 @@ task_thread_t* task_thread_create(
   // push back into free list
   if ( ! list_push_back_data( process->thread_list, thread ) ) {
     task_stack_manager_remove( stack_virtual, process->thread_stack_manager );
-    virt_unmap_address( process->virtual_context, stack_virtual, true ); /// FIXME: UNMAP WHOLE STACK COMPLETELY
+    virt_unmap_address_range( process->virtual_context, thread->stack_virtual - thread->stack_size, thread->stack_size, true );
     free( thread->current_context );
     free( thread );
     return nullptr;

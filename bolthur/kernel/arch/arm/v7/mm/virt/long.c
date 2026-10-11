@@ -601,7 +601,7 @@ uint64_t v7_long_create_table(
       DEBUG_OUTPUT( "requesting new l2 table\r\n" )
     #endif
     // populate level 2 table
-    uint64_t phys_l2table = get_new_table( 0 );
+    const uint64_t phys_l2table = get_new_table( 0 );
     // handle error
     if ( 0 == phys_l2table ) {
       // debug output

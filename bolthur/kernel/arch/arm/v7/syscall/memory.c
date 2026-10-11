@@ -37,14 +37,12 @@ void syscall_memory_shared_attach( void* context ) {
   const uint32_t lower_id = syscall_get_parameter( context, 0 );
   const uint32_t upper_id = syscall_get_parameter( context, 1 );
   const uint64_t id = ( uint64_t )upper_id << 32 | lower_id;
-  uintptr_t start = ( uintptr_t )syscall_get_parameter( context, 2 );
+  const uintptr_t start = ( uintptr_t )syscall_get_parameter( context, 2 );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
-      "syscall_memory_shared_attach( %zu, %#"PRIxPTR" )\r\n",
-      id,
-      start
-    )
+      "syscall_memory_shared_attach( %"PRIu64", %#"PRIxPTR" ) from %d\r\n",
+      id, start, task_thread_current_thread->process->id )
   #endif
   const uintptr_t addr = shared_memory_attach(
     task_thread_current_thread->process,
@@ -74,7 +72,8 @@ void syscall_memory_shared_detach( void* context ) {
   const uint64_t id = ( uint64_t )upper_id << 32 | lower_id;
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_memory_shared_detach( %zu )\r\n", id )
+    DEBUG_OUTPUT( "syscall_memory_shared_detach( %"PRIu64" ) from %d\r\n",
+      id, task_thread_current_thread->process->id )
   #endif
   // drain possible cached stuff by performing complete flush and data cache invalidation
   cache_invalidate_save();
@@ -101,7 +100,8 @@ void syscall_memory_shared_size( void* context ) {
   const uint64_t id = ( uint64_t )upper_id << 32 | lower_id;
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_memory_shared_size( %zu )\r\n", id )
+    DEBUG_OUTPUT( "syscall_memory_shared_size( %"PRIu64" ) from %d\r\n",
+      id, task_thread_current_thread->process->id )
   #endif
   // try to get size
   const size_t len = shared_memory_size( task_thread_current_thread->process, id );
