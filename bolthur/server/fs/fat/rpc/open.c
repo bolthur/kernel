@@ -31,14 +31,12 @@
 #include "../stat.h"
 
 // fat library
-#include <bfs/common/transaction.h>
 #include <bfs/common/errno.h>
 #include <bfs/common/mountpoint.h>
 #include <bfs/fat/type.h>
 #include <bfs/fat/file.h>
 #include <bfs/fat/directory.h>
 #include <bfs/fat/stat.h>
-#include <bfs/fat/fs.h>
 
 /**
  * @fn void rpc_handle_open(size_t, pid_t, uint64_t, uint64_t)
@@ -88,23 +86,13 @@ void rpc_handle_open(
     free( request );
     return;
   }
-  // cache fs
-  auto const fs = ( fat_fs_t* )mp->fs;
-  // start transaction
-  int result = common_transaction_begin( fs->bdev );
-  if ( EOK != result ) {
-    response.handle = -result;
-    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
-    free( request );
-    return;
-  }
+  int result;
   struct stat* cached = stat_fetch( request->path );
   struct stat st;
   if ( ! cached ) {
     // stat result
     result = fat_stat( request->path, &st );
     if ( EOK != result ) {
-      common_transaction_rollback( fs->bdev );
       response.handle = -result;
       bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( request );
@@ -121,7 +109,6 @@ void rpc_handle_open(
   }
   handle_container_t* container = malloc( sizeof( *container ) );
   if ( ! container ) {
-    common_transaction_rollback( fs->bdev );
     response.handle = -ENOMEM;
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
@@ -135,7 +122,6 @@ void rpc_handle_open(
     // allocate space for directory
     fat_directory_t* dir = malloc( sizeof( *dir ) );
     if ( ! dir ) {
-      common_transaction_rollback( fs->bdev );
       response.handle = -ENOMEM;
       bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( container );
@@ -146,17 +132,6 @@ void rpc_handle_open(
     memset( dir, 0, sizeof( *dir ) );
     // try to open
     result = fat_directory_open( dir, request->path );
-    if ( EOK != result ) {
-      common_transaction_rollback( fs->bdev );
-      response.handle = -result;
-      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
-      free( dir );
-      free( container );
-      free( request );
-      return;
-    }
-    // commit transaction
-    result = common_transaction_rollback( fs->bdev );
     if ( EOK != result ) {
       response.handle = -result;
       bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
@@ -203,7 +178,6 @@ void rpc_handle_open(
     // allocate space for directory
     fat_file_t* file = malloc( sizeof( *file ) );
     if ( ! file ) {
-      common_transaction_rollback( fs->bdev );
       response.handle = -ENOMEM;
       bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( container );
@@ -214,21 +188,6 @@ void rpc_handle_open(
     memset( file, 0, sizeof( *file ) );
     // try to open
     result = fat_file_open2( file, request->path, request->flags );
-    if ( EOK != result ) {
-      common_transaction_rollback( fs->bdev );
-      response.handle = -result;
-      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
-      free( file );
-      free( container );
-      free( request );
-      return;
-    }
-    // commit transaction
-    if ( ( request->flags & O_CREAT ) || ( request->flags & O_TRUNC ) ) {
-      result = common_transaction_commit( fs->bdev );
-    } else {
-      result = common_transaction_rollback( fs->bdev );
-    }
     if ( EOK != result ) {
       response.handle = -result;
       bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
