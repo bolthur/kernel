@@ -87,10 +87,6 @@ typedef struct {
   size_t shm_id;
   int fd_iomem;
   bool initialized;
-
-  // flags for card is absent and ejected
-  bool card_absent;
-  bool card_ejected;
 } sdhost_device_t;
 
 typedef struct  {

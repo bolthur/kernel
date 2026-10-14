@@ -34,7 +34,6 @@
 #include <sys/mman.h>
 #include <sys/bolthur.h>
 #include "emmc.h"
-#include "util.h"
 #include "constants.h"
 #include "mmio.h"
 // from iomem
@@ -434,72 +433,9 @@ static emmc_response_t init_gpio( void ) {
     // return error
     return EMMC_RESPONSE_MEMORY;
   }
-  // allocate detect parameter block
-  iomem_gpio_detect_t* detect = malloc( sizeof( iomem_gpio_detect_t ) );
-  if ( ! detect ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to allocate detect block for rpc\r\n" )
-    #endif
-    // free memory
-    free( func );
-    free( pull );
-    // return error
-    return EMMC_RESPONSE_MEMORY;
-  }
   // clear parameter blocks
   memset( func, 0, sizeof( iomem_gpio_function_t ) );
   memset( pull, 0, sizeof( iomem_gpio_pull_t ) );
-  memset( detect, 0, sizeof( iomem_gpio_detect_t ) );
-  // prepare parameter block for function
-  func->pin = IOMEM_GPIO_ENUM_PIN_CD;
-  func->function = IOMEM_GPIO_ENUM_FUNCTION_INPUT;
-  // prepare parameter block for pull
-  pull->pin = IOMEM_GPIO_ENUM_PIN_CD;
-  pull->pull = IOMEM_GPIO_ENUM_PULL_UP;
-  // prepare parameter block for high detect
-  detect->pin = IOMEM_GPIO_ENUM_PIN_CD;
-  detect->type = IOMEM_GPIO_ENUM_DETECT_TYPE_HIGH;
-  detect->value = 1;
-  // debug output
-  #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT(
-      "Set card detection function, pin pull and high pin detection\r\n"
-    )
-  #endif
-  // handle ioctl error
-  if (
-    -1 == ioctl(
-      device->fd_iomem,
-      IOCTL_BUILD_REQUEST(
-        IOMEM_RPC_GPIO_SET_FUNCTION,
-        sizeof( iomem_gpio_function_t ),
-        IOCTL_WRONLY
-      ),
-      func
-    ) || -1 == ioctl(
-      device->fd_iomem,
-      IOCTL_BUILD_REQUEST(
-        IOMEM_RPC_GPIO_SET_PULL,
-        sizeof( iomem_gpio_pull_t ),
-        IOCTL_WRONLY
-      ),
-      pull
-    ) || -1 == ioctl(
-      device->fd_iomem,
-      IOCTL_BUILD_REQUEST(
-        IOMEM_RPC_GPIO_SET_DETECT,
-        sizeof( iomem_gpio_detect_t ),
-        IOCTL_WRONLY
-      ),
-      detect
-    )
-  ) {
-    free( func );
-    free( pull );
-    free( detect );
-    return EMMC_RESPONSE_IO;
-  }
   // function and pull for dat3
   func->pin = IOMEM_GPIO_ENUM_PIN_DAT3;
   func->function = IOMEM_GPIO_ENUM_FUNCTION_ALT3;
@@ -531,7 +467,6 @@ static emmc_response_t init_gpio( void ) {
   ) {
     free( func );
     free( pull );
-    free( detect );
     return EMMC_RESPONSE_IO;
   }
   // function and pull for dat2
@@ -565,7 +500,6 @@ static emmc_response_t init_gpio( void ) {
   ) {
     free( func );
     free( pull );
-    free( detect );
     return EMMC_RESPONSE_IO;
   }
   // function and pull for dat1
@@ -599,7 +533,6 @@ static emmc_response_t init_gpio( void ) {
   ) {
     free( func );
     free( pull );
-    free( detect );
     return EMMC_RESPONSE_IO;
   }
   // function and pull for dat0
@@ -633,7 +566,6 @@ static emmc_response_t init_gpio( void ) {
   ) {
     free( func );
     free( pull );
-    free( detect );
     return EMMC_RESPONSE_IO;
   }
   // function and pull for cmd
@@ -667,7 +599,6 @@ static emmc_response_t init_gpio( void ) {
   ) {
     free( func );
     free( pull );
-    free( detect );
     return EMMC_RESPONSE_IO;
   }
   // function and pull for clk
@@ -701,13 +632,11 @@ static emmc_response_t init_gpio( void ) {
   ) {
     free( func );
     free( pull );
-    free( detect );
     return EMMC_RESPONSE_IO;
   }
   // free up blocks again
   free( func );
   free( pull );
-  free( detect );
   // return success
   return EMMC_RESPONSE_OK;
 }
@@ -2193,58 +2122,13 @@ emmc_response_t emmc_init( void ) {
     }
   }
 
-  // debug output
-  #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Update card detection\r\n" )
-    // cache previous absent flag
-    const bool was_absent = device->card_absent;
-  #endif
-  // Update card detection
-  if ( ! util_update_card_detect(
-    device->fd_iomem,
-    &device->card_absent,
-    &device->card_ejected
-  ) ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Failed to update card detection\r\n" )
-    #endif
-    // return error
-    return EMMC_RESPONSE_UNKNOWN;
-  }
-
-  // handle no card present
-  if ( device->card_absent ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "No card present\r\n" )
-    #endif
-    // reset flags
-    device->initialized = false;
-    device->card_absent = true;
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      if ( ! was_absent ) {
-        EARLY_STARTUP_PRINT( "No card detected\r\n" )
-      }
-    #endif
-    // return card absent
-    return EMMC_RESPONSE_CARD_ABSENT;
-  }
-  // handle ejected detected
-  if ( device->card_ejected && device->initialized ) {
-    // reset initialized
-    device->initialized = false;
-    // backup card identification
-    memcpy( device->card_cid_backup, device->card_cid, sizeof( uint32_t ) * 4 );
-  // clear card identification backup if initializing
-  } else if ( ! device->initialized ) {
-    memset( device->card_cid_backup, 0, sizeof( uint32_t )* 4 );
-  }
   // skip if initialized
   if ( device->initialized ) {
     return EMMC_RESPONSE_OK;
   }
+
+  // clear card identification backup
+  memset( device->card_cid_backup, 0, sizeof( uint32_t )* 4 );
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
@@ -2609,49 +2493,6 @@ emmc_response_t emmc_transfer_block(
     #endif
     // return error
     return EMMC_RESPONSE_UNKNOWN;
-  }
-
-  // check for card change
-  if ( device ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Update card detection\r\n" )
-    #endif
-    // Update card detection
-    if ( ! util_update_card_detect(
-      device->fd_iomem,
-      &device->card_absent,
-      &device->card_ejected
-    ) ) {
-      // debug output
-      #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Failed to update card detection\r\n" )
-      #endif
-      // return error
-      return EMMC_RESPONSE_UNKNOWN;
-    }
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Check for card absent / ejected\r\n" )
-    #endif
-    // handle absent
-    if ( device->card_absent ) {
-      // debug output
-      #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Card absent\r\n" )
-      #endif
-      // return error
-      return EMMC_RESPONSE_CARD_ABSENT;
-    }
-    // handle ejected
-    if ( device->card_ejected ) {
-      // debug output
-      #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Card ejected\r\n" )
-      #endif
-      // return error
-      return EMMC_RESPONSE_CARD_EJECTED;
-    }
   }
 
   // initialize / reinitialize emmc if necessary

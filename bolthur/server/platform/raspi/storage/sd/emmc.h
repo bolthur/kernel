@@ -89,10 +89,6 @@ typedef struct {
   uint8_t version_host_controller;
   // status of slot
   uint8_t status_slot;
-
-  // flags for card is absent and ejected
-  bool card_absent;
-  bool card_ejected;
 } emmc_device_t;
 
 typedef struct {

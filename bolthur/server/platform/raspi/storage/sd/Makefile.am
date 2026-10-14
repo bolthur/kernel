@@ -19,6 +19,5 @@ sd_SOURCES = \
   main.c \
   mmio.c \
   sd.c \
-  sdhost.c \
-  util.c
+  sdhost.c
 sd_LDFLAGS = -all-static --static

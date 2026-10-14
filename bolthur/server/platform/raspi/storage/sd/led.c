@@ -40,7 +40,7 @@ void led_set_activity( const led_activity_t state ) {
   // clear parameter blocks
   memset( raise, 0, sizeof( iomem_gpio_pull_t ) );
   // prepare parameter block for pull
-  raise->pin = IOMEM_GPIO_ENUM_PIN_CD;
+  raise->pin = IOMEM_GPIO_ENUM_PIN_STATUS_LED;
   raise->raise = LED_ACTIVITY_LED_ON == state;
   // handle ioctl error
   if ( -1 == ioctl(  fd_iomem, IOCTL_BUILD_REQUEST( IOMEM_RPC_GPIO_SET_FUNCTION,  sizeof( iomem_gpio_raise_t ), IOCTL_WRONLY ), raise ) ) {
@@ -74,22 +74,42 @@ bool led_init_status( void ) {
     // return error
     return false;
   }
+  // allocate pull parameter block
+  iomem_gpio_pull_t* pull = malloc( sizeof( iomem_gpio_pull_t ) );
+  if ( ! pull ) {
+    // debug output
+    #if defined( EMMC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Unable to allocate pull block for rpc\r\n" )
+    #endif
+    // free memory
+    free( func );
+    // return error
+    return false;
+  }
   // clear parameter blocks
   memset( func, 0, sizeof( iomem_gpio_function_t ) );
+  memset( pull, 0, sizeof( iomem_gpio_pull_t ) );
   // change pin 47 to output
-  func->pin = IOMEM_GPIO_ENUM_PIN_CD;
+  func->pin = IOMEM_GPIO_ENUM_PIN_STATUS_LED;
   func->function = IOMEM_GPIO_ENUM_FUNCTION_OUTPUT;
+  pull->pin = IOMEM_GPIO_ENUM_PIN_STATUS_LED;
+  pull->pull = IOMEM_GPIO_ENUM_PULL_UP;
   // handle ioctl error
-  if ( -1 == ioctl(  fd_iomem, IOCTL_BUILD_REQUEST( IOMEM_RPC_GPIO_SET_FUNCTION,  sizeof( iomem_gpio_function_t ), IOCTL_WRONLY ), func ) ) {
+  if (
+    -1 == ioctl( fd_iomem, IOCTL_BUILD_REQUEST( IOMEM_RPC_GPIO_SET_PULL, sizeof( iomem_gpio_pull_t ), IOCTL_WRONLY ), pull )
+    || -1 == ioctl( fd_iomem, IOCTL_BUILD_REQUEST( IOMEM_RPC_GPIO_SET_FUNCTION, sizeof( iomem_gpio_function_t ), IOCTL_WRONLY ), func )
+  ) {
     // close file descriptor again
     close( fd_iomem );
     // free func
     free( func );
+    free( pull );
     // return error
     return false;
   }
   // free func
   free( func );
+  free( pull );
   // return success
   return true;
 }
