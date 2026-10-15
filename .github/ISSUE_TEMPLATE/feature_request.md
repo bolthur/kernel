@@ -1,6 +1,9 @@
 ---
 name: Feature Request
 about: Suggest a new feature or improvement
+labels: enhancement
+assignee: ''
+type: Feature
 ---
 
 ## Is your feature request related to a problem? Please describe.
