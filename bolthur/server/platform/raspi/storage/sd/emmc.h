@@ -55,6 +55,9 @@ typedef struct {
   // sdcard configuration register
   uint32_t card_scr[ 2 ];
 
+  // max clock information
+  uint32_t max_clock;
+
   // support information
   uint32_t card_support_sdhc;
   // card version

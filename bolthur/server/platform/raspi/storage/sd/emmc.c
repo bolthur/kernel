@@ -672,6 +672,88 @@ static emmc_response_t gather_version_info( void ) {
 }
 
 /**
+ * @fn emmc_response_t max_clock_frequency(void)
+ * @brief Helper to get max clock frequency
+ * @return
+ */
+static emmc_response_t max_clock_frequency( void ) {
+  size_t request_size;
+  int32_t* request;
+  // debug output
+  #if defined( SDHOST_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Fetch max clock property\r\n" )
+  #endif
+  // allocate buffer
+  request = iomem_prepare_mailbox( 8, &request_size );
+  if ( ! request ) {
+    // debug output
+    #if defined( SDHOST_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Unable to allocate mailbox area\r\n" )
+    #endif
+    // return error
+    return EMMC_RESPONSE_MEMORY;
+  }
+  // build request
+  // buffer size
+  request[ 0 ] = ( int32_t )request_size;
+  // perform request
+  request[ 1 ] = 0;
+  // power state tag
+  request[ 2 ] = MAILBOX_GET_CLOCK_RATE;
+  // buffer and request size
+  request[ 3 ] = 8;
+  request[ 4 ] = 4;
+  // emmc clock
+  request[ 5 ] = MAILBOX_CLOCK_EMMC;
+  // space for return
+  request[ 6 ] = 0;
+  // end tag
+  request[ 7 ] = 0;
+  // perform request
+  const int result = ioctl(
+    device->fd_iomem,
+    IOCTL_BUILD_REQUEST(
+      IOMEM_RPC_MAILBOX,
+      request_size,
+      IOCTL_RDWR
+    ),
+    request
+  );
+  // handle ioctl error
+  if ( -1 == result ) {
+    // debug output
+    #if defined( SDHOST_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Mailbox request error\r\n" )
+    #endif
+    // free request
+    iomem_mailbox_release( request );
+    // return error
+    return EMMC_RESPONSE_IO;
+  }
+  // handle invalid device id returned
+  if ( MAILBOX_CLOCK_EMMC != request[ 5 ] ) {
+    // debug output
+    #if defined( SDHOST_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Invalid device id returned\r\n" )
+    #endif
+    // free request
+    iomem_mailbox_release( request );
+    // return error
+    return EMMC_RESPONSE_MAILBOX;
+  }
+  // debug output
+  #if defined( SDHOST_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "clock rate = %#"PRIx32"\r\n", request[ 6 ] )
+  #endif
+  // set max clock
+  device->max_clock = ( uint32_t )request[ 6 ];
+  // free request
+  iomem_mailbox_release( request );
+  // return success
+  return EMMC_RESPONSE_OK;
+}
+
+/**
  * @fn emmc_response_t clock_frequency(uint32_t)
  * @brief Method to change clock frequency
  *
@@ -683,87 +765,51 @@ static emmc_response_t clock_frequency( const uint32_t frequency ) {
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Clock frequency change request\r\n" )
   #endif
-  uint32_t divisor;
-  const uint32_t closest = 41666666 / frequency;
-  uint32_t high_value = 0;
-  // debug output
-  #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "frequency = %#"PRIx32", closest = %#"PRIx32"\r\n",
-      frequency, closest )
-  #endif
-  // debug output
-  #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Determine closest shift count\r\n" )
-  #endif
-  // determine shift count
-  uint32_t shift_count = 32;
-  uint32_t value = closest - 1;
-  // handle nothing to shift
-  if ( ! value ) {
-    shift_count = 0;
-  // apply shift if necessary
+  // evaluate target divisor depending on frequency and max clock
+  uint32_t target_divisor = 0;
+  if ( frequency > device->max_clock ) {
+    target_divisor = 1;
   } else {
-    if ( ! ( value & 0xFFFF0000 ) ) {
-      value <<= 16;
-      shift_count -= 16;
-    }
-    if ( ! ( value & 0xFF000000 ) ) {
-      value <<= 8;
-      shift_count -= 8;
-    }
-    if ( ! ( value & 0xF0000000 ) ) {
-      value <<= 4;
-      shift_count -= 4;
-    }
-    if ( ! ( value & 0xC0000000 ) ) {
-      value <<= 2;
-      shift_count -= 2;
-    }
-    if ( ! ( value & 0x80000000 ) ) {
-      shift_count -= 1;
-    }
-    // some additional restrictions
-    if ( shift_count > 0 ) {
-      shift_count--;
-    }
-    if ( shift_count > 7 ) {
-      shift_count = 7;
+    target_divisor = device->max_clock / frequency;
+    const uint32_t mod = device->max_clock % frequency;
+    if ( mod ) {
+      target_divisor--;
     }
   }
-  // debug output
-  #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Determine divisor\r\n" )
-  #endif
-  // more bits for host controller after version 2, so use closest directly there
+
+  uint32_t value = 0;
   if ( EMMC_HOST_CONTROLLER_V2 < device->version_host_controller ) {
-    divisor = closest;
-  // else use shift count for divisor
+    // find the first bit set
+    int divisor = -1;
+    for ( int first_bit = 31; first_bit >= 0; first_bit-- ) {
+      const uint32_t test = 1 << first_bit;
+      if ( target_divisor & test ) {
+        divisor = first_bit;
+        target_divisor &= ~test;
+        if (target_divisor) {
+          divisor++;
+        }
+        break;
+      }
+    }
+    // handle invalid values
+    if ( -1 == divisor || 32 <= divisor ) {
+      divisor = 31;
+    }
+    // calculate divisor
+    if ( divisor != 0 ) {
+      divisor = 1 << ( divisor - 1 );
+    }
+    // handle max reached
+    if ( 0x400 <= divisor ) {
+      divisor = 0x3FF;
+    }
+    const uint32_t freq_select = divisor & 0xFF;
+    const uint32_t upper_bits = ( divisor >> 8 ) & 0x3;
+    value = ( freq_select << 8 ) | ( upper_bits << 6 ) | ( 0 << 5 );
   } else {
-    divisor = 1 << shift_count;
+    return EMMC_RESPONSE_IO;
   }
-  // min limit, set divisor at least to 2
-  if ( 2 >= divisor ) {
-    divisor = 2;
-  }
-  // debug output
-  #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "divisor = %#"PRIx32"\r\n", divisor )
-  #endif
-  // update high bits if newer than v2 is active
-  if ( EMMC_HOST_CONTROLLER_V2 < device->version_host_controller ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Fill high value\r\n" )
-    #endif
-    high_value = ( divisor & 0x300 ) >> 2;
-  }
-  // get final divisor value
-  divisor = ( ( divisor & 0x0ff ) << 8 ) | high_value;
-  // debug output
-  #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "divisor = %#"PRIx32", high_value = %#"PRIx32"\r\n",
-      divisor, high_value )
-  #endif
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
@@ -803,7 +849,7 @@ static emmc_response_t clock_frequency( const uint32_t frequency ) {
   nanosleep( &ts, nullptr );
   // read control again and write divisor
   control = mmio_read( PERIPHERAL_EMMC_CONTROL1 ) & 0xFFFF003F;
-  control |= divisor;
+  control |= value;
   control |= EMMC_CONTROL1_CLK_INTLEN;
   mmio_write( PERIPHERAL_EMMC_CONTROL1, control );
   // delay 20 milliseconds
@@ -1930,7 +1976,16 @@ static emmc_response_t init_sd( void ) {
  * @return
  */
 static emmc_response_t reset( void ) {
-  emmc_response_t response;
+  // fetch max clock
+  emmc_response_t response = max_clock_frequency();
+  if ( EMMC_RESPONSE_OK != response ) {
+    // debug output
+    #if defined( EMMC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Error while fetching max clock frequency\r\n" )
+    #endif
+    // return error
+    return response;
+  }
   // sleep values
   constexpr long milliseconds = 10;
   constexpr struct timespec ts = {
@@ -2275,7 +2330,7 @@ emmc_response_t emmc_init( void ) {
   }
 
   // debug output
-  /*#if defined( EMMC_ENABLE_DEBUG )
+  #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Set clock frequency to normal\r\n" )
   #endif
   // change clock frequency
@@ -2288,7 +2343,7 @@ emmc_response_t emmc_init( void ) {
     #endif
     // return error
     return response;
-  }*/
+  }
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
