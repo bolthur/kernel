@@ -150,11 +150,11 @@ static int confini_callback(
       const size_t read = fread(
         &map.keymap[ i ],
         sizeof( uint16_t ),
-        KEYMAP_ALTSHIFTTAB + 1,
+        KEYMAP_CTRTAB + 1,
         f
       );
       // check read amount
-      if ( read != KEYMAP_ALTSHIFTTAB + 1 ) {
+      if ( read != KEYMAP_CTRTAB + 1 ) {
         // debug output
         #if defined( KEYBOARD_ENABLE_OUTPUT )
           STARTUP_PRINT( "Unable to read keymap entry %zu\r\n", i )

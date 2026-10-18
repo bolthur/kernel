@@ -106,7 +106,7 @@ void rpc_handle_read(
     free( response );
     return;
   }
-  handle_container_t* container = node->data;
+  const handle_container_t* container = node->data;
   if ( container->type != HANDLE_TYPE_FILE ) {
     #if defined( FAT_ENABLE_OUTPUT )
       STARTUP_PRINT( "invalid type set for found handle!\r\n" )

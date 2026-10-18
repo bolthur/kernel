@@ -33,13 +33,12 @@ cppcheck:
 		--check-level=exhaustive
 
 image:
-	cd $(ROOT_DIR)/tool && nim -d:release -d:ssl compile --run image.nim \
+	cd $(ROOT_DIR)/tool && make clean && make all && ./image \
 		$(ROOT_DIR) \
 		$(BUILD_DIR) \
 		$(SYSROOT_DIR) \
 		$(ROOT_DIR)/config/ini/${platform_subdir}/${platform_name}/ \
-		$(BUILD_DIR)/bolthur/kernel/target/${platform_subdir}/${output_img} \
-		${platform_subdir}
+		$(BUILD_DIR)/bolthur/kernel/target/${platform_subdir}/${output_img}
 
 README: README.md
 	pandoc -f markdown -t plain --wrap=none $< -o $@

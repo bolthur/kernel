@@ -178,16 +178,6 @@ void rpc_handle_mount(
     return;
   }
 
-  // check whether target is already mounted
-  /*struct ext4_mount_stats stats;
-  int result = ext4_mount_point_stats( request->target, &stats );
-  if ( ENOENT != result ) {
-    response.result = -EALREADY;
-    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
-    free( request );
-    return;
-  }*/
-
   // split device and partition index up
   uint32_t partition_index = 0;
   char* device = split_device_partition( request->source, &partition_index );
@@ -250,7 +240,7 @@ void rpc_handle_mount(
     return;
   }
   // add trailing slash necessary for library
-  size_t target_length = strlen( request->target );
+  const size_t target_length = strlen( request->target );
   if ( request->target[ target_length - 1 ] != '/' ) {
     strcat( request->target, "/" );
   }
