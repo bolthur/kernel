@@ -28,6 +28,7 @@
 #include <archive_entry.h>
 #include <curl/curl.h>
 #include "firmware.h"
+#include "global.h"
 #include "path.h"
 
 /**
@@ -58,15 +59,14 @@ static int copy_data( struct archive* ar, struct archive* aw ) {
   size_t size;
   la_int64_t offset;
   for (;;) {
-    int r = archive_read_data_block( ar, &buff, &size, &offset );
+    const int r = archive_read_data_block( ar, &buff, &size, &offset );
     if ( ARCHIVE_EOF == r ) {
       return ARCHIVE_OK;
     }
     if ( ARCHIVE_OK > r ) {
       return r;
     }
-    r = archive_write_data_block( aw, buff, size, offset );
-    if ( ARCHIVE_OK > r ) {
+    if ( ARCHIVE_OK > archive_write_data_block( aw, buff, size, offset ) ) {
       fprintf( stderr, "Error while writing data: %s\n", archive_error_string( aw ) );
       return r;
     }
@@ -96,14 +96,8 @@ static void prepend_destination( struct archive_entry* entry, const char* dest_d
  */
 bool firmware_load( void ) {
   fprintf( stdout, "Loading firmware...\r\n" );
-  // get current cwd
-  char cwd[ PATH_MAX ];
-  if ( ! getcwd( cwd, sizeof( cwd ) ) ) {
-    fprintf( stderr, "getcwd() failed\r\n" );
-    return false;
-  }
   // build cache dir
-  char* cache_dir = path_join( cwd, ".cache" );
+  char* cache_dir = path_join( root_path, "tool", ".cache", image_type );
   if ( ! cache_dir ) {
     fprintf( stderr, "path_join() failed\r\n" );
     return false;
@@ -120,7 +114,7 @@ bool firmware_load( void ) {
     return false;
   }
   // out path
-  char* out_path = path_join( ".cache", "firmware" );
+  char* out_path = path_join( ".cache", image_type, "firmware" );
   if ( ! out_path ) {
     fprintf( stderr, "path_join() failed\r\n" );
     free( cache_dir );
@@ -154,7 +148,7 @@ bool firmware_load( void ) {
     curl_easy_setopt( curl, CURLOPT_WRITEDATA, fp );
     curl_easy_setopt( curl, CURLOPT_FOLLOWLOCATION, 1L );
     // perform curl
-    CURLcode res = curl_easy_perform( curl );
+    const CURLcode res = curl_easy_perform( curl );
     // cleanup
     curl_easy_cleanup( curl );
     fclose( fp );

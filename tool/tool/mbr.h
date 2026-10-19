@@ -24,21 +24,35 @@
 
 #pragma pack(push, 1)
 
+/**
+ * @brief mbr partition entry representation
+ */
 typedef struct{
+  /** @brief boot flag */
   uint8_t boot_flag;
+  /** @brief start chs */
   uint8_t start_chs[ 3 ];
+  /** @brief partition type */
   uint8_t partition_type;
+  /** @brief end chs */
   uint8_t end_chs[ 3 ];
+  /** @brief start lba */
   uint32_t start_lba;
+  /** @brief total sectors */
   uint32_t total_sectors;
 } mbr_partition_t;
 
+/**
+ * @brief mbr representation
+ */
 typedef struct {
+  /** @brief boot code */
   uint8_t bootstrap[ 446 ];
+  /** @brief partitions */
   mbr_partition_t partition[ 4 ];
+  /** @brief signature */
   uint16_t signature;
 } mbr_t;
-
 static_assert( sizeof( mbr_t ) == 512, "MBR size mismatch" );
 
 #pragma pack(pop)

@@ -26,16 +26,37 @@
 #include <diskio.h>
 #include "../image.h"
 
+/**
+ * @brief FatFS Volume to partition array
+ */
 PARTITION VolToPart[] = { { .pd = 0, .pt = 1, } };
 
+/**
+ * @brief FatFS disk status callback
+ * @param pdrv
+ * @return
+ */
 DSTATUS disk_status( [[maybe_unused]] BYTE pdrv ) {
   return 0;
 }
 
+/**
+ * @brief FatFS disk initialize callback
+ * @param pdrv
+ * @return
+ */
 DSTATUS disk_initialize( [[maybe_unused]] BYTE pdrv ) {
   return 0;
 }
 
+/**
+ * @brief FatFS disk read callback
+ * @param pdrv
+ * @param buff
+ * @param sector
+ * @param count
+ * @return
+ */
 DRESULT disk_read( [[maybe_unused]] BYTE pdrv, BYTE* buff, LBA_t sector, UINT count ) {
   const off_t offset = ( off_t )sector * SECTOR_SIZE;
   fseeko( global_sd_image_fd, offset, SEEK_SET );
@@ -43,6 +64,14 @@ DRESULT disk_read( [[maybe_unused]] BYTE pdrv, BYTE* buff, LBA_t sector, UINT co
   return RES_OK;
 }
 
+/**
+ * @brief FatFS disk write callback
+ * @param pdrv
+ * @param buff
+ * @param sector
+ * @param count
+ * @return
+ */
 DRESULT disk_write( [[maybe_unused]] BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count ) {
   const off_t offset = ( off_t )sector * SECTOR_SIZE;
   fseeko( global_sd_image_fd, offset, SEEK_SET );
@@ -50,6 +79,13 @@ DRESULT disk_write( [[maybe_unused]] BYTE pdrv, const BYTE* buff, LBA_t sector, 
   return RES_OK;
 }
 
+/**
+ * @brief FatFS disk ioctl callback
+ * @param pdrv
+ * @param cmd
+ * @param buff
+ * @return
+ */
 DRESULT disk_ioctl( [[maybe_unused]] BYTE pdrv, BYTE cmd, [[maybe_unused]] void* buff ) {
   switch (cmd) {
     case CTRL_SYNC:
@@ -70,11 +106,17 @@ DRESULT disk_ioctl( [[maybe_unused]] BYTE pdrv, BYTE cmd, [[maybe_unused]] void*
   return RES_PARERR;
 }
 
+/**
+ * @brief FatFS get fat time implementation
+ * @return
+ */
 DWORD get_fattime( void ) {
   const time_t t = time( nullptr );
   struct tm* tm_info = localtime( &t );
   if ( ! tm_info ) {
-    return ( ( DWORD )( 2026 - 1980 ) << 25 ) | ( ( DWORD )1 << 21 ) | ( ( DWORD )1 << 16 );
+    return ( ( DWORD )( 2026 - 1980 ) << 25 )
+      | ( ( DWORD )1 << 21 )
+      | ( ( DWORD )1 << 16 );
   }
   return ( ( DWORD )( tm_info->tm_year + 1900 - 1980 ) << 25 )
      | ( ( DWORD )( tm_info->tm_mon + 1 ) << 21 )

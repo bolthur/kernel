@@ -20,8 +20,13 @@
 #ifndef INI_SERVER_H
 #define INI_SERVER_H
 
+/**
+ * @brief Server / Application ini representation
+ */
 typedef struct {
+  /** @brief type where to put the file */
   char type[ 255 ];
+  /** @brief path where to put the file */
   char path[ 255 ];
 } server_ini_t;
 

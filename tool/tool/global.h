@@ -30,5 +30,6 @@ extern char* font;
 extern char* application;
 extern char* server;
 extern char* image_path;
+extern char* image_type;
 
 #endif

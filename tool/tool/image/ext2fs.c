@@ -23,6 +23,13 @@
 #include <sys/types.h>
 #include "../image.h"
 
+/**
+ * @brief ext2fs open callback
+ * @param name
+ * @param flags
+ * @param channel
+ * @return
+ */
 static errcode_t custom_open(
   [[maybe_unused]] const char* name,
   [[maybe_unused]] int flags,
@@ -41,11 +48,24 @@ static errcode_t custom_open(
   return 0;
 }
 
+/**
+ * @brief ext2fs close callback
+ * @param channel
+ * @return
+ */
 static errcode_t custom_close( io_channel channel ) {
   free( channel );
   return 0;
 }
 
+/**
+ * @brief ext2fs read callback
+ * @param channel
+ * @param block
+ * @param count
+ * @param data
+ * @return
+ */
 static errcode_t custom_read_blk(
   io_channel channel,
   const unsigned long block,
@@ -56,7 +76,7 @@ static errcode_t custom_read_blk(
   constexpr off_t base_offset = ( off_t )EXT_PARTITION_START * 512;
   const off_t target_offset = base_offset + ( ( off_t )block * block_size );
   // Seek to the target position
-  if (fseeko( global_sd_image_fd, target_offset, SEEK_SET ) != 0) {
+  if ( fseeko( global_sd_image_fd, target_offset, SEEK_SET ) != 0 ) {
     return EXT2_ET_SHORT_READ;
   }
   // handle libext2fs negative count logic
@@ -77,6 +97,14 @@ static errcode_t custom_read_blk(
   return 0;
 }
 
+/**
+ * @brief ext2fs write callback
+ * @param channel
+ * @param block
+ * @param count
+ * @param data
+ * @return
+ */
 static errcode_t custom_write_blk(
   io_channel channel,
   const unsigned long block,
@@ -87,7 +115,7 @@ static errcode_t custom_write_blk(
   constexpr off_t base_offset = ( off_t )EXT_PARTITION_START * 512;
   const off_t target_offset = base_offset + ( ( off_t )block * block_size );
   // Seek to the target position
-  if (fseeko( global_sd_image_fd, target_offset, SEEK_SET ) != 0) {
+  if ( fseeko( global_sd_image_fd, target_offset, SEEK_SET ) != 0 ) {
     return EXT2_ET_SHORT_WRITE;
   }
   if ( 0 > count ) {
@@ -107,16 +135,30 @@ static errcode_t custom_write_blk(
   return 0;
 }
 
+/**
+ * @brief ext2fs flush callback
+ * @param channel
+ * @return
+ */
 static errcode_t custom_flush( [[maybe_unused]] io_channel channel ) {
   fflush( global_sd_image_fd );
   return 0;
 }
 
+/**
+ * @brief ext2fs set block size callback
+ * @param channel
+ * @param blksize
+ * @return
+ */
 static errcode_t custom_set_blksize( io_channel channel, const int blksize ) {
   channel->block_size = blksize;
   return 0;
 }
 
+/**
+ * @brief ext2fs io manager mapping all helpers
+ */
 struct struct_io_manager custom_io_manager = {
   .magic = EXT2_ET_MAGIC_IO_MANAGER,
   .name = "custom_image_io",

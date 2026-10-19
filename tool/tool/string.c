@@ -57,7 +57,7 @@ char* replace( const char* str, const char* search, const char* replace ) {
 }
 
 /**
- * Ltrim implementation
+ * @brief ltrim implementation
  * @param src
  */
 void ltrim( char *src ) {

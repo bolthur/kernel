@@ -33,7 +33,7 @@
 static char* prepared_root_folder = nullptr;
 
 /**
- * @brief Directory traversal path
+ * @brief Directory traversal callback for servers / applications
  * @param path absolute path to folder
  * @param file name of the file
  */
@@ -100,7 +100,7 @@ static void directory_server_application_callback( const char* path, const char*
 }
 
 /**
- * @brief Directory traversal path
+ * @brief Directory traversal callback for sysroot
  * @param path absolute path to folder
  * @param file name of the file
  */
@@ -178,7 +178,7 @@ static void directory_sysroot_callback( const char* path, const char* file ) {
 }
 
 /**
- * @brief Directory traversal path
+ * @brief Directory traversal callback for prepared root files
  * @param path absolute path to folder
  * @param file name of the file
  */
@@ -255,6 +255,10 @@ static void directory_prepared_root_callback( const char* path, const char* file
   free( target_path );
 }
 
+/**
+ * @brief Function to populate root image
+ * @return
+ */
 bool populate_root_image( void ) {
   fprintf( stdout, "Populating root image\r\n" );
   // scan for server executables
@@ -267,12 +271,7 @@ bool populate_root_image( void ) {
   fprintf( stdout, "[3/4] Scanning sysroot %s\r\n", sysroot );
   scan_directory_generic( sysroot, directory_sysroot_callback );
   // copy over prepared root files
-  char cwd[ PATH_MAX ];
-  if ( ! getcwd( cwd, sizeof( cwd ) ) ) {
-    fprintf( stderr, "getcwd() failed\r\n" );
-    return false;
-  }
-  prepared_root_folder = path_join( cwd, "file", "raspi", "root" );
+  prepared_root_folder = path_join( root_path, "tool", ".file", "root" );
   if ( ! prepared_root_folder ) {
     fprintf( stderr, "Unable to prepare path to prepared root\r\n" );
     return false;

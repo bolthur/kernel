@@ -36,14 +36,24 @@
 static TAR* tar;
 static TAR* compressed;
 
+/**
+ * @brief Memory buffer for ram tar
+ */
 typedef struct {
+  /** @brief buffer */
   char *buffer;
+  /** @brief size */
   size_t size;
+  /** @brief capacity */
   size_t capacity;
+  /** @brief offset */
   size_t offset;
 } memory_buffer_t;
 
-static memory_buffer_t my_ram_db = {
+/**
+ * @brief RAM Tar representation
+ */
+static memory_buffer_t tar_ram_db = {
   .buffer = nullptr,
   .size = 0,
   .capacity = 0,
@@ -62,10 +72,10 @@ static int mem_open(
   [[maybe_unused]] int oflags,
   [[maybe_unused]] mode_t mode
 ) {
-  my_ram_db.buffer = malloc( 1024 );
-  my_ram_db.capacity = 1024;
-  my_ram_db.size = 0;
-  my_ram_db.offset = 0;
+  tar_ram_db.buffer = malloc( 1024 );
+  tar_ram_db.capacity = 1024;
+  tar_ram_db.size = 0;
+  tar_ram_db.offset = 0;
   return 42;
 }
 
@@ -90,22 +100,22 @@ static ssize_t mem_write(
   const void *buf,
   const size_t count
 ) {
-  if ( my_ram_db.offset + count > my_ram_db.capacity ) {
-    my_ram_db.capacity *= 2;
-    my_ram_db.capacity += count;
-    void* r = realloc( my_ram_db.buffer, my_ram_db.capacity );
+  if ( tar_ram_db.offset + count > tar_ram_db.capacity ) {
+    tar_ram_db.capacity *= 2;
+    tar_ram_db.capacity += count;
+    void* r = realloc( tar_ram_db.buffer, tar_ram_db.capacity );
     if ( ! r ) {
       fprintf( stderr, "Unable to extend compressed ramdisk buffer\r\n" );
       exit( EXIT_FAILURE );
     }
-    my_ram_db.buffer = r;
+    tar_ram_db.buffer = r;
   }
-  memcpy( my_ram_db.buffer + my_ram_db.offset, buf, count );
-  my_ram_db.offset += count;
-  if ( my_ram_db.offset > my_ram_db.size ) {
-    my_ram_db.size = my_ram_db.offset;
+  memcpy( tar_ram_db.buffer + tar_ram_db.offset, buf, count );
+  tar_ram_db.offset += count;
+  if ( tar_ram_db.offset > tar_ram_db.size ) {
+    tar_ram_db.size = tar_ram_db.offset;
   }
-  return count;
+  return ( ssize_t )count;
 }
 
 /**
@@ -120,15 +130,15 @@ static ssize_t mem_read(
   void *buf,
   size_t count
 ) {
-  if ( my_ram_db.offset >= my_ram_db.size ) {
+  if ( tar_ram_db.offset >= tar_ram_db.size ) {
     return 0;
   }
-  if ( my_ram_db.offset + count > my_ram_db.size ) {
-    count = my_ram_db.size - my_ram_db.offset;
+  if ( tar_ram_db.offset + count > tar_ram_db.size ) {
+    count = tar_ram_db.size - tar_ram_db.offset;
   }
-  memcpy( buf, my_ram_db.buffer + my_ram_db.offset, count );
-  my_ram_db.offset += count;
-  return count;
+  memcpy( buf, tar_ram_db.buffer + tar_ram_db.offset, count );
+  tar_ram_db.offset += count;
+  return ( ssize_t )count;
 }
 
 /**
@@ -138,8 +148,8 @@ static ssize_t mem_read(
  */
 static bool check_folder_exists( const char* dir ) {
   // Rewind the underlying file descriptor back to 0
-  const size_t old_offset = my_ram_db.offset;
-  my_ram_db.offset = 0;
+  const size_t old_offset = tar_ram_db.offset;
+  tar_ram_db.offset = 0;
   char buffer[ 255 ] = "\0";
   sprintf( buffer, "%s%s", dir, PATH_SEP_STR );
   // Clear out the current internal header buffer to prevent stale reads
@@ -147,7 +157,7 @@ static bool check_folder_exists( const char* dir ) {
   while ( 0 == th_read( compressed ) ) {
     auto const current_path = th_get_pathname( compressed );
     if ( strcmp( current_path, buffer ) == 0 && TH_ISDIR( compressed ) ) {
-      my_ram_db.offset = old_offset;
+      tar_ram_db.offset = old_offset;
       return true;
     }
     // skip in case it's a regular file
@@ -158,7 +168,7 @@ static bool check_folder_exists( const char* dir ) {
       }
     }
   }
-  my_ram_db.offset = old_offset;
+  tar_ram_db.offset = old_offset;
   return false;
 }
 
@@ -236,7 +246,7 @@ static void add_directory_recursive( const char* path ) {
 }
 
 /**
- * @brief Directory traversal path
+ * @brief Directory traversal for server files
  * @param path absolute path to folder
  * @param file name of the file
  */
@@ -305,7 +315,7 @@ static void directory_callback( const char* path, const char* file ) {
 }
 
 /**
- * @brief Directory traversal path
+ * @brief Directory traversal for configuration files
  * @param path absolute path to folder
  * @param file name of the file
  */
@@ -378,7 +388,7 @@ static void* gzip_compress_memory(
 static bool add_compressed_initrd_to_uncompressed() {
   // compress memory
   size_t gzip_length = 0;
-  void* gzip = gzip_compress_memory( my_ram_db.buffer, my_ram_db.size, &gzip_length );
+  void* gzip = gzip_compress_memory( tar_ram_db.buffer, tar_ram_db.size, &gzip_length );
   if ( ! gzip ) {
     fprintf( stderr, "Unable to compress memory initrd\r\n" );
     return false;

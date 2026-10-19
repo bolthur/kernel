@@ -32,7 +32,7 @@
 static TAR* tar;
 
 /**
- * @brief Directory traversal path
+ * @brief Directory traversal callback for servers
  * @param path absolute path to folder
  * @param file name of the file
  */

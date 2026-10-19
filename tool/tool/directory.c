@@ -103,7 +103,7 @@ void scan_directory( const char* path, const char* type, const char* additional_
 }
 
 /**
- * Scan directory generic
+ * @brief Helper to scan directory generic without type check
  * @param path
  * @param callback
  */

@@ -23,23 +23,19 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include "keycode.h"
+#include "global.h"
 #include "path.h"
 #include "keycode/us.h"
 #include "keycode/de.h"
 
 /**
- * Generate key code files
+ * @brief Generate key code files
  * @return
  */
 bool keycode_generate( void ) {
   fprintf( stdout, "Generating keycodes.\r\n" );
-  // build path to destination
-  char cwd[ PATH_MAX ];
-  if ( ! getcwd( cwd, sizeof( cwd ) ) ) {
-    fprintf( stderr, "getcwd() failed\r\n" );
-    return false;
-  }
-  char* destination_folder = path_join( cwd, "file", "raspi", "root", "usr", "share", "kbd" );
+  // build destination folder
+  char* destination_folder = path_join( root_path, "tool", ".file", "root", "usr", "share", "kbd" );
   if ( ! destination_folder ) {
     fprintf( stderr, "Unable to prepare path to destination folder\r\n" );
     return false;

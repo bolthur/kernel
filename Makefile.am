@@ -38,7 +38,8 @@ image:
 		$(BUILD_DIR) \
 		$(SYSROOT_DIR) \
 		$(ROOT_DIR)/config/ini/${platform_subdir}/${platform_name}/ \
-		$(BUILD_DIR)/bolthur/kernel/target/${platform_subdir}/${output_img}
+		$(BUILD_DIR)/bolthur/kernel/target/${platform_subdir}/${output_img} \
+		${platform_subdir}
 
 README: README.md
 	pandoc -f markdown -t plain --wrap=none $< -o $@

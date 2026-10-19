@@ -37,6 +37,7 @@ char* font = nullptr;
 char* application = nullptr;
 char* server = nullptr;
 char* image_path = nullptr;
+char* image_type = nullptr;
 
 /**
  * @brief Wrapper to cleanup path globals
@@ -72,6 +73,9 @@ static void cleanup_arguments( void ) {
   if ( image_path ) {
     free( image_path );
   }
+  if ( image_type ) {
+    free( image_type );
+  }
 }
 
 /**
@@ -105,8 +109,13 @@ static bool duplicate_arguments( char** argv ) {
     fprintf( stderr, "Could not allocate memory for kernel_path" );
     return false;
   }
+  image_type = strdup( argv[ 6 ] );
+  if ( ! image_type ) {
+    fprintf( stderr, "Could not allocate memory for image_type" );
+    return false;
+  }
   // build paths
-  output_ramdisk = path_join( root_path, "build-aux", "platform", "raspi", "initrd" );
+  output_ramdisk = path_join( root_path, "build-aux", "platform", image_type, "initrd" );
   if ( ! output_ramdisk ) {
     fprintf( stderr, "Could not join path for output_ramdisk" );
     return false;
@@ -126,7 +135,7 @@ static bool duplicate_arguments( char** argv ) {
     fprintf( stderr, "Could not join path for server" );
     return false;
   }
-  image_path = path_join( root_path, "build-aux", "platform", "raspi", "sdcard.img" );
+  image_path = path_join( root_path, "build-aux", "platform", image_type, "sdcard.img" );
   if ( ! image_path ) {
     fprintf( stderr, "Could not join path for image_path" );
     return false;
@@ -142,8 +151,8 @@ static bool duplicate_arguments( char** argv ) {
  */
 int main( const int argc, char **argv ) {
   // validate arguments
-  if ( argc != 6 ) {
-    fprintf( stderr, "Usage: image <root source path> <build path> <sysroot> <bootConfig> <kernel build path>\r\n" );
+  if ( argc != 7 ) {
+    fprintf( stderr, "Usage: image <root source path> <build path> <sysroot> <bootConfig> <kernel build path> <image type>\r\n" );
     return EXIT_FAILURE;
   }
   // register atexit function
