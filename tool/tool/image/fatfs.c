@@ -59,8 +59,13 @@ DSTATUS disk_initialize( [[maybe_unused]] BYTE pdrv ) {
  */
 DRESULT disk_read( [[maybe_unused]] BYTE pdrv, BYTE* buff, LBA_t sector, UINT count ) {
   const off_t offset = ( off_t )sector * SECTOR_SIZE;
-  fseeko( global_sd_image_fd, offset, SEEK_SET );
-  fread( buff, SECTOR_SIZE, count, global_sd_image_fd );
+  if ( 0 != fseeko( global_sd_image_fd, offset, SEEK_SET ) ) {
+    return RES_ERROR;
+  }
+  const size_t read_count = fread( buff, SECTOR_SIZE, count, global_sd_image_fd );
+  if ( read_count != count ) {
+    return RES_ERROR;
+  }
   return RES_OK;
 }
 
@@ -74,8 +79,13 @@ DRESULT disk_read( [[maybe_unused]] BYTE pdrv, BYTE* buff, LBA_t sector, UINT co
  */
 DRESULT disk_write( [[maybe_unused]] BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count ) {
   const off_t offset = ( off_t )sector * SECTOR_SIZE;
-  fseeko( global_sd_image_fd, offset, SEEK_SET );
-  fwrite( buff, SECTOR_SIZE, count, global_sd_image_fd );
+  if ( 0 != fseeko( global_sd_image_fd, offset, SEEK_SET ) ) {
+    return RES_ERROR;
+  }
+  const size_t write_count = fwrite( buff, SECTOR_SIZE, count, global_sd_image_fd );
+  if ( write_count != count ) {
+    return RES_ERROR;
+  }
   return RES_OK;
 }
 

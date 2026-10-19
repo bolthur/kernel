@@ -273,7 +273,7 @@ static void directory_callback( const char* path, const char* file ) {
     exit( EXIT_FAILURE );
   }
   // parse config ini
-  auto const data = parse_server_ini( prepared );
+  auto const data = server_parse_ini( prepared );
   if ( ! data ) {
     fprintf( stderr, "Unable to parse %s\r\n", ini );
     free( full_path );
@@ -296,7 +296,7 @@ static void directory_callback( const char* path, const char* file ) {
     add_directory_recursive( data->path );
     // finally append file
     fprintf( stdout, "-> Pushing %s into compressed initrd at %s\r\n", full_path, target_path );
-    if ( ! append_tar_file_with_mode( compressed, full_path, target_path, 0755 ) ) {
+    if ( ! ramdisk_append_tar_file_with_mode( compressed, full_path, target_path, 0755 ) ) {
       fprintf( stderr, "Unable to push %s to compressed ramdisk path %s\r\n", full_path, target_path );
       free( full_path );
       free( ini );
@@ -331,7 +331,7 @@ static void directory_config_callback( const char* path, const char* file ) {
   add_directory_recursive( buffer );
   sprintf( buffer, "ramdisk%sconfig%s%s", PATH_SEP_STR, PATH_SEP_STR, file );
   fprintf( stdout, "-> Pushing %s into compressed initrd at %s\r\n", full_path, buffer );
-  if ( ! append_tar_file_with_mode( compressed, full_path, buffer, 0755 ) ) {
+  if ( ! ramdisk_append_tar_file_with_mode( compressed, full_path, buffer, 0755 ) ) {
     fprintf( stderr, "Unable to push %s to compressed ramdisk path %s\r\n", full_path, buffer );
     exit( EXIT_FAILURE );
   }
@@ -396,7 +396,7 @@ static bool add_compressed_initrd_to_uncompressed() {
   // construct standard stat structure for metadata
   struct stat s = {0};
   s.st_mode = S_IFREG | 0644;
-  s.st_size = gzip_length;
+  s.st_size = ( off_t )gzip_length;
   // populate and write the TAR header
   th_set_from_stat( tar, &s );
   th_set_path( tar, "ramdisk.tar.gz" );
@@ -438,7 +438,7 @@ static bool add_compressed_initrd_to_uncompressed() {
  * @param output_path path where ramdisk shall be stored
  * @return
  */
-bool create_compressed_ramdisk( const char* output_path ) {
+bool ramdisk_compressed_create( const char* output_path ) {
   fprintf( stdout, "Creating uncompressed ramdisk at %s\r\n", output_path );
   // create tar file
   fprintf( stdout, "[1/8] Opening tar file\r\n" );
@@ -471,16 +471,16 @@ bool create_compressed_ramdisk( const char* output_path ) {
   }
   // copy over configuration files
   fprintf( stdout, "[3/8] Copy over configurations\r\n" );
-  scan_directory_generic( boot_config, directory_config_callback );
+  directory_scan_generic( boot_config, directory_config_callback );
   // scan for fonts
   fprintf( stdout, "[4/8] Scanning for fonts in %s\r\n", font );
-  scan_directory( font, "PC Screen Font", nullptr, directory_callback );
+  directory_scan( font, "PC Screen Font", nullptr, directory_callback );
   // scan for server executables
   fprintf( stdout, "[5/8] Scanning for server executables in %s\r\n", server );
-  scan_directory( server, "ELF", "executable", directory_callback );
+  directory_scan( server, "ELF", "executable", directory_callback );
   // scan for applications
   fprintf( stdout, "[6/8] Scanning for applications in %s\r\n", application );
-  scan_directory( application, "ELF", "executable", directory_callback );
+  directory_scan( application, "ELF", "executable", directory_callback );
   // append eof to compressed
   tar_append_eof( compressed );
   // write content to tar

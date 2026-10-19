@@ -52,7 +52,7 @@ static void directory_callback( const char* path, const char* file ) {
     exit( EXIT_FAILURE );
   }
   fprintf( stdout, "-> Pushing %s into boot at %s\r\n", full_path, destination_path );
-  if ( ! copy_file_to_boot( full_path, destination_path ) ) {
+  if ( ! image_copy_file_to_boot( full_path, destination_path ) ) {
     fprintf( stderr, "Unable to copy %s\r\n", destination_path );
     free( full_path );
     free( destination_path );
@@ -82,7 +82,7 @@ static void directory_callback_configuration( const char* path, const char* file
     exit( EXIT_FAILURE );
   }
   fprintf( stdout, "-> Pushing %s into boot at %s\r\n", full_path, destination_path );
-  if ( ! copy_file_to_boot( full_path, destination_path ) ) {
+  if ( ! image_copy_file_to_boot( full_path, destination_path ) ) {
     fprintf( stderr, "Unable to copy %s\r\n", destination_path );
     free( full_path );
     free( destination_path );
@@ -97,15 +97,15 @@ static void directory_callback_configuration( const char* path, const char* file
  * @brief Copy ramdisk file to boot
  * @return
  */
-bool copy_ramdisk_to_boot_image( void ) {
-  return copy_file_to_boot( output_ramdisk, "/initrd" );
+bool image_boot_copy_image( void ) {
+  return image_copy_file_to_boot( output_ramdisk, "/initrd" );
 }
 
 /**
  * @brief Copy kernel image to boot
  * @return
  */
-bool copy_kernel_to_boot_image( void ) {
+bool image_boot_copy_kernel( void ) {
   // get destination path with a slash at the beginning
   char* destination = path_join( " ", basename( kernel_path ) );
   if ( ! destination ) {
@@ -114,7 +114,7 @@ bool copy_kernel_to_boot_image( void ) {
   // trim out left spaces
   ltrim( destination );
   // copy to boot
-  if ( ! copy_file_to_boot( kernel_path, destination ) ) {
+  if ( ! image_copy_file_to_boot( kernel_path, destination ) ) {
     free( destination );
     return false;
   }
@@ -128,7 +128,7 @@ bool copy_kernel_to_boot_image( void ) {
  * @brief Copy firmware to boot image
  * @return
  */
-bool copy_firmware_to_boot_image( void ) {
+bool image_boot_copy_firmware( void ) {
   // build firmware dir
   firmware_dir = path_join( root_path, "tool", ".cache", image_type, "firmware", FIRMWARE_NAME, "boot" );
   if ( ! firmware_dir ) {
@@ -136,7 +136,7 @@ bool copy_firmware_to_boot_image( void ) {
     return false;
   }
   // walk over directory and copy everything
-  scan_directory_generic( firmware_dir, directory_callback );
+  directory_scan_generic( firmware_dir, directory_callback );
   // cleanup
   free( firmware_dir );
   firmware_dir = nullptr;
@@ -147,20 +147,20 @@ bool copy_firmware_to_boot_image( void ) {
  * @brief Wrapper to populate boot partition
  * @return
  */
-bool populate_boot_image( void ) {
+bool image_boot_populate( void ) {
   fprintf( stdout, "Populating boot partition of image.\r\n" );
   fprintf( stdout, "[1/4] Copying firmware to boot image\r\n" );
-  if ( ! copy_firmware_to_boot_image() ) {
+  if ( ! image_boot_copy_firmware() ) {
     fprintf( stderr, "Unable to copy firmware to boot image\r\n" );
     return false;
   }
   fprintf( stdout, "[2/4] Copying kernel to boot image\r\n" );
-  if ( ! copy_kernel_to_boot_image() ) {
+  if ( ! image_boot_copy_kernel() ) {
     fprintf( stderr, "Unable to copy kernel to boot image\r\n" );
     return false;
   }
   fprintf( stdout, "[3/4] Copying ramdisk to boot image\r\n" );
-  if ( ! copy_ramdisk_to_boot_image() ) {
+  if ( ! image_boot_copy_image() ) {
     fprintf( stderr, "Unable to copy ramdisk to boot image\r\n" );
     return false;
   }
@@ -170,7 +170,7 @@ bool populate_boot_image( void ) {
     fprintf( stderr, "Unable to build path to configuration\r\n" );
     return false;
   }
-  scan_directory_generic( config_dir, directory_callback_configuration );
+  directory_scan_generic( config_dir, directory_callback_configuration );
   free( config_dir );
   config_dir = nullptr;
   fprintf( stdout, "Completed! Populated boot partition successfully.\r\n" );

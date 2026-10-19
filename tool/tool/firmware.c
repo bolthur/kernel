@@ -39,7 +39,7 @@
  * @param stream
  * @return
  */
-static size_t write_data(
+static size_t curl_write_data(
   const void* ptr,
   const size_t size,
   const size_t nmemb,
@@ -54,7 +54,7 @@ static size_t write_data(
  * @param aw
  * @return
  */
-static int copy_data( struct archive* ar, struct archive* aw ) {
+static int archive_copy_data( struct archive* ar, struct archive* aw ) {
   const void *buff;
   size_t size;
   la_int64_t offset;
@@ -144,7 +144,7 @@ bool firmware_load( void ) {
     }
     // set curl options
     curl_easy_setopt( curl, CURLOPT_URL, FIRMWARE_URL );
-    curl_easy_setopt( curl, CURLOPT_WRITEFUNCTION, write_data );
+    curl_easy_setopt( curl, CURLOPT_WRITEFUNCTION, curl_write_data );
     curl_easy_setopt( curl, CURLOPT_WRITEDATA, fp );
     curl_easy_setopt( curl, CURLOPT_FOLLOWLOCATION, 1L );
     // perform curl
@@ -211,7 +211,7 @@ bool firmware_load( void ) {
       if ( ARCHIVE_OK > r ) {
         fprintf( stderr, "Error while writing headers: %s\n", archive_error_string( ext ) );
       } else if ( archive_entry_size( entry ) > 0 ) {
-        r = copy_data( a, ext );
+        r = archive_copy_data( a, ext );
         if ( ARCHIVE_OK > r ) {
           free( cache_dir );
           free( out_file );

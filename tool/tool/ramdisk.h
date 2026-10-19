@@ -22,9 +22,9 @@
 
 #include <libtar.h>
 
-bool append_tar_file_with_mode( TAR* t, const char* realname, const char* savename, mode_t mode );
+bool ramdisk_append_tar_file_with_mode( TAR* t, const char* realname, const char* savename, mode_t mode );
 
-bool create_compressed_ramdisk( const char* output_path );
-bool create_uncompressed_ramdisk( const char* output_path );
+bool ramdisk_compressed_create( const char* output_path );
+bool ramdisk_uncompressed_create( const char* output_path );
 
 #endif

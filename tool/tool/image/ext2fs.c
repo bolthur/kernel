@@ -76,7 +76,7 @@ static errcode_t custom_read_blk(
   constexpr off_t base_offset = ( off_t )EXT_PARTITION_START * 512;
   const off_t target_offset = base_offset + ( ( off_t )block * block_size );
   // Seek to the target position
-  if ( fseeko( global_sd_image_fd, target_offset, SEEK_SET ) != 0 ) {
+  if ( 0 != fseeko( global_sd_image_fd, target_offset, SEEK_SET ) ) {
     return EXT2_ET_SHORT_READ;
   }
   // handle libext2fs negative count logic
@@ -115,7 +115,7 @@ static errcode_t custom_write_blk(
   constexpr off_t base_offset = ( off_t )EXT_PARTITION_START * 512;
   const off_t target_offset = base_offset + ( ( off_t )block * block_size );
   // Seek to the target position
-  if ( fseeko( global_sd_image_fd, target_offset, SEEK_SET ) != 0 ) {
+  if ( 0 != fseeko( global_sd_image_fd, target_offset, SEEK_SET ) ) {
     return EXT2_ET_SHORT_WRITE;
   }
   if ( 0 > count ) {

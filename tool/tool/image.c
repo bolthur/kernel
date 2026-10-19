@@ -37,7 +37,7 @@ FILE* global_sd_image_fd;
  * @param path path where to store
  * @return
  */
-bool create_empty_image( const char* path ) {
+bool image_create_empty( const char* path ) {
   constexpr uint32_t fat_start = FAT_PARTITION_START;
   constexpr uint32_t fat_size = FAT_PARTITION_SIZE;
   constexpr uint32_t ext_start = EXT_PARTITION_START;
@@ -164,7 +164,7 @@ bool create_empty_image( const char* path ) {
  * @param destination
  * @return
  */
-bool copy_file_to_boot( const char* path, const char* destination ) {
+bool image_copy_file_to_boot( const char* path, const char* destination ) {
   // open file
   global_sd_image_fd = fopen( image_path, "rb+" );
   if ( ! global_sd_image_fd ) {
@@ -316,7 +316,7 @@ bool copy_file_to_boot( const char* path, const char* destination ) {
  * @param child child ino output
  * @return
  */
-static errcode_t ensure_single_directory(
+static errcode_t extfs_ensure_single_directory(
   ext2_filsys fs,
   const ext2_ino_t parent,
   const char* name,
@@ -358,7 +358,10 @@ static errcode_t ensure_single_directory(
  * @param child final output inode
  * @return
  */
-static errcode_t ensure_directory( ext2_filsys fs, const char* path, ext2_ino_t* child ) {
+static errcode_t extfs_ensure_directory(
+  ext2_filsys fs,
+  const char* path, ext2_ino_t* child
+) {
   char* copy = strdup( path );
   if ( ! copy ) {
     fprintf( stderr, "Could not duplicate path %s\r\n", path );
@@ -373,7 +376,7 @@ static errcode_t ensure_directory( ext2_filsys fs, const char* path, ext2_ino_t*
     // handle only if valid string length
     if ( strlen( token ) ) {
       // ensure single directory existence
-      result = ensure_single_directory( fs, current_ino, token, child );
+      result = extfs_ensure_single_directory( fs, current_ino, token, child );
       // handle error
       if ( result ) {
         fprintf( stderr, "Could not ensure directory\r\n" );
@@ -424,7 +427,7 @@ static int check_root_file_existence( ext2_filsys fs, const char* path ) {
  * @param destination
  * @return
  */
-bool copy_file_to_root( const char* path, const char* destination ) {
+bool image_copy_file_to_root( const char* path, const char* destination ) {
   // open file
   global_sd_image_fd = fopen( image_path, "rb+" );
   if ( ! global_sd_image_fd ) {
@@ -520,7 +523,7 @@ bool copy_file_to_root( const char* path, const char* destination ) {
   }
   // ensure directory existence
   ext2_ino_t target_ino;
-  if ( ensure_directory( ext2_fs, dup_dest, &target_ino ) ) {
+  if ( extfs_ensure_directory( ext2_fs, dup_dest, &target_ino ) ) {
     fprintf( stderr, "Could not create %s\r\n", dup_dest );
     ext2fs_close( ext2_fs );
     fclose( global_sd_image_fd );
@@ -650,7 +653,7 @@ bool copy_file_to_root( const char* path, const char* destination ) {
  * @param destination
  * @return
  */
-bool link_file_in_root( const char* target, const char* destination ) {
+bool image_link_file_in_root( const char* target, const char* destination ) {
   // open file
   global_sd_image_fd = fopen( image_path, "rb+" );
   if ( ! global_sd_image_fd ) {
@@ -682,7 +685,7 @@ bool link_file_in_root( const char* target, const char* destination ) {
   }
   // ensure directory existence
   ext2_ino_t target_ino;
-  if ( ensure_directory( ext2_fs, dup_dest, &target_ino ) ) {
+  if ( extfs_ensure_directory( ext2_fs, dup_dest, &target_ino ) ) {
     fprintf( stderr, "Could not create %s\r\n", dup_dest );
     ext2fs_close( ext2_fs );
     fclose( global_sd_image_fd );

@@ -35,17 +35,17 @@
 extern FILE* global_sd_image_fd;
 extern struct struct_io_manager custom_io_manager;
 
-bool copy_file_to_boot( const char* path, const char* destination );
-bool copy_file_to_root( const char* path, const char* destination );
-bool link_file_in_root( const char* target, const char* destination );
+bool image_copy_file_to_boot( const char* path, const char* destination );
+bool image_copy_file_to_root( const char* path, const char* destination );
+bool image_link_file_in_root( const char* target, const char* destination );
 
-bool create_empty_image( const char* path );
+bool image_create_empty( const char* path );
 
-bool copy_firmware_to_boot_image( void );
-bool copy_ramdisk_to_boot_image( void );
-bool copy_kernel_to_boot_image( void );;
+bool image_boot_copy_firmware( void );
+bool image_boot_copy_image( void );
+bool image_boot_copy_kernel( void );;
 
-bool populate_boot_image( void );
-bool populate_root_image( void );
+bool image_boot_populate( void );
+bool image_root_populate( void );
 
 #endif

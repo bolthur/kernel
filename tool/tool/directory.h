@@ -22,7 +22,7 @@
 
 typedef void ( *directory_callback_t )( const char* path, const char* file );
 
-void scan_directory( const char* path, const char* type, const char* additional_type, directory_callback_t callback );
-void scan_directory_generic( const char* path, directory_callback_t callback );
+void directory_scan( const char* path, const char* type, const char* additional_type, directory_callback_t callback );
+void directory_scan_generic( const char* path, directory_callback_t callback );
 
 #endif

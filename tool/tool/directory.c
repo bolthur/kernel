@@ -34,7 +34,7 @@
  * @param additional_type additional type check
  * @param callback callback executed per file
  */
-void scan_directory( const char* path, const char* type, const char* additional_type, const directory_callback_t callback ) {
+void directory_scan( const char* path, const char* type, const char* additional_type, const directory_callback_t callback ) {
   DIR* dir = opendir( path );
   const struct dirent* entry = nullptr;
   // handle open not possible
@@ -69,7 +69,7 @@ void scan_directory( const char* path, const char* type, const char* additional_
     }
     // handle directory
     if ( DT_DIR == entry->d_type ) {
-      scan_directory( target, type, additional_type, callback );
+      directory_scan( target, type, additional_type, callback );
     } else {
       // get description of the file
       const char *description = magic_file( magic_cookie, target );
@@ -107,7 +107,7 @@ void scan_directory( const char* path, const char* type, const char* additional_
  * @param path
  * @param callback
  */
-void scan_directory_generic( const char* path, directory_callback_t callback ) {
+void directory_scan_generic( const char* path, const directory_callback_t callback ) {
   DIR* dir = opendir( path );
   const struct dirent* entry = nullptr;
   // handle open not possible
@@ -130,7 +130,7 @@ void scan_directory_generic( const char* path, directory_callback_t callback ) {
     }
     // handle directory
     if ( DT_DIR == entry->d_type ) {
-      scan_directory_generic( target, callback );
+      directory_scan_generic( target, callback );
     } else {
       callback( path, entry->d_name );
     }

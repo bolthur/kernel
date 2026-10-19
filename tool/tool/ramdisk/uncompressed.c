@@ -59,7 +59,7 @@ static void directory_callback( const char* path, const char* file ) {
     exit( EXIT_FAILURE );
   }
   // parse config ini
-  auto const data = parse_server_ini( prepared );
+  auto const data = server_parse_ini( prepared );
   if ( ! data ) {
     fprintf( stderr, "Unable to parse %s\r\n", ini );
     free( full_path );
@@ -70,7 +70,7 @@ static void directory_callback( const char* path, const char* file ) {
   // handle uncompressed handling
   if ( 0 == strcmp( data->type, "ramdisk_uncompressed" ) ) {
     fprintf( stdout, "-> Pushing %s into uncompressed initrd\r\n", full_path );
-    if ( ! append_tar_file_with_mode( tar, full_path, file, 0755 ) ) {
+    if ( ! ramdisk_append_tar_file_with_mode( tar, full_path, file, 0755 ) ) {
       fprintf( stderr, "Unable to append file %s to initrd\r\n", full_path );
       free( full_path );
       free( ini );
@@ -90,7 +90,7 @@ static void directory_callback( const char* path, const char* file ) {
  * @param output_path path where ramdisk shall be stored
  * @return
  */
-bool create_uncompressed_ramdisk( const char* output_path ) {
+bool ramdisk_uncompressed_create( const char* output_path ) {
   fprintf( stdout, "Creating uncompressed ramdisk at %s\r\n", output_path );
   // create tar file
   fprintf( stdout, "[1/5] Creating tar file\r\n" );
@@ -100,13 +100,13 @@ bool create_uncompressed_ramdisk( const char* output_path ) {
   }
   // scan for fonts
   fprintf( stdout, "[2/5] Scanning for fonts in %s\r\n", font );
-  scan_directory( font, "PC Screen Font", nullptr, directory_callback );
+  directory_scan( font, "PC Screen Font", nullptr, directory_callback );
   // scan for server executables
   fprintf( stdout, "[3/5] Scanning for server executables in %s\r\n", server );
-  scan_directory( server, "ELF", "executable", directory_callback );
+  directory_scan( server, "ELF", "executable", directory_callback );
   // scan for applications
   fprintf( stdout, "[4/5] Scanning for applications in %s\r\n", application );
-  scan_directory( application, "ELF", "executable", directory_callback );
+  directory_scan( application, "ELF", "executable", directory_callback );
   // we're done => close again
   fprintf( stdout, "[5/5] Done, closing %s again\r\n", output_path );
   tar_append_eof( tar );

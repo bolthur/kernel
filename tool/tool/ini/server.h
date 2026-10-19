@@ -30,6 +30,6 @@ typedef struct {
   char path[ 255 ];
 } server_ini_t;
 
-server_ini_t* parse_server_ini( const char* path );
+server_ini_t* server_parse_ini( const char* path );
 
 #endif

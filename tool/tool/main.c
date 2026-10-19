@@ -171,17 +171,17 @@ int main( const int argc, char **argv ) {
     return EXIT_FAILURE;
   }
   // create plain image
-  if ( ! create_empty_image( image_path ) ) {
+  if ( ! image_create_empty( image_path ) ) {
     fprintf( stderr, "Could not create empty image\r\n" );
     return EXIT_FAILURE;
   }
   // create uncompressed ramdisk
-  if ( ! create_uncompressed_ramdisk( output_ramdisk ) ) {
+  if ( ! ramdisk_uncompressed_create( output_ramdisk ) ) {
     fprintf( stderr, "Could not create uncompressed ramdisk\r\n" );
     return EXIT_FAILURE;
   }
   // create compressed ramdisk
-  if ( ! create_compressed_ramdisk( output_ramdisk ) ) {
+  if ( ! ramdisk_compressed_create( output_ramdisk ) ) {
     fprintf( stderr, "Could not create compressed ramdisk\r\n" );
     return EXIT_FAILURE;
   }
@@ -191,12 +191,12 @@ int main( const int argc, char **argv ) {
     return EXIT_FAILURE;
   }
   // copy to boot
-  if ( ! populate_boot_image() ) {
+  if ( ! image_boot_populate() ) {
     fprintf( stderr, "Could not copy ramdisk to boot_image\r\n" );
     return EXIT_FAILURE;
   }
   // populate root
-  if ( ! populate_root_image() ) {
+  if ( ! image_root_populate() ) {
     fprintf( stderr, "Could not populate root_image\r\n" );
     return EXIT_FAILURE;
   }

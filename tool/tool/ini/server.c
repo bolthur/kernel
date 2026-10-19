@@ -53,7 +53,7 @@ static int config_handler(
  * @param path
  * @return
  */
-server_ini_t* parse_server_ini( const char* path ) {
+server_ini_t* server_parse_ini( const char* path ) {
   server_ini_t* ini = malloc( sizeof( *ini ) );
   if ( ! ini ) {
     return nullptr;

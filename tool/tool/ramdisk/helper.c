@@ -30,7 +30,12 @@
  * @param mode
  * @return
  */
-bool append_tar_file_with_mode( TAR* t, const char* realname, const char* savename, mode_t mode ) {
+bool ramdisk_append_tar_file_with_mode(
+  TAR* t,
+  const char* realname,
+  const char* savename,
+  const mode_t mode
+) {
   struct stat st;
   if ( -1 == stat( realname, &st ) ) {
     fprintf( stderr, "%s: stat() failed\n", realname );
