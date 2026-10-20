@@ -98,7 +98,7 @@ static void directory_callback_configuration( const char* path, const char* file
  * @return
  */
 bool image_boot_copy_image( void ) {
-  return image_copy_file_to_boot( output_ramdisk, "/initrd" );
+  return image_copy_file_to_boot( output_ramdisk, "initrd" );
 }
 
 /**
@@ -106,20 +106,10 @@ bool image_boot_copy_image( void ) {
  * @return
  */
 bool image_boot_copy_kernel( void ) {
-  // get destination path with a slash at the beginning
-  char* destination = path_join( " ", basename( kernel_path ) );
-  if ( ! destination ) {
-    return false;
-  }
-  // trim out left spaces
-  ltrim( destination );
   // copy to boot
-  if ( ! image_copy_file_to_boot( kernel_path, destination ) ) {
-    free( destination );
+  if ( ! image_copy_file_to_boot( kernel_path, basename( kernel_path ) ) ) {
     return false;
   }
-  // free destination again
-  free( destination );
   // return success
   return true;
 }
@@ -129,15 +119,22 @@ bool image_boot_copy_kernel( void ) {
  * @return
  */
 bool image_boot_copy_firmware( void ) {
+  char* firmware_name = firmware_get_name();
+  if ( ! firmware_name ) {
+    fprintf( stderr, "Unable to get firmware name\r\n" );
+    return false;
+  }
   // build firmware dir
-  firmware_dir = path_join( root_path, "tool", ".cache", image_type, "firmware", FIRMWARE_NAME, "boot" );
+  firmware_dir = path_join( root_path, "tool", ".cache", image_type, "firmware", firmware_name, "boot" );
   if ( ! firmware_dir ) {
     fprintf( stderr, "path_join() failed\r\n" );
+    free( firmware_name );
     return false;
   }
   // walk over directory and copy everything
   directory_scan_generic( firmware_dir, directory_callback );
   // cleanup
+  free( firmware_name );
   free( firmware_dir );
   firmware_dir = nullptr;
   return true;

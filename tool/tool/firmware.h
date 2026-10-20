@@ -20,9 +20,8 @@
 #ifndef FIRMWARE_H
 #define FIRMWARE_H
 
-#define FIRMWARE_NAME "firmware-1.20250430"
-#define FIRMWARE_URL "https://github.com/raspberrypi/firmware/archive/refs/tags/1.20250430.tar.gz"
-
 bool firmware_load( void );
+char* firmware_get_name( void );
+char* firmware_get_url( void );
 
 #endif

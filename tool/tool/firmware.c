@@ -121,7 +121,15 @@ bool firmware_load( void ) {
     free( out_file );
     return false;
   }
-  fprintf( stdout, "[1/2] Loading firmware %s\r\n", FIRMWARE_URL );
+  char* firmware_url = firmware_get_url();
+  if ( ! firmware_url ) {
+    fprintf( stderr, "Unable to get firmware url\r\n" );
+    free( cache_dir );
+    free( out_file );
+    free( out_path );
+    return false;
+  }
+  fprintf( stdout, "[1/2] Loading firmware %s\r\n", firmware_url );
   if ( 0 != access( out_file, F_OK ) ) {
     // initialize curl
     CURL* curl = curl_easy_init();
@@ -143,7 +151,7 @@ bool firmware_load( void ) {
       return false;
     }
     // set curl options
-    curl_easy_setopt( curl, CURLOPT_URL, FIRMWARE_URL );
+    curl_easy_setopt( curl, CURLOPT_URL, firmware_url );
     curl_easy_setopt( curl, CURLOPT_WRITEFUNCTION, curl_write_data );
     curl_easy_setopt( curl, CURLOPT_WRITEDATA, fp );
     curl_easy_setopt( curl, CURLOPT_FOLLOWLOCATION, 1L );
@@ -160,6 +168,8 @@ bool firmware_load( void ) {
       return false;
     }
   }
+  // free url again
+  free( firmware_url );
   fprintf( stdout, "[2/2] Extracting firmware %s to %s\r\n", out_file, out_path );
   if ( 0 != access( out_path, F_OK ) ) {
     struct archive_entry *entry;
@@ -192,7 +202,7 @@ bool firmware_load( void ) {
         break;
       }
       if ( ARCHIVE_OK > r ) {
-        fprintf( stderr, "Warning/error while reading header: %s\n", archive_error_string( a ) );
+        fprintf( stderr, "Error while reading header: %s\n", archive_error_string( a ) );
       }
       if ( ARCHIVE_WARN > r ) {
         free( cache_dir );
