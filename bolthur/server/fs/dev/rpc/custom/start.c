@@ -27,7 +27,7 @@
 #include "../../../../libdev.h"
 
 /**
- * @fn void rpc_custom_handle_start(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_custom_handle_start(size_t, pid_t, uint64_t, uint64_t)
  * @brief Device start command
  *
  * @param type
@@ -38,8 +38,8 @@
 void rpc_custom_handle_start(
   [[maybe_unused]] size_t type,
   pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+  uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin

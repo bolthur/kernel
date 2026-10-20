@@ -22,28 +22,28 @@
 
 #include <sys/bolthur.h>
 
-void rpc_handle_add( size_t, pid_t, size_t, size_t );
-void rpc_handle_boot_init( size_t, pid_t, size_t, size_t );
-void rpc_handle_close( size_t, pid_t, size_t, size_t );
-void rpc_handle_fork( size_t, pid_t, size_t, size_t );
+void rpc_handle_add( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_boot_init( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_close( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_fork( size_t, pid_t, uint64_t, uint64_t );
 bool rpc_init( void );
-void rpc_handle_ioctl( size_t, pid_t, size_t, size_t );
-void rpc_handle_ioctl_async( size_t, pid_t, size_t, size_t );
-void rpc_handle_mount( size_t, pid_t, size_t, size_t );
-void rpc_handle_mount_async( size_t, pid_t, size_t, size_t );
-void rpc_handle_open( size_t, pid_t, size_t, size_t );
-void rpc_handle_read( size_t, pid_t, size_t, size_t );
-void rpc_handle_read_async( size_t, pid_t, size_t, size_t );
-void rpc_handle_stat( size_t, pid_t, size_t, size_t );
-void rpc_handle_umount( size_t, pid_t, size_t, size_t );
-void rpc_handle_umount_async( size_t, pid_t, size_t, size_t );
-void rpc_handle_write( size_t, pid_t, size_t, size_t );
-void rpc_handle_write_async( size_t, pid_t, size_t, size_t );
-void rpc_handle_watch_register( size_t, pid_t, size_t, size_t );
-void rpc_handle_watch_release( size_t, pid_t, size_t, size_t );
-void rpc_handle_watch_notify( size_t, pid_t, size_t, size_t );
+void rpc_handle_ioctl( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_ioctl_async( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_mount( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_mount_async( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_open( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_read( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_read_async( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_stat( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_umount( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_umount_async( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_write( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_write_async( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_watch_register( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_watch_release( size_t, pid_t, uint64_t, uint64_t );
+void rpc_handle_watch_notify( size_t, pid_t, uint64_t, uint64_t );
 
-void rpc_custom_handle_start( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_kill( size_t, pid_t, size_t, size_t );
+void rpc_custom_handle_start( size_t, pid_t, uint64_t, uint64_t );
+void rpc_custom_handle_kill( size_t, pid_t, uint64_t, uint64_t );
 
 #endif

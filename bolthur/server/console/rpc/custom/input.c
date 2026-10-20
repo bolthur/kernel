@@ -31,7 +31,7 @@
 #include "../../../libterminal.h"
 
 /**
- * @fn void rpc_handle_render_cleanup(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_render_cleanup(size_t, pid_t, uint64_t, uint64_t)
  * @brief Async render cleanup
  * @param type
  * @param origin
@@ -41,8 +41,8 @@
 static void rpc_handle_render_cleanup(
   [[maybe_unused]] size_t type,
   [[maybe_unused]] pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   // get matching async data
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async( RPC_VFS_WRITE, response_info );
@@ -91,7 +91,7 @@ static void render_character( console_t* console, const char c ) {
     return;
   }
   constexpr size_t length = sizeof( char ) * 2;
-  const size_t shm_id = _syscall_memory_shared_create( length );
+  const uint64_t shm_id = _syscall_memory_shared_create( length );
   if ( errno ) {
     return;
   }
@@ -176,7 +176,7 @@ static void render_character( console_t* console, const char c ) {
 }
 
 /**
- * @fn void rpc_custom_handle_input(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_custom_handle_input(size_t, pid_t, uint64_t, uint64_t)
  * @brief Console handle input command handler
  *
  * @param type
@@ -187,8 +187,8 @@ static void render_character( console_t* console, const char c ) {
 void rpc_custom_handle_input(
   [[maybe_unused]] size_t type,
   pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+  uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin

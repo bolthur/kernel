@@ -20,6 +20,7 @@
 #include "../../../../../lib/assert.h"
 #include "../../../../../lib/inttypes.h"
 #include "../../../../../lib/stdlib.h"
+#include "../../../../../lib/string.h"
 #include "../../../../../task/stack.h"
 #include "../../../../../mm/phys.h"
 #if defined( REMOTE_DEBUG )
@@ -83,7 +84,7 @@ void vector_data_abort_handler( cpu_register_context_t* cpu ) {
       const size_t current_stack_size = task_thread_current_thread->stack_size / PAGE_SIZE;
       const size_t add_stack_size = diff / PAGE_SIZE;
       const size_t new_physical_size = current_stack_size + add_stack_size;
-      uint64_t* new_physical = realloc( task_thread_current_thread->stack_physical, new_physical_size * sizeof( uint64_t ) );
+      uint64_t* new_physical = malloc( new_physical_size * sizeof( uint64_t ) );
       if ( new_physical ) {
         // map down growing stack
         for ( uintptr_t start = 1; start <= add_stack_size; start++ ) {
@@ -101,11 +102,19 @@ void vector_data_abort_handler( cpu_register_context_t* cpu ) {
           ) ) {
             PANIC( "Mapping failed" )
           }
-          new_physical[ current_stack_size + start - 1 ] = virt_get_mapped_address_in_context(
-            task_thread_current_thread->process->virtual_context,
-            vaddr
-          );
         }
+        // rebuild physical array
+        size_t idx = 0;
+        for (
+          uintptr_t start = task_thread_current_thread->stack_virtual - task_thread_current_thread->stack_size - add_stack_size * PAGE_SIZE;
+          start < task_thread_current_thread->stack_virtual;
+          start += PAGE_SIZE
+        ) {
+          new_physical[ idx++ ] = virt_get_mapped_address_in_context(
+            task_thread_current_thread->process->virtual_context, start );
+        }
+        // free previous stack array
+        free( task_thread_current_thread->stack_physical );
         // overwrite physical
         task_thread_current_thread->stack_physical = new_physical;
         // increase stack size

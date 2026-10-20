@@ -24,7 +24,7 @@
 #include "../../../libhcd.h"
 
 /**
- * @fn int usbd_interrupt_poll(const libusb_device_t*, libusb_pipe_address_t, usb_interrupt_poll_t*, usbd_interrupt_message_t*, rpc_handler_t, pid_t, size_t, void*, size_t);
+ * @fn int usbd_interrupt_poll(const libusb_device_t*, libusb_pipe_address_t, usb_interrupt_poll_t*, usbd_interrupt_message_t*, rpc_handler_t, pid_t, uint64_t, void*, size_t);
  * @brief Wrapper to perform usbd control message
  * @param dev device information
  * @param usb_pipe pipe to use
@@ -44,7 +44,7 @@ int usbd_interrupt_poll(
   usbd_interrupt_message_t* message,
   const rpc_handler_t callback,
   const pid_t origin,
-  const size_t data_info,
+  const uint64_t data_info,
   void* original_request,
   const size_t original_request_size
 ) {

@@ -25,7 +25,7 @@
 
 #define BOOT_ENABLE_OUTPUT 1
 
-extern size_t ramdisk_shared_id;
+extern uint64_t ramdisk_shared_id;
 extern TAR *disk;
 extern int fd_dev_manager;
 

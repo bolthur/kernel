@@ -30,7 +30,7 @@
 #include "../../../../../library/usb/usb.h"
 
 /**
- * @fn void rpc_control_message_finished(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_control_message_finished(size_t, pid_t, uint64_t, uint64_t)
  * @brief Handle control message finished callback
  * @param type
  * @param origin
@@ -40,8 +40,8 @@
  static void rpc_control_message_finished(
   [[maybe_unused]] size_t type,
   const pid_t origin,
-  const size_t data_info,
-  const size_t response_info
+  const uint64_t data_info,
+  const uint64_t response_info
 ) {
   // get matching async data
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
@@ -192,7 +192,7 @@
 }
 
 /**
- * @fn void rpc_control_message(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_control_message(size_t, pid_t, uint64_t, uint64_t)
  * @brief Register rpc handler for device
  * @param type message type
  * @param origin origin of the message
@@ -202,8 +202,8 @@
 void rpc_control_message(
   [[maybe_unused]] size_t type,
   const pid_t origin,
-  const size_t data_info,
-  [[maybe_unused]] size_t response_info
+  const uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin

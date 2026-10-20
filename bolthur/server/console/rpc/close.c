@@ -23,8 +23,8 @@
 #include "../handler.h"
 
 /**
- * @fn void rpc_handle_fork(size_t, pid_t, size_t, size_t)
- * @brief handle fork request
+ * @fn void rpc_handle_close(size_t, pid_t, uint64_t, uint64_t)
+ * @brief handle close request
  *
  * @param type
  * @param origin
@@ -34,8 +34,8 @@
 void rpc_handle_close(
   size_t type,
   pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+  uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   vfs_close_response_t response = { .status = -EINVAL };
   // validate origin

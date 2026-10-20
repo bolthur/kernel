@@ -1,6 +1,10 @@
 ---
 name: Bug Report
 about: Something doesn't work as expected? Tell us about it
+labels: bug
+assignee: ''
+title: '[BUG] '
+type: Bug
 ---
 
 ## Describe the bug

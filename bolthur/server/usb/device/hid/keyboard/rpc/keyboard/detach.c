@@ -25,7 +25,7 @@
 #include "../../../../../../../library/usb/usb.h"
 
 /**
- * @fn void rpc_keyboard_detach(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_keyboard_detach(size_t, pid_t, uint64_t, uint64_t)
  * @brief Register rpc handler detach
  * @param type message type
  * @param origin origin of the message
@@ -35,8 +35,8 @@
 void rpc_keyboard_detach(
   [[maybe_unused]] size_t type,
   const pid_t origin,
-  const size_t data_info,
-  [[maybe_unused]] size_t response_info
+  const uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL, };
   // handle no data

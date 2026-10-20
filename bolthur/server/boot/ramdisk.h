@@ -29,7 +29,7 @@ extern size_t ramdisk_decompressed_size;
 extern size_t ramdisk_read_offset;
 
 size_t ramdisk_size( uintptr_t, size_t );
-void* ramdisk_extract( uintptr_t, size_t, size_t, size_t* );
+void* ramdisk_extract( uintptr_t, size_t, size_t, uint64_t* );
 void* ramdisk_lookup( TAR*, const char*, size_t* );
 void ramdisk_dump( TAR* );
 

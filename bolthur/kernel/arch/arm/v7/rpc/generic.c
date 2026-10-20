@@ -92,7 +92,7 @@ bool rpc_generic_restore( task_thread_t* thread ) {
   // handle sync return on end
   if ( backup->sync_return_on_end ) {
     // populate return for sync request ( rpc raise is waiting at source )
-    syscall_populate_success( thread->current_context, backup->sync_return_data_id );
+    syscall_populate_success64( thread->current_context, backup->sync_return_data_id );
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT(
         "unblock threads of process %d and blocked data %zu\r\n",
@@ -347,11 +347,6 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
   #endif
   const uintptr_t sp = cpu->reg.sp;
   const uint32_t fpscr = cpu->reg.fpscr;
-  // populate parameters
-  cpu->reg.r0 = backup->type;
-  cpu->reg.r1 = ( size_t )backup->source->process->id;
-  cpu->reg.r2 = backup->data_id;
-  cpu->reg.r3 = backup->origin_data_id;
   // set pc with handler
   cpu->reg.pc = proc->rpc_handler & ~1U;
   cpu->reg.lr = 0;
@@ -369,6 +364,17 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
     // add thumb mode to spsr
     cpu->reg.spsr |= CPSR_THUMB;
   }
+  // populate parameters
+  // pass type => 32 bit
+  cpu->reg.r0 = backup->type;
+  // pass pid => 32 bit
+  cpu->reg.r1 = ( size_t )backup->source->process->id;
+  // pass data id => 64 bit
+  cpu->reg.r2 = ( uint32_t )backup->data_id; // lower value
+  cpu->reg.r3 = ( uint32_t )( ( backup->data_id >> 32 ) & 0xFFFFFFFF ); // higher value
+  // pass origin data id => 64 bit
+  cpu->reg.r4 = ( uint32_t )backup->origin_data_id;
+  cpu->reg.r5 = ( uint32_t )( ( backup->origin_data_id >> 32 ) & 0xFFFFFFFF );
   // handle interrupt by masking irq, fiq and async aborts to ensure that
   // handler doesn't get interrupted
   if ( backup->is_interrupt ) {

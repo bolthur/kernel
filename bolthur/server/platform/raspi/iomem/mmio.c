@@ -24,10 +24,10 @@
 // initial setup of peripheral base
 #if defined( BCM2709 ) || defined( BCM2710 )
   #define PERIPHERAL_BASE 0x3F000000
-  #define PERIPHERAL_SIZE 0x980000 // map everything except dwhci which starts at the mentioned offset
+  #define PERIPHERAL_SIZE 0xFFFFFF
 #else
   #define PERIPHERAL_BASE 0x20000000
-  #define PERIPHERAL_SIZE 0x980000 // map everything except dwhci which starts at the mentioned offset
+  #define PERIPHERAL_SIZE 0xFFFFFF
 #endif
 
 void* mmio_start = nullptr;
@@ -36,7 +36,6 @@ void* mmio_end = nullptr;
 /**
  * @fn bool mmio_setup(void)
  * @brief Prepare and setup mmio
- *
  * @return
  */
 bool mmio_setup( void ) {
@@ -56,6 +55,10 @@ bool mmio_setup( void ) {
   // set mmio start address
   mmio_start = tmp;
   mmio_end = ( void* )( ( uintptr_t )tmp + PERIPHERAL_SIZE );
+  // unmap sdhost, emmc and hcd again
+  munmap( ( void* )( ( uintptr_t )mmio_start + 0x202000 ), 0x1000 );
+  munmap( ( void* )( ( uintptr_t )mmio_start + 0x300000 ), 0x1000 );
+  munmap( ( void* )( ( uintptr_t )mmio_start + 0x980000 ), 0x1000 );
   // return success
   return true;
 }
@@ -63,27 +66,37 @@ bool mmio_setup( void ) {
 /**
  * @fn bool mmio_validate_offset(uintptr_t, size_t)
  * @brief Method to validate a read / write
- *
  * @param address
  * @param len
  * @return
  */
-bool mmio_validate_offset(const uintptr_t address, const size_t len ) {
+bool mmio_validate_offset( const uintptr_t address, const size_t len ) {
   // determine read begin and end address since address contains only an offset
   auto const begin = ( void* )( ( uintptr_t )mmio_start + address );
   auto const end = ( void* )( ( uintptr_t )mmio_start + address + len );
-  // return whether it's in range or not
-  return !( end > mmio_end || begin > mmio_end );
+  // handle invalid
+  if ( begin > mmio_end || end > mmio_end ) {
+    return false;
+  }
+  // handle not taking care of
+  if (
+    ( address >= 0x202000 && address < 0x203000 )
+    || ( address >= 0x300000 && address < 0x301000 )
+    || ( address >= 0x980000 && address < 0x981000 )
+  ) {
+    return false;
+  }
+  // return true
+  return true;
 }
 
 /**
  * @fn uint32_t mmio_read(uintptr_t)
  * @brief Perform single mmio read
- *
  * @param address
  * @return
  */
-uint32_t mmio_read(const uintptr_t address ) {
+uint32_t mmio_read( const uintptr_t address ) {
   // determine read begin and end address since address contains only an offset
   auto volatile const read_begin = ( void* )( ( uintptr_t )mmio_start + address );
   // barrier
@@ -95,15 +108,15 @@ uint32_t mmio_read(const uintptr_t address ) {
 /**
  * @fn void mmio_write(uintptr_t, uint32_t)
  * @brief Perform single mmio write
- *
  * @param address
  * @param data
  */
-void mmio_write(const uintptr_t address, const uint32_t data ) {
+void mmio_write( const uintptr_t address, const uint32_t data ) {
   // determine write begin and end address since address contains only an offset
   auto volatile const write_begin = ( void* )( ( uintptr_t )mmio_start + address );
   // barrier, write and barrier
   barrier_dmb();
   *( volatile uint32_t* )write_begin  = data;
   barrier_dmb();
+  barrier_isb();
 }

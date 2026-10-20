@@ -114,7 +114,7 @@ void rpc_pool_push( rpc_backup_t* backup ) {
  * @brief Init rpc pool
  */
 void rpc_pool_init( void ) {
-  _Static_assert( 64 == sizeof( rpc_backup_t ), "rpc_backup_t must be exactly 64 bytes" );
+  _Static_assert( 128 == sizeof( rpc_backup_t ), "rpc_backup_t must be exactly 64 bytes" );
   for (
     uintptr_t addr = rpc_pool_start;
     addr < rpc_pool_start + rpc_pool_size;

@@ -58,7 +58,7 @@ int usbd_device_get_by_number( const uint32_t device_number, libusb_device_t** o
 }
 
 /**
- * @fn void set_configuration(size_t, pid_t, size_t, size_t)
+ * @fn void set_configuration(size_t, pid_t, uint64_t, uint64_t)
  * @brief Callback for set descriptor
  * @param type
  * @param origin
@@ -68,8 +68,8 @@ int usbd_device_get_by_number( const uint32_t device_number, libusb_device_t** o
 static void set_configuration(
   size_t type,
   pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_OUTPUT )
@@ -127,7 +127,7 @@ static void set_configuration(
 }
 
 /**
- * @fn void get_configuration(size_t, pid_t, size_t, size_t)
+ * @fn void get_configuration(size_t, pid_t, uint64_t, uint64_t)
  * @brief Callback for fetch descriptor
  * @param type
  * @param origin
@@ -137,8 +137,8 @@ static void set_configuration(
 static void get_configuration(
   [[maybe_unused]] size_t type,
   [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
-  size_t response_info
+  [[maybe_unused]] uint64_t data_info,
+  uint64_t response_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_OUTPUT )
@@ -257,7 +257,7 @@ static void get_configuration(
 }
 
 /**
- * @fn void get_configuration_size(size_t, pid_t, size_t, size_t)
+ * @fn void get_configuration_size(size_t, pid_t, uint64_t, uint64_t)
  * @brief Callback for fetch descriptor size
  * @param type
  * @param origin
@@ -267,8 +267,8 @@ static void get_configuration(
 static void get_configuration_size(
   [[maybe_unused]] size_t type,
   [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
-  size_t response_info
+  [[maybe_unused]] uint64_t data_info,
+  uint64_t response_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_OUTPUT )

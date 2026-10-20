@@ -18,7 +18,6 @@
  */
 
 #include <stddef.h>
-
 #include "../lib/assert.h"
 #include "../lib/inttypes.h"
 #if defined( PRINT_MM_VIRT )
@@ -138,7 +137,7 @@ void virt_init( void ) {
   if ( initrd_exist() ) {
     // set start and end from initrd
     uintptr_t initrd_start = initrd_get_start_address();
-    uintptr_t initrd_end = initrd_get_end_address();
+    const uintptr_t initrd_end = initrd_get_end_address();
     // set start to end to map initrd following to the kernel
     start = end;
     const uintptr_t new_initrd_start = start;
@@ -373,7 +372,7 @@ uintptr_t virt_find_free_page_range(
   // round up to full page
   size = ROUND_UP_TO_FULL_PAGE( size );
   // determine amount of pages
-  size_t page_amount = size / PAGE_SIZE;
+  const size_t page_amount = size / PAGE_SIZE;
   size_t found_amount = 0;
   // found address range
   uintptr_t address = 0;
@@ -381,7 +380,7 @@ uintptr_t virt_find_free_page_range(
 
   const uintptr_t min_address = virt_get_context_min_address( ctx );
   const uintptr_t frame = ( min - min_address ) / PAGE_SIZE;
-  uint32_t index = PAGE_INDEX( frame );
+  const uint32_t index = PAGE_INDEX( frame );
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "index = %#"PRIu32"\r\n", index )
     DEBUG_OUTPUT( "ctx = %p\r\n", ctx )
@@ -429,7 +428,7 @@ uintptr_t virt_find_free_page_range(
 }
 
 /**
- * @fn bool virt_map_address_range(virt_context_t*, uintptr_t, uint64_t, size_t, virt_memory_type_t, uint32_t)
+ * @fn bool virt_map_address_range(virt_context_t*, uintptr_t, const uint64_t*, size_t, virt_memory_type_t, uint32_t)
  * @brief Map physical address range to virtual address range
  *
  * @param ctx context
@@ -443,7 +442,53 @@ uintptr_t virt_find_free_page_range(
  */
 bool virt_map_address_range(
   virt_context_t* ctx,
-  uintptr_t address,
+  const uintptr_t address,
+  const uint64_t* phys,
+  const size_t size,
+  const virt_memory_type_t type,
+  const uint32_t page
+) {
+  const uint32_t max_phys = size / PAGE_SIZE;
+  // mark all pages as used
+  for ( size_t i = 0; i < max_phys; i++ ) {
+    phys_mark_page_used( phys[ i ] );
+  }
+  // determine end
+  uintptr_t start = address;
+  bool failed_to_map = false;
+  // iterate through physical pages and map them
+  for ( size_t i = 0; i < max_phys; i++, start += PAGE_SIZE ) {
+    if ( ! virt_map_address( ctx, start, phys[ i ], type, page ) ) {
+      virt_unmap_address_range( ctx, address, start - address, false );
+      failed_to_map = true;
+    }
+  }
+  // handle failed by marking physical as free
+  if ( failed_to_map ) {
+    for ( size_t i = 0; i < max_phys; i++ ) {
+      phys_free_page( phys[ i ] );
+    }
+  }
+  // return success
+  return true;
+}
+
+/**
+ * @fn bool virt_map_address_range_contiguous(virt_context_t*, uintptr_t, const uint64_t*, size_t, virt_memory_type_t, uint32_t)
+ * @brief Map physical address range to virtual address range
+ *
+ * @param ctx context
+ * @param address virtual start address
+ * @param phys physical address
+ * @param size size
+ * @param type memory type
+ * @param page page attributes
+ * @return true
+ * @return false
+ */
+bool virt_map_address_range_contiguous(
+  virt_context_t* ctx,
+  const uintptr_t address,
   uint64_t phys,
   const size_t size,
   const virt_memory_type_t type,
@@ -458,10 +503,8 @@ bool virt_map_address_range(
   while ( start < end ) {
     if ( ! virt_map_address( ctx, start, phys, type, page ) ) {
       // free already mapped stuff
-      while ( address < end ) {
-        virt_unmap_address( ctx, address, true );
-        address += PAGE_SIZE;
-      }
+      virt_unmap_address_range( ctx, address, start - address, true );
+      // return error
       return false;
     }
     // next page
@@ -485,7 +528,7 @@ bool virt_map_address_range(
  */
 bool virt_map_address_range_random(
   virt_context_t* ctx,
-  uintptr_t address,
+  const uintptr_t address,
   const size_t size,
   const virt_memory_type_t type,
   const uint32_t page
@@ -496,9 +539,9 @@ bool virt_map_address_range_random(
   // loop and map
   while ( start < end ) {
     // get physical page
-    uint64_t phys = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
+    const uint64_t phys = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "phys = %#"PRIx64"\r\n", phys )
+      DEBUG_OUTPUT( "phys = %#"PRIx64", start = %#"PRIxPTR"\r\n", phys, start )
     #endif
     // handle error
     if (
@@ -512,10 +555,7 @@ bool virt_map_address_range_random(
         phys_free_page( phys );
       }
       // free already mapped stuff
-      while ( address < end ) {
-        virt_unmap_address( ctx, start, true );
-        address += PAGE_SIZE;
-      }
+      virt_unmap_address_range( ctx, address, start - address, true );
       // return error
       return false;
     }
@@ -526,13 +566,13 @@ bool virt_map_address_range_random(
 }
 
 /**
- * @fn uintptr_t virt_get_context_min_address(virt_context_t*)
+ * @fn uintptr_t virt_get_context_min_address(const virt_context_t*)
  * @brief Get context min address
  *
  * @param ctx
  * @return
  */
-uintptr_t virt_get_context_min_address( virt_context_t* ctx ) {
+uintptr_t virt_get_context_min_address( const virt_context_t* ctx ) {
   if ( ctx->type == VIRT_CONTEXT_TYPE_KERNEL ) {
     return KERNEL_AREA_START;
   } else if ( ctx->type == VIRT_CONTEXT_TYPE_USER ) {
@@ -543,13 +583,13 @@ uintptr_t virt_get_context_min_address( virt_context_t* ctx ) {
 }
 
 /**
- * @fn uintptr_t virt_get_context_max_address(virt_context_t*)
+ * @fn uintptr_t virt_get_context_max_address(const virt_context_t*)
  * @brief Get context max address
  *
  * @param ctx
  * @return
  */
-uintptr_t virt_get_context_max_address( virt_context_t* ctx ) {
+uintptr_t virt_get_context_max_address( const virt_context_t* ctx ) {
   if ( ctx->type == VIRT_CONTEXT_TYPE_KERNEL ) {
     return KERNEL_AREA_END;
   } else if ( ctx->type == VIRT_CONTEXT_TYPE_USER ) {

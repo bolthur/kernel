@@ -24,7 +24,7 @@
 #include "../../../../library/usb/usb.h"
 
 /**
- * @fn void attach_attach_finished(size_t, pid_t, size_t, size_t)
+ * @fn void attach_attach_finished(size_t, pid_t, uint64_t, uint64_t)
  * @brief Final callback for attach was finished
  * @param type
  * @param origin
@@ -34,8 +34,8 @@
 static void attach_attach_finished(
   const size_t type,
   const pid_t origin,
-  const size_t data_info,
-  const size_t response_info
+  const uint64_t data_info,
+  const uint64_t response_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_OUTPUT )
@@ -77,7 +77,7 @@ static void attach_attach_finished(
 }
 
 /**
- * @fn void attach_configure_finished(size_t, pid_t, size_t, size_t)
+ * @fn void attach_configure_finished(size_t, pid_t, uint64_t, uint64_t)
  * @brief Callback for configure was finished
  * @param type
  * @param origin
@@ -87,8 +87,8 @@ static void attach_attach_finished(
 static void attach_configure_finished(
   [[maybe_unused]] size_t type,
   const pid_t origin,
-  const size_t data_info,
-  const size_t response_info
+  const uint64_t data_info,
+  const uint64_t response_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_OUTPUT )
@@ -182,7 +182,7 @@ static void attach_configure_finished(
 }
 
 /**
- * @fn void attach_read_device_finished_2(size_t, pid_t, size_t, size_t)
+ * @fn void attach_read_device_finished_2(size_t, pid_t, uint64_t, uint64_t)
  * @brief Callback for second read device finished
  * @param type
  * @param origin
@@ -192,8 +192,8 @@ static void attach_configure_finished(
 static void attach_read_device_finished_2(
   [[maybe_unused]] size_t type,
   const pid_t origin,
-  const size_t data_info,
-  const size_t response_info
+  const uint64_t data_info,
+  const uint64_t response_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_OUTPUT )
@@ -281,7 +281,7 @@ static void delay_us(const uint32_t us) {
 }
 
 /**
- * @fn void attach_set_address_finished(size_t, pid_t, size_t, size_t)
+ * @fn void attach_set_address_finished(size_t, pid_t, uint64_t, uint64_t)
  * @brief Callback for set address done
  * @param type
  * @param origin
@@ -291,8 +291,8 @@ static void delay_us(const uint32_t us) {
 static void attach_set_address_finished(
   [[maybe_unused]] size_t type,
   const pid_t origin,
-  const size_t data_info,
-  const size_t response_info
+  const uint64_t data_info,
+  const uint64_t response_info
 ) {
   #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "SET ADDRESS FINISHED\r\n")
@@ -367,7 +367,7 @@ static void attach_set_address_finished(
 }
 
 /**
- * @fn void attach_read_device_finished_1(size_t, pid_t, size_t, size_t)
+ * @fn void attach_read_device_finished_1(size_t, pid_t, uint64_t, uint64_t)
  * @brief Callback for first read of device finished
  * @param type
  * @param origin
@@ -377,8 +377,8 @@ static void attach_set_address_finished(
 static void attach_read_device_finished_1(
   [[maybe_unused]] size_t type,
   const pid_t origin,
-  const size_t data_info,
-  const size_t response_info
+  const uint64_t data_info,
+  const uint64_t response_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_OUTPUT )
@@ -455,7 +455,7 @@ static void attach_read_device_finished_1(
 }
 
 /**
- * @fn int usbd_attach_device(libusb_device_t*, rpc_handler_t, pid_t, size_t, void*, size_t)
+ * @fn int usbd_attach_device(libusb_device_t*, rpc_handler_t, pid_t, uint64_t, void*, size_t)
  * @brief Wrapper to attach device
  * @param dev device to attach
  * @param callback callback to be invoked ( set to nullptr if not there )
@@ -469,7 +469,7 @@ int usbd_attach_device(
   libusb_device_t* dev,
   const rpc_handler_t callback,
   const pid_t origin,
-  const size_t data_info,
+  const uint64_t data_info,
   const void* original_request,
   const size_t original_request_size
 ) {

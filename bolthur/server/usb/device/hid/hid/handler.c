@@ -219,7 +219,7 @@ int handler_call_attach(
   const uint32_t interface_number,
   const rpc_handler_t callback,
   const pid_t origin,
-  const size_t data_info
+  const uint64_t data_info
 ) {
   // get handler
   pid_t handler;
@@ -247,7 +247,7 @@ int handler_call_attach(
   ( ( usb_generic_attach_t* )request->container )->device_number = device_number;
   ( ( usb_generic_attach_t* )request->container)->interface_number = interface_number;
   // attach is defined as first custom message
-  const size_t response_id = bolthur_rpc_raise(
+  const uint64_t response_id = bolthur_rpc_raise(
     GENERIC_ATTACH,
     handler,
     request,
@@ -284,7 +284,7 @@ int handler_call_detach(
   libusb_hid_device_t* device,
   const rpc_handler_t callback,
   const pid_t origin,
-  const size_t data_info
+  const uint64_t data_info
 ) {
   // get handler
   const pid_t handler = device->device_detached_handler;
@@ -305,7 +305,7 @@ int handler_call_detach(
   // populate container
   ( ( usb_generic_detached_t* )request->container )->device_number = device->device_number;
   // attach is defined as first custom message
-  const size_t response_id = bolthur_rpc_raise(
+  const uint64_t response_id = bolthur_rpc_raise(
     GENERIC_DETACH,
     handler,
     request,

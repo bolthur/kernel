@@ -26,10 +26,10 @@
 #include <sys/bolthur.h>
 
 #define DEV_START RPC_CUSTOM_START
-#define DEV_KILL DEV_START + 1
+#define DEV_KILL ( DEV_START + 1 )
 
 typedef struct {
-  size_t shm_id;
+  uint64_t shm_id;
   size_t data_size;
 } dev_command_start_t;
 
@@ -39,7 +39,7 @@ typedef struct {
 } dev_command_start_data_t;
 
 typedef struct {
-  size_t shm_id;
+  uint64_t shm_id;
   size_t data_size;
 } dev_command_kill_t;
 

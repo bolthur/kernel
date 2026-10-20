@@ -142,7 +142,7 @@ static bool fetch_mbr_entry(
 }
 
 /**
- * @fn void rpc_handle_mount(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_mount(size_t, pid_t, uint64_t, uint64_t)
  * @brief Handle mount point request
  *
  * @param type
@@ -155,8 +155,8 @@ static bool fetch_mbr_entry(
 void rpc_handle_mount(
   size_t type,
   [[maybe_unused]] pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+  uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   #if defined( FAT_ENABLE_OUTPUT )
     STARTUP_PRINT( "fat mounting\r\n" )
@@ -177,16 +177,6 @@ void rpc_handle_mount(
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
-
-  // check whether target is already mounted
-  /*struct ext4_mount_stats stats;
-  int result = ext4_mount_point_stats( request->target, &stats );
-  if ( ENOENT != result ) {
-    response.result = -EALREADY;
-    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
-    free( request );
-    return;
-  }*/
 
   // split device and partition index up
   uint32_t partition_index = 0;
@@ -250,7 +240,7 @@ void rpc_handle_mount(
     return;
   }
   // add trailing slash necessary for library
-  size_t target_length = strlen( request->target );
+  const size_t target_length = strlen( request->target );
   if ( request->target[ target_length - 1 ] != '/' ) {
     strcat( request->target, "/" );
   }

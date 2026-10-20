@@ -30,7 +30,7 @@
 #include "../../../../../../../library/usb/usb.h"
 
 /**
- * @fn void rpc_hid_attach_finished(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_hid_attach_finished(size_t, pid_t, uint64_t, uint64_t)
  * @brief Hid attached finished callback
  * @param type
  * @param origin
@@ -42,8 +42,8 @@
 static void rpc_hid_attach_finished(
   [[maybe_unused]] size_t type,
   const pid_t origin,
-  const size_t data_info,
-  const size_t response_info
+  const uint64_t data_info,
+  const uint64_t response_info
 ) {
   // debug output
   #if defined( HID_ENABLE_OUTPUT )
@@ -100,7 +100,7 @@ static void rpc_hid_attach_finished(
 }
 
 /**
- * @fn void rpc_hid_attach(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_hid_attach(size_t, pid_t, uint64_t, uint64_t)
  * @brief Register rpc handler attach
  * @param type message type
  * @param origin origin of the message
@@ -110,8 +110,8 @@ static void rpc_hid_attach_finished(
 void rpc_hid_attach(
   [[maybe_unused]] size_t type,
   const pid_t origin,
-  const size_t data_info,
-  [[maybe_unused]] size_t response_info
+  const uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   // debug output
   #if defined( HID_ENABLE_OUTPUT )

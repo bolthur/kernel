@@ -345,7 +345,7 @@ int hid_get_report(
     return EINVAL;
   }
   // allocate shared memory
-  const size_t shm_id = _syscall_memory_shared_create( 0x1000 );
+  const uint64_t shm_id = _syscall_memory_shared_create( 0x1000 );
   // handle error
   if ( errno ) {
     const int e = errno;
@@ -509,7 +509,7 @@ int hid_set_report( const uint32_t device_number, const uint8_t report_type, con
     return EINVAL;
   }
   // allocate shared memory
-  const size_t shm_id = _syscall_memory_shared_create( buffer_size );
+  const uint64_t shm_id = _syscall_memory_shared_create( buffer_size );
   // handle error
   if ( errno ) {
     const int e = errno;

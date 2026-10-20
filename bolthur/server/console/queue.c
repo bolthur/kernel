@@ -34,7 +34,7 @@ bool queue_setup( void ) {
 }
 
 /**
- * @fn bool queue_push(size_t, size_t, vfs_read_request_t*, handler_node_t*)
+ * @fn bool queue_push(size_t, uint64_t, vfs_read_request_t*, handler_node_t*)
  * @brief
  * @param type
  * @param response_info
@@ -42,7 +42,7 @@ bool queue_setup( void ) {
  * @param node
  * @return
  */
-bool queue_push( const size_t type, const size_t response_info, vfs_read_request_t* request, handler_node_t* node )
+bool queue_push( const size_t type, const uint64_t response_info, vfs_read_request_t* request, handler_node_t* node )
 {
   // allocate node
   queue_node_t* e = malloc( sizeof( queue_node_t ) );

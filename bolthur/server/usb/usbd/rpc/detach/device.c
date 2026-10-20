@@ -30,7 +30,7 @@
 #include "../../../../libusbd.h"
 
 /**
- * @fn void rpc_detach_device_finished(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_detach_device_finished(size_t, pid_t, uint64_t, uint64_t)
  * @brief Detach device finished callback
  * @param type
  * @param origin
@@ -40,8 +40,8 @@
 static void rpc_detach_device_finished(
   [[maybe_unused]] size_t type,
   const pid_t origin,
-  const size_t data_info,
-  const size_t response_info
+  const uint64_t data_info,
+  const uint64_t response_info
 ) {
   #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "device detach finished\r\n" )
@@ -99,7 +99,7 @@ static void rpc_detach_device_finished(
 }
 
 /**
- * @fn void rpc_detach_device(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_detach_device(size_t, pid_t, uint64_t, uint64_t)
  * @brief Register rpc handler for detaching device
  * @param type message type
  * @param origin origin of the message
@@ -109,8 +109,8 @@ static void rpc_detach_device_finished(
 void rpc_detach_device(
   [[maybe_unused]] size_t type,
   const pid_t origin,
-  const size_t data_info,
-  [[maybe_unused]] size_t response_info
+  const uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin

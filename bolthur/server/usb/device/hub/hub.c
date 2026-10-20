@@ -503,8 +503,8 @@ int hub_port_reset(
 static void rpc_hub_detach_finished(
   [[maybe_unused]] size_t type,
   pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   auto const async_data = bolthur_rpc_pop_async( RPC_VFS_IOCTL, response_info );
@@ -626,7 +626,7 @@ int hub_perform_detach(
   libusb_hub_device_t* hub,
   const size_t to_detach,
   const pid_t origin,
-  const size_t data_info
+  const uint64_t data_info
 ) {
   // allocate context
   hub_detach_context_t* ctx = malloc( sizeof( hub_detach_context_t ) );
@@ -680,8 +680,8 @@ int hub_perform_detach(
 static void hub_attach_finished(
   [[maybe_unused]] size_t type,
   pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // debug output

@@ -39,8 +39,8 @@
 static void check_change_done(
   [[maybe_unused]] size_t type,
   [[maybe_unused]] pid_t origin,
-  const size_t data_info,
-  [[maybe_unused]] size_t response_info
+  const uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   if ( ! data_info ) {
     _syscall_rpc_cleanup();

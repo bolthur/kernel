@@ -25,7 +25,7 @@
 #include "../../../../libdev.h"
 
 /**
- * @fn void rpc_custom_handle_kill(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_custom_handle_kill(size_t, pid_t, uint64_t, uint64_t)
  * @brief Device kill command
  *
  * @param type
@@ -36,8 +36,8 @@
 void rpc_custom_handle_kill(
   [[maybe_unused]] size_t type,
   [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
-  [[maybe_unused]] size_t response_info
+  [[maybe_unused]] uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );

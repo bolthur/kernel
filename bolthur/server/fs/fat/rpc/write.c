@@ -36,7 +36,7 @@
 #include <bfs/fat/stat.h>
 
 /**
- * @fn void rpc_handle_write(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_write(size_t, pid_t, uint64_t, uint64_t)
  * @brief Handle write request
  *
  * @param type
@@ -49,8 +49,8 @@
 void rpc_handle_write(
   size_t type,
   pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+  uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   vfs_write_response_t* response = malloc( sizeof( *response ) );
   if ( ! response ) {

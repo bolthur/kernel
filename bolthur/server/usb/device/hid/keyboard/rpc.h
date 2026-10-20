@@ -23,22 +23,22 @@
 #include <sys/bolthur.h>
 
 // generic
-void rpc_generic_add( size_t, pid_t, size_t, size_t );
-void rpc_generic_close( size_t, pid_t, size_t, size_t );
-void rpc_generic_exec( size_t, pid_t, size_t, size_t );
-void rpc_generic_exit( size_t, pid_t, size_t, size_t );
-void rpc_generic_fork( size_t, pid_t, size_t, size_t );
-void rpc_generic_ioctl( size_t, pid_t, size_t, size_t );
-void rpc_generic_open( size_t, pid_t, size_t, size_t );
-void rpc_generic_read( size_t, pid_t, size_t, size_t );
-void rpc_generic_remove( size_t, pid_t, size_t, size_t );
-void rpc_generic_seek( size_t, pid_t, size_t, size_t );
-void rpc_generic_stat( size_t, pid_t, size_t, size_t );
-void rpc_generic_write( size_t, pid_t, size_t, size_t );
+void rpc_generic_add( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_close( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_exec( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_exit( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_fork( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_ioctl( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_open( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_read( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_remove( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_seek( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_stat( size_t, pid_t, uint64_t, uint64_t );
+void rpc_generic_write( size_t, pid_t, uint64_t, uint64_t );
 // specific
-void rpc_keyboard_attach( size_t, pid_t, size_t, size_t );
-void rpc_keyboard_detach( size_t, pid_t, size_t, size_t );
-void rpc_keyboard_key( size_t, pid_t, size_t, size_t );
+void rpc_keyboard_attach( size_t, pid_t, uint64_t, uint64_t );
+void rpc_keyboard_detach( size_t, pid_t, uint64_t, uint64_t );
+void rpc_keyboard_key( size_t, pid_t, uint64_t, uint64_t );
 bool rpc_init( void );
 
 #endif

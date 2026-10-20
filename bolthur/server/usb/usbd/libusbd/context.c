@@ -37,7 +37,7 @@
 int usbd_context_attach_create(
   const rpc_handler_t callback,
   const pid_t origin,
-  const size_t data_info,
+  const uint64_t data_info,
   const void* original_request,
   const size_t original_request_size,
   const uint8_t address,
@@ -154,7 +154,7 @@ void usbd_context_descriptor_destroy( usbd_descriptor_context_t* ctx ) {
 }
 
 /**
- * @fn int usbd_context_get_descriptor_create(libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, void*, size_t, uint8_t, rpc_handler_t, pid_t, size_t, void*, size_t, void*, usbd_get_descriptor_context_t**)
+ * @fn int usbd_context_get_descriptor_create(libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, void*, size_t, uint8_t, rpc_handler_t, pid_t, uint64_t, void*, size_t, void*, usbd_get_descriptor_context_t**)
  * @brief Wrapper to create get descriptor context
  * @param dev
  * @param type
@@ -182,7 +182,7 @@ int usbd_context_get_descriptor_create(
   const uint8_t recipient,
   const rpc_handler_t callback,
   const pid_t origin,
-  const size_t data_info,
+  const uint64_t data_info,
   void* original_request,
   const size_t original_request_size,
   void* context,
@@ -494,7 +494,7 @@ void usbd_context_deallocate_destroy( usbd_deallocate_context_t* ctx ) {
 }
 
 /**
- * @fn int usbd_context_read_string_create(rpc_handler_t, libusb_device_t*, uint8_t, uint16_t, void*, size_t, void*, pid_t, size_t, usbd_get_string_context_t**)
+ * @fn int usbd_context_read_string_create(rpc_handler_t, libusb_device_t*, uint8_t, uint16_t, void*, size_t, void*, pid_t, uint64_t, usbd_get_string_context_t**)
  * @brief Function to create get string context
  * @param handler handler to be called once finished
  * @param dev device to get string for
@@ -512,7 +512,7 @@ void usbd_context_deallocate_destroy( usbd_deallocate_context_t* ctx ) {
 int usbd_context_read_string_create(
   const rpc_handler_t handler, libusb_device_t* dev, const uint8_t string_index,
   const uint16_t language_id, void* buffer, const size_t buffer_length, void* request,
-  const size_t request_size, const pid_t origin, const size_t data_info,
+  const size_t request_size, const pid_t origin, const uint64_t data_info,
   usbd_read_string_context_t** ctx
 ) {
   // allocate additional context

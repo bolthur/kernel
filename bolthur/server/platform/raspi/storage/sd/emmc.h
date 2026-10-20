@@ -20,8 +20,6 @@
 #ifndef _EMMC_H
 #define _EMMC_H
 
-#include <stdint.h>
-
 //#define EMMC_ENABLE_DEBUG 1
 
 typedef enum {
@@ -57,6 +55,9 @@ typedef struct {
   // sdcard configuration register
   uint32_t card_scr[ 2 ];
 
+  // max clock information
+  uint32_t max_clock;
+
   // support information
   uint32_t card_support_sdhc;
   // card version
@@ -91,10 +92,6 @@ typedef struct {
   uint8_t version_host_controller;
   // status of slot
   uint8_t status_slot;
-
-  // flags for card is absent and ejected
-  bool card_absent;
-  bool card_ejected;
 } emmc_device_t;
 
 typedef struct {

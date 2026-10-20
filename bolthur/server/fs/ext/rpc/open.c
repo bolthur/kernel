@@ -29,20 +29,18 @@
 #include "../../../../library/handle/process.h"
 #include "../../../../library/handle/handle.h"
 
-// fat library
-#include <bfs/common/transaction.h>
+// ext library
 #include <bfs/common/errno.h>
 #include <bfs/common/mountpoint.h>
 #include <bfs/ext/type.h>
 #include <bfs/ext/file.h>
 #include <bfs/ext/directory.h>
 #include <bfs/ext/stat.h>
-#include <bfs/ext/fs.h>
 #include "../stat.h"
 #include "../global.h"
 
 /**
- * @fn void rpc_handle_open(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_open(size_t, pid_t, uint64_t, uint64_t)
  * @brief Handle open request
  *
  * @param type
@@ -55,8 +53,8 @@
 void rpc_handle_open(
   size_t type,
   pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+  uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   #if defined( EXT_ENABLE_OUTPUT )
     STARTUP_PRINT( "open\r\n" )
@@ -89,23 +87,13 @@ void rpc_handle_open(
     free( request );
     return;
   }
-  // cache fs
-  auto const fs = ( ext_fs_t* )mp->fs;
-  // start transaction
-  int result = common_transaction_begin( fs->bdev );
-  if ( EOK != result ) {
-    response.handle = -result;
-    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
-    free( request );
-    return;
-  }
+  int result;
   struct stat* cached = stat_fetch( request->path );
   struct stat st;
   if ( ! cached ) {
     // stat result
     result = ext_stat( request->path, &st );
     if ( EOK != result ) {
-      common_transaction_rollback( fs->bdev );
       response.handle = -result;
       bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( request );
@@ -122,7 +110,6 @@ void rpc_handle_open(
   }
   handle_container_t* container = malloc( sizeof( *container ) );
   if ( ! container ) {
-    common_transaction_rollback( fs->bdev );
     response.handle = -ENOMEM;
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
@@ -136,7 +123,6 @@ void rpc_handle_open(
     // allocate space for directory
     ext_directory_t* dir = malloc( sizeof( *dir ) );
     if ( ! dir ) {
-      common_transaction_rollback( fs->bdev );
       response.handle = -ENOMEM;
       bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( container );
@@ -147,16 +133,6 @@ void rpc_handle_open(
     memset( dir, 0, sizeof( *dir ) );
     // try to open
     result = ext_directory_open( dir, request->path );
-    if ( EOK != result ) {
-      common_transaction_rollback( fs->bdev );
-      response.handle = -result;
-      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
-      free( dir );
-      free( container );
-      free( request );
-      return;
-    }
-    result = common_transaction_rollback( fs->bdev );
     if ( EOK != result ) {
       response.handle = -result;
       bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
@@ -203,7 +179,6 @@ void rpc_handle_open(
     // allocate space for directory
     ext_file_t* file = malloc( sizeof( *file ) );
     if ( ! file ) {
-      common_transaction_rollback( fs->bdev );
       response.handle = -ENOMEM;
       bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( container );
@@ -214,21 +189,6 @@ void rpc_handle_open(
     memset( file, 0, sizeof( *file ) );
     // try to open
     result = ext_file_open2( file, request->path, request->flags );
-    if ( EOK != result ) {
-      common_transaction_rollback( fs->bdev );
-      response.handle = -result;
-      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
-      free( file );
-      free( container );
-      free( request );
-      return;
-    }
-    // commit transaction
-    if ( ( request->flags & O_CREAT ) || ( request->flags & O_TRUNC ) ) {
-      result = common_transaction_commit( fs->bdev );
-    } else {
-      result = common_transaction_rollback( fs->bdev );
-    }
     if ( EOK != result ) {
       response.handle = -result;
       bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );

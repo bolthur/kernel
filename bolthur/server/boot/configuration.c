@@ -244,7 +244,7 @@ bool configuration_handle( const char* path, const char* bootarg ) {
       strncpy( request->out, "/dev/stdout", PATH_MAX );
       strncpy( request->err, "/dev/stderr", PATH_MAX );
       // wait for response
-      size_t response_id = bolthur_rpc_raise(
+      uint64_t response_id = bolthur_rpc_raise(
         RPC_VFS_BOOT_INIT,
         VFS_DAEMON_ID,
         request,

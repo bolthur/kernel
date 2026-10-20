@@ -53,7 +53,9 @@ typedef struct task_process {
   /** registered rpc handler */
   uintptr_t rpc_handler;
   /** rpc mailbox */
-  uint64_t rpc_mailbox;
+  uint64_t* rpc_mailbox;
+  /** mailbox size */
+  size_t rpc_mailbox_size;
   /** mapped virtual address of mailbox */
   uintptr_t rpc_mailbox_virt;
   /** array of registered interrupts */

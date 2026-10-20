@@ -26,9 +26,9 @@
 #include <sys/bolthur.h>
 
 #define FRAMEBUFFER_GET_RESOLUTION RPC_CUSTOM_START
-#define FRAMEBUFFER_CLEAR FRAMEBUFFER_GET_RESOLUTION + 1
-#define FRAMEBUFFER_SURFACE_RENDER FRAMEBUFFER_CLEAR + 1
-#define FRAMEBUFFER_SURFACE_ALLOCATE FRAMEBUFFER_SURFACE_RENDER + 1
+#define FRAMEBUFFER_CLEAR ( FRAMEBUFFER_GET_RESOLUTION + 1 )
+#define FRAMEBUFFER_SURFACE_RENDER ( FRAMEBUFFER_CLEAR + 1 )
+#define FRAMEBUFFER_SURFACE_ALLOCATE ( FRAMEBUFFER_SURFACE_RENDER + 1 )
 
 typedef struct {
   uint32_t x;
@@ -46,7 +46,7 @@ typedef struct {
   uint32_t width;
   uint32_t height;
   uint32_t depth;
-  size_t shm_id;
+  uint64_t shm_id;
   size_t surface_id;
   uint32_t pitch;
 } framebuffer_surface_allocate_t;

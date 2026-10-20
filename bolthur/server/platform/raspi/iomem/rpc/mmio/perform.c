@@ -27,11 +27,9 @@
 #include "../../mmio.h"
 #include "../../rpc.h"
 #include "../../delay.h"
-#include "../../../libsdhost.h"
 #include "../../dma.h"
 #include "../../generic.h"
 #include "../../../../../../library/platform/raspi/iomem/libiomem.h"
-#include "../../../../../../library/platform/raspi/iomem/libperipheral.h"
 #include "../../../../../../library/util/min.h"
 #if defined( RPC_ENABLE_OUTPUT )
   #include <inttypes.h>
@@ -164,7 +162,7 @@ static void apply_sleep(const mmio_sleep_t sleep_type, const uint32_t sleep_valu
 }
 
 /**
- * @fn void rpc_handle_mmio_perform(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_mmio_perform(size_t, pid_t, uint64_t, uint64_t)
  * @brief handle mmio perform request
  *
  * @param type
@@ -175,8 +173,8 @@ static void apply_sleep(const mmio_sleep_t sleep_type, const uint32_t sleep_valu
 void rpc_handle_mmio_perform(
   [[maybe_unused]] size_t type,
   pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+  uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
   // validate origin
@@ -655,7 +653,7 @@ void rpc_handle_mmio_perform(
           continue;
         }
         // get shared memory id
-        size_t shm_id = ( *mmio_request )[ i ].value;
+        uint64_t shm_id = ( *mmio_request )[ i ].value64;
         // attach it
         void* shm_addr = _syscall_memory_shared_attach(
           shm_id,
@@ -877,7 +875,7 @@ void rpc_handle_mmio_perform(
           continue;
         }
         // get shared memory id
-        size_t shm_id = ( *mmio_request )[ i ].value;
+        uint64_t shm_id = ( *mmio_request )[ i ].value64;
         // attach it
         void* shm_addr = _syscall_memory_shared_attach(
           shm_id,

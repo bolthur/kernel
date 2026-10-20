@@ -33,7 +33,7 @@ cppcheck:
 		--check-level=exhaustive
 
 image:
-	cd $(ROOT_DIR)/tool && nim -d:release -d:ssl compile --run image.nim \
+	cd $(ROOT_DIR)/tool && make PLATFORM=${platform_subdir} clean && make PLATFORM=${platform_subdir} all && ./image \
 		$(ROOT_DIR) \
 		$(BUILD_DIR) \
 		$(SYSROOT_DIR) \

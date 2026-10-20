@@ -61,7 +61,7 @@ bool output_init( void ) {
 }
 
 /**
- * @fn void output_handle_out(size_t, pid_t, size_t, size_t)
+ * @fn void output_handle_out(size_t, pid_t, uint64_t, uint64_t)
  * @brief Handler for normal output stream
  *
  * @param type
@@ -72,8 +72,8 @@ bool output_init( void ) {
 void output_handle_out(
   [[maybe_unused]] size_t type,
   [[maybe_unused]] pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+  uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // handle no data
@@ -116,7 +116,7 @@ void output_handle_out(
   if ( errno ) {
     error.status = -errno;
     #if defined( TERMINAL_ENABLE_OUTPUT )
-      EARLY_STARTUP_PRINT( "unable to attach shared memory %zu\r\n", terminal->shm_id )
+      EARLY_STARTUP_PRINT( "unable to attach shared memory %"PRIu64"\r\n", terminal->shm_id )
     #endif
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     free( request );
@@ -160,7 +160,7 @@ void output_handle_out(
 }
 
 /**
- * @fn void output_handle_err(size_t, pid_t, size_t, size_t)
+ * @fn void output_handle_err(size_t, pid_t, uint64_t, uint64_t)
  * @brief Handler for error stream output
  *
  * @param type
@@ -171,8 +171,8 @@ void output_handle_out(
 void output_handle_err(
   [[maybe_unused]] size_t type,
   [[maybe_unused]] pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
+  uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // handle no data
@@ -260,7 +260,7 @@ void output_handle_err(
 }
 
 /**
- * @fn void output_handle_in(size_t, pid_t, size_t, size_t)
+ * @fn void output_handle_in(size_t, pid_t, uint64_t, uint64_t)
  * @brief Handler for stream input
  *
  * @param type
@@ -273,8 +273,8 @@ void output_handle_err(
 void output_handle_in(
   [[maybe_unused]] size_t type,
   [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
-  [[maybe_unused]] size_t response_info
+  [[maybe_unused]] uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
   bolthur_rpc_return( RPC_VFS_READ, &error, sizeof( error ), nullptr, 0 );

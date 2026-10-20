@@ -483,13 +483,12 @@ void virt_flush_complete( void ) {
 }
 
 /**
- * @fn void virt_flush_address(virt_context_t*, uintptr_t)
+ * @fn void virt_flush_address(virt_context_t*, uintptr_t, size_t)
  * @brief Flush specific address mapping
- *
  * @param ctx used context
  * @param addr virtual address to flush
  */
-void virt_flush_address( virt_context_t* ctx, const uintptr_t addr ) {
+void virt_flush_address( virt_context_t* ctx, const uintptr_t addr, const size_t size ) {
   // no flush if not initialized or context currently not active
   if (
     ! virt_init_get()
@@ -504,13 +503,13 @@ void virt_flush_address( virt_context_t* ctx, const uintptr_t addr ) {
 
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == virt_supported_mode ) {
-    v7_long_flush_address( addr );
+    v7_long_flush_address( addr, size );
   // check v7 short descriptor format
   } else if (
     ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == virt_supported_mode )
     || ( ID_MMFR0_VSMA_V7_PAGING_PXN == virt_supported_mode )
   ) {
-    v7_short_flush_address( addr );
+    v7_short_flush_address( addr, size );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" )

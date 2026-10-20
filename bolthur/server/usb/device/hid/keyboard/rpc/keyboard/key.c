@@ -30,7 +30,7 @@
 #include "../../../../../../../library/util/min.h"
 
 /**
- * @fn void console_complete(size_t, pid_t, size_t, size_t)
+ * @fn void console_complete(size_t, pid_t, uint64_t, uint64_t)
  * @brief Console transfer complete command
  * @param type
  * @param origin
@@ -40,8 +40,8 @@
 static void console_complete(
   [[maybe_unused]] size_t type,
   const pid_t origin,
-  const size_t data_info,
-  const size_t response_info
+  const uint64_t data_info,
+  const uint64_t response_info
 ) {
   // get async data and destroy it directly
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async( RPC_VFS_IOCTL, response_info );
@@ -69,7 +69,7 @@ static void console_complete(
 }
 
 /**
- * @fn void rpc_keyboard_key(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_keyboard_key(size_t, pid_t, uint64_t, uint64_t)
  * @brief Key rpc handler callback
  * @param type
  * @param origin
@@ -79,8 +79,8 @@ static void console_complete(
 void rpc_keyboard_key(
   [[maybe_unused]] size_t type,
   const pid_t origin,
-  const size_t data_info,
-  [[maybe_unused]] size_t response_info
+  const uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
@@ -432,7 +432,7 @@ void rpc_keyboard_key(
     // copy over data
     memcpy( rpc_request->container, input_command, sizeof( *input_command ) );
     // raise rpc and wait for return
-    const size_t response_id = bolthur_rpc_raise(
+    const uint64_t response_id = bolthur_rpc_raise(
       RPC_VFS_IOCTL,
       VFS_DAEMON_ID,
       rpc_request,

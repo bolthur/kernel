@@ -41,8 +41,8 @@
 static void rpc_stop_transmission_finished(
   [[maybe_unused]] size_t type,
   const pid_t origin,
-  const size_t data_info,
-  const size_t response_info
+  const uint64_t data_info,
+  const uint64_t response_info
 ) {
   // get matching async data
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
@@ -89,7 +89,7 @@ static void rpc_stop_transmission_finished(
 }
 
 /**
- * @fn void rpc_stop_transmission(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_stop_transmission(size_t, pid_t, uint64_t, uint64_t)
  * @brief Stop a transmission for a device
  * @param type message type
  * @param origin origin of the message
@@ -99,8 +99,8 @@ static void rpc_stop_transmission_finished(
 void rpc_stop_transmission(
   [[maybe_unused]] size_t type,
   const pid_t origin,
-  const size_t data_info,
-  [[maybe_unused]] size_t response_info
+  const uint64_t data_info,
+  [[maybe_unused]] uint64_t response_info
 ) {
   #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "POLLING\r\n" )

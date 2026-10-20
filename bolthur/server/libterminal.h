@@ -33,7 +33,7 @@ typedef struct {
 
 typedef struct {
   size_t len;
-  size_t shm_id;
+  uint64_t shm_id;
   char terminal[];
 } terminal_write_request_t;
 

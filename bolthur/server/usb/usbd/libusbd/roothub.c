@@ -32,14 +32,14 @@ libusb_device_t* usbd_roothub_get( void ) {
 }
 
 /**
- * @fn int attach_roothub(const rpc_handler_t, const pid_t, const size_t)
+ * @fn int attach_roothub(const rpc_handler_t, const pid_t, const uint64_t)
  * @brief Helper to initiate roothub attach
  * @param callback
  * @param origin
  * @param data_info
  * @return
  */
-static int attach_roothub( const rpc_handler_t callback, const pid_t origin, const size_t data_info ) {
+static int attach_roothub( const rpc_handler_t callback, const pid_t origin, const uint64_t data_info ) {
   // space for root hub
   libusb_device_t* roothub = nullptr;
   // allocate device
@@ -88,8 +88,8 @@ static int attach_roothub( const rpc_handler_t callback, const pid_t origin, con
 static void deallocate_roothub_finished(
   [[maybe_unused]] size_t type,
   pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "ROOTHUB DEALLOCATE FINISHED\r\n" )
@@ -171,7 +171,7 @@ static void deallocate_roothub_finished(
 int usbd_roothub_attach(
   const rpc_handler_t callback,
   const pid_t origin,
-  const size_t data_info
+  const uint64_t data_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_OUTPUT )
@@ -221,8 +221,8 @@ int usbd_roothub_attach(
 static void attach_roothub_finished(
   [[maybe_unused]] size_t type,
   pid_t origin,
-  size_t data_info,
-  size_t response_info
+  uint64_t data_info,
+  uint64_t response_info
 ) {
   #if defined( USBD_ENABLE_OUTPUT )
     EARLY_STARTUP_PRINT( "ROOTHUB ATTACH FINISHED\r\n" )
@@ -280,7 +280,7 @@ int usbd_roothub_fire_attach( void ) {
     return -1;
   }
   // raise rpc
-  const size_t response_id = bolthur_rpc_raise(
+  const uint64_t response_id = bolthur_rpc_raise(
     USBD_ATTACH_ROOTHUB,
     target,
     dummy,

@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <sys/bolthur.h>
 #include "../ramdisk.h"
 #include "../init.h"
@@ -39,7 +40,7 @@ pid_t ramdisk_pid = 4;
  */
 void init_stage1( void ) {
   // transform number to string
-  int len = snprintf( nullptr, 0, "%zu", ramdisk_shared_id ) + 1;
+  int len = snprintf( nullptr, 0, "%"PRIu64, ramdisk_shared_id ) + 1;
   char* shm_id_str = malloc( sizeof( char ) * ( size_t )len );
   if ( ! shm_id_str ) {
     #if defined( BOOT_ENABLE_OUTPUT )
@@ -48,7 +49,7 @@ void init_stage1( void ) {
     exit( -1 );
   }
   memset( shm_id_str, 0, sizeof( char ) * ( size_t )len );
-  sprintf( shm_id_str, "%zu", ramdisk_shared_id );
+  sprintf( shm_id_str, "%"PRIu64, ramdisk_shared_id );
 
   // get vfs image
   size_t vfs_size;
